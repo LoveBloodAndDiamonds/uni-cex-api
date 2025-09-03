@@ -1,0 +1,43 @@
+# Системные файлы
+.git
+.gitignore
+.github
+.DS_Store
+
+# Файлы окружения и секретов
+.env
+.env.*
+*.env
+secrets/
+
+# Кеш и временные файлы
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Директории с зависимостями
+venv/
+env/
+node_modules/
+
+# Логи и данные
+*.log
+logs/
+data/
+
+# Файлы документации
+docs/
+*.md
+!README.md
+
+# Служебные файлы разработки
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Файлы дистрибуции
+*.dist

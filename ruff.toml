@@ -1,0 +1,42 @@
+# Включить автоисправление
+fix = true
+
+# Длина строка
+line-length = 100
+
+# Исключаем тесты из проверок
+exclude = ["tests", "migrations", "*.html"]
+
+# Выбрать правила - не слишком строгие, но полезные
+lint.select = [
+    "E",      # стандартные ошибки синтаксиса
+    "F",      # pyflakes (неиспользуемые импорты и т.д.)
+    "I",      # isort (сортировка импортов)
+    "UP",     # улучшения синтаксиса под новые версии Python
+    "B",      # обнаружение потенциальных багов,
+    "PERF",   # performance — подсказки по улучшению производительности
+    "FIX002", # проверка TODO
+    "PLE",    # pylint errors
+    "PLW",    # pylint warnings
+    "F822",   # неопределенные имена в __all__
+    # "D",    # правила pydocstyle
+]
+# Игнорировать некоторые слишком строгие правила
+lint.ignore = [
+    "E501", # длина строки
+    "D104", # документация для публичного пакета
+    "D100", # документация для публичного модуля
+]
+# Исключить ненужные директории
+lint.exclude = [".git", "__pycache__", "venv", ".venv", "tests"]
+
+# Двойные кавычки в строках документации
+lint.flake8-quotes.docstring-quotes = "double"
+
+# Настройки форматирования
+format.quote-style = "double"
+format.indent-style = "space"
+format.line-ending = "auto"
+format.exclude = ["tests"]
+format.skip-magic-trailing-comma = false # Всегда добавлять висящую запятую
+format.docstring-code-format = true      # Приводить код внутри docstring к единому стилю
