@@ -5,7 +5,7 @@ fix = true
 line-length = 100
 
 # Исключаем тесты из проверок
-exclude = ["tests", "migrations", "*.html"]
+exclude = ["tests"]
 
 # Выбрать правила - не слишком строгие, но полезные
 lint.select = [

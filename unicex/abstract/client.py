@@ -12,7 +12,7 @@ from typing import Any, Self
 import aiohttp
 import requests
 
-from unicex.types import JsonLike, RequestMethod
+from unicex.types import RequestMethod
 
 
 class _BaseClient:
@@ -20,7 +20,14 @@ class _BaseClient:
 
     @staticmethod
     def filter_params(params: dict) -> dict:
-        """Фильтрует параметры запроса, удаляя None-значения."""
+        """Фильтрует параметры запроса, удаляя None-значения.
+
+        Параметры:
+            params (dict): Словарь параметров запроса.
+
+        Возвращает:
+            dict: Отфильтрованный словарь параметров запроса.
+        """
         return {k: v for k, v in params.items() if v is not None}
 
     def __str__(self) -> str:
@@ -84,7 +91,7 @@ class BaseSyncClient(_BaseClient):
         params: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
         headers: dict[str, Any] | None = None,
-    ):
+    ) -> Any:
         """Выполняет HTTP-запрос к API биржи.
 
         Параметры:
@@ -95,7 +102,7 @@ class BaseSyncClient(_BaseClient):
             headers (dict[str, Any] | None): Заголовки запроса.
 
         Возвращает:
-            Ответ API в формате JSON.
+            dict | list: Ответ API в формате JSON.
         """
         self._logger.debug(
             f"Request: {method} {url} | Params: {params} | Data: {data} | Headers: {headers}"
@@ -133,14 +140,14 @@ class BaseSyncClient(_BaseClient):
             f"Connection error after {self._max_retries} request on {method} {url}. Errors: {errors}"
         ) from errors[-1]
 
-    def _handle_response(self, response: requests.Response):
+    def _handle_response(self, response: requests.Response) -> Any:
         """Функция обрабатывает ответ от HTTP запроса.
 
         Параметры:
             response (requests.Response): Ответ от HTTP запроса.
 
         Возвращает:
-            Обработанный ответ в виде словаря или списка.
+            dict | list: Обработанный ответ в виде словаря или списка.
         """
         response.raise_for_status()
         result = response.json()
@@ -208,7 +215,7 @@ class BaseAsyncClient(_BaseClient):
         Создать клиент можно и через __init__, но в таком случае session: `aiohttp.ClientSession` - обязательный параметр.
 
         Возвращает:
-            Созданный экземпляр клиента.
+            BaseAsyncClient: Созданный экземпляр клиента.
         """
         return cls(
             session=session or aiohttp.ClientSession(),
@@ -240,7 +247,7 @@ class BaseAsyncClient(_BaseClient):
         params: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
         headers: dict[str, Any] | None = None,
-    ) -> JsonLike:
+    ) -> Any:
         """Выполняет HTTP-запрос к API биржи.
 
         Параметры:
@@ -251,7 +258,7 @@ class BaseAsyncClient(_BaseClient):
             headers (dict[str, Any] | None): Заголовки запроса.
 
         Возвращает:
-            Ответ API в формате JSON.
+            dict | list: Ответ API в формате JSON.
         """
         self._logger.debug(
             f"Request: {method} {url} | Params: {params} | Data: {data} | Headers: {headers}"
@@ -283,14 +290,14 @@ class BaseAsyncClient(_BaseClient):
             f"Connection error after {self._max_retries} request on {method} {url}. Errors: {errors}"
         ) from errors[-1]
 
-    async def _handle_response(self, response: aiohttp.ClientResponse) -> JsonLike:
+    async def _handle_response(self, response: aiohttp.ClientResponse) -> Any:
         """Функция обрабатывает ответ от HTTP запроса.
 
         Параметры:
             response (requests.Response): Ответ от HTTP запроса.
 
         Возвращает:
-            Обработанный ответ в виде словаря или списка.
+            dict | list: Обработанный ответ в виде словаря или списка.
         """
         response.raise_for_status()
         result = await response.json()

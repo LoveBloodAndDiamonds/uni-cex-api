@@ -1,116 +1,147 @@
-from abc import ABC, abstractmethod
-from typing import Any
-
+from unicex.abstract import IAdapter
 from unicex.types import KlineDict, TickerDailyDict
 
 
-class IAdapter(ABC):
-    """Интерфейс для создания адаптеров, которые преобразовывают ответы с бирж в уницифицированный формат."""
+class BybitAdapter(IAdapter):
+    """Адаптер для унификации данных с Bybit API."""
 
     @staticmethod
-    @abstractmethod
-    def tickers(raw_data: Any, only_usdt: bool) -> list[str]:
+    def tickers(raw_data: dict, only_usdt: bool = True) -> list[str]:
         """Преобразует сырой ответ, в котором содержатся данные о тикерах в список тикеров.
 
         Параметры:
-            raw_data (Any): Сырой ответ с биржи.
+            raw_data (dict): Сырой ответ с биржи.
             only_usdt (bool): Флаг, указывающий, нужно ли включать только тикеры в паре к USDT.
 
         Возвращает:
             list[str]: Список тикеров.
         """
-        raise NotImplementedError()
+        instruments = raw_data.get("result", {}).get("list", [])
+        if only_usdt:
+            return [item["symbol"] for item in instruments if item["symbol"].endswith("USDT")]
+        return [item["symbol"] for item in instruments]
 
     @staticmethod
-    @abstractmethod
-    def futures_tickers(raw_data: Any, only_usdt: bool) -> list[str]:
+    def futures_tickers(raw_data: dict, only_usdt: bool = True) -> list[str]:
         """Преобразует сырой ответ, в котором содержатся данные о тикерах в список тикеров.
 
         Параметры:
-            raw_data (Any): Сырой ответ с биржи.
+            raw_data (dict): Сырой ответ с биржи.
             only_usdt (bool): Флаг, указывающий, нужно ли включать только тикеры в паре к USDT.
 
         Возвращает:
             list[str]: Список тикеров.
         """
-        raise NotImplementedError()
+        return BybitAdapter.tickers(raw_data, only_usdt)
 
     @staticmethod
-    @abstractmethod
-    def ticker_24h(raw_data: Any, only_usdt: bool) -> dict[str, TickerDailyDict]:
+    def ticker_24h(raw_data: dict, only_usdt: bool = True) -> dict[str, TickerDailyDict]:
         """Преобразует сырой ответ, в котором содержатся данные о тикере за последние 24 часа в унифицированный формат.
 
         Параметры:
-            raw_data (Any): Сырой ответ с биржи.
+            raw_data (dict): Сырой ответ с биржи.
             only_usdt (bool): Флаг, указывающий, нужно ли включать только тикеры в паре к USDT.
 
         Возвращает:
             dict[str, TickerDailyDict]: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
         """
-        raise NotImplementedError()
+        if only_usdt:
+            result = {}
+            for item in raw_data.get("result", {}).get("list", []):
+                symbol = item["symbol"]
+                if symbol.endswith("USDT"):
+                    result[symbol] = TickerDailyDict(
+                        p=round(
+                            float(item["price24hPcnt"]) * 100, 2
+                        ),  # Bybit возвращает в десятичной форме (0.01 = 1%), конвертируем в проценты
+                        q=float(item["turnover24h"]),  # Объем торгов в долларах
+                        v=float(item["volume24h"]),  # Объем торгов в монетах
+                    )
+        else:
+            result = {
+                item["symbol"]: TickerDailyDict(
+                    p=round(
+                        float(item["price24hPcnt"]) * 100, 2
+                    ),  # Bybit возвращает в десятичной форме (0.01 = 1%), конвертируем в проценты
+                    q=float(item["turnover24h"]),  # Объем торгов в долларах
+                    v=float(item["volume24h"]),  # Объем торгов в монетах
+                )
+                for item in raw_data.get("result", {}).get("list", [])
+            }
+        return result
 
     @staticmethod
-    @abstractmethod
-    def futures_ticker_24h(raw_data: Any, only_usdt: bool) -> dict[str, TickerDailyDict]:
+    def futures_ticker_24h(raw_data: dict, only_usdt: bool = True) -> dict[str, TickerDailyDict]:
         """Преобразует сырой ответ, в котором содержатся данные о тикере за последние 24 часа в унифицированный формат.
 
         Параметры:
-            raw_data (Any): Сырой ответ с биржи.
+            raw_data (dict): Сырой ответ с биржи.
             only_usdt (bool): Флаг, указывающий, нужно ли включать только тикеры в паре к USDT.
 
         Возвращает:
             dict[str, TickerDailyDict]: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
         """
-        raise NotImplementedError()
+        return BybitAdapter.ticker_24h(raw_data)
 
     @staticmethod
-    @abstractmethod
-    def last_price(raw_data: Any) -> dict[str, float]:
+    def last_price(raw_data: dict) -> dict[str, float]:
         """Преобразует сырой ответ, в котором содержатся данные о последних ценах тикеров в унифицированный формат.
 
         Параметры:
-            raw_data (Any): Сырой ответ с биржи.
+            raw_data (dict): Сырой ответ с биржи.
 
         Возвращает:
             dict[str, float]: Словарь, где ключ - тикер, а значение - последняя цена.
         """
-        raise NotImplementedError()
+        tickers = raw_data.get("result", {}).get("list", [])
+        return {item["symbol"]: float(item["lastPrice"]) for item in tickers}
 
     @staticmethod
-    @abstractmethod
-    def futures_last_price(raw_data: Any) -> dict[str, float]:
+    def futures_last_price(raw_data: dict) -> dict[str, float]:
         """Преобразует сырой ответ, в котором содержатся данные о последних ценах тикеров в унифицированный формат.
 
         Параметры:
-            raw_data (Any): Сырой ответ с биржи.
+            raw_data (dict): Сырой ответ с биржи.
 
         Возвращает:
             dict[str, float]: Словарь, где ключ - тикер, а значение - последняя цена.
         """
-        raise NotImplementedError()
+        return BybitAdapter.last_price(raw_data)
 
     @staticmethod
-    @abstractmethod
-    def klines(raw_data: Any) -> list[KlineDict]:
+    def klines(raw_data: dict) -> list[KlineDict]:
         """Преобразует сырой ответ, в котором содержатся данные о котировках тикеров в унифицированный формат.
 
         Параметры:
-            raw_data (Any): Сырой ответ с биржи.
+            raw_data (dict): Сырой ответ с биржи.
 
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
         """
-        raise NotImplementedError()
+        klines = raw_data.get("result", {}).get("list", [])
+        return [
+            KlineDict(
+                t=int(item[0]),  # Start time
+                o=float(item[1]),  # Open price
+                h=float(item[2]),  # High price
+                l=float(item[3]),  # Low price
+                c=float(item[4]),  # Close price
+                v=float(item[5]),  # Volume
+                q=float(item[6]),  # Quote volume
+                T=None,  # Close time (not provided by Bybit)
+                x=None,  # Is closed (not provided by Bybit)
+            )
+            for item in klines
+        ]
 
     @staticmethod
-    @abstractmethod
-    def futures_klines(raw_data: Any) -> list[KlineDict]:
+    def futures_klines(raw_data: dict) -> list[KlineDict]:
         """Преобразует сырой ответ, в котором содержатся данные о котировках тикеров в унифицированный формат.
 
         Параметры:
-            raw_data (Any): Сырой ответ с биржи.
+            raw_data (dict): Сырой ответ с биржи.
 
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
         """
-        raise NotImplementedError()
+        return BybitAdapter.klines(raw_data)

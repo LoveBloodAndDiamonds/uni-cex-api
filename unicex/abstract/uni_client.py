@@ -70,20 +70,37 @@ class ISyncUniClient(Generic[TClient], ABC):  # noqa: UP046
         """Вход в контекст."""
         return self
 
-    def __exit__(self, *_):
+    def __exit__(self, *_) -> None:
         """Выход из контекста."""
         self.close()
 
     @property
+    def client(self) -> TClient:
+        """Возвращает клиент биржи.
+
+        Возвращает:
+            TClient: Клиент биржи.
+        """
+        return self._client
+
+    @property
     @abstractmethod
     def client_cls(self) -> type[TClient]:
-        """Возвращает класс клиента для конкретной биржи."""
+        """Возвращает класс клиента для конкретной биржи.
+
+        Возвращает:
+            type[TClient]: Класс клиента.
+        """
         raise NotImplementedError()
 
     @cached_property
     @abstractmethod
     def adapter(self) -> IAdapter:
-        """Возвращает реализацию адаптера под конкретную биржу."""
+        """Возвращает реализацию адаптера под конкретную биржу.
+
+        Возвращает:
+            IAdapter: Реализация адаптера.
+        """
         raise NotImplementedError()
 
     @abstractmethod
@@ -134,22 +151,6 @@ class ISyncUniClient(Generic[TClient], ABC):  # noqa: UP046
 
         Возвращает:
             dict[str, TickerDailyDict]: Словарь с статистикой за последние 24 часа для каждого тикера.
-
-        Пример возвращаемого значения:
-            ```python
-            {
-                "BTCUSDT": {
-                    "p": 0.01,
-                    "v": 1000000,
-                    "c": 10000,
-                },
-                "ETHUSDT": {
-                    "p": 0.02,
-                    "v": 500000,
-                    "c": 5000,
-                },
-            }
-            ```
         """
         raise NotImplementedError()
 
@@ -159,22 +160,6 @@ class ISyncUniClient(Generic[TClient], ABC):  # noqa: UP046
 
         Возвращает:
             dict[str, TickerDailyDict]: Словарь с статистикой за последние 24 часа для каждого тикера.
-
-        Пример возвращаемого значения:
-            ```python
-            {
-                "BTCUSDT": {
-                    "p": 0.01,
-                    "v": 1000000,
-                    "c": 10000,
-                },
-                "ETHUSDT": {
-                    "p": 0.02,
-                    "v": 500000,
-                    "c": 5000,
-                },
-            }
-            ```
         """
         raise NotImplementedError()
 
@@ -190,6 +175,9 @@ class ISyncUniClient(Generic[TClient], ABC):  # noqa: UP046
             interval (Timeframe): Таймфрейм свечей.
             start_time (int): Время начала периода в миллисекундах.
             end_time (int): Время окончания периода в миллисекундах.
+
+        Возвращает:
+            list[KlineDict]: Список свечей.
         """
         raise NotImplementedError()
 
@@ -205,6 +193,9 @@ class ISyncUniClient(Generic[TClient], ABC):  # noqa: UP046
             interval (Timeframe): Таймфрейм свечей.
             start_time (int): Время начала периода в миллисекундах.
             end_time (int): Время окончания периода в миллисекундах.
+
+        Возвращает:
+            list[KlineDict]: Список свечей.
         """
         raise NotImplementedError()
 

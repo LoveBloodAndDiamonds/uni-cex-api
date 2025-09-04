@@ -5,7 +5,6 @@ __all__ = [
 
 from typing import Literal, TypedDict
 
-type JsonLike = dict | list
 type RequestMethod = Literal["GET", "POST", "PUT", "DELETE"]
 
 
@@ -42,6 +41,9 @@ class KlineDict(TypedDict):
 
     v: float
     """Объем свечи. В монетах."""
+
+    q: float
+    """Объем свечи. В долларах."""
 
     T: int | None
     """Время закрытия. В миллисекундах."""
