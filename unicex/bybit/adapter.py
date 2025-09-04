@@ -121,15 +121,15 @@ class BybitAdapter(IAdapter):
         klines = raw_data.get("result", {}).get("list", [])
         return [
             KlineDict(
-                t=int(item[0]),  # Start time
-                o=float(item[1]),  # Open price
-                h=float(item[2]),  # High price
-                l=float(item[3]),  # Low price
-                c=float(item[4]),  # Close price
-                v=float(item[5]),  # Volume
-                q=float(item[6]),  # Quote volume
-                T=None,  # Close time (not provided by Bybit)
-                x=None,  # Is closed (not provided by Bybit)
+                t=int(item[0]),
+                o=float(item[1]),
+                h=float(item[2]),
+                l=float(item[3]),
+                c=float(item[4]),
+                v=float(item[5]),
+                q=float(item[6]),
+                T=None,
+                x=None,
             )
             for item in klines
         ]

@@ -70,7 +70,7 @@ class BinanceUniClient(ISyncUniClient[BinanceClient]):
         """Возвращает статистику за последние 24 часа для каждого тикера.
 
         Возвращает:
-            dict[str, TickerDaily]: Словарь с статистикой за последние 24 часа для каждого тикера.
+            dict[str, TickerDailyDict]: Словарь с статистикой за последние 24 часа для каждого тикера.
         """
         raw_data = self._client.futures_ticker_24h()
         return self.adapter.futures_ticker_24h(raw_data=raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not ommited

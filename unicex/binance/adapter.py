@@ -44,7 +44,7 @@ class BinanceAdapter(IAdapter):
             only_usdt (bool): Флаг, указывающий, нужно ли включать только тикеры в паре к USDT.
 
         Возвращает:
-            dict[str, TickerDaily]: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
+            dict[str, TickerDailyDict]: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
         """
         if only_usdt:
             result = {}
@@ -78,7 +78,7 @@ class BinanceAdapter(IAdapter):
             only_usdt (bool): Флаг, указывающий, нужно ли включать только тикеры в паре к USDT.
 
         Возвращает:
-            dict[str, TickerDaily]: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
+            dict[str, TickerDailyDict]: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
         """
         return BinanceAdapter.ticker_24h(raw_data)
 
@@ -118,15 +118,15 @@ class BinanceAdapter(IAdapter):
         """
         return [
             KlineDict(
-                t=item[0],  # Start time
-                o=float(item[1]),  # Open price
-                h=float(item[2]),  # High price
-                l=float(item[3]),  # Low price
-                c=float(item[4]),  # Close price
-                v=float(item[5]),  # Volume
-                q=float(item[7]),  # Quote volume
-                T=item[6],  # Close time
-                x=None,  # Is closed (not provided by Binance)
+                t=item[0],
+                o=float(item[1]),
+                h=float(item[2]),
+                l=float(item[3]),
+                c=float(item[4]),
+                v=float(item[5]),
+                q=float(item[7]),
+                T=item[6],
+                x=None,
             )
             for item in raw_data
         ]
