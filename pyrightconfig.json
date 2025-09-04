@@ -1,5 +1,5 @@
 {
-  "include": ["src", "app"],
+  "include": ["unicex"],
   "exclude": [
     "**/node_modules",
     "**/__pycache__",

@@ -1,0 +1,11 @@
+[project]
+name = "uni-cex-api"
+version = "0.1.0"
+description = "Unified Crypto Exchange API "
+readme = "README.md"
+license = "LICENSE"
+requires-python = ">=3.13"
+dependencies = [
+    "aiohttp>=3.12.15",
+    "requests>=2.32.5",
+]
