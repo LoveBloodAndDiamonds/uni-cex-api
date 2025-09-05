@@ -199,6 +199,18 @@ class ISyncUniClient(Generic[TClient], ABC):  # noqa: UP046
         """
         raise NotImplementedError()
 
+    @abstractmethod
+    def funding_rate(self, only_usdt: bool) -> dict[str, float]:
+        """Возвращает ставку финансирования для всех тикеров.
+
+        Параметры:
+            only_usdt (bool): Если True, возвращает только тикеры в паре к USDT.
+
+        Возвращает:
+            dict[str, float]: Ставка финансирования для каждого тикера.
+        """
+        raise NotImplementedError()
+
 
 class IAsyncUniClient:
     """Интерфейс для реализации асинхронного унифицированного клиента."""

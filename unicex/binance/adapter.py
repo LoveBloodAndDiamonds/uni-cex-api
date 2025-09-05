@@ -142,3 +142,22 @@ class BinanceAdapter(IAdapter):
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
         """
         return BinanceAdapter.klines(raw_data)
+
+    @staticmethod
+    def funding_rate(raw_data: list[dict], only_usdt: bool = True) -> dict[str, float]:
+        """Преобразует сырой ответ, в котором содержатся данные о ставках финансирования тикеров в унифицированный формат.
+
+        Параметры:
+            raw_data (list[dict]): Сырой ответ с биржи.
+            only_usdt (bool): Флаг, указывающий, нужно ли возвращать только ставки финансирования для USDT-тикеров.
+
+        Возвращает:
+            dict[str, float]: Словарь, где ключ - тикер, а значение - ставка финансирования.
+        """
+        if only_usdt:
+            return {
+                item["symbol"]: float(item["lastFundingRate"]) * 100
+                for item in raw_data
+                if item["symbol"].endswith("USDT")
+            }
+        return {item["symbol"]: float(item["lastFundingRate"] * 100) for item in raw_data}

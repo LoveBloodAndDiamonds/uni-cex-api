@@ -152,3 +152,15 @@ class BybitUniClient(ISyncUniClient[BybitClient]):
             limit=limit,
         )
         return self.adapter.futures_klines(raw_data)
+
+    def funding_rate(self, only_usdt: bool = True) -> dict[str, float]:
+        """Возвращает ставку финансирования для всех тикеров.
+
+        Параметры:
+            only_usdt (bool): Если True, возвращает только тикеры в паре к USDT.
+
+        Возвращает:
+            dict[str, float]: Ставка финансирования для каждого тикера.
+        """
+        raw_data = self._client.futures_tickers()
+        return self.adapter.funding_rate(raw_data, only_usdt)

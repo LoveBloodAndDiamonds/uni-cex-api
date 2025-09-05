@@ -150,3 +150,15 @@ class BinanceUniClient(ISyncUniClient[BinanceClient]):
             end_time=end_time,
         )
         return self.adapter.futures_klines(raw_data)
+
+    def funding_rate(self, only_usdt: bool = True) -> dict[str, float]:
+        """Возвращает ставку финансирования для всех тикеров.
+
+        Параметры:
+            only_usdt (bool): Если True, возвращает только тикеры в паре к USDT.
+
+        Возвращает:
+            dict[str, float]: Ставка финансирования для каждого тикера.
+        """
+        raw_data = self._client.futures_mark_price()
+        return self.adapter.funding_rate(raw_data, only_usdt)  # type: ignore | raw_data is list[dict] if symbol param is not ommited

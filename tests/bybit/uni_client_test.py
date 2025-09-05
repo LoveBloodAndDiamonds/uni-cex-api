@@ -11,7 +11,7 @@ def main() -> None:
         # r = client.futures_klines("BTCUSDT", "1", limit=1)
         # r = c._client.futures_ping()
         # r = c.klines("BTCUSDT", Timeframe.MIN_1)
-        r = c.futures_ticker_24h()
+        r = c.funding_rate()
 
         print(r)
         print(len(r))

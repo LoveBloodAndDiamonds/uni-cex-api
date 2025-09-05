@@ -7,8 +7,8 @@ def main() -> None:
 
     with BinanceUniClient() as client:
         # r = client.futures_klines("BTCUSDT", "1m", limit=1)
-        r = client.futures_ticker_24h()
-
+        # r = client.futures_ticker_24h()
+        r = client.funding_rate()
         print(r)
         print(len(r))
 

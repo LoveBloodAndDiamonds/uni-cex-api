@@ -1,3 +1,6 @@
+# Test API Keys file
+tests/keys.py
+
 # System files
 .DS_Store
 

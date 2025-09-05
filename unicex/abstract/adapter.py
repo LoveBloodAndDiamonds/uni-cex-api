@@ -114,3 +114,17 @@ class IAdapter(ABC):
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
         """
         raise NotImplementedError()
+
+    @staticmethod
+    @abstractmethod
+    def funding_rate(raw_data: Any, only_usdt: bool = True) -> dict[str, float]:
+        """Преобразует сырой ответ, в котором содержатся данные о ставках финансирования тикеров в унифицированный формат.
+
+        Параметры:
+            raw_data (Any): Сырой ответ с биржи.
+            only_usdt (bool): Если True, то возвращаются только ставки для USDT-тикеров.
+
+        Возвращает:
+            dict[str, float]: Словарь, где ключ - тикер, а значение - ставка финансирования.
+        """
+        raise NotImplementedError()
