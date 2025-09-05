@@ -1,17 +1,54 @@
+__all__ = [
+    "dict_to_query_string",
+    "generate_hmac_sha256_signature",
+    "filter_params",
+]
+
 import hashlib
 import hmac
+import json
+from urllib.parse import urlencode
 
 
-def hmac_hashing(api_secret: str, payload: str) -> str:
-    """Generates an HMAC-SHA256 hash of the provided payload using the given API secret.
+def filter_params(params: dict) -> dict:
+    """Фильтрует параметры запроса, удаляя None-значения.
 
-    Args:
-        api_secret (str): The API secret to use for the HMAC-SHA256 hashing.
-        payload (str): The payload to hash.
+    Параметры:
+        params (dict): Словарь параметров запроса.
 
-    Returns:
-        str: The hexadecimal HMAC-SHA256 hash of the payload.
-
+    Возвращает:
+        dict: Отфильтрованный словарь параметров запроса.
     """
-    m = hmac.new(api_secret.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256)
-    return m.hexdigest()
+    return {k: v for k, v in params.items() if v is not None}
+
+
+def dict_to_query_string(params: dict) -> str:
+    """Преобразует словарь параметров в query string для URL.
+
+    - Списки и словари автоматически сериализуются в JSON.
+    - Используется стандартная urlencode кодировка.
+
+    Параметры:
+        params (dict): Словарь параметров запроса.
+
+    Возвращает:
+        str: Строка параметров, готовая для использования в URL.
+    """
+    processed = {
+        k: json.dumps(v, separators=(",", ":")) if isinstance(v, list | dict) else v
+        for k, v in params.items()
+    }
+    return urlencode(processed, doseq=True)
+
+
+def generate_hmac_sha256_signature(secret_key: str, payload: str) -> str:
+    """Генерирует HMAC-SHA256 подпись для переданного payload с использованием секретного ключа.
+
+    Параметры:
+        secret_key (str): Секретный ключ API.
+        payload (str): Строка запроса или тело, которое нужно подписать.
+
+    Возвращает:
+        str: Подпись в виде шестнадцатеричной строки.
+    """
+    return hmac.new(secret_key.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).hexdigest()

@@ -1,6 +1,6 @@
 from typing import Literal
 
-type SpotTimeframes = Literal[
+type SpotTimeframe = Literal[
     "1s",
     "1m",
     "3m",
@@ -20,7 +20,7 @@ type SpotTimeframes = Literal[
 ]
 """Возможные интервалы для запросов исторических данных на споте."""
 
-type FuturesTimeframes = Literal[
+type FuturesTimeframe = Literal[
     "1m",
     "3m",
     "5m",
@@ -38,3 +38,26 @@ type FuturesTimeframes = Literal[
     "1M",
 ]
 """Возможные интервалы для запросов исторических данных на фьючерсах."""
+
+type Side = Literal["BUY", "SELL"]
+"""Возможные стороны для торговли."""
+
+type OrderType = Literal[
+    "LIMIT",
+    "MARKET",
+    "STOP_LOSS",
+    "STOP_LOSS_LIMIT",
+    "TAKE_PROFIT",
+    "TAKE_PROFIT_LIMIT",
+    "LIMIT_MAKER",
+]
+"""Возможные типы ордеров."""
+
+type NewOrderRespType = Literal["ACK", "RESULT", "FULL"]
+"""Возможные типы ответов на запросы создания ордеров."""
+
+type TimeInForce = Literal["GTC", "IOC", "FOK"]
+"""Возможные типы действия ордера."""
+
+type SelfTradePreventionMode = Literal["EXPIRE_TAKER", "EXPIRE_MAKER", "EXPIRE_BOTH"]
+"""Возможные режимы предотвращения самообмена."""

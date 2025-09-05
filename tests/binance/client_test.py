@@ -17,7 +17,9 @@ def main() -> None:
 
         # r = cl.futures_ticker_24h("BTCUSDT")
 
-        r = cl.order_create(symbol="TRXUSDT", side="BUY", type="MARKET", quantity=33)
+        # r = cl.all_orders("BTCUSDT")
+
+        r = cl.order_create(symbol="TRXUSDT", side="SELL", type="MARKET", quantity=19)
 
         print(r)
 

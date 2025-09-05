@@ -1,18 +1,25 @@
 __all__ = ["BinanceClient"]
 
-import hashlib
-import hmac
-import json
 import time
 from typing import Any, Literal
-from urllib.parse import urlencode
 
 from unicex.abstract import BaseSyncClient
+from unicex.exceptions import MissingApiKey
+from unicex.types import RequestMethod
+from unicex.utils import dict_to_query_string, filter_params, generate_hmac_sha256_signature
 
-from .types import FuturesTimeframes, SpotTimeframes
+from .types import (
+    FuturesTimeframe,
+    NewOrderRespType,
+    OrderType,
+    SelfTradePreventionMode,
+    Side,
+    SpotTimeframe,
+    TimeInForce,
+)
 
 
-class _BaseBinanceClient:
+class _BaseBinanceClient(BaseSyncClient):
     """Базовый класс для клиентов Binance API."""
 
     _BASE_SPOT_URL: str = "https://api.binance.com"
@@ -26,80 +33,92 @@ class _BaseBinanceClient:
 
     def _get_headers(self) -> dict:
         """Возвращает заголовки для запросов к Binance API."""
-        headers = {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36",  # noqa
-        }
+        headers = {"Accept": "application/json"}
         if self._api_key:  # type: ignore
             headers["X-MBX-APIKEY"] = self._api_key  # type: ignore
         return headers
 
-    def _hmac_signature(self, query_string: str) -> str:
-        if not self._api_secret:  # type: ignore
-            raise ValueError("API Secret required for private endpoints")
-        m = hmac.new(
-            self._api_secret.encode("utf-8"),  # type: ignore
-            query_string.encode("utf-8"),
-            hashlib.sha256,
-        )
-        return m.hexdigest()
-
-    @staticmethod
-    def encoded_string(query: dict) -> str:
-        """123."""
-        # todo Не работает со вложенными структурами (словари, списки)
-        query = {
-            k: json.dumps(v, separators=(",", ":")) if isinstance(v, list | dict) else v
-            for k, v in query.items()
-        }
-        return urlencode(query, True)
-
-    def _prepare_signed_request(
-        self, params: dict | None = None, data: dict | None = None
-    ) -> tuple[dict | None, dict | None]:
-        """Подготавливает подписанный запрос добавляя timestamp и signature."""
-        if not self._api_key or not self._api_secret:  # type: ignore
-            raise ValueError("API Key and Secret required for signed endpoints")
-
-        timestamp = int(time.time() * 1000)
-
-        # Создаем копию параметров чтобы не мутировать оригинальные
-        signed_params = (params or {}).copy()
-        signed_data = (data or {}).copy()
-
-        # Добавляем timestamp и recvWindow
-        if signed_params:
-            signed_params["timestamp"] = timestamp
-            signed_params["recvWindow"] = self._RECV_WINDOW
-            # Генерируем подпись для параметров
-            query_string = self.encoded_string(signed_params)
-            signed_params["signature"] = self._hmac_signature(query_string)
-        else:
-            signed_data["timestamp"] = timestamp
-            signed_data["recvWindow"] = self._RECV_WINDOW
-            query_string = self.encoded_string(signed_data)
-            # Генерируем подпись для тела запроса
-            signed_data["signature"] = self._hmac_signature(query_string)
-        return signed_params, signed_data
-
-    def _make_signed_request(
+    def _make_request(
         self,
-        method: str,
+        method: RequestMethod,
         url: str,
+        signed: bool = False,
+        *,
         params: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
     ) -> Any:
-        """Выполняет подписанный запрос к приватным эндпоинтам."""
-        signed_params, signed_data = self._prepare_signed_request(params, data)
+        """Выполняет HTTP-запрос к эндпоинтам Binance API с поддержкой подписи.
+
+        Если signed=True, формируется подпись для приватных endpoint'ов:
+            - Если переданы params — подпись добавляется в параметры запроса.
+            - Если передан data — подпись добавляется в тело запроса.
+
+        Если signed=False, запрос отправляется как обычный публичный, через
+        базовый _make_request без обработки подписи.
+
+        Параметры:
+            method (str): HTTP метод запроса ("GET", "POST", "DELETE" и т.д.).
+            url (str): Полный URL эндпоинта Binance API.
+            signed (bool): Нужно ли подписывать запрос.
+            params (dict | None): Параметры запроса для query string.
+            data (dict | None): Параметры запроса для тела запроса.
+
+        Возвращает:
+            dict: Ответ в формате JSON.
+        """
+        # Фильтруем параметры от None значений
+        params = filter_params(params) if params else {}
+        data = filter_params(data) if data else {}
+
+        # Проверяем нужно ли подписывать запрос
+        if not signed:
+            return super()._make_request(
+                method=method,
+                url=url,
+                params=params,
+                data=data,
+            )
+
+        # Проверяем наличие апи ключей для подписи запроса
+        if not self._api_key or not self._api_secret:
+            raise MissingApiKey("Api key is required to private endpoints")
+
+        # Формируем payload
+        payload = {}
+        if params:
+            payload.update(params)
+        if data:
+            payload.update(data)
+
+        # Добавляем обязательные поля для подписи
+        payload["timestamp"] = int(time.time() * 1000)
+        payload["recvWindow"] = self._RECV_WINDOW
+
+        # Генерируем строку для подписи
+        query_string = dict_to_query_string(payload)
+        signature = generate_hmac_sha256_signature(self._api_secret, query_string)
+        payload["signature"] = signature
+
+        # Генерируем заголовки
         headers = self._get_headers()
 
-        return self._make_request(  # type: ignore
-            method=method, url=url, params=signed_params, data=signed_data, headers=headers
-        )
+        if data:  # Если есть тело запроса — подпись туда
+            return super()._make_request(
+                method=method,
+                url=url,
+                data=payload,
+                headers=headers,
+            )
+        else:  # Иначе подпись добавляем к query string
+            return super()._make_request(
+                method=method,
+                url=url,
+                params=payload,
+                headers=headers,
+            )
 
 
-class BinanceClient(BaseSyncClient, _BaseBinanceClient):
+class BinanceClient(_BaseBinanceClient):
     """Клиент для работы с Binance API."""
 
     # ========== PUBLIC ENDPOINTS ==========
@@ -109,60 +128,76 @@ class BinanceClient(BaseSyncClient, _BaseBinanceClient):
 
         https://developers.binance.com/docs/binance-spot-api-docs/rest-api/general-endpoints#test-connectivity
         """
-        return self._make_request("GET", self._BASE_SPOT_URL + "/api/v3/ping")
+        url = self._BASE_SPOT_URL + "/api/v3/ping"
+
+        return self._make_request("GET", url)
 
     def futures_ping(self) -> dict:
         """Проверка подключения к REST API.
 
         https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api#api-description
         """
-        return self._make_request("GET", self._BASE_FUTURES_URL + "/fapi/v1/ping")
+        url = self._BASE_FUTURES_URL + "/fapi/v1/ping"
+
+        return self._make_request("GET", url)
 
     def exchange_info(self) -> dict:
         """Получение информации о символах рынка и текущих правилах биржевой торговли.
 
         https://developers.binance.com/docs/binance-spot-api-docs/rest-api/general-endpoints#exchange-information
         """
-        return self._make_request("GET", self._BASE_SPOT_URL + "/api/v3/exchangeInfo")
+        url = self._BASE_SPOT_URL + "/api/v3/exchangeInfo"
+
+        return self._make_request("GET", url)
 
     def futures_exchange_info(self) -> dict:
         """Получение информации о символах рынка и текущих правилах биржевой торговли.
 
         https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Exchange-Information#api-description
         """
-        return self._make_request("GET", self._BASE_FUTURES_URL + "/fapi/v1/exchangeInfo")
+        url = self._BASE_FUTURES_URL + "/fapi/v1/exchangeInfo"
+
+        return self._make_request("GET", url)
 
     def depth(self, symbol: str, limit: int | None = None) -> dict:
         """Получение книги ордеров.
 
         https://developers.binance.com/docs/binance-spot-api-docs/rest-api/market-data-endpoints#order-book
         """
-        params = self.filter_params({"symbol": symbol, "limit": limit})
-        return self._make_request("GET", self._BASE_SPOT_URL + "/api/v3/depth", params=params)
+        url = self._BASE_SPOT_URL + "/api/v3/depth"
+        params = {"symbol": symbol, "limit": limit}
+
+        return self._make_request("GET", url, params=params)
 
     def futures_depth(self, symbol: str, limit: int | None = None) -> dict:
         """Получение книги ордеров.
 
         https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Order-Book#request-parameters
         """
-        params = self.filter_params({"symbol": symbol, "limit": limit})
-        return self._make_request("GET", self._BASE_FUTURES_URL + "/fapi/v1/depth", params=params)
+        url = self._BASE_FUTURES_URL + "/fapi/v1/depth"
+        params = {"symbol": symbol, "limit": limit}
+
+        return self._make_request("GET", url, params=params)
 
     def trades(self, symbol: str, limit: int | None = None) -> list[dict]:
         """Получение последних сделок.
 
         https://developers.binance.com/docs/binance-spot-api-docs/rest-api/market-data-endpoints#recent-trades-list
         """
-        params = self.filter_params({"symbol": symbol, "limit": limit})
-        return self._make_request("GET", self._BASE_SPOT_URL + "/api/v3/trades", params=params)
+        url = self._BASE_SPOT_URL + "/api/v3/trades"
+        params = {"symbol": symbol, "limit": limit}
+
+        return self._make_request("GET", url, params=params)
 
     def futures_trades(self, symbol: str, limit: int | None = None) -> list[dict]:
         """Получение последних сделок.
 
         https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Recent-Trades-List
         """
-        params = self.filter_params({"symbol": symbol, "limit": limit})
-        return self._make_request("GET", self._BASE_FUTURES_URL + "/fapi/v1/trades", params=params)
+        url = self._BASE_FUTURES_URL + "/fapi/v1/trades"
+        params = {"symbol": symbol, "limit": limit}
+
+        return self._make_request("GET", url, params=params)
 
     def historical_trades(
         self, symbol: str, limit: int | None = None, from_id: int | None = None
@@ -171,10 +206,10 @@ class BinanceClient(BaseSyncClient, _BaseBinanceClient):
 
         https://developers.binance.com/docs/binance-spot-api-docs/rest-api/market-data-endpoints#old-trade-lookup
         """
-        params = self.filter_params({"symbol": symbol, "limit": limit, "fromId": from_id})
-        return self._make_request(
-            "GET", self._BASE_SPOT_URL + "/api/v3/historicalTrades", params=params
-        )
+        url = self._BASE_SPOT_URL + "/api/v3/historicalTrades"
+        params = {"symbol": symbol, "limit": limit, "fromId": from_id}
+
+        return self._make_request("GET", url, params=params)
 
     def futures_historical_trades(
         self, symbol: str, limit: int | None = None, from_id: int | None = None
@@ -183,10 +218,10 @@ class BinanceClient(BaseSyncClient, _BaseBinanceClient):
 
         https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Old-Trades-Lookup
         """
-        params = self.filter_params({"symbol": symbol, "limit": limit, "fromId": from_id})
-        return self._make_request(
-            "GET", self._BASE_FUTURES_URL + "/fapi/v1/historicalTrades", params=params
-        )
+        url = self._BASE_FUTURES_URL + "/fapi/v1/historicalTrades"
+        params = {"symbol": symbol, "limit": limit, "fromId": from_id}
+
+        return self._make_request("GET", url, params=params)
 
     def ticker_24h(
         self,
@@ -198,10 +233,10 @@ class BinanceClient(BaseSyncClient, _BaseBinanceClient):
 
         https://developers.binance.com/docs/binance-spot-api-docs/rest-api/market-data-endpoints#24hr-ticker-price-change-statistics
         """
-        params = self.filter_params({"symbol": symbol, "type": type})
-        if symbols is not None:
-            params["symbols"] = json.dumps(symbols, separators=(",", ":"))
-        return self._make_request("GET", self._BASE_SPOT_URL + "/api/v3/ticker/24hr", params=params)
+        url = self._BASE_SPOT_URL + "/api/v3/ticker/24hr"
+        params = {"symbol": symbol, "type": type, "symbols": symbols}
+
+        return self._make_request("GET", url, params=params)
 
     def futures_ticker_24h(self, symbol: str | None = None) -> dict | list[dict]:
         """Получение статистики изменения цен и объема за 24 часа.
@@ -209,7 +244,8 @@ class BinanceClient(BaseSyncClient, _BaseBinanceClient):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/24hr-Ticker-Price-Change-Statistics
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/ticker/24hr"
-        params = self.filter_params({"symbol": symbol})
+        params = {"symbol": symbol}
+
         return self._make_request("GET", url, params=params)
 
     def ticker_price(
@@ -219,10 +255,9 @@ class BinanceClient(BaseSyncClient, _BaseBinanceClient):
 
         https://developers.binance.com/docs/binance-spot-api-docs/rest-api/market-data-endpoints#symbol-price-ticker
         """
-        params = self.filter_params({"symbol": symbol})
-        if symbols is not None:
-            params["symbols"] = json.dumps(symbols, separators=(",", ":"))
         url = self._BASE_SPOT_URL + "/api/v3/ticker/price"
+        params = {"symbol": symbol, "symbols": symbols}
+
         return self._make_request("GET", url, params=params)
 
     def futures_ticker_price(self, symbol: str | None = None) -> dict | list[dict]:
@@ -230,10 +265,10 @@ class BinanceClient(BaseSyncClient, _BaseBinanceClient):
 
         https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Symbol-Price-Ticker-v2
         """
-        params = self.filter_params({"symbol": symbol})
-        return self._make_request(
-            "GET", self._BASE_FUTURES_URL + "/fapi/v2/ticker/price", params=params
-        )
+        url = self._BASE_FUTURES_URL + "/fapi/v2/ticker/price"
+        params = {"symbol": symbol}
+
+        return self._make_request("GET", url, params=params)
 
     def open_interest(self, symbol: str) -> dict:
         """Получение открытого интереса тикера.
@@ -242,12 +277,13 @@ class BinanceClient(BaseSyncClient, _BaseBinanceClient):
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/openInterest"
         params = {"symbol": symbol}
+
         return self._make_request(method="GET", url=url, params=params)
 
     def klines(
         self,
         symbol: str,
-        interval: SpotTimeframes,
+        interval: SpotTimeframe,
         start_time: int | None = None,
         end_time: int | None = None,
         time_zone: str | None = None,
@@ -258,23 +294,21 @@ class BinanceClient(BaseSyncClient, _BaseBinanceClient):
         https://developers.binance.com/docs/binance-spot-api-docs/rest-api/market-data-endpoints#klinecandlestick-data
         """
         url = self._BASE_SPOT_URL + "/api/v3/klines"
-        params = self.filter_params(
-            {
-                "symbol": symbol,
-                "interval": interval,
-                "startTime": start_time,
-                "endTime": end_time,
-                "timeZone": time_zone,
-                "limit": limit,
-            }
-        )
+        params = {
+            "symbol": symbol,
+            "interval": interval,
+            "startTime": start_time,
+            "endTime": end_time,
+            "timeZone": time_zone,
+            "limit": limit,
+        }
 
         return self._make_request("GET", url, params=params)
 
     def futures_klines(
         self,
         symbol: str,
-        interval: FuturesTimeframes,
+        interval: FuturesTimeframe,
         start_time: int | None = None,
         end_time: int | None = None,
         limit: int | None = None,
@@ -284,15 +318,13 @@ class BinanceClient(BaseSyncClient, _BaseBinanceClient):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Kline-Candlestick-Data
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/klines"
-        params = self.filter_params(
-            {
-                "symbol": symbol,
-                "interval": interval,
-                "startTime": start_time,
-                "endTime": end_time,
-                "limit": limit,
-            }
-        )
+        params = {
+            "symbol": symbol,
+            "interval": interval,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+        }
 
         return self._make_request("GET", url, params=params)
 
@@ -302,11 +334,11 @@ class BinanceClient(BaseSyncClient, _BaseBinanceClient):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Mark-Price
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/premiumIndex"
-        params = self.filter_params({"symbol": symbol})
+        params = {"symbol": symbol}
 
         return self._make_request("GET", url, params=params)
 
-    # ========== PRIVATE ENDPOINTS (USER_DATA & TRADE) ==========
+    # ========== PRIVATE ENDPOINTS ==========
 
     def account(self) -> dict:
         """Получение информации об аккаунте (балансы, комиссии и т.д.).
@@ -314,7 +346,8 @@ class BinanceClient(BaseSyncClient, _BaseBinanceClient):
         https://developers.binance.com/docs/binance-spot-api-docs/rest-api/account-endpoints#account-information-user_data
         """
         url = self._BASE_SPOT_URL + "/api/v3/account"
-        return self._make_signed_request("GET", url)
+
+        return self._make_request("GET", url, True)
 
     def futures_account(self) -> dict:
         """Получение информации об аккаунте фьючерсов.
@@ -322,7 +355,7 @@ class BinanceClient(BaseSyncClient, _BaseBinanceClient):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Account-Information-V3
         """
         url = self._BASE_FUTURES_URL + "/fapi/v3/account"
-        return self._make_signed_request("GET", url)
+        return self._make_request("GET", url, True)
 
     def futures_balance(self) -> list[dict]:
         """Получение баланса фьючерсного аккаунта.
@@ -330,7 +363,8 @@ class BinanceClient(BaseSyncClient, _BaseBinanceClient):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Futures-Account-Balance-V3
         """
         url = self._BASE_FUTURES_URL + "/fapi/v3/balance"
-        return self._make_signed_request("GET", url)
+
+        return self._make_request("GET", url, True)
 
     def all_orders(
         self,
@@ -345,16 +379,15 @@ class BinanceClient(BaseSyncClient, _BaseBinanceClient):
         https://developers.binance.com/docs/binance-spot-api-docs/rest-api/spot-trading-endpoints#all-orders-user_data
         """
         url = self._BASE_SPOT_URL + "/api/v3/allOrders"
-        params = self.filter_params(
-            {
-                "symbol": symbol,
-                "orderId": order_id,
-                "startTime": start_time,
-                "endTime": end_time,
-                "limit": limit,
-            }
-        )
-        return self._make_signed_request("GET", url, params=params)
+        params = {
+            "symbol": symbol,
+            "orderId": order_id,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+        }
+
+        return self._make_request("GET", url, True, params=params)
 
     def futures_order_cancel(
         self, symbol: str, order_id: int | None = None, orig_client_order_id: str | None = None
@@ -364,14 +397,13 @@ class BinanceClient(BaseSyncClient, _BaseBinanceClient):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api/Cancel-Order
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/order"
-        data = self.filter_params(
-            {
-                "symbol": symbol,
-                "orderId": order_id,
-                "origClientOrderId": orig_client_order_id,
-            }
-        )
-        return self._make_signed_request("DELETE", url, data=data)
+        data = {
+            "symbol": symbol,
+            "orderId": order_id,
+            "origClientOrderId": orig_client_order_id,
+        }
+
+        return self._make_request("DELETE", url, data=data)
 
     def order_cancel(
         self,
@@ -385,60 +417,48 @@ class BinanceClient(BaseSyncClient, _BaseBinanceClient):
         https://developers.binance.com/docs/binance-spot-api-docs/rest-api/spot-trading-endpoints#cancel-order-trade
         """
         url = self._BASE_SPOT_URL + "/api/v3/order"
-        data = self.filter_params(
-            {
-                "symbol": symbol,
-                "orderId": order_id,
-                "origClientOrderId": orig_client_order_id,
-                "newClientOrderId": new_client_order_id,
-            }
-        )
-        return self._make_signed_request("DELETE", url, data=data)
+        data = {
+            "symbol": symbol,
+            "orderId": order_id,
+            "origClientOrderId": orig_client_order_id,
+            "newClientOrderId": new_client_order_id,
+        }
+
+        return self._make_request("DELETE", url, True, data=data)
 
     def order_create(
         self,
         symbol: str,
-        side: Literal["BUY", "SELL"],
-        type: Literal[
-            "LIMIT",
-            "MARKET",
-            "STOP_LOSS",
-            "STOP_LOSS_LIMIT",
-            "TAKE_PROFIT",
-            "TAKE_PROFIT_LIMIT",
-            "LIMIT_MAKER",
-        ],
+        side: Side,
+        type: OrderType,
         quantity: float | None = None,
         quote_order_qty: float | None = None,
         price: float | None = None,
         stop_price: float | None = None,
-        time_in_force: Literal["GTC", "IOC", "FOK"] | None = None,
+        time_in_force: TimeInForce | None = None,
         new_client_order_id: str | None = None,
         iceberg_qty: float | None = None,
-        new_order_resp_type: Literal["ACK", "RESULT", "FULL"] | None = None,
-        self_trade_prevention_mode: Literal["EXPIRE_TAKER", "EXPIRE_MAKER", "EXPIRE_BOTH"]
-        | None = None,
+        new_order_resp_type: NewOrderRespType | None = None,
+        self_trade_prevention_mode: SelfTradePreventionMode | None = None,
     ) -> dict:
         """Создание нового ордера на спот-рынке.
 
-        Security: TRADE (подпись требуется)
         https://developers.binance.com/docs/binance-spot-api-docs/rest-api/spot-trading-endpoints#new-order-trade
         """
         url = self._BASE_SPOT_URL + "/api/v3/order"
-        data = self.filter_params(
-            {
-                "symbol": symbol,
-                "side": side,
-                "type": type,
-                "quantity": quantity,
-                "quoteOrderQty": quote_order_qty,
-                "price": price,
-                "stopPrice": stop_price,
-                "timeInForce": time_in_force,
-                "newClientOrderId": new_client_order_id,
-                "icebergQty": iceberg_qty,
-                "newOrderRespType": new_order_resp_type,
-                "selfTradePreventionMode": self_trade_prevention_mode,
-            }
-        )
-        return self._make_signed_request("POST", url, data=data)
+        data = {
+            "symbol": symbol,
+            "side": side,
+            "type": type,
+            "quantity": quantity,
+            "quoteOrderQty": quote_order_qty,
+            "price": price,
+            "stopPrice": stop_price,
+            "timeInForce": time_in_force,
+            "newClientOrderId": new_client_order_id,
+            "icebergQty": iceberg_qty,
+            "newOrderRespType": new_order_resp_type,
+            "selfTradePreventionMode": self_trade_prevention_mode,
+        }
+
+        return self._make_request("POST", url, True, data=data)

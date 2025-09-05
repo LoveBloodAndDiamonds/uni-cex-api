@@ -1,4 +1,4 @@
-from unicex.binance.client import AsyncBinanceClient
+from unicex.binance.client import AsyncBinanceClient  # type: ignore
 
 from pprint import pp as print  # noqa # type: ignore
 

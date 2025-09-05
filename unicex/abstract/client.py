@@ -12,32 +12,11 @@ from typing import Any, Self
 import aiohttp
 import requests
 
+from unicex.exceptions import UniCexException
 from unicex.types import RequestMethod
 
 
-class _BaseClient:
-    """Базовый класс для создания клиентов для работы с API."""
-
-    @staticmethod
-    def filter_params(params: dict) -> dict:
-        """Фильтрует параметры запроса, удаляя None-значения.
-
-        Параметры:
-            params (dict): Словарь параметров запроса.
-
-        Возвращает:
-            dict: Отфильтрованный словарь параметров запроса.
-        """
-        return {k: v for k, v in params.items() if v is not None}
-
-    def __str__(self) -> str:
-        return "APIClient"
-
-    def __repr__(self) -> str:
-        return "<APIClient>"
-
-
-class BaseSyncClient(_BaseClient):
+class BaseSyncClient:
     """Базовый синхронный класс для создания клиентов для работы с API."""
 
     def __init__(
@@ -90,6 +69,7 @@ class BaseSyncClient(_BaseClient):
         url: str,
         params: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
+        json: dict[str, Any] | None = None,
         headers: dict[str, Any] | None = None,
     ) -> Any:
         """Выполняет HTTP-запрос к API биржи.
@@ -98,7 +78,8 @@ class BaseSyncClient(_BaseClient):
             method (RequestMethod): HTTP-метод запроса.
             url (str): Полный URL API.
             params (dict[str, Any] | None): Параметры запроса (query string).
-            data (dict[str, Any] | None): Тело запроса для POST/PUT.
+            data (dict[str, Any] | None): Тело запроса (application/x-www-form-urlencoded).
+            json (dict[str, Any] | None): Тело запроса (application/json).
             headers (dict[str, Any] | None): Заголовки запроса.
 
         Возвращает:
@@ -121,7 +102,8 @@ class BaseSyncClient(_BaseClient):
                     method=method,
                     url=url,
                     params=params,
-                    json=data if method in {"POST", "PUT"} else None,
+                    data=data if data is not None else None,
+                    json=json if json is not None else None,
                     headers=headers,
                     proxies=proxies,
                     timeout=self._timeout,
@@ -149,8 +131,22 @@ class BaseSyncClient(_BaseClient):
         Возвращает:
             dict | list: Обработанный ответ в виде словаря или списка.
         """
-        response.raise_for_status()
-        result = response.json()
+        try:
+            response.raise_for_status()
+        except Exception as e:
+            raise UniCexException(
+                f"HTTP error: {e}. Response: {response.text}. Status code: {response.status_code}"
+            ) from e
+
+        if not response.content:
+            raise UniCexException(f"Empty response. Status code: {response.status_code}")
+
+        try:
+            result = response.json()
+        except requests.exceptions.JSONDecodeError as e:
+            raise UniCexException(
+                f"JSONDecodeError error: {e}. Response: {response.text}. Status code: {response.status_code}"
+            ) from e
 
         try:
             result_str: str = str(result)
@@ -163,7 +159,7 @@ class BaseSyncClient(_BaseClient):
         return result
 
 
-class BaseAsyncClient(_BaseClient):
+class BaseAsyncClient:
     """Базовый асинхронный класс для создания клиентов для работы с API."""
 
     def __init__(

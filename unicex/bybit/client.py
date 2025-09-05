@@ -7,14 +7,14 @@ from unicex.abstract import BaseSyncClient
 from .types import FuturesTimeframes, SpotTimeframes
 
 
-class _BaseBybitClient:
+class _BaseBybitClient(BaseSyncClient):
     """Базовый класс для клиентов Bybit API."""
 
     _BASE_URL: str = "https://api.bybit.com"
     """Базовый URL для REST API Bybit."""
 
 
-class BybitClient(BaseSyncClient, _BaseBybitClient):
+class BybitClient(_BaseBybitClient):
     """Клиент для работы с Bybit API."""
 
     def ping(self) -> dict:
