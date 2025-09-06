@@ -1,10 +1,11 @@
 __all__ = [
+    "AsyncBinanceUniClient",
+    "AsyncBinanceClient",
     "BinanceAdapter",
     "BinanceClient",
-    "AsyncBinanceClient",
     "BinanceUniClient",
 ]
 
 from .adapter import BinanceAdapter
 from .client import AsyncBinanceClient, BinanceClient
-from .uni_client import BinanceUniClient
+from .uni_client import AsyncBinanceUniClient, BinanceUniClient

@@ -1,4 +1,4 @@
-from unicex.abstract import IAdapter
+from unicex.abc import IAdapter
 from unicex.types import KlineDict, TickerDailyDict
 
 

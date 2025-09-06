@@ -7,7 +7,7 @@ import json
 import time
 from typing import Any, Literal
 
-from unicex.abstract import BaseAsyncClient, BaseSyncClient
+from unicex.base import BaseAsyncClient, BaseSyncClient
 from unicex.exceptions import MissingApiKey
 from unicex.types import RequestMethod
 from unicex.utils import dict_to_query_string, filter_params, generate_hmac_sha256_signature

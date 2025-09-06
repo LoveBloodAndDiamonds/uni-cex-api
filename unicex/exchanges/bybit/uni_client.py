@@ -4,7 +4,7 @@ __all__ = [
 
 from functools import cached_property
 
-from unicex.abstract import ISyncUniClient
+from unicex.abc import ISyncUniClient
 from unicex.enums import Exchange, Timeframe
 from unicex.types import KlineDict, TickerDailyDict
 

@@ -10,11 +10,11 @@ from typing import Generic, Self, TypeVar
 import aiohttp
 import requests
 
+from unicex.base import BaseAsyncClient, BaseSyncClient
 from unicex.enums import Timeframe
 from unicex.types import KlineDict, TickerDailyDict
 
 from .adapter import IAdapter
-from .client import BaseAsyncClient, BaseSyncClient
 
 TClient = TypeVar("TClient", bound=BaseSyncClient)
 AClient = TypeVar("AClient", bound=BaseAsyncClient)

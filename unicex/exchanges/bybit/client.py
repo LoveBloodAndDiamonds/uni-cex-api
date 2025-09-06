@@ -4,7 +4,7 @@ import json
 import time
 from typing import Any
 
-from unicex.abstract import BaseSyncClient
+from unicex.abc import BaseSyncClient
 from unicex.exceptions import MissingApiKey
 from unicex.types import RequestMethod
 from unicex.utils import filter_params, generate_hmac_sha256_signature

@@ -14,3 +14,10 @@ class MissingApiKey(UniCexException):
     """Исключение, возникающее при отсутствии API ключей."""
 
     pass
+
+
+@dataclass
+class NotSupported(UniCexException):
+    """Исключение, возникающее при попытке использования не поддерживаемой функции."""
+
+    pass

@@ -1,10 +1,11 @@
 __all__ = [
     "BinanceUniClient",
+    "AsyncBinanceUniClient",
 ]
 
 from functools import cached_property
 
-from unicex.abstract import IAsyncUniClient, ISyncUniClient
+from unicex.abc import IAsyncUniClient, ISyncUniClient
 from unicex.enums import Exchange, Timeframe
 from unicex.types import KlineDict, TickerDailyDict
 

@@ -1,4 +1,4 @@
-from unicex.abstract import BaseSyncWebsocket
+from unicex.abc import BaseSyncWebsocket
 
 
 class BybitWebsocket(BaseSyncWebsocket):

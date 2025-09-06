@@ -1,10 +1,15 @@
+__all__ = [
+    "IUniWebsocketManager",
+]
+
 from abc import ABC, abstractmethod
 
+from unicex.base import BaseSyncWebsocket
+
 from .uni_client import ISyncUniClient
-from .websocket import BaseSyncWebsocket
 
 
-class IWebsocketManager(ABC):
+class IUniWebsocketManager(ABC):
     """Интерфейс для реализации менеджера вебсокетов."""
 
     def __init__(self, client: ISyncUniClient | None = None) -> None:

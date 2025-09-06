@@ -1,7 +1,7 @@
 import json
 from collections.abc import Callable, Sequence
 
-from unicex.abstract import IWebsocketManager
+from unicex.abc import IWebsocketManager
 from unicex.enums import MarketType, Timeframe
 
 from .websocket import BybitWebsocket
