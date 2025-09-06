@@ -122,16 +122,9 @@ class BybitClient(_BaseBybitClient):
 
         return self._make_request("GET", url)
 
-    def futures_ping(self) -> dict:
-        """Проверка подключения к REST API.
-
-        https://bybit-exchange.github.io/docs/v5/market/time
-        """
-        return self.ping()
-
     def instruments_info(
         self,
-        category: ProductType = "spot",
+        category: ProductType,
         symbol: str | None = None,
         status: str | None = None,
         base_coin: str | None = None,
@@ -154,31 +147,9 @@ class BybitClient(_BaseBybitClient):
 
         return self._make_request("GET", url, params=params)
 
-    def futures_instruments_info(
-        self,
-        category: FuturesProductType = "linear",
-        symbol: str | None = None,
-        status: str | None = None,
-        base_coin: str | None = None,
-        limit: int | None = None,
-        cursor: str | None = None,
-    ) -> dict:
-        """Получение информации об инструментах торговли.
-
-        https://bybit-exchange.github.io/docs/v5/market/instrument
-        """
-        return self.instruments_info(
-            category=category,
-            symbol=symbol,
-            status=status,
-            base_coin=base_coin,
-            limit=limit,
-            cursor=cursor,
-        )
-
     def tickers(
         self,
-        category: ProductType = "spot",
+        category: ProductType,
         symbol: str | None = None,
         base_coin: str | None = None,
         exp_date: str | None = None,
@@ -197,23 +168,11 @@ class BybitClient(_BaseBybitClient):
 
         return self._make_request("GET", url, params=params)
 
-    def futures_tickers(
-        self,
-        category: FuturesProductType = "linear",
-        symbol: str | None = None,
-        base_coin: str | None = None,
-    ) -> dict:
-        """Получение информации о тикерах. В т.ч. статистику за 24 ч., ОИ и последнюю цену.
-
-        https://bybit-exchange.github.io/docs/v5/market/tickers
-        """
-        return self.tickers(category=category, symbol=symbol, base_coin=base_coin)
-
     def klines(
         self,
         symbol: str,
         interval: FuturesTimeframe,
-        category: ProductType = "spot",
+        category: ProductType,
         start: int | None = None,
         end: int | None = None,
         limit: int | None = None,
@@ -233,28 +192,6 @@ class BybitClient(_BaseBybitClient):
         }
 
         return self._make_request("GET", url, params=params)
-
-    def futures_klines(
-        self,
-        symbol: str,
-        interval: FuturesTimeframe,
-        category: FuturesProductType = "linear",
-        start: int | None = None,
-        end: int | None = None,
-        limit: int | None = None,
-    ) -> dict:
-        """Получение исторических свечей.
-
-        https://bybit-exchange.github.io/docs/v5/market/kline
-        """
-        return self.klines(
-            category=category,
-            symbol=symbol,
-            interval=interval,
-            start=start,
-            end=end,
-            limit=limit,
-        )
 
     # ========== PRIVATE ENDPOINTS ==========
 
@@ -381,3 +318,5 @@ class BybitClient(_BaseBybitClient):
         }
 
         return self._make_request("POST", url, True, params=params)
+
+    # ========== WALLET ENDPOINTS ==========
