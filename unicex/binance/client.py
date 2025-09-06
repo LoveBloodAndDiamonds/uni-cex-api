@@ -34,8 +34,8 @@ class _BaseBinanceClient(BaseSyncClient):
     def _get_headers(self) -> dict:
         """Возвращает заголовки для запросов к Binance API."""
         headers = {"Accept": "application/json"}
-        if self._api_key:  # type: ignore
-            headers["X-MBX-APIKEY"] = self._api_key  # type: ignore
+        if self._api_key:
+            headers["X-MBX-APIKEY"] = self._api_key
         return headers
 
     def _make_request(
