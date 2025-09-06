@@ -3,6 +3,7 @@ __all__ = [
     "BaseAsyncWebsocket",
 ]
 
+import json
 import logging
 import threading
 from collections.abc import Callable
@@ -20,7 +21,7 @@ class BaseSyncWebsocket:
         self,
         callback: Callable,
         url: str,
-        subscribe_messages: list[str] | None = None,
+        subscription_messages: list[dict] | list[str] | None = None,
         ping_interval: int | float | None = None,
         pong_interval: int | float | None = None,
         ping_message: str | None = None,
@@ -28,7 +29,7 @@ class BaseSyncWebsocket:
     ) -> None:
         """Инициализация вебсокета."""
         self._callback = callback
-        self._subscribe_messages = subscribe_messages or []
+        self._subscription_messages = subscription_messages or []
         self._ping_interval = ping_interval
         self._pong_interval = pong_interval
         self._ping_message = ping_message
@@ -74,8 +75,10 @@ class BaseSyncWebsocket:
     def _on_open(self, ws: WebSocket) -> None:
         """Обработчик события открытия вебсокета."""
         logger.info("Websocket opened")
-        for subscribe_message in self._subscribe_messages:
-            ws.send_text(subscribe_message)
+        for subscription_message in self._subscription_messages:
+            if isinstance(subscription_message, dict):
+                subscription_message = json.dumps(subscription_message)  # noqa: PLW2901
+            ws.send(subscription_message)
 
     def _on_message(self, _: WebSocket, message: str | dict) -> None:
         """Обработчик события получения сообщения."""

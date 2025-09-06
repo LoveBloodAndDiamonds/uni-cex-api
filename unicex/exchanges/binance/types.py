@@ -371,3 +371,6 @@ type PriceMatch = Literal[
 
 type AutoCloseType = Literal["LIQUIDATION", "ADL"]
 """Возможные типы автоматического закрытия позиции."""
+
+type StreamType = Literal["aggTrade", "markPrice", "markPrice@1s"]
+"""Возможные типы подписок на вебсокеты."""

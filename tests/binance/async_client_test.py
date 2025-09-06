@@ -1,4 +1,4 @@
-from unicex.binance.client import AsyncBinanceClient  # type: ignore
+from unicex.exchanges.binance import AsyncBinanceClient
 
 from pprint import pp as print  # noqa # type: ignore
 
@@ -11,11 +11,15 @@ async def main() -> None:
 
     client = await AsyncBinanceClient.create()
 
-    result = await client.exchange_info()
+    # result = await client.exchange_info()
 
-    print(result)
+    async with client as cl:
+        r = await cl.futures_exchange_info()
+        print(r)
 
-    await client.close()
+    # print(result)
+
+    # await client.close()
 
 
 if __name__ == "__main__":
