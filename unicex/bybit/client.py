@@ -22,7 +22,12 @@ class _BaseBybitClient(BaseSyncClient):
     """Стандартный интервал времени для получения ответа от сервера."""
 
     def _get_headers(self, timestamp: str, signature: str | None = None) -> dict:
-        """Возвращает заголовки для запросов к Bybit API."""  # todo docs
+        """Возвращает заголовки для запросов к Bybit API.
+
+        Параметры:
+            timestamp (str): Временная метка запроса в миллисекундах.
+            signature (str | None): Подпись запроса, если запрос авторизированый.
+        """
         headers = {"Accept": "application/json", "Content-Type": "application/json"}
         if signature:
             headers["X-BAPI-API-KEY"] = self._api_key  # type: ignore
