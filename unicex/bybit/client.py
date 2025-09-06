@@ -9,7 +9,7 @@ from unicex.exceptions import MissingApiKey
 from unicex.types import RequestMethod
 from unicex.utils import filter_params, generate_hmac_sha256_signature
 
-from .types import FuturesProductType, FuturesTimeframe, OrderType, ProductType, Side
+from .types import Category, FuturesCategory, OrderType, Side, Timeframe
 
 
 class _BaseBybitClient(BaseSyncClient):
@@ -109,9 +109,11 @@ class _BaseBybitClient(BaseSyncClient):
 
 
 class BybitClient(_BaseBybitClient):
-    """Клиент для работы с Bybit API."""
+    """Клиент для работы с Bybit API (REST v5)."""
 
-    # ========== PUBLIC ENDPOINTS ==========
+    # ==========================================================================
+    # MARKET DATA (Public)
+    # ==========================================================================
 
     def ping(self) -> dict:
         """Проверка подключения к REST API.
@@ -119,19 +121,18 @@ class BybitClient(_BaseBybitClient):
         https://bybit-exchange.github.io/docs/v5/market/time
         """
         url = self._BASE_URL + "/v5/market/time"
-
         return self._make_request("GET", url)
 
     def instruments_info(
         self,
-        category: ProductType,
+        category: Category,
         symbol: str | None = None,
         status: str | None = None,
         base_coin: str | None = None,
         limit: int | None = None,
         cursor: str | None = None,
     ) -> dict:
-        """Получение информации об инструментах торговли.
+        """Информация об инструментах торговли.
 
         https://bybit-exchange.github.io/docs/v5/market/instrument
         """
@@ -149,12 +150,12 @@ class BybitClient(_BaseBybitClient):
 
     def tickers(
         self,
-        category: ProductType,
+        category: Category,
         symbol: str | None = None,
         base_coin: str | None = None,
         exp_date: str | None = None,
     ) -> dict:
-        """Получение информации о тикерах. В т.ч. статистику за 24 ч. и последнюю цену.
+        """Тикеры (вкл. 24h stats и last price).
 
         https://bybit-exchange.github.io/docs/v5/market/tickers
         """
@@ -168,16 +169,91 @@ class BybitClient(_BaseBybitClient):
 
         return self._make_request("GET", url, params=params)
 
-    def klines(
+    def mark_price_kline(
         self,
+        category: Category,
         symbol: str,
-        interval: FuturesTimeframe,
-        category: ProductType,
+        interval: Timeframe,
         start: int | None = None,
         end: int | None = None,
         limit: int | None = None,
     ) -> dict:
-        """Получение исторических свечей.
+        """Свечи по mark price.
+
+        https://bybit-exchange.github.io/docs/v5/market/mark-kline
+        """
+        url = self._BASE_URL + "/v5/market/mark-price-kline"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "interval": interval,
+            "start": start,
+            "end": end,
+            "limit": limit,
+        }
+
+        return self._make_request("GET", url, params=params)
+
+    def index_price_kline(
+        self,
+        category: Category,
+        symbol: str,
+        interval: Timeframe,
+        start: int | None = None,
+        end: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Свечи по index price.
+
+        https://bybit-exchange.github.io/docs/v5/market/index-kline
+        """
+        url = self._BASE_URL + "/v5/market/index-price-kline"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "interval": interval,
+            "start": start,
+            "end": end,
+            "limit": limit,
+        }
+
+        return self._make_request("GET", url, params=params)
+
+    def premium_index_price_kline(
+        self,
+        category: Category,
+        symbol: str,
+        interval: Timeframe,
+        start: int | None = None,
+        end: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Свечи по premium index price.
+
+        https://bybit-exchange.github.io/docs/v5/market/premium-index-kline
+        """
+        url = self._BASE_URL + "/v5/market/premium-index-price-kline"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "interval": interval,
+            "start": start,
+            "end": end,
+            "limit": limit,
+        }
+
+        return self._make_request("GET", url, params=params)
+
+    def klines(
+        self,
+        symbol: str,
+        interval: Timeframe,
+        category: Category,
+        start: int | None = None,
+        end: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Исторические свечи.
 
         https://bybit-exchange.github.io/docs/v5/market/kline
         """
@@ -193,39 +269,121 @@ class BybitClient(_BaseBybitClient):
 
         return self._make_request("GET", url, params=params)
 
-    # ========== PRIVATE ENDPOINTS ==========
-
-    def order_history(
+    def recent_trades(
         self,
-        category: ProductType,
-        symbol: str | None = None,
-        base_coin: str | None = None,
-        settle_coin: str | None = None,
-        order_id: str | None = None,
-        order_link_id: str | None = None,
+        category: Category,
+        symbol: str,
         limit: int | None = None,
-        cursor: str | None = None,
     ) -> dict:
-        """Получение истории ордеров.
+        """Последние сделки.
 
-        https://bybit-exchange.github.io/docs/v5/order/order-list
+        https://bybit-exchange.github.io/docs/v5/market/recent-trade
         """
-        url = self._BASE_URL + "/v5/order/history"
+        url = self._BASE_URL + "/v5/market/recent-trade"
+        params = {"category": category, "symbol": symbol, "limit": limit}
+
+        return self._make_request("GET", url, params=params)
+
+    def orderbook(
+        self,
+        category: Category,
+        symbol: str,
+        limit: int | None = None,
+    ) -> dict:
+        """Стакан ордеров (Order Book).
+
+        https://bybit-exchange.github.io/docs/v5/market/orderbook
+        """
+        url = self._BASE_URL + "/v5/market/orderbook"
+        params = {"category": category, "symbol": symbol, "limit": limit}
+
+        return self._make_request("GET", url, params=params)
+
+    def funding_history(
+        self,
+        category: Category,
+        symbol: str | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """История фондирования.
+
+        https://bybit-exchange.github.io/docs/v5/market/funding
+        """
+        url = self._BASE_URL + "/v5/market/funding/history"
         params = {
             "category": category,
             "symbol": symbol,
-            "baseCoin": base_coin,
-            "settleCoin": settle_coin,
-            "orderId": order_id,
-            "orderLinkId": order_link_id,
+            "startTime": start_time,
+            "endTime": end_time,
             "limit": limit,
-            "cursor": cursor,
         }
-        return self._make_request("GET", url, signed=True, params=params)
+
+        return self._make_request("GET", url, params=params)
+
+    def open_interest(
+        self,
+        category: Category,
+        symbol: str | None = None,
+        interval_time: str | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Открытый интерес.
+
+        https://bybit-exchange.github.io/docs/v5/market/open-interest
+        """
+        url = self._BASE_URL + "/v5/market/open-interest"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "intervalTime": interval_time,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+        }
+
+        return self._make_request("GET", url, params=params)
+
+    def insurance(self, coin: str | None = None) -> dict:
+        """Данные страхового фонда.
+
+        https://bybit-exchange.github.io/docs/v5/market/insurance
+        """
+        url = self._BASE_URL + "/v5/market/insurance"
+        params = {"coin": coin}
+
+        return self._make_request("GET", url, params=params)
+
+    def risk_limit(self, category: Category, symbol: str | None = None) -> dict:
+        """Лимиты риска по инструментам.
+
+        https://bybit-exchange.github.io/docs/v5/market/risk-limit
+        """
+        url = self._BASE_URL + "/v5/market/risk-limit"
+        params = {"category": category, "symbol": symbol}
+
+        return self._make_request("GET", url, params=params)
+
+    def delivery_price(self, category: Category, symbol: str) -> dict:
+        """Delivery price (для опционов/фьючерсов).
+
+        https://bybit-exchange.github.io/docs/v5/market/delivery-price
+        """
+        url = self._BASE_URL + "/v5/market/delivery-price"
+        params = {"category": category, "symbol": symbol}
+
+        return self._make_request("GET", url, params=params)
+
+    # ==========================================================================
+    # ORDER (Private)
+    # ==========================================================================
 
     def create_order(
         self,
-        category: ProductType,
+        category: Category,
         symbol: str,
         side: Side,
         orderType: OrderType,
@@ -298,14 +456,238 @@ class BybitClient(_BaseBybitClient):
 
         return self._make_request("POST", url, True, params=params)
 
+    def amend_order(
+        self,
+        category: Category,
+        symbol: str,
+        orderId: str | None = None,
+        orderLinkId: str | None = None,
+        qty: str | None = None,
+        price: str | None = None,
+        triggerPrice: str | None = None,
+        takeProfit: str | None = None,
+        stopLoss: str | None = None,
+        tpTriggerBy: str | None = None,
+        slTriggerBy: str | None = None,
+        triggerBy: str | None = None,
+        tpslMode: str | None = None,
+        tpLimitPrice: str | None = None,
+        slLimitPrice: str | None = None,
+        tpOrderType: str | None = None,
+        slOrderType: str | None = None,
+        orderIv: str | None = None,
+        reduceOnly: bool | None = None,
+        closeOnTrigger: bool | None = None,
+        smpType: str | None = None,
+        mmp: bool | None = None,
+    ) -> dict:
+        """Изменение ордера.
+
+        https://bybit-exchange.github.io/docs/v5/order/amend-order
+        """
+        url = self._BASE_URL + "/v5/order/amend"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "orderId": orderId,
+            "orderLinkId": orderLinkId,
+            "qty": qty,
+            "price": price,
+            "triggerPrice": triggerPrice,
+            "takeProfit": takeProfit,
+            "stopLoss": stopLoss,
+            "tpTriggerBy": tpTriggerBy,
+            "slTriggerBy": slTriggerBy,
+            "triggerBy": triggerBy,
+            "tpslMode": tpslMode,
+            "tpLimitPrice": tpLimitPrice,
+            "slLimitPrice": slLimitPrice,
+            "tpOrderType": tpOrderType,
+            "slOrderType": slOrderType,
+            "orderIv": orderIv,
+            "reduceOnly": reduceOnly,
+            "closeOnTrigger": closeOnTrigger,
+            "smpType": smpType,
+            "mmp": mmp,
+        }
+
+        return self._make_request("POST", url, True, params=params)
+
+    def cancel_order(
+        self,
+        category: Category,
+        symbol: str,
+        orderId: str | None = None,
+        orderLinkId: str | None = None,
+        orderFilter: str | None = None,
+    ) -> dict:
+        """Отмена ордера.
+
+        https://bybit-exchange.github.io/docs/v5/order/cancel-order
+        """
+        url = self._BASE_URL + "/v5/order/cancel"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "orderId": orderId,
+            "orderLinkId": orderLinkId,
+            "orderFilter": orderFilter,
+        }
+
+        return self._make_request("POST", url, True, params=params)
+
+    def cancel_all_orders(
+        self,
+        category: Category,
+        symbol: str | None = None,
+        base_coin: str | None = None,
+        settle_coin: str | None = None,
+        orderFilter: str | None = None,
+        stopOrderType: str | None = None,
+    ) -> dict:
+        """Отмена всех ордеров.
+
+        https://bybit-exchange.github.io/docs/v5/order/cancel-all
+        """
+        url = self._BASE_URL + "/v5/order/cancel-all"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "baseCoin": base_coin,
+            "settleCoin": settle_coin,
+            "orderFilter": orderFilter,
+            "stopOrderType": stopOrderType,
+        }
+
+        return self._make_request("POST", url, True, params=params)
+
+    def open_orders(
+        self,
+        category: Category,
+        symbol: str | None = None,
+        base_coin: str | None = None,
+        settle_coin: str | None = None,
+        orderId: str | None = None,
+        orderLinkId: str | None = None,
+        orderFilter: str | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """Список открытых ордеров.
+
+        https://bybit-exchange.github.io/docs/v5/order/open-order
+        """
+        url = self._BASE_URL + "/v5/order/realtime"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "baseCoin": base_coin,
+            "settleCoin": settle_coin,
+            "orderId": orderId,
+            "orderLinkId": orderLinkId,
+            "orderFilter": orderFilter,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return self._make_request("GET", url, True, params=params)
+
+    def order_history(
+        self,
+        category: Category,
+        symbol: str | None = None,
+        base_coin: str | None = None,
+        settle_coin: str | None = None,
+        order_id: str | None = None,
+        order_link_id: str | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """История ордеров.
+
+        https://bybit-exchange.github.io/docs/v5/order/order-list
+        """
+        url = self._BASE_URL + "/v5/order/history"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "baseCoin": base_coin,
+            "settleCoin": settle_coin,
+            "orderId": order_id,
+            "orderLinkId": order_link_id,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return self._make_request("GET", url, signed=True, params=params)
+
+    def batch_create_orders(self, category: Category, request: list[dict]) -> dict:
+        """Пакетное создание ордеров.
+
+        https://bybit-exchange.github.io/docs/v5/order/batch-place
+        """
+        url = self._BASE_URL + "/v5/order/batch-create"
+        params = {"category": category, "request": request}
+
+        return self._make_request("POST", url, True, params=params)
+
+    def batch_amend_orders(self, category: Category, request: list[dict]) -> dict:
+        """Пакетное изменение ордеров.
+
+        https://bybit-exchange.github.io/docs/v5/order/batch-amend
+        """
+        url = self._BASE_URL + "/v5/order/batch-amend"
+        params = {"category": category, "request": request}
+
+        return self._make_request("POST", url, True, params=params)
+
+    def batch_cancel_orders(self, category: Category, request: list[dict]) -> dict:
+        """Пакетная отмена ордеров.
+
+        https://bybit-exchange.github.io/docs/v5/order/batch-cancel
+        """
+        url = self._BASE_URL + "/v5/order/batch-cancel"
+        params = {"category": category, "request": request}
+
+        return self._make_request("POST", url, True, params=params)
+
+    # ==========================================================================
+    # POSITION (Private)
+    # ==========================================================================
+
+    def positions(
+        self,
+        category: Category,
+        symbol: str | None = None,
+        base_coin: str | None = None,
+        settle_coin: str | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """Список позиций.
+
+        https://bybit-exchange.github.io/docs/v5/position/list
+        """
+        url = self._BASE_URL + "/v5/position/list"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "baseCoin": base_coin,
+            "settleCoin": settle_coin,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return self._make_request("GET", url, True, params=params)
+
     def set_leverage(
         self,
-        category: FuturesProductType,
+        category: FuturesCategory,
         symbol: str,
         buy_leverage: str,
         sell_leverage: str,
     ) -> dict:
-        """Установить кредитное плечо для позиции.
+        """Установить кредитное плечо.
 
         https://bybit-exchange.github.io/docs/v5/position/leverage
         """
@@ -319,4 +701,464 @@ class BybitClient(_BaseBybitClient):
 
         return self._make_request("POST", url, True, params=params)
 
-    # ========== WALLET ENDPOINTS ==========
+    def switch_isolated(
+        self,
+        category: FuturesCategory,
+        symbol: str,
+        tradeMode: int,
+        buyLeverage: str | None = None,
+        sellLeverage: str | None = None,
+    ) -> dict:
+        """Переключение режима маржи (cross/isolated).
+
+        https://bybit-exchange.github.io/docs/v5/position/switch-isolated
+        """
+        url = self._BASE_URL + "/v5/position/switch-isolated"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "tradeMode": tradeMode,
+            "buyLeverage": buyLeverage,
+            "sellLeverage": sellLeverage,
+        }
+
+        return self._make_request("POST", url, True, params=params)
+
+    def set_tpsl_mode(
+        self,
+        category: FuturesCategory,
+        symbol: str,
+        tpSlMode: str,
+    ) -> dict:
+        """Режим TP/SL (partial/full).
+
+        https://bybit-exchange.github.io/docs/v5/position/tpsl-mode
+        """
+        url = self._BASE_URL + "/v5/position/set-tpsl-mode"
+        params = {"category": category, "symbol": symbol, "tpSlMode": tpSlMode}
+
+        return self._make_request("POST", url, True, params=params)
+
+    def set_trading_stop(
+        self,
+        category: FuturesCategory,
+        symbol: str,
+        takeProfit: str | None = None,
+        stopLoss: str | None = None,
+        trailingStop: str | None = None,
+        tpTriggerBy: str | None = None,
+        slTriggerBy: str | None = None,
+        positionIdx: int | None = None,
+        tpslMode: str | None = None,
+        tpLimitPrice: str | None = None,
+        slLimitPrice: str | None = None,
+        tpOrderType: str | None = None,
+        slOrderType: str | None = None,
+    ) -> dict:
+        """Установка TP/SL/Trailing Stop.
+
+        https://bybit-exchange.github.io/docs/v5/position/trading-stop
+        """
+        url = self._BASE_URL + "/v5/position/trading-stop"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "takeProfit": takeProfit,
+            "stopLoss": stopLoss,
+            "trailingStop": trailingStop,
+            "tpTriggerBy": tpTriggerBy,
+            "slTriggerBy": slTriggerBy,
+            "positionIdx": positionIdx,
+            "tpslMode": tpslMode,
+            "tpLimitPrice": tpLimitPrice,
+            "slLimitPrice": slLimitPrice,
+            "tpOrderType": tpOrderType,
+            "slOrderType": slOrderType,
+        }
+
+        return self._make_request("POST", url, True, params=params)
+
+    def set_risk_limit(
+        self,
+        category: FuturesCategory,
+        symbol: str,
+        riskId: int,
+        positionIdx: int | None = None,
+    ) -> dict:
+        """Установка лимита риска.
+
+        https://bybit-exchange.github.io/docs/v5/position/set-risk-limit
+        """
+        url = self._BASE_URL + "/v5/position/set-risk-limit"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "riskId": riskId,
+            "positionIdx": positionIdx,
+        }
+
+        return self._make_request("POST", url, True, params=params)
+
+    def set_auto_add_margin(
+        self,
+        category: FuturesCategory,
+        symbol: str,
+        autoAddMargin: int,
+        positionIdx: int | None = None,
+    ) -> dict:
+        """Auto add margin (вкл/выкл).
+
+        https://bybit-exchange.github.io/docs/v5/position/auto-add-margin
+        """
+        url = self._BASE_URL + "/v5/position/set-auto-add-margin"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "autoAddMargin": autoAddMargin,
+            "positionIdx": positionIdx,
+        }
+
+        return self._make_request("POST", url, True, params=params)
+
+    def switch_position_mode(self, category: FuturesCategory, symbol: str, mode: int) -> dict:
+        """Hedge (двунаправленный) / One-way режим.
+
+        https://bybit-exchange.github.io/docs/v5/position/switch-mode
+        """
+        url = self._BASE_URL + "/v5/position/switch-mode"
+        params = {"category": category, "symbol": symbol, "mode": mode}
+
+        return self._make_request("POST", url, True, params=params)
+
+    # ==========================================================================
+    # ACCOUNT (Private)
+    # ==========================================================================
+
+    def wallet_balance(
+        self,
+        accountType: str,
+        coin: str | None = None,
+    ) -> dict:
+        """Баланс кошелька.
+
+        https://bybit-exchange.github.io/docs/v5/account/wallet-balance
+        """
+        url = self._BASE_URL + "/v5/account/wallet-balance"
+        params = {"accountType": accountType, "coin": coin}
+
+        return self._make_request("GET", url, True, params=params)
+
+    def fee_rate(
+        self, category: Category, symbol: str | None = None, base_coin: str | None = None
+    ) -> dict:
+        """Торговые комиссии (ваши персональные).
+
+        https://bybit-exchange.github.io/docs/v5/account/fee-rate
+        """
+        url = self._BASE_URL + "/v5/account/fee-rate"
+        params = {"category": category, "symbol": symbol, "baseCoin": base_coin}
+
+        return self._make_request("GET", url, True, params=params)
+
+    def transaction_log(
+        self,
+        accountType: str,
+        category: str | None = None,
+        currency: str | None = None,
+        base_coin: str | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """Транзакционный лог (сводка движений средств).
+
+        https://bybit-exchange.github.io/docs/v5/account/transaction-log
+        """
+        url = self._BASE_URL + "/v5/account/transaction-log"
+        params = {
+            "accountType": accountType,
+            "category": category,
+            "currency": currency,
+            "baseCoin": base_coin,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return self._make_request("GET", url, True, params=params)
+
+    def set_margin_mode(
+        self,
+        setMarginMode: int,
+        productType: str,
+    ) -> dict:
+        """Unified Margin / Portfolio Margin переключение режима (если доступно).
+
+        https://bybit-exchange.github.io/docs/v5/account/set-margin-mode
+        """
+        url = self._BASE_URL + "/v5/account/set-margin-mode"
+        params = {"setMarginMode": setMarginMode, "productType": productType}
+
+        return self._make_request("POST", url, True, params=params)
+
+    def set_fee_rate(
+        self,
+        symbol: str,
+        takerFeeRate: str | None = None,
+        makerFeeRate: str | None = None,
+    ) -> dict:
+        """(Для брокеров/привилегий) Настройка своей комиссии — если доступно.
+
+        https://bybit-exchange.github.io/docs/v5/account/fee-rate
+        """
+        url = self._BASE_URL + "/v5/account/set-fee-rate"
+        params = {
+            "symbol": symbol,
+            "takerFeeRate": takerFeeRate,
+            "makerFeeRate": makerFeeRate,
+        }
+
+        return self._make_request("POST", url, True, params=params)
+
+    # ==========================================================================
+    # ASSET / WALLET (Private)
+    # ==========================================================================
+
+    def deposit_withdraw_status(
+        self,
+        coin: str | None = None,
+    ) -> dict:
+        """Статус депозита/вывода по монетам.
+
+        https://bybit-exchange.github.io/docs/v5/asset/coin-info
+        """
+        url = self._BASE_URL + "/v5/asset/coin/query-info"
+        params = {"coin": coin}
+
+        return self._make_request("GET", url, True, params=params)
+
+    def deposit_list(
+        self,
+        coin: str | None = None,
+        chainType: str | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        cursor: str | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Список депозитов.
+
+        https://bybit-exchange.github.io/docs/v5/asset/deposit
+        """
+        url = self._BASE_URL + "/v5/asset/deposit/query-record"
+        params = {
+            "coin": coin,
+            "chainType": chainType,
+            "startTime": start_time,
+            "endTime": end_time,
+            "cursor": cursor,
+            "limit": limit,
+        }
+
+        return self._make_request("GET", url, True, params=params)
+
+    def withdraw_list(
+        self,
+        coin: str | None = None,
+        withdrawType: int | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        cursor: str | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Список выводов.
+
+        https://bybit-exchange.github.io/docs/v5/asset/withdraw
+        """
+        url = self._BASE_URL + "/v5/asset/withdraw/query-record"
+        params = {
+            "coin": coin,
+            "withdrawType": withdrawType,
+            "startTime": start_time,
+            "endTime": end_time,
+            "cursor": cursor,
+            "limit": limit,
+        }
+
+        return self._make_request("GET", url, True, params=params)
+
+    def internal_transfer(
+        self,
+        transferId: str,
+        coin: str,
+        amount: str,
+        fromAccountType: str,
+        toAccountType: str,
+    ) -> dict:
+        """Внутренний перевод между счетами.
+
+        https://bybit-exchange.github.io/docs/v5/asset/transfer
+        """
+        url = self._BASE_URL + "/v5/asset/transfer/inter-transfer"
+        params = {
+            "transferId": transferId,
+            "coin": coin,
+            "amount": amount,
+            "fromAccountType": fromAccountType,
+            "toAccountType": toAccountType,
+        }
+
+        return self._make_request("POST", url, True, params=params)
+
+    def query_internal_transfer(
+        self,
+        transferId: str | None = None,
+        cursor: str | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Запрос статуса внутренних переводов.
+
+        https://bybit-exchange.github.io/docs/v5/asset/transfer
+        """
+        url = self._BASE_URL + "/v5/asset/transfer/query-inter-transfer-list"
+        params = {"transferId": transferId, "cursor": cursor, "limit": limit}
+
+        return self._make_request("GET", url, True, params=params)
+
+    def withdraw(
+        self,
+        coin: str,
+        chain: str,
+        address: str,
+        amount: str,
+        tag: str | None = None,
+        requestId: str | None = None,
+        timestamp: int | None = None,
+        forceChain: int | None = None,
+        accountType: str | None = None,
+    ) -> dict:
+        """Создание заявки на вывод.
+
+        https://bybit-exchange.github.io/docs/v5/asset/withdraw
+        """
+        url = self._BASE_URL + "/v5/asset/withdraw/create"
+        params = {
+            "coin": coin,
+            "chain": chain,
+            "address": address,
+            "amount": amount,
+            "tag": tag,
+            "requestId": requestId,
+            "timestamp": timestamp,
+            "forceChain": forceChain,
+            "accountType": accountType,
+        }
+
+        return self._make_request("POST", url, True, params=params)
+
+    def cancel_withdraw(self, withdrawId: str) -> dict:
+        """Отмена вывода.
+
+        https://bybit-exchange.github.io/docs/v5/asset/withdraw
+        """
+        url = self._BASE_URL + "/v5/asset/withdraw/cancel"
+        params = {"withdrawId": withdrawId}
+
+        return self._make_request("POST", url, True, params=params)
+
+    def deposit_address(
+        self, coin: str, chainType: str | None = None, accountType: str | None = None
+    ) -> dict:
+        """Адрес депозита.
+
+        https://bybit-exchange.github.io/docs/v5/asset/deposit-address
+        """
+        url = self._BASE_URL + "/v5/asset/deposit/query-address"
+        params = {"coin": coin, "chainType": chainType, "accountType": accountType}
+
+        return self._make_request("GET", url, True, params=params)
+
+    # ==========================================================================
+    # SPOT MARGIN (Private)
+    # ==========================================================================
+
+    def spot_margin_switch(self, spotMarginMode: int) -> dict:
+        """Вкл/выкл Spot Margin Trading.
+
+        https://bybit-exchange.github.io/docs/v5/spot-margin/switch
+        """
+        url = self._BASE_URL + "/v5/spot-margin/switch"
+        params = {"spotMarginMode": spotMarginMode}
+
+        return self._make_request("POST", url, True, params=params)
+
+    def spot_margin_borrow_history(
+        self,
+        coin: str | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """История заимствований (Spot Margin).
+
+        https://bybit-exchange.github.io/docs/v5/spot-margin/borrow-history
+        """
+        url = self._BASE_URL + "/v5/spot-margin/borrow-history"
+        params = {
+            "coin": coin,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return self._make_request("GET", url, True, params=params)
+
+    # ==========================================================================
+    # OPTIONS (Public/Private) — базовые рыночные данные
+    # ==========================================================================
+
+    def options_delivery_price(self, symbol: str) -> dict:
+        """Delivery price для опциона.
+
+        https://bybit-exchange.github.io/docs/v5/market/delivery-price
+        """
+        url = self._BASE_URL + "/v5/market/delivery-price"
+        params = {"category": "option", "symbol": symbol}
+
+        return self._make_request("GET", url, params=params)
+
+    # ==========================================================================
+    # COPY TRADING / BROKER / LOAN
+    # ==========================================================================
+
+    def broker_earnings(
+        self,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        cursor: str | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Доходы брокера (если аккаунт поддерживает).
+
+        https://bybit-exchange.github.io/docs/v5/broker/...
+        """
+        url = self._BASE_URL + "/v5/broker/earnings"
+        params = {"startTime": start_time, "endTime": end_time, "cursor": cursor, "limit": limit}
+
+        return self._make_request("GET", url, True, params=params)
+
+    def institutional_loan_list(
+        self, status: str | None = None, cursor: str | None = None, limit: int | None = None
+    ) -> dict:
+        """Список займов (Institutional Loan).
+
+        https://bybit-exchange.github.io/docs/v5/loan/...
+        """
+        url = self._BASE_URL + "/v5/loan/query-list"
+        params = {"status": status, "cursor": cursor, "limit": limit}
+
+        return self._make_request("GET", url, True, params=params)

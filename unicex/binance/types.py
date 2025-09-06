@@ -356,3 +356,18 @@ type FilterType = Literal[
     "TRAILING_DELTA",
 ]
 """Возможные типы фильтров символов."""
+
+type PriceMatch = Literal[
+    "OPPONENT",
+    "OPPONENT_5",
+    "OPPONENT_10",
+    "OPPONENT_20",
+    "QUEUE",
+    "QUEUE_5",
+    "QUEUE_10",
+    "QUEUE_20",
+]
+"""Возможные типы ценовой совместимости."""
+
+type AutoCloseType = Literal["LIQUIDATION", "ADL"]
+"""Возможные типы автоматического закрытия позиции."""

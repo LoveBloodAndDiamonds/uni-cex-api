@@ -19,7 +19,6 @@ class IAdapter(ABC):
         Возвращает:
             list[str]: Список тикеров.
         """
-        raise NotImplementedError()
 
     @staticmethod
     @abstractmethod
@@ -33,7 +32,6 @@ class IAdapter(ABC):
         Возвращает:
             list[str]: Список тикеров.
         """
-        raise NotImplementedError()
 
     @staticmethod
     @abstractmethod
@@ -47,7 +45,6 @@ class IAdapter(ABC):
         Возвращает:
             dict[str, TickerDailyDict]: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
         """
-        raise NotImplementedError()
 
     @staticmethod
     @abstractmethod
@@ -61,7 +58,6 @@ class IAdapter(ABC):
         Возвращает:
             dict[str, TickerDailyDict]: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
         """
-        raise NotImplementedError()
 
     @staticmethod
     @abstractmethod
@@ -74,7 +70,6 @@ class IAdapter(ABC):
         Возвращает:
             dict[str, float]: Словарь, где ключ - тикер, а значение - последняя цена.
         """
-        raise NotImplementedError()
 
     @staticmethod
     @abstractmethod
@@ -87,7 +82,6 @@ class IAdapter(ABC):
         Возвращает:
             dict[str, float]: Словарь, где ключ - тикер, а значение - последняя цена.
         """
-        raise NotImplementedError()
 
     @staticmethod
     @abstractmethod
@@ -100,7 +94,6 @@ class IAdapter(ABC):
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
         """
-        raise NotImplementedError()
 
     @staticmethod
     @abstractmethod
@@ -113,7 +106,6 @@ class IAdapter(ABC):
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
         """
-        raise NotImplementedError()
 
     @staticmethod
     @abstractmethod
@@ -127,4 +119,3 @@ class IAdapter(ABC):
         Возвращает:
             dict[str, float]: Словарь, где ключ - тикер, а значение - ставка финансирования.
         """
-        raise NotImplementedError()

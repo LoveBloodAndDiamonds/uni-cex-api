@@ -290,7 +290,7 @@ class BaseAsyncClient:
         """Функция обрабатывает ответ от HTTP запроса.
 
         Параметры:
-            response (requests.Response): Ответ от HTTP запроса.
+            response (aiohttp.ClientResponse): Ответ от HTTP запроса.
 
         Возвращает:
             dict | list: Обработанный ответ в виде словаря или списка.
