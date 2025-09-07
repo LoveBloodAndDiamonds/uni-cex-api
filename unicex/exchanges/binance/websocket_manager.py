@@ -1,19 +1,26 @@
 from collections.abc import Callable
 
-from unicex.base import BaseSyncClient, BaseSyncWebsocket
+from unicex.base import BaseSyncWebsocket
 
-from .types import StreamType
+from .client import BinanceClient
+from .types import (
+    BookDepthLevels,
+    ContinuousContractType,
+    FuturesTimeframe,
+    MarkPriceUpdateSpeed,
+    RollingWindowSize,
+    SpotTimeframe,
+)
 
 
 class BinanceWebsocketManager:
     """Менеджер вебсокетов для Binance."""
 
-    # _BASE_SPOT_URL: str = "wss://stream.binance.com:9443"
-    _BASE_SPOT_URL: str = "wss://stream.binance.com:443"
+    _BASE_SPOT_URL: str = "wss://stream.binance.com:9443"
     _BASE_FUTURES_URL: str = "wss://fstream.binance.com"
     _TESTNET_FUTURES_URL: str = "wss://testnet.binancefuture.com/ws-fapi/v1"
 
-    def __init__(self, client: BaseSyncClient | None = None) -> None:
+    def __init__(self, client: BinanceClient | None = None) -> None:
         """Инициализирует менеджер вебсокетов для Binance.
 
         Параметры:
@@ -24,16 +31,16 @@ class BinanceWebsocketManager:
     @classmethod
     def set_base_spot_url(cls, url: str = "wss://stream.binance.com:443") -> None:
         """Устанавливает базовый URL для вебсокетов Binance Spot."""
-        cls._BASE_SPOT_WS_URL = url
+        cls._BASE_SPOT_URL = url
 
     @classmethod
     def set_base_futures_url(cls, url: str) -> None:
         """Устанавливает базовый URL для вебсокетов Binance Futures."""
-        cls._BASE_FUTURES_WS_URL = url
+        cls._BASE_FUTURES_URL = url
 
     def _generate_stream_url(
         self,
-        type: StreamType,
+        type: str,
         url: str,
         symbol: str | None = None,
         symbols: list[str] | None = None,
@@ -52,13 +59,213 @@ class BinanceWebsocketManager:
         if symbol and symbols:
             raise ValueError("Parameters symbol and symbols cannot be used together")
         if symbol:
-            return f"{url}/{symbol.lower()}@{type}"
+            return f"{url}/ws/{symbol.lower()}@{type}"
         if symbols:
-            return f"{url}/{'!'.join([symbol.lower() for symbol in symbols])}@{type}"
-        return f"{url}/@{type}"
+            streams = "/".join(f"{s.lower()}@{type}" for s in symbols)
+            return f"{url}/stream?streams={streams}"
+        return f"{url}/ws/{type}"
+
+    def trade(self, callback: Callable, symbol: str) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения сделок."""
+        url = self._generate_stream_url(type="trade", url=self._BASE_SPOT_URL, symbol=symbol)
+        return BaseSyncWebsocket(callback=callback, url=url)
 
     def agg_trade(self, callback: Callable, symbol: str) -> BaseSyncWebsocket:
         """Создает вебсокет для получения агрегированных сделок."""
         url = self._generate_stream_url(type="aggTrade", url=self._BASE_SPOT_URL, symbol=symbol)
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def kline(self, callback: Callable, symbol: str, interval: SpotTimeframe) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения свечей."""
+        url = self._generate_stream_url(
+            type=f"kline_{interval}", url=self._BASE_SPOT_URL, symbol=symbol
+        )
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def depth_stream(self, callback: Callable, symbol: str) -> BaseSyncWebsocket:  # todo
+        """Создает вебсокет для получения событий изменения стакана (без лимита глубины)."""
+        url = self._generate_stream_url(type="depth", url=self._BASE_SPOT_URL, symbol=symbol)
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def symbol_mini_ticker(self, callback: Callable, symbol: str) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения мини-статистики тикера за последние 24 ч. (Не за сутки)."""
+        url = self._generate_stream_url(type="miniTicker", url=self._BASE_SPOT_URL, symbol=symbol)
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def mini_ticker(self, callback: Callable) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения мини-статистики всех тикеров за последние 24 ч. (Не за сутки)."""
+        url = self._generate_stream_url(type="!miniTicker@arr", url=self._BASE_SPOT_URL)
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def symbol_ticker(self, callback: Callable, symbol: str) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения расширенной статистики тикера за последние 24 ч. (Не за сутки)."""
+        url = self._generate_stream_url(type="ticker", url=self._BASE_SPOT_URL, symbol=symbol)
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def ticker(self, callback: Callable) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения расширенной статистики всех тикеров за последние 24 ч. (Не за сутки)."""
+        url = self._generate_stream_url(type="!ticker@arr", url=self._BASE_SPOT_URL)
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def symbol_rolling_window_ticker(
+        self, callback: Callable, symbol: str, window: RollingWindowSize
+    ) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения статистики тикера за указанное окно времени."""
+        url = self._generate_stream_url(
+            type=f"ticker_{window}", url=self._BASE_SPOT_URL, symbol=symbol
+        )
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def rolling_window_ticker(
+        self, callback: Callable, window: RollingWindowSize
+    ) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения статистики всех тикеров за указанное окно времени."""
+        url = self._generate_stream_url(type=f"!ticker_{window}@arr", url=self._BASE_SPOT_URL)
         print(url)
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def avg_price(self, callback: Callable, symbol: str) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения среднего прайса (Average Price)."""
+        url = self._generate_stream_url(type="avgPrice", url=self._BASE_SPOT_URL, symbol=symbol)
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def book_ticker(self, callback: Callable, symbol: str) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения лучших бид/аск по символу."""
+        url = self._generate_stream_url(type="bookTicker", url=self._BASE_SPOT_URL, symbol=symbol)
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def book_depth(
+        self, callback: Callable, symbol: str, levels: BookDepthLevels
+    ) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения стакана глубиной N уровней."""
+        url = self._generate_stream_url(
+            type=f"depth{levels}", url=self._BASE_SPOT_URL, symbol=symbol
+        )
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def futures_trade(self, callback: Callable, symbol: str) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения сделок."""
+        url = self._generate_stream_url(type="trade", url=self._BASE_FUTURES_URL, symbol=symbol)
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def futures_agg_trade(self, callback: Callable, symbol: str) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения агрегированных сделок."""
+        url = self._generate_stream_url(type="aggTrade", url=self._BASE_FUTURES_URL, symbol=symbol)
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def futures_kline(
+        self, callback: Callable, symbol: str, interval: FuturesTimeframe
+    ) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения свечей."""
+        url = self._generate_stream_url(
+            type=f"kline_{interval}", url=self._BASE_FUTURES_URL, symbol=symbol
+        )
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def futures_symbol_mini_ticker(self, callback: Callable, symbol: str) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения мини-статистики тикера за последние 24 ч. (Не за сутки)."""
+        url = self._generate_stream_url(
+            type="miniTicker", url=self._BASE_FUTURES_URL, symbol=symbol
+        )
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def futures_mini_ticker(self, callback: Callable) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения мини-статистики всех тикеров за последние 24 ч. (Не за сутки)."""
+        url = self._generate_stream_url(type="!miniTicker@arr", url=self._BASE_FUTURES_URL)
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def futures_symbol_ticker(self, callback: Callable, symbol: str) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения расширенной статистики тикера за последние 24 ч. (Не за сутки)."""
+        url = self._generate_stream_url(type="ticker", url=self._BASE_FUTURES_URL, symbol=symbol)
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def futures_ticker(self, callback: Callable) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения расширенной статистики всех тикеров за последние 24 ч. (Не за сутки)."""
+        url = self._generate_stream_url(type="!ticker@arr", url=self._BASE_FUTURES_URL)
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def futures_book_ticker(self, callback: Callable, symbol: str) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения лучших бид/аск по символу."""
+        url = self._generate_stream_url(
+            type="bookTicker", url=self._BASE_FUTURES_URL, symbol=symbol
+        )
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def futures_book_depth(
+        self, callback: Callable, symbol: str, levels: BookDepthLevels
+    ) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения стакана глубиной N уровней."""
+        url = self._generate_stream_url(
+            type=f"depth{levels}", url=self._BASE_FUTURES_URL, symbol=symbol
+        )
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def futures_depth_stream(self, callback: Callable, symbol: str) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения событий изменения стакана (без лимита глубины)."""
+        url = self._generate_stream_url(type="depth", url=self._BASE_FUTURES_URL, symbol=symbol)
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def futures_mark_price(
+        self, callback: Callable, interval: MarkPriceUpdateSpeed = "1s"
+    ) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения mark price и funding rate для всех тикеров."""
+        if interval == "1s":
+            type = f"!markPrice@arr@{interval}"
+        else:
+            type = "!markPrice@arr"
+        url = self._generate_stream_url(type=type, url=self._BASE_FUTURES_URL)
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def futures_symbol_mark_price(
+        self, callback: Callable, symbol: str, interval: MarkPriceUpdateSpeed = "1s"
+    ) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения mark price и funding rate для всех тикеров."""
+        if interval == "1s":
+            type = f"markPrice@{interval}"
+        else:
+            type = "markPrice"
+        url = self._generate_stream_url(type=type, url=self._BASE_FUTURES_URL, symbol=symbol)
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def futures_continuous_kline(
+        self,
+        callback: Callable,
+        pair: str,
+        contract_type: ContinuousContractType,
+        interval: FuturesTimeframe,
+    ) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения свечей по непрерывным контрактам (continuous contract)."""
+        url = self._generate_stream_url(
+            type=f"{pair.lower()}_{contract_type}@continuousKline_{interval}",
+            url=self._BASE_FUTURES_URL,
+        )
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def liquidation_order(self, callback: Callable, symbol: str) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения ликвидационных ордеров по символу."""
+        url = self._generate_stream_url(
+            type="forceOrder", url=self._BASE_FUTURES_URL, symbol=symbol
+        )
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def all_liquidation_orders(self, callback: Callable) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения всех ликвидационных ордеров по рынку."""
+        url = self._generate_stream_url(type="!forceOrder@arr", url=self._BASE_FUTURES_URL)
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def futures_composite_index(self, callback: Callable, symbol: str) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения информации по композитному индексу (Не работает на 2025.09.07)."""
+        url = self._generate_stream_url(
+            type="compositeIndex", url=self._BASE_FUTURES_URL, symbol=symbol
+        )
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def futures_contract_info(self, callback: Callable) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения информации о контрактах (Contract Info Stream)."""
+        url = self._generate_stream_url(type="!contractInfo", url=self._BASE_FUTURES_URL)
+        return BaseSyncWebsocket(callback=callback, url=url)
+
+    def futures_multi_assets_index(self, callback: Callable) -> BaseSyncWebsocket:
+        """Создает вебсокет для получения индекса активов в режиме Multi-Assets Mode."""
+        url = self._generate_stream_url(type="!assetIndex@arr", url=self._BASE_FUTURES_URL)
         return BaseSyncWebsocket(callback=callback, url=url)

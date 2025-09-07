@@ -1,15 +1,19 @@
 __all__ = [
     "AsyncBinanceClient",
-    "AsyncBinanceUniClient",
     "BinanceAdapter",
     "BinanceClient",
-    "BinanceUniClient",
+    "UniBinanceClient",
+    "UniBinanceWebsocketManager",
+    "AsyncUniBinanceClient",
+    "BinanceWebsocketManager",
 ]
 
 from .binance import (
     AsyncBinanceClient,
-    AsyncBinanceUniClient,
+    AsyncUniBinanceClient,
     BinanceAdapter,
     BinanceClient,
-    BinanceUniClient,
+    BinanceWebsocketManager,
+    UniBinanceClient,
+    UniBinanceWebsocketManager,
 )

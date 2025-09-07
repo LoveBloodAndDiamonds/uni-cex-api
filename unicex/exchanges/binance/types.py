@@ -236,26 +236,6 @@ type IncomeType = Literal[
 type FuturesTransferType = Literal["1", "2", "3", "4"]
 """Возможные типы переводов: 1-spot to futures, 2-futures to spot, 3-spot to delivery, 4-delivery to spot."""
 
-type KlineInterval = Literal[
-    "1s",
-    "1m",
-    "3m",
-    "5m",
-    "15m",
-    "30m",
-    "1h",
-    "2h",
-    "4h",
-    "6h",
-    "8h",
-    "12h",
-    "1d",
-    "3d",
-    "1w",
-    "1M",
-]
-"""Возможные интервалы для свечей."""
-
 type TransferType = Literal[
     "MAIN_UMFUTURE",
     "MAIN_CMFUTURE",
@@ -372,5 +352,14 @@ type PriceMatch = Literal[
 type AutoCloseType = Literal["LIQUIDATION", "ADL"]
 """Возможные типы автоматического закрытия позиции."""
 
-type StreamType = Literal["aggTrade", "markPrice", "markPrice@1s"]
-"""Возможные типы подписок на вебсокеты."""
+type RollingWindowSize = Literal["1h", "4h", "1d"]
+"""Возможные размеры окна для вебсокета статистики тикеров."""
+
+type BookDepthLevels = Literal[5, 10, 20]
+"""Возможные уровни глубины стакана."""
+
+type MarkPriceUpdateSpeed = Literal["", "1s"]
+"""Возможные скорости обновления для стрима futures mark price."""
+
+type ContinuousContractType = Literal["perpetual", "current_quarter", "next_quarter"]
+"""Возможные типы контрактов на для стрима continuous contract kline / candlestick streams."""

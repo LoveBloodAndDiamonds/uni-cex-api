@@ -1,4 +1,4 @@
-from unicex.binance.client import BinanceClient
+from unicex.exchanges.binance.client import BinanceClient
 from unicex.enums import Timeframe
 
 from pprint import pp as print  # noqa # type: ignore
@@ -19,7 +19,9 @@ def main() -> None:
 
         # r = cl.all_orders("BTCUSDT")
 
-        r = cl.order_create(symbol="TRXUSDT", side="SELL", type="MARKET", quantity=19)
+        # r = cl.order_create(symbol="TRXUSDT", side="SELL", type="MARKET", quantity=19)
+
+        r = cl.futures_listen_key()
 
         print(r)
 

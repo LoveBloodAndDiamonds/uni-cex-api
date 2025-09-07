@@ -11,7 +11,11 @@ def main() -> None:
     # exit()
 
     bwm = BinanceWebsocketManager()
-    ws = bwm.agg_trade(callback=lambda m: print(m), symbol="BTCUSDT")
+    # ws = bwm.mini_ticker(callback=lambda m: print(m), symbol="ETHUSDT")
+    # ws = bwm.futures_continuous_kline(
+    #     callback=lambda m: print(m), pair="BTCUSDT", contract_type="perpetual", interval="1m"
+    # )
+    ws = bwm.futures_composite_index(callback=lambda m: print(m), symbol="ETHUSDT")
     ws.start()
     import time
 

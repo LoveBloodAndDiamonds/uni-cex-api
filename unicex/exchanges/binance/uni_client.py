@@ -1,6 +1,6 @@
 __all__ = [
-    "BinanceUniClient",
-    "AsyncBinanceUniClient",
+    "UniBinanceClient",
+    "AsyncUniBinanceClient",
 ]
 
 from functools import cached_property
@@ -13,7 +13,7 @@ from .adapter import BinanceAdapter
 from .client import AsyncBinanceClient, BinanceClient
 
 
-class BinanceUniClient(ISyncUniClient[BinanceClient]):
+class UniBinanceClient(ISyncUniClient[BinanceClient]):
     """Унифицированный клиент для работы с Binance API."""
 
     @cached_property
@@ -165,7 +165,7 @@ class BinanceUniClient(ISyncUniClient[BinanceClient]):
         return self.adapter.funding_rate(raw_data, only_usdt)  # type: ignore | raw_data is list[dict] if symbol param is not ommited
 
 
-class AsyncBinanceUniClient(IAsyncUniClient[AsyncBinanceClient]):
+class AsyncUniBinanceClient(IAsyncUniClient[AsyncBinanceClient]):
     """Унифицированный клиент для работы с Binance API."""
 
     @cached_property
