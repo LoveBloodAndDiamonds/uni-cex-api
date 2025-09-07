@@ -82,7 +82,7 @@ class BinanceWebsocketManager:
         )
         return BaseSyncWebsocket(callback=callback, url=url)
 
-    def depth_stream(self, callback: Callable, symbol: str) -> BaseSyncWebsocket:  # todo
+    def depth_stream(self, callback: Callable, symbol: str) -> BaseSyncWebsocket:
         """Создает вебсокет для получения событий изменения стакана (без лимита глубины)."""
         url = self._generate_stream_url(type="depth", url=self._BASE_SPOT_URL, symbol=symbol)
         return BaseSyncWebsocket(callback=callback, url=url)
