@@ -11,6 +11,7 @@ from .types import (
     RollingWindowSize,
     SpotTimeframe,
 )
+from .user_websocket import BinanceUserWebsocket
 
 
 class BinanceWebsocketManager:
@@ -269,3 +270,9 @@ class BinanceWebsocketManager:
         """Создает вебсокет для получения индекса активов в режиме Multi-Assets Mode."""
         url = self._generate_stream_url(type="!assetIndex@arr", url=self._BASE_FUTURES_URL)
         return BaseSyncWebsocket(callback=callback, url=url)
+
+    def user_data_stream(self, callback: Callable) -> BinanceUserWebsocket:
+        """Создает вебсокет для получения информации о пользовательских данных."""
+        if not self.client:
+            pass
+        return BinanceUserWebsocket()

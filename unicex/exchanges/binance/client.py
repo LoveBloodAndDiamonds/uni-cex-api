@@ -1614,7 +1614,7 @@ class BinanceClient(_BinanceMixin, BaseSyncClient):
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/listenKey"
 
-        return self._make_request("POST", url)
+        return self._make_request("POST", url, True)
 
     def futures_renew_listen_key(self) -> dict:
         """Обновление ключа прослушивания для подключения к пользовательскому вебсокету.
@@ -1623,7 +1623,7 @@ class BinanceClient(_BinanceMixin, BaseSyncClient):
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/listenKey"
 
-        return self._make_request("PUT", url)
+        return self._make_request("PUT", url, True)
 
     def futures_close_listen_key(self) -> dict:
         """Закрытие ключа прослушивания для подключения к пользовательскому вебсокету.
@@ -1632,7 +1632,7 @@ class BinanceClient(_BinanceMixin, BaseSyncClient):
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/listenKey"
 
-        return self._make_request("DELETE", url)
+        return self._make_request("DELETE", url, True)
 
 
 class AsyncBinanceClient(_BinanceMixin, BaseAsyncClient):
@@ -3086,3 +3086,78 @@ class AsyncBinanceClient(_BinanceMixin, BaseAsyncClient):
         }
 
         return await self._make_request("GET", url, True, params=params)
+
+    # ========== SPOT LISTEN KEY ENDPOINTS ==========
+
+    async def listen_key(self) -> dict:
+        """Создание ключа прослушивания для подключения к пользовательскому вебсокету.
+
+        https://developers.binance.com/docs/binance-spot-api-docs/testnet/rest-api/user-data-stream-endpoints-deprecated#start-user-data-stream-user_stream-deprecated
+        """
+        warnings.warn(
+            "[!IMPORTANT] These requests have been deprecated, which means we will remove them in the future. Please subscribe to the User Data Stream through the WebSocket API instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        url = self._BASE_SPOT_URL + "/api/v3/userDataStream"
+
+        return await self._make_request("POST", url)
+
+    async def renew_listen_key(self, listen_key: str) -> dict:
+        """Обновление ключа прослушивания для подключения к пользовательскому вебсокету.
+
+        https://developers.binance.com/docs/binance-spot-api-docs/testnet/rest-api/user-data-stream-endpoints-deprecated#keepalive-user-data-stream-user_stream-deprecated
+        """
+        warnings.warn(
+            "[!IMPORTANT] These requests have been deprecated, which means we will remove them in the future. Please subscribe to the User Data Stream through the WebSocket API instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        url = self._BASE_SPOT_URL + "/api/v3/userDataStream"
+        params = {"listenKey": listen_key}
+
+        return await self._make_request("PUT", url, params=params)
+
+    async def close_listen_key(self, listen_key: str) -> dict:
+        """Закрытие ключа прослушивания для подключения к пользовательскому вебсокету.
+
+        https://developers.binance.com/docs/binance-spot-api-docs/testnet/rest-api/user-data-stream-endpoints-deprecated#close-user-data-stream-user_stream-deprecated
+        """
+        warnings.warn(
+            "[!IMPORTANT] These requests have been deprecated, which means we will remove them in the future. Please subscribe to the User Data Stream through the WebSocket API instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        url = self._BASE_SPOT_URL + "/api/v3/userDataStream"
+        params = {"listenKey": listen_key}
+
+        return await self._make_request("DELETE", url, params=params)
+
+    # ========== FUTURES LISTEN KEY ENDPOINTS ==========
+
+    async def futures_listen_key(self) -> dict:
+        """Создание ключа прослушивания для подключения к пользовательскому вебсокету.
+
+        https://developers.binance.com/docs/derivatives/usds-margined-futures/user-data-streams/Start-User-Data-Stream#api-description
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v1/listenKey"
+
+        return await self._make_request("POST", url, True)
+
+    async def futures_renew_listen_key(self) -> dict:
+        """Обновление ключа прослушивания для подключения к пользовательскому вебсокету.
+
+        https://developers.binance.com/docs/derivatives/usds-margined-futures/user-data-streams
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v1/listenKey"
+
+        return await self._make_request("PUT", url, True)
+
+    async def futures_close_listen_key(self) -> dict:
+        """Закрытие ключа прослушивания для подключения к пользовательскому вебсокету.
+
+        https://developers.binance.com/docs/derivatives/usds-margined-futures/user-data-streams
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v1/listenKey"
+
+        return await self._make_request("DELETE", url, True)

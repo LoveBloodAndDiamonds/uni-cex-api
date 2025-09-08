@@ -1,15 +1,16 @@
+from os import getenv
+
 from unicex.exchanges.binance.client import BinanceClient
 from unicex.enums import Timeframe
 
 from pprint import pp as print  # noqa # type: ignore
-from tests.keys import binance_api, binance_secret
 
 
 def main() -> None:
     """Main entry point for the application."""
     client = BinanceClient(
-        api_key=binance_api,
-        api_secret=binance_secret,
+        api_key=getenv("BINANCE_API_KEY"),
+        api_secret=getenv("BINANCE_API_SECRET"),
     )
 
     with client as cl:
@@ -21,7 +22,11 @@ def main() -> None:
 
         # r = cl.order_create(symbol="TRXUSDT", side="SELL", type="MARKET", quantity=19)
 
+        # 2kmVLdWzz5AwUWOqU6sbuuLmlOnKS3THP7g44FSStAl6eAFyU5eUstxSdc4EWTs7
+
         r = cl.futures_listen_key()
+
+        # r = cl.futures_close_listen_key()
 
         print(r)
 

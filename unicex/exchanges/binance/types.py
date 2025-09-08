@@ -267,7 +267,7 @@ type TransferType = Literal[
 ]
 """Возможные типы внутренних переводов."""
 
-type AccountType = Literal["SPOT", "MARGIN", "FUTURES", "LEVERAGED"]
+type AccountType = Literal["SPOT", "MARGIN", "FUTURES"]
 """Возможные типы аккаунтов."""
 
 type SymbolType = Literal["SPOT"]
