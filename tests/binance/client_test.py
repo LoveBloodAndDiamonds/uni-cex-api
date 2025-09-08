@@ -24,7 +24,7 @@ def main() -> None:
 
         # 2kmVLdWzz5AwUWOqU6sbuuLmlOnKS3THP7g44FSStAl6eAFyU5eUstxSdc4EWTs7
 
-        r = cl.futures_listen_key()
+        r = cl.listen_key()
 
         # r = cl.futures_close_listen_key()
 

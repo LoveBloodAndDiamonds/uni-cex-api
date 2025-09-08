@@ -55,6 +55,10 @@ class BaseSyncClient:
         """Закрывает сессию."""
         self._session.close()
 
+    def is_authorized(self) -> bool:
+        """Проверяет, наличие апи ключей в инстансе клиента."""
+        return self._api_key is not None and self._api_secret is not None
+
     def __enter__(self) -> Self:
         """Вход в контекст."""
         return self
@@ -227,6 +231,10 @@ class BaseAsyncClient:
     async def close(self) -> None:
         """Закрывает сессию."""
         await self._session.close()
+
+    def is_authorized(self) -> bool:
+        """Проверяет, наличие апи ключей в инстансе клиента."""
+        return self._api_key is not None and self._api_secret is not None
 
     async def __aenter__(self) -> Self:
         """Вход в асинхронный контекст."""

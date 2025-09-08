@@ -9,7 +9,7 @@ import warnings
 from typing import Any, Literal
 
 from unicex.base import BaseAsyncClient, BaseSyncClient
-from unicex.exceptions import MissingApiKey
+from unicex.exceptions import NotAuthorized
 from unicex.types import RequestMethod
 from unicex.utils import dict_to_query_string, filter_params, generate_hmac_sha256_signature
 
@@ -91,7 +91,7 @@ class _BinanceMixin:
             return {"params": params, "data": data}, None
 
         if not self._api_key or not self._api_secret:  # type: ignore[attr-defined]
-            raise MissingApiKey("Api key is required to private endpoints")
+            raise NotAuthorized("Api key is required to private endpoints")
 
         # Объединяем все параметры в payload
         payload = {**params, **data}
@@ -1573,7 +1573,7 @@ class BinanceClient(_BinanceMixin, BaseSyncClient):
         )
         url = self._BASE_SPOT_URL + "/api/v3/userDataStream"
 
-        return self._make_request("POST", url)
+        return super()._make_request("POST", url, headers=self._get_headers())
 
     def renew_listen_key(self, listen_key: str) -> dict:
         """Обновление ключа прослушивания для подключения к пользовательскому вебсокету.
@@ -1588,7 +1588,7 @@ class BinanceClient(_BinanceMixin, BaseSyncClient):
         url = self._BASE_SPOT_URL + "/api/v3/userDataStream"
         params = {"listenKey": listen_key}
 
-        return self._make_request("PUT", url, params=params)
+        return super()._make_request("PUT", url, params=params, headers=self._get_headers())
 
     def close_listen_key(self, listen_key: str) -> dict:
         """Закрытие ключа прослушивания для подключения к пользовательскому вебсокету.
@@ -1603,7 +1603,7 @@ class BinanceClient(_BinanceMixin, BaseSyncClient):
         url = self._BASE_SPOT_URL + "/api/v3/userDataStream"
         params = {"listenKey": listen_key}
 
-        return self._make_request("DELETE", url, params=params)
+        return super()._make_request("DELETE", url, params=params, headers=self._get_headers())
 
     # ========== FUTURES LISTEN KEY ENDPOINTS ==========
 
@@ -3101,7 +3101,7 @@ class AsyncBinanceClient(_BinanceMixin, BaseAsyncClient):
         )
         url = self._BASE_SPOT_URL + "/api/v3/userDataStream"
 
-        return await self._make_request("POST", url)
+        return await self._make_request("POST", url, True)
 
     async def renew_listen_key(self, listen_key: str) -> dict:
         """Обновление ключа прослушивания для подключения к пользовательскому вебсокету.
@@ -3116,7 +3116,7 @@ class AsyncBinanceClient(_BinanceMixin, BaseAsyncClient):
         url = self._BASE_SPOT_URL + "/api/v3/userDataStream"
         params = {"listenKey": listen_key}
 
-        return await self._make_request("PUT", url, params=params)
+        return await self._make_request("PUT", url, True, params=params)
 
     async def close_listen_key(self, listen_key: str) -> dict:
         """Закрытие ключа прослушивания для подключения к пользовательскому вебсокету.
@@ -3131,7 +3131,7 @@ class AsyncBinanceClient(_BinanceMixin, BaseAsyncClient):
         url = self._BASE_SPOT_URL + "/api/v3/userDataStream"
         params = {"listenKey": listen_key}
 
-        return await self._make_request("DELETE", url, params=params)
+        return await self._make_request("DELETE", url, True, params=params)
 
     # ========== FUTURES LISTEN KEY ENDPOINTS ==========
 

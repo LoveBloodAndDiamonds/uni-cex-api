@@ -64,10 +64,6 @@ class ISyncUniClient(Generic[TClient], ABC):  # noqa: UP046
         instance._client = client
         return instance
 
-    def is_authorized(self) -> bool:
-        """Проверяет, наличие апи ключей в инстансе клиента."""
-        return self._client._api_key is not None and self._client._api_secret is not None
-
     def close(self) -> None:
         """Закрывает сессию клиента."""
         self._client.close()

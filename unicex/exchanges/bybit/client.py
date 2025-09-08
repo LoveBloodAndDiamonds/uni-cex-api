@@ -4,8 +4,8 @@ import json
 import time
 from typing import Any
 
-from unicex.abc import BaseSyncClient
-from unicex.exceptions import MissingApiKey
+from unicex.base import BaseSyncClient
+from unicex.exceptions import NotAuthorized
 from unicex.types import RequestMethod
 from unicex.utils import filter_params, generate_hmac_sha256_signature
 
@@ -78,7 +78,7 @@ class _BaseBybitClient(BaseSyncClient):
 
         # Проверяем наличие апи ключей для подписи запроса
         if not self._api_key or not self._api_secret:
-            raise MissingApiKey("Api key is required to private endpoints")
+            raise NotAuthorized("Api key is required to private endpoints")
 
         # Формируем payload
         payload = params

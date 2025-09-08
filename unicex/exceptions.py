@@ -10,8 +10,8 @@ class UniCexException(Exception):
 
 
 @dataclass
-class MissingApiKey(UniCexException):
-    """Исключение, возникающее при отсутствии API ключей."""
+class NotAuthorized(UniCexException):
+    """Исключение, возникающее при отсутствии авторизации."""
 
     pass
 

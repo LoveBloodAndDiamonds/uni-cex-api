@@ -1,6 +1,7 @@
 from collections.abc import Callable
 
 from unicex.base import BaseSyncWebsocket
+from unicex.exceptions import NotAuthorized
 
 from .client import BinanceClient
 from .types import (
@@ -144,6 +145,12 @@ class BinanceWebsocketManager:
         )
         return BaseSyncWebsocket(callback=callback, url=url)
 
+    def user_data_stream(self, callback: Callable) -> BinanceUserWebsocket:
+        """Создает вебсокет для получения информации о пользовательских данных."""
+        if not self.client or not self.client.is_authorized():
+            raise NotAuthorized("You must provide authorized client.")
+        return BinanceUserWebsocket(callback=callback, client=self.client, type="SPOT")
+
     def futures_trade(self, callback: Callable, symbol: str) -> BaseSyncWebsocket:
         """Создает вебсокет для получения сделок."""
         url = self._generate_stream_url(type="trade", url=self._BASE_FUTURES_URL, symbol=symbol)
@@ -271,8 +278,8 @@ class BinanceWebsocketManager:
         url = self._generate_stream_url(type="!assetIndex@arr", url=self._BASE_FUTURES_URL)
         return BaseSyncWebsocket(callback=callback, url=url)
 
-    def user_data_stream(self, callback: Callable) -> BinanceUserWebsocket:
+    def futures_user_data_stream(self, callback: Callable) -> BinanceUserWebsocket:
         """Создает вебсокет для получения информации о пользовательских данных."""
-        if not self.client:
-            pass
-        return BinanceUserWebsocket()
+        if not self.client or not self.client.is_authorized():
+            raise NotAuthorized("You must provide authorized client.")
+        return BinanceUserWebsocket(callback=callback, client=self.client, type="FUTURES")
