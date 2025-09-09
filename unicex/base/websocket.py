@@ -80,8 +80,13 @@ class BaseSyncWebsocket:
                 subscription_message = json.dumps(subscription_message)  # noqa: PLW2901
             ws.send(subscription_message)
 
-    def _on_message(self, _: WebSocket, message: str | dict) -> None:
+    def _on_message(self, _: WebSocket, message: str) -> None:
         """Обработчик события получения сообщения."""
+        try:
+            message = json.loads(message)
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to decode JSON message: {message}, error: {e}")
+            return
         self._callback(message)
 
     def _on_error(self, ws: WebSocket, error: Exception) -> None:

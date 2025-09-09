@@ -1,7 +1,10 @@
 __all__ = ["BinanceAdapter"]
 
+from typing import Any
+
 from unicex.abc import IAdapter
-from unicex.types import KlineDict, TickerDailyDict
+from unicex.exceptions import ConversionError
+from unicex.types import AggTradeDict, KlineDict, TickerDailyDict, TradeDict
 
 
 class BinanceAdapter(IAdapter):
@@ -118,6 +121,7 @@ class BinanceAdapter(IAdapter):
         """
         return [
             KlineDict(
+                s="",
                 t=item[0],
                 o=float(item[1]),
                 h=float(item[2]),
@@ -161,3 +165,100 @@ class BinanceAdapter(IAdapter):
                 if item["symbol"].endswith("USDT")
             }
         return {item["symbol"]: float(item["lastFundingRate"] * 100) for item in raw_data}
+
+    @staticmethod
+    def klines_message(raw_msg: dict) -> list[KlineDict]:
+        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
+        свече/свечах в унифицированный вид.
+
+        Параметры:
+            raw_msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
+        """
+        try:
+            # Обрабатываем обертку в случае с multiplex stream
+            try:
+                kline = raw_msg["data"]["k"]
+            except KeyError:
+                kline = raw_msg["k"]
+            return [
+                KlineDict(
+                    s=kline["s"],
+                    t=kline["t"],
+                    o=float(kline["o"]),
+                    h=float(kline["h"]),
+                    l=float(kline["l"]),
+                    c=float(kline["c"]),
+                    v=float(kline["v"]),  # Используем quote volume (в USDT)
+                    q=float(kline["q"]),  # Используем quote volume (в USDT)
+                    T=kline["T"],
+                    x=kline["x"],
+                )
+            ]
+        except Exception as e:
+            raise ConversionError(
+                f"Can not convert {raw_msg} to unified format ({type(e)}): {e} {str(e.__traceback__)}"
+            ) from e
+
+    @staticmethod
+    def futures_klines_message(raw_msg: dict) -> list[KlineDict]:
+        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
+        свече/свечах в унифицированный вид.
+
+        Параметры:
+            raw_msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
+        """
+        return BinanceAdapter.klines_message(raw_msg)
+
+    @staticmethod
+    def aggtrades_message(raw_msg: dict) -> list[AggTradeDict]:
+        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
+        аггрегированных сделке/сделках в унифицированный вид.
+
+        Параметры:
+            raw_msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
+        """
+
+    @staticmethod
+    def futures_aggtrades_message(raw_msg: dict) -> list[AggTradeDict]:
+        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
+        аггрегированных сделке/сделках в унифицированный вид.
+
+        Параметры:
+            raw_msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
+        """
+
+    @staticmethod
+    def trades_message(raw_msg: dict) -> list[TradeDict]:
+        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
+        сделке/сделках в унифицированный вид.
+
+        Параметры:
+            raw_msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
+        """
+
+    @staticmethod
+    def futures_trades_message(raw_msg: Any) -> list[TradeDict]:
+        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
+        сделке/сделках в унифицированный вид.
+
+        Параметры:
+            raw_msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
+        """

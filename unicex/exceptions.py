@@ -21,3 +21,10 @@ class NotSupported(UniCexException):
     """Исключение, возникающее при попытке использования не поддерживаемой функции."""
 
     pass
+
+
+@dataclass
+class ConversionError(UniCexException):
+    """Исключение, возникающее при ошибке адаптации данных."""
+
+    pass

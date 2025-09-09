@@ -2,6 +2,7 @@ __all__ = [
     "MarketType",
     "Exchange",
     "Timeframe",
+    "Side",
 ]
 
 from enum import StrEnum
@@ -27,6 +28,13 @@ class Exchange(StrEnum):
     def __add__(self, market_type: "MarketType") -> tuple["Exchange", "MarketType"]:
         """Возвращает кортеж из биржи и типа рынка."""
         return self, market_type
+
+
+class Side(StrEnum):
+    """Перечисление сторон сделки."""
+
+    BUY = "BUY"
+    SELL = "SELL"
 
 
 class Timeframe(StrEnum):

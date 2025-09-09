@@ -1,6 +1,8 @@
 __all__ = [
     "TickerDailyDict",
     "KlineDict",
+    "TradeDict",
+    "AggTradeDict",
 ]
 
 from typing import Literal, TypedDict
@@ -23,6 +25,9 @@ class TickerDailyDict(TypedDict):
 
 class KlineDict(TypedDict):
     """Модель свечи."""
+
+    s: str
+    """Символ."""
 
     t: int
     """Время открытия. В миллисекундах."""
@@ -50,3 +55,28 @@ class KlineDict(TypedDict):
 
     x: bool | None
     """Флаг закрыта ли свеча."""
+
+
+class TradeDict(TypedDict):
+    """Модель сделки."""
+
+    t: int
+    """Время сделки. В миллисекундах."""
+
+    s: str
+    """Символ."""
+
+    S: Literal["BUY", "SELL"]
+    """Направление сделки."""
+
+    p: float
+    """Цена сделки."""
+
+    v: float
+    """Объем сделки. В монетах."""
+
+
+class AggTradeDict(TradeDict):
+    """Модель агрегированной сделки."""
+
+    pass

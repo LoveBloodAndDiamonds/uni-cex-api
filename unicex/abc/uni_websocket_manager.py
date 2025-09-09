@@ -6,15 +6,13 @@ from abc import ABC, abstractmethod
 
 from unicex.base import BaseSyncWebsocket
 
-from .uni_client import ISyncUniClient
-
 
 class IUniWebsocketManager(ABC):
     """Интерфейс для реализации менеджера вебсокетов."""
 
-    def __init__(self, client: ISyncUniClient | None = None) -> None:
-        """Инициализирует менеджер вебсокетов."""
-        self._client = client
+    # def __init__(self, client: ISyncUniClient | None = None) -> None:
+    #     """Инициализирует менеджер вебсокетов."""
+    #     self._client = client
 
     # @abstractmethod
     # def trades(self, *args, **kwargs) -> BaseSyncWebsocket:

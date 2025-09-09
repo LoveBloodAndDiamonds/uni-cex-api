@@ -77,7 +77,7 @@ class BinanceWebsocketManager:
         url = self._generate_stream_url(type="aggTrade", url=self._BASE_SPOT_URL, symbol=symbol)
         return BaseSyncWebsocket(callback=callback, url=url)
 
-    def kline(self, callback: Callable, symbol: str, interval: SpotTimeframe) -> BaseSyncWebsocket:
+    def klines(self, callback: Callable, symbol: str, interval: SpotTimeframe) -> BaseSyncWebsocket:
         """Создает вебсокет для получения свечей."""
         url = self._generate_stream_url(
             type=f"kline_{interval}", url=self._BASE_SPOT_URL, symbol=symbol
@@ -123,7 +123,6 @@ class BinanceWebsocketManager:
     ) -> BaseSyncWebsocket:
         """Создает вебсокет для получения статистики всех тикеров за указанное окно времени."""
         url = self._generate_stream_url(type=f"!ticker_{window}@arr", url=self._BASE_SPOT_URL)
-        print(url)
         return BaseSyncWebsocket(callback=callback, url=url)
 
     def avg_price(self, callback: Callable, symbol: str) -> BaseSyncWebsocket:
@@ -161,7 +160,7 @@ class BinanceWebsocketManager:
         url = self._generate_stream_url(type="aggTrade", url=self._BASE_FUTURES_URL, symbol=symbol)
         return BaseSyncWebsocket(callback=callback, url=url)
 
-    def futures_kline(
+    def futures_klines(
         self, callback: Callable, symbol: str, interval: FuturesTimeframe
     ) -> BaseSyncWebsocket:
         """Создает вебсокет для получения свечей."""
@@ -235,7 +234,7 @@ class BinanceWebsocketManager:
         url = self._generate_stream_url(type=type, url=self._BASE_FUTURES_URL, symbol=symbol)
         return BaseSyncWebsocket(callback=callback, url=url)
 
-    def futures_continuous_kline(
+    def futures_continuous_klines(
         self,
         callback: Callable,
         pair: str,
