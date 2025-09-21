@@ -28,3 +28,10 @@ class AdapterError(UniCexException):
     """Исключение, возникающее при ошибке адаптации данных."""
 
     pass
+
+
+@dataclass
+class QueueOverflowError(UniCexException):
+    """Исключение, возникающее при переполнении очереди сообщений."""
+
+    pass
