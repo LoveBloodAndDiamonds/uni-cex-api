@@ -19,14 +19,8 @@ def main() -> None:
     )
 
     bwm = BinanceWebsocketManager(client=client)
-    ws = bwm.futures_user_data_stream(callback=lambda m: print(m))
+    ws = bwm.user_data_stream(callback=lambda m: print(m))
     ws.start()
-    # ws = bwm.mini_ticker(callback=lambda m: print(m), symbol="ETHUSDT")
-    # ws = bwm.futures_continuous_kline(
-    #     callback=lambda m: print(m), pair="BTCUSDT", contract_type="perpetual", interval="1m"
-    # )
-    # ws = bwm.futures_composite_index(callback=lambda m: print(m), symbol="ETHUSDT")
-    # ws.start()
     import time
 
     time.sleep(100000)

@@ -1,9 +1,9 @@
 __all__ = [
-    "BaseSyncClient",
-    "BaseAsyncClient",
-    "BaseSyncWebsocket",
-    "BaseAsyncWebsocket",
+    "BaseClient",
+    "BaseAioClient",
+    "BaseWebsocket",
+    "BaseAioWebsocket",
 ]
 
-from .client import BaseAsyncClient, BaseSyncClient
-from .websocket import BaseAsyncWebsocket, BaseSyncWebsocket
+from .client import BaseAioClient, BaseClient
+from .websocket import BaseAioWebsocket, BaseWebsocket

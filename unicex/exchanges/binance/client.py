@@ -8,7 +8,7 @@ import time
 import warnings
 from typing import Any, Literal
 
-from unicex.base import BaseAsyncClient, BaseSyncClient
+from unicex.base import BaseAioClient, BaseClient
 from unicex.exceptions import NotAuthorized
 from unicex.types import RequestMethod
 from unicex.utils import dict_to_query_string, filter_params, generate_hmac_sha256_signature
@@ -109,7 +109,7 @@ class _BinanceMixin:
         return payload, headers
 
 
-class BinanceClient(_BinanceMixin, BaseSyncClient):
+class BinanceClient(_BinanceMixin, BaseClient):
     """Клиент для работы с Binance API."""
 
     def _make_request(
@@ -867,7 +867,7 @@ class BinanceClient(_BinanceMixin, BaseSyncClient):
 
         return self._make_request("GET", url, params=params)
 
-    def futures_open_interest(self, symbol: str) -> dict:
+    def open_interest(self, symbol: str) -> dict:
         """Получение открытого интереса тикера.
 
         https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Open-Interest
@@ -917,7 +917,7 @@ class BinanceClient(_BinanceMixin, BaseSyncClient):
 
         return self._make_request("GET", url)
 
-    def futures_open_interest_hist(
+    def open_interest_hist(
         self,
         symbol: str,
         period: StatsPeriod,
@@ -1635,7 +1635,7 @@ class BinanceClient(_BinanceMixin, BaseSyncClient):
         return self._make_request("DELETE", url, True)
 
 
-class AsyncBinanceClient(_BinanceMixin, BaseAsyncClient):
+class AsyncBinanceClient(_BinanceMixin, BaseAioClient):
     """Клиент для работы с Binance API."""
 
     async def _make_request(
@@ -2395,7 +2395,7 @@ class AsyncBinanceClient(_BinanceMixin, BaseAsyncClient):
 
         return await self._make_request("GET", url, params=params)
 
-    async def futures_open_interest(self, symbol: str) -> dict:
+    async def open_interest(self, symbol: str) -> dict:
         """Получение открытого интереса тикера.
 
         https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Open-Interest
@@ -2445,7 +2445,7 @@ class AsyncBinanceClient(_BinanceMixin, BaseAsyncClient):
 
         return await self._make_request("GET", url)
 
-    async def futures_open_interest_hist(
+    async def open_interest_hist(
         self,
         symbol: str,
         period: StatsPeriod,

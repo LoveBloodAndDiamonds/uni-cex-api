@@ -4,7 +4,7 @@ __all__ = [
 
 from abc import ABC, abstractmethod
 
-from unicex.base import BaseSyncWebsocket
+from unicex.base import BaseWebsocket
 
 
 class IUniWebsocketManager(ABC):
@@ -23,5 +23,5 @@ class IUniWebsocketManager(ABC):
     #     """Возвращает вебсокет для получения аггрегированных сделок."""
 
     @abstractmethod
-    def klines(self, *args, **kwargs) -> BaseSyncWebsocket:
+    def klines(self, *args, **kwargs) -> BaseWebsocket:
         """Возвращает вебсокет для получения свечей."""

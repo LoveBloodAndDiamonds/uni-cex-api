@@ -11,11 +11,7 @@ def callback(klines: list[KlineDict]):
 def main() -> None:
     """Main entry point for the application."""
     sm = UniBinanceWebsocketManager()
-    socket = sm.klines(
-        symbol="BTCUSDT",
-        timeframe=Timeframe.MIN_1,
-        callback=callback,
-    )
+    socket = sm.futures_aggtrades(symbol="BTCUSDT", callback=callback)
     socket.start()
 
     import time

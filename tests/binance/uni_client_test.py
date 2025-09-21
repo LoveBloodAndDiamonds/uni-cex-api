@@ -8,9 +8,10 @@ def main() -> None:
     with UniBinanceClient() as client:
         # r = client.futures_klines("BTCUSDT", "1m", limit=1)
         # r = client.futures_ticker_24h()
-        r = client.funding_rate()
+        # r = client.funding_rate()
+        r = client.open_interest("ETHUSDT")
         print(r)
-        print(len(r))
+        # print(len(r))
 
 
 if __name__ == "__main__":

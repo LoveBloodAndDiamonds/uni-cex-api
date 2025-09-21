@@ -8,10 +8,14 @@ import threading
 import time
 from collections.abc import Callable
 
-from unicex.base import BaseSyncWebsocket
+from unicex.base import BaseWebsocket
+from unicex.exceptions import NotSupported
 
 from .client import AsyncBinanceClient, BinanceClient
 from .types import AccountType
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 class BinanceUserWebsocket:
@@ -21,12 +25,14 @@ class BinanceUserWebsocket:
     Тип "MARGIN" пока не реализован.
     """
 
-    # Базовые URL WebSocket
     _BASE_SPOT_WSS: str = "wss://stream.binance.com:9443"
-    _BASE_FUTURES_WSS: str = "wss://fstream.binance.com"
+    """Базовый URL для вебсокета на спот."""
 
-    # Интервал продления listenKey (сек.) — безопасный буфер меньше 30 мин
-    _RENEW_INTERVAL: int = 25 * 60
+    _BASE_FUTURES_WSS: str = "wss://fstream.binance.com"
+    """Базовый URL для вебсокета на фьючерсы."""
+
+    _RENEW_INTERVAL: int = 30 * 60
+    """Интервал продления listenKey (сек.)"""
 
     def __init__(self, callback: Callable, client: BinanceClient, type: AccountType) -> None:
         """Инициализирует пользовательский вебсокет.
@@ -40,136 +46,133 @@ class BinanceUserWebsocket:
         self._client = client
         self._type = type
 
-        self._logger = logging.getLogger(__name__)
         self._listen_key: str | None = None
-        self._ws: BaseSyncWebsocket | None = None
+        self._ws: BaseWebsocket | None = None
         self._keepalive_thread: threading.Thread | None = None
-        self._stop_event = threading.Event()
-        self._lock = threading.RLock()
+
+        self._running = False
 
     def start(self) -> None:
         """Запускает пользовательский стрим с автопродлением listenKey."""
-        with self._lock:
-            self._listen_key = self._create_listen_key()
-            self._start_ws(self._listen_key)
+        self._running = True
+        self._listen_key = self._create_listen_key()
+        self._start_ws(self._create_ws_url(self._listen_key))
 
-            # Фоновое продление ключа
-            self._stop_event.clear()
-            self._keepalive_thread = threading.Thread(
-                target=self._keepalive_loop, name="binance-user-ws-keepalive", daemon=True
-            )
-            self._keepalive_thread.start()
+        # Фоновое продление ключа прослушивания
+        self._keepalive_thread = threading.Thread(target=self._keepalive_loop, daemon=True)
+        self._keepalive_thread.start()
 
     def stop(self) -> None:
         """Останавливает стрим и закрывает listenKey."""
-        with self._lock:
-            self._stop_event.set()
-            if self._keepalive_thread and self._keepalive_thread.is_alive():
-                self._keepalive_thread.join(timeout=5)
-            self._keepalive_thread = None
+        self._running = False
 
-            if self._ws:
-                try:
-                    self._ws.stop()
-                except Exception as e:  # noqa: BLE001
-                    self._logger.error(f"Ошибка при остановке WS: {e}")
-                finally:
-                    self._ws = None
+        # Останавливаем вебсокет
+        try:
+            if isinstance(self._ws, BaseWebsocket):
+                self._ws.stop()
+        except Exception as e:
+            logger.error(f"Error stopping WebSocket: {e}")
 
-            # Закрываем listenKey на стороне API
+        # Ожидаем завершения фонового продления ключа прослушивания
+        if isinstance(self._keepalive_thread, threading.Thread):
+            self._keepalive_thread.join()
+
+        # Закрываем ключ прослушивания
+        try:
+            if self._listen_key:
+                self._close_listen_key(self._listen_key)
+        except Exception as e:
+            logger.error(f"Error closing listenKey: {e}")
+        finally:
+            self._listen_key = None
+
+        logger.info("User websocket stopped")
+
+    def restart(self) -> None:
+        """Перезапускает WebSocket для User Data Stream."""
+        self.stop()
+        self.start()
+
+    def _start_ws(self, ws_url: str) -> None:
+        """Запускает WebSocket для User Data Stream."""
+        self._ws = BaseWebsocket(
+            callback=self._callback, url=ws_url, no_message_reconnect_timeout=None
+        )
+        self._ws.start()
+        logger.info(f"User websocket started: ...{ws_url[-5:]}")
+
+    def _keepalive_loop(self) -> None:
+        """Фоновый цикл продления listenKey и восстановления сессии при необходимости."""
+        while self._running:
             try:
-                if self._listen_key:
-                    self._close_listen_key(self._listen_key)
-            finally:
-                self._listen_key = None
+                if self._type == "FUTURES":
+                    response = self._renew_listen_key()
+                    listen_key = response.get("listenKey")
+                    if not listen_key:
+                        raise RuntimeError(f"Can not renew listenKey: {response}")
 
-    def _ws_url(self, listen_key: str) -> str:
+                    if listen_key != self._listen_key:
+                        logger.info(
+                            f"Listen key changed: {self._listen_key} -> {listen_key}. Restarting websocket"
+                        )
+                        return self.restart()
+
+                elif self._type == "SPOT":
+                    self._renew_listen_key()
+
+                else:
+                    raise NotSupported(f"Account type '{self._type}' not supported")
+
+            except Exception as e:
+                logger.error(f"Error while keeping alive: {e}")
+                return self.restart()
+
+            # Ждём до следующего продления
+            for _ in range(self._RENEW_INTERVAL):
+                if self._running:
+                    return
+                time.sleep(1)
+
+    def _create_ws_url(self, listen_key: str) -> str:
+        """Создает URL для подключения к WebSocket."""
         if self._type == "FUTURES":
             return f"{self._BASE_FUTURES_WSS}/ws/{listen_key}"
         if self._type == "SPOT":
             return f"{self._BASE_SPOT_WSS}/ws/{listen_key}"
-        raise NotImplementedError("Поддерживаются только типы аккаунта: SPOT и FUTURES")
-
-    def _start_ws(self, listen_key: str) -> None:
-        url = self._ws_url(listen_key)
-        self._ws = BaseSyncWebsocket(callback=self._callback, url=url)
-        self._ws.start()
-        self._logger.info(f"User WS started: {url}")
-
-    def _restart_ws(self, new_listen_key: str) -> None:
-        self._logger.info("Перезапуск пользовательского WS из-за изменения listenKey")
-        if self._ws:
-            try:
-                self._ws.stop()
-            except Exception as e:  # noqa: BLE001
-                self._logger.error(f"Ошибка при остановке WS перед перезапуском: {e}")
-        self._start_ws(new_listen_key)
+        raise NotSupported(f"Account type '{self._type}' not supported")
 
     def _create_listen_key(self) -> str:
+        """Создает новый listenKey для User Data Stream в зависимости от типа аккаунта."""
         if self._type == "FUTURES":
             resp = self._client.futures_listen_key()
         elif self._type == "SPOT":
             resp = self._client.listen_key()
         else:
-            raise NotImplementedError("Тип аккаунта не поддерживается для User Data Stream")
+            raise NotSupported(f"Account type '{self._type}' not supported")
 
         key = resp.get("listenKey")
-        if not isinstance(key, str) or not key:
-            raise RuntimeError(f"Не удалось получить listenKey. Ответ: {resp}")
+        if not key:
+            raise RuntimeError(f"Can not create listenKey: {resp}")
         return key
 
-    def _renew_listen_key(self) -> str | None:
+    def _renew_listen_key(self) -> dict:
         """Продлевает listenKey. Возвращает новый ключ, если сервер его выдал."""
+        if not isinstance(self._listen_key, str):
+            raise RuntimeError("listenKey is not a string")
         if self._type == "FUTURES":
-            # FAPI обычно возвращает {} и не меняет ключ
-            self._client.futures_renew_listen_key()
-            return None
+            return self._client.futures_renew_listen_key()
         elif self._type == "SPOT":
-            # SPOT keepalive принимает listenKey и обычно возвращает {}
-            resp = self._client.renew_listen_key(self._listen_key or "")
-            return resp.get("listenKey") if isinstance(resp, dict) else None
+            return self._client.renew_listen_key(self._listen_key)
         else:
-            raise NotImplementedError("Тип аккаунта не поддерживается для keepalive")
+            raise NotSupported(f"Account type '{self._type}' not supported")
 
     def _close_listen_key(self, listen_key: str) -> None:
-        try:
-            if self._type == "FUTURES":
-                self._client.futures_close_listen_key()
-            elif self._type == "SPOT":
-                self._client.close_listen_key(listen_key)
-            else:
-                raise NotImplementedError("Тип аккаунта не поддерживается для закрытия listenKey")
-        except Exception as e:  # noqa: BLE001
-            self._logger.error(f"Ошибка закрытия listenKey: {e}")
-
-    def _keepalive_loop(self) -> None:
-        """Фоновый цикл продления listenKey и восстановления сессии при необходимости."""
-        while not self._stop_event.is_set():
-            try:
-                # Пытаемся продлить текущий ключ
-                new_key = self._renew_listen_key()
-                # Если сервер вернул новый ключ — перезапускаем WS
-                if isinstance(new_key, str) and new_key and new_key != self._listen_key:
-                    self._listen_key = new_key
-                    with self._lock:
-                        self._restart_ws(new_key)
-            except Exception as e:  # noqa: BLE001
-                # В случае ошибки — пробуем получить новый ключ и перезапуститься
-                self._logger.error(f"Ошибка keepalive: {e}. Пробуем пересоздать listenKey…")
-                try:
-                    new_key = self._create_listen_key()
-                    if new_key != self._listen_key:
-                        self._listen_key = new_key
-                        with self._lock:
-                            self._restart_ws(new_key)
-                except Exception as ee:  # noqa: BLE001
-                    self._logger.error(f"Не удалось пересоздать listenKey: {ee}")
-
-            # Ждём до следующего продления
-            for _ in range(self._RENEW_INTERVAL):
-                if self._stop_event.is_set():
-                    return
-                time.sleep(1)
+        if self._type == "FUTURES":
+            self._client.futures_close_listen_key()
+        elif self._type == "SPOT":
+            self._client.close_listen_key(listen_key)
+        else:
+            raise NotSupported(f"Account type '{self._type}' not supported")
 
 
 class AsyncBinanceUserWebsocket:

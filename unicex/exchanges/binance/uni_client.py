@@ -5,15 +5,16 @@ __all__ = [
 
 from functools import cached_property
 
-from unicex.abc import IAsyncUniClient, ISyncUniClient
+from unicex.abc import IUniAioClient, IUniClient
 from unicex.enums import Exchange, Timeframe
+from unicex.exceptions import NotSupported
 from unicex.types import KlineDict, TickerDailyDict
 
 from .adapter import BinanceAdapter
 from .client import AsyncBinanceClient, BinanceClient
 
 
-class UniBinanceClient(ISyncUniClient[BinanceClient]):
+class UniBinanceClient(IUniClient[BinanceClient]):
     """Унифицированный клиент для работы с Binance API."""
 
     @cached_property
@@ -164,8 +165,24 @@ class UniBinanceClient(ISyncUniClient[BinanceClient]):
         raw_data = self._client.futures_mark_price()
         return self.adapter.funding_rate(raw_data, only_usdt)  # type: ignore | raw_data is list[dict] if symbol param is not ommited
 
+    def open_interest(self, symbol: str) -> float:
+        """Возвращает объем открытого интереса для тикера или всех тикеров,
+        если тикер не указан.
 
-class AsyncUniBinanceClient(IAsyncUniClient[AsyncBinanceClient]):
+        Параметры:
+            symbol (str | None): Название тикера (Опционально).
+
+        Возвращает:
+            float: Объем открытых позиций в монетах.
+        """
+        if not symbol:
+            raise NotSupported("Open interest for all symbols is not supported for binance")
+
+        raw_data = self._client.open_interest(symbol)
+        return self.adapter.open_interest(raw_data)  # type: ignore | binance supports only single ticker open interest
+
+
+class AsyncUniBinanceClient(IUniAioClient[AsyncBinanceClient]):
     """Унифицированный клиент для работы с Binance API."""
 
     @cached_property

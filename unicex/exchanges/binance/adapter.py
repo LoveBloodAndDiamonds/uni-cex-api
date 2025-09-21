@@ -1,9 +1,8 @@
 __all__ = ["BinanceAdapter"]
 
-from typing import Any
 
 from unicex.abc import IAdapter
-from unicex.exceptions import ConversionError
+from unicex.exceptions import AdapterError
 from unicex.types import AggTradeDict, KlineDict, TickerDailyDict, TradeDict
 
 
@@ -21,9 +20,14 @@ class BinanceAdapter(IAdapter):
         Возвращает:
             list[str]: Список тикеров.
         """
-        if only_usdt:
-            return [item["symbol"] for item in raw_data if item["symbol"].endswith("USDT")]
-        return [item["symbol"] for item in raw_data]
+        try:
+            if only_usdt:
+                return [item["symbol"] for item in raw_data if item["symbol"].endswith("USDT")]
+            return [item["symbol"] for item in raw_data]
+        except Exception as e:
+            raise AdapterError(
+                f"({type(e)}): {e}. Can not convert {raw_data} to unified tickers."
+            ) from e
 
     @staticmethod
     def futures_tickers(raw_data: list[dict], only_usdt: bool = True) -> list[str]:
@@ -49,26 +53,31 @@ class BinanceAdapter(IAdapter):
         Возвращает:
             dict[str, TickerDailyDict]: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
         """
-        if only_usdt:
-            result = {}
-            for item in raw_data:
-                symbol = item["symbol"]
-                if symbol.endswith("USDT"):
-                    result[symbol] = TickerDailyDict(
+        try:
+            if only_usdt:
+                result = {}
+                for item in raw_data:
+                    symbol = item["symbol"]
+                    if symbol.endswith("USDT"):
+                        result[symbol] = TickerDailyDict(
+                            p=float(item["priceChangePercent"]),
+                            q=float(item["quoteVolume"]),  # Объем торгов в долларах
+                            v=float(item["volume"]),  # Объем торгов в монетах
+                        )
+            else:
+                result = {
+                    item["symbol"]: TickerDailyDict(
                         p=float(item["priceChangePercent"]),
                         q=float(item["quoteVolume"]),  # Объем торгов в долларах
                         v=float(item["volume"]),  # Объем торгов в монетах
                     )
-        else:
-            result = {
-                item["symbol"]: TickerDailyDict(
-                    p=float(item["priceChangePercent"]),
-                    q=float(item["quoteVolume"]),  # Объем торгов в долларах
-                    v=float(item["volume"]),  # Объем торгов в монетах
-                )
-                for item in raw_data
-            }
-        return result
+                    for item in raw_data
+                }
+            return result
+        except Exception as e:
+            raise AdapterError(
+                f"({type(e)}): {e}. Can not convert {raw_data} to unified ticker 24h."
+            ) from e
 
     @staticmethod
     def futures_ticker_24h(
@@ -95,7 +104,12 @@ class BinanceAdapter(IAdapter):
         Возвращает:
             dict[str, float]: Словарь, где ключ - тикер, а значение - последняя цена.
         """
-        return {item["symbol"]: float(item["price"]) for item in raw_data}
+        try:
+            return {item["symbol"]: float(item["price"]) for item in raw_data}
+        except Exception as e:
+            raise AdapterError(
+                f"({type(e)}): {e}. Can not convert {raw_data} to unified last price."
+            ) from e
 
     @staticmethod
     def futures_last_price(raw_data: list[dict]) -> dict[str, float]:
@@ -119,21 +133,26 @@ class BinanceAdapter(IAdapter):
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
         """
-        return [
-            KlineDict(
-                s="",
-                t=item[0],
-                o=float(item[1]),
-                h=float(item[2]),
-                l=float(item[3]),
-                c=float(item[4]),
-                v=float(item[5]),
-                q=float(item[7]),
-                T=item[6],
-                x=None,
-            )
-            for item in raw_data
-        ]
+        try:
+            return [
+                KlineDict(
+                    s="",
+                    t=item[0],
+                    o=float(item[1]),
+                    h=float(item[2]),
+                    l=float(item[3]),
+                    c=float(item[4]),
+                    v=float(item[5]),
+                    q=float(item[7]),
+                    T=item[6],
+                    x=None,
+                )
+                for item in raw_data
+            ]
+        except Exception as e:
+            raise AdapterError(
+                f"({type(e)}): {e}. Can not convert {raw_data} to unified kline."
+            ) from e
 
     @staticmethod
     def futures_klines(raw_data: list[list]) -> list[KlineDict]:
@@ -158,13 +177,18 @@ class BinanceAdapter(IAdapter):
         Возвращает:
             dict[str, float]: Словарь, где ключ - тикер, а значение - ставка финансирования.
         """
-        if only_usdt:
-            return {
-                item["symbol"]: float(item["lastFundingRate"]) * 100
-                for item in raw_data
-                if item["symbol"].endswith("USDT")
-            }
-        return {item["symbol"]: float(item["lastFundingRate"] * 100) for item in raw_data}
+        try:
+            if only_usdt:
+                return {
+                    item["symbol"]: float(item["lastFundingRate"]) * 100
+                    for item in raw_data
+                    if item["symbol"].endswith("USDT")
+                }
+            return {item["symbol"]: float(item["lastFundingRate"]) * 100 for item in raw_data}
+        except Exception as e:
+            raise AdapterError(
+                f"({type(e)}): {e}. Can not convert {raw_data} to unified funding rate."
+            ) from e
 
     @staticmethod
     def klines_message(raw_msg: dict) -> list[KlineDict]:
@@ -179,10 +203,7 @@ class BinanceAdapter(IAdapter):
         """
         try:
             # Обрабатываем обертку в случае с multiplex stream
-            try:
-                kline = raw_msg["data"]["k"]
-            except KeyError:
-                kline = raw_msg["k"]
+            kline = raw_msg.get("data", raw_msg)["k"]
             return [
                 KlineDict(
                     s=kline["s"],
@@ -198,8 +219,8 @@ class BinanceAdapter(IAdapter):
                 )
             ]
         except Exception as e:
-            raise ConversionError(
-                f"Can not convert {raw_msg} to unified format ({type(e)}): {e} {str(e.__traceback__)}"
+            raise AdapterError(
+                f"({type(e)}): {e}. Can not convert {raw_msg} to unified kline."
             ) from e
 
     @staticmethod
@@ -226,6 +247,21 @@ class BinanceAdapter(IAdapter):
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
         """
+        try:
+            msg = raw_msg.get("data", raw_msg)
+            return [
+                AggTradeDict(
+                    t=int(msg["T"]),
+                    s=str(msg["s"]),
+                    S="SELL" if bool(msg["m"]) else "BUY",
+                    p=float(msg["p"]),
+                    v=float(msg["q"]),
+                )
+            ]
+        except Exception as e:
+            raise AdapterError(
+                f"({type(e)}): {e}. Can not convert {raw_msg} to unified aggtrade."
+            ) from e
 
     @staticmethod
     def futures_aggtrades_message(raw_msg: dict) -> list[AggTradeDict]:
@@ -238,6 +274,7 @@ class BinanceAdapter(IAdapter):
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
         """
+        return BinanceAdapter.aggtrades_message(raw_msg)
 
     @staticmethod
     def trades_message(raw_msg: dict) -> list[TradeDict]:
@@ -250,9 +287,24 @@ class BinanceAdapter(IAdapter):
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
         """
+        try:
+            msg = raw_msg.get("data", raw_msg)
+            return [
+                TradeDict(
+                    t=int(msg["T"]),
+                    s=str(msg["s"]),
+                    S="SELL" if bool(msg["m"]) else "BUY",
+                    p=float(msg["p"]),
+                    v=float(msg["q"]),
+                )
+            ]
+        except Exception as e:
+            raise AdapterError(
+                f"({type(e)}): {e}. Can not convert {raw_msg} to unified trade."
+            ) from e
 
     @staticmethod
-    def futures_trades_message(raw_msg: Any) -> list[TradeDict]:
+    def futures_trades_message(raw_msg: dict) -> list[TradeDict]:
         """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
         сделке/сделках в унифицированный вид.
 
@@ -262,3 +314,22 @@ class BinanceAdapter(IAdapter):
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
         """
+        return BinanceAdapter.trades_message(raw_msg)
+
+    @staticmethod
+    def open_interest(raw_data: dict) -> float:
+        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
+        объеме открытых позиций в унифицированный вид.
+
+        Параметры:
+            raw_data (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            float: Объем открытых позиций в монетах.
+        """
+        try:
+            return float(raw_data["openInterest"])
+        except Exception as e:
+            raise AdapterError(
+                f"{type(e)}: {e}. Can not convert {raw_data} to unified open interest."
+            ) from e

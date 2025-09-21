@@ -4,7 +4,7 @@ import json
 import time
 from typing import Any
 
-from unicex.base import BaseSyncClient
+from unicex.base import BaseClient
 from unicex.exceptions import NotAuthorized
 from unicex.types import RequestMethod
 from unicex.utils import filter_params, generate_hmac_sha256_signature
@@ -12,7 +12,7 @@ from unicex.utils import filter_params, generate_hmac_sha256_signature
 from .types import Category, FuturesCategory, OrderType, Side, Timeframe
 
 
-class _BaseBybitClient(BaseSyncClient):
+class _BaseBybitClient(BaseClient):
     """Базовый класс для клиентов Bybit API."""
 
     _BASE_URL: str = "https://api.bybit.com"

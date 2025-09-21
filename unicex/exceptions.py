@@ -24,7 +24,7 @@ class NotSupported(UniCexException):
 
 
 @dataclass
-class ConversionError(UniCexException):
+class AdapterError(UniCexException):
     """Исключение, возникающее при ошибке адаптации данных."""
 
     pass

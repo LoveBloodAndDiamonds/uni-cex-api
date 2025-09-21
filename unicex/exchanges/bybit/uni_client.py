@@ -4,7 +4,7 @@ __all__ = [
 
 from functools import cached_property
 
-from unicex.abc import ISyncUniClient
+from unicex.abc import IUniClient
 from unicex.enums import Exchange, Timeframe
 from unicex.types import KlineDict, TickerDailyDict
 
@@ -12,7 +12,7 @@ from .adapter import BybitAdapter
 from .client import BybitClient
 
 
-class BybitUniClient(ISyncUniClient[BybitClient]):
+class BybitUniClient(IUniClient[BybitClient]):
     """Унифицированный клиент для работы с Bybit API."""
 
     @cached_property

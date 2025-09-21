@@ -1,6 +1,6 @@
 __all__ = [
-    "BaseAsyncClient",
-    "BaseSyncClient",
+    "BaseAioClient",
+    "BaseClient",
 ]
 
 import asyncio
@@ -16,7 +16,7 @@ from unicex.exceptions import UniCexException
 from unicex.types import RequestMethod
 
 
-class BaseSyncClient:
+class BaseClient:
     """Базовый синхронный класс для создания клиентов для работы с API."""
 
     def __init__(
@@ -163,7 +163,7 @@ class BaseSyncClient:
         return result
 
 
-class BaseAsyncClient:
+class BaseAioClient:
     """Базовый асинхронный класс для создания клиентов для работы с API."""
 
     def __init__(

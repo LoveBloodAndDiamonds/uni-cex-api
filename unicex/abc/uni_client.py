@@ -1,26 +1,26 @@
 __all__ = [
-    "ISyncUniClient",
-    "IAsyncUniClient",
+    "IUniClient",
+    "IUniAioClient",
 ]
 import logging
 from abc import ABC, abstractmethod
 from functools import cached_property
-from typing import Generic, Self, TypeVar
+from typing import Generic, Self, TypeVar, overload
 
 import aiohttp
 import requests
 
-from unicex.base import BaseAsyncClient, BaseSyncClient
+from unicex.base import BaseAioClient, BaseClient
 from unicex.enums import Timeframe
 from unicex.types import KlineDict, TickerDailyDict
 
 from .adapter import IAdapter
 
-TClient = TypeVar("TClient", bound=BaseSyncClient)
-AClient = TypeVar("AClient", bound=BaseAsyncClient)
+Client = TypeVar("Client", bound=BaseClient)
+AioClient = TypeVar("AioClient", bound=BaseAioClient)
 
 
-class ISyncUniClient(Generic[TClient], ABC):  # noqa: UP046
+class IUniClient(Generic[Client], ABC):  # noqa: UP046
     """Интерфейс для реализации синхронного унифицированного клиента."""
 
     def __init__(
@@ -46,7 +46,7 @@ class ISyncUniClient(Generic[TClient], ABC):  # noqa: UP046
             proxies (list[str] | None): Список HTTP(S) прокси для циклического использования.
             timeout (int): Максимальное время ожидания ответа от сервера.
         """
-        self._client: TClient = self.client_cls(
+        self._client: Client = self.client_cls(
             api_key=api_key,
             api_secret=api_secret,
             session=session,
@@ -58,7 +58,7 @@ class ISyncUniClient(Generic[TClient], ABC):  # noqa: UP046
         )
 
     @classmethod
-    def from_client(cls, client: TClient) -> Self:
+    def from_client(cls, client: Client) -> Self:
         """Создает UniClient из уже существующего BinanceClient."""
         instance = cls.__new__(cls)  # создаем пустой объект без вызова __init__
         instance._client = client
@@ -77,7 +77,7 @@ class ISyncUniClient(Generic[TClient], ABC):  # noqa: UP046
         self.close()
 
     @property
-    def client(self) -> TClient:
+    def client(self) -> Client:
         """Возвращает клиент биржи.
 
         Возвращает:
@@ -87,7 +87,7 @@ class ISyncUniClient(Generic[TClient], ABC):  # noqa: UP046
 
     @property
     @abstractmethod
-    def client_cls(self) -> type[TClient]:
+    def client_cls(self) -> type[Client]:
         """Возвращает класс клиента для конкретной биржи.
 
         Возвращает:
@@ -199,11 +199,29 @@ class ISyncUniClient(Generic[TClient], ABC):  # noqa: UP046
             only_usdt (bool): Если True, возвращает только тикеры в паре к USDT.
 
         Возвращает:
-            dict[str, float]: Ставка финансирования для каждого тикера.
+            dict[str, float]: Ставка финансирования для каждого тикера в %.
+        """
+
+    @overload
+    def open_interest(self, symbol: str) -> float: ...
+
+    @overload
+    def open_interest(self, symbol: None) -> dict[str, float]: ...
+
+    @abstractmethod
+    def open_interest(self, symbol: str | None) -> float | dict[str, float]:
+        """Возвращает объем открытого интереса для тикера или всех тикеров,
+        если тикер не указан.
+
+        Параметры:
+            symbol (str | None): Название тикера (Опционально).
+
+        Возвращает:
+            float: Объем открытых позиций в монетах.
         """
 
 
-class IAsyncUniClient(Generic[AClient], ABC):  # noqa: UP046
+class IUniAioClient(Generic[AioClient], ABC):  # noqa: UP046
     """Интерфейс для реализации асинхронного унифицированного клиента."""
 
     def __init__(
@@ -229,7 +247,7 @@ class IAsyncUniClient(Generic[AClient], ABC):  # noqa: UP046
             proxies (list[str] | None): Список HTTP(S) прокси для циклического использования.
             timeout (int): Максимальное время ожидания ответа от сервера.
         """
-        self._client: AClient = self.client_cls(
+        self._client: AioClient = self.client_cls(
             api_key=api_key,
             api_secret=api_secret,
             session=session,
@@ -271,7 +289,7 @@ class IAsyncUniClient(Generic[AClient], ABC):  # noqa: UP046
         )
 
     @classmethod
-    def from_client(cls, client: AClient) -> Self:
+    def from_client(cls, client: AioClient) -> Self:
         """Создает UniClient из уже существующего BinanceClient."""
         instance = cls.__new__(cls)  # создаем пустой объект без вызова __init__
         instance._client = client
@@ -294,7 +312,7 @@ class IAsyncUniClient(Generic[AClient], ABC):  # noqa: UP046
         await self.close()
 
     @property
-    def client(self) -> AClient:
+    def client(self) -> AioClient:
         """Возвращает клиент биржи.
 
         Возвращает:
@@ -304,7 +322,7 @@ class IAsyncUniClient(Generic[AClient], ABC):  # noqa: UP046
 
     @property
     @abstractmethod
-    def client_cls(self) -> type[AClient]:
+    def client_cls(self) -> type[AioClient]:
         """Возвращает класс клиента для конкретной биржи.
 
         Возвращает:
@@ -417,4 +435,22 @@ class IAsyncUniClient(Generic[AClient], ABC):  # noqa: UP046
 
         Возвращает:
             dict[str, float]: Ставка финансирования для каждого тикера.
+        """
+
+    @overload
+    async def open_interest(self, symbol: str) -> float: ...
+
+    @overload
+    async def open_interest(self, symbol: None) -> dict[str, float]: ...
+
+    @abstractmethod
+    async def open_interest(self, symbol: str | None) -> float | dict[str, float]:
+        """Возвращает объем открытого интереса для тикера или всех тикеров,
+        если тикер не указан.
+
+        Параметры:
+            symbol (str | None): Название тикера (Опционально).
+
+        Возвращает:
+            float: Объем открытых позиций в монетах.
         """
