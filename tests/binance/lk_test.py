@@ -11,9 +11,6 @@ async def main() -> None:
     api_key = getenv("BINANCE_API_KEY")
     secret_key = getenv("BINANCE_API_SECRET")
 
-    print(api_key)
-    print(secret_key)
-
     client = Client(api_key, secret_key)
     async_client = await AsyncClient.create(api_key, secret_key)
 

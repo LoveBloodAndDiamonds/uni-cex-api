@@ -1,4 +1,4 @@
-__all__ = ["BaseWebsocket"]
+__all__ = ["Websocket"]
 
 import asyncio
 import logging
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-class BaseWebsocket:
+class Websocket:
     """Базовый класс асинхронного вебсокета."""
 
     MAX_QUEUE_SIZE: int = 100
@@ -206,8 +206,11 @@ class BaseWebsocket:
 
     async def _healthcheck_task(self) -> None:
         """Следит за таймаутом получения сообщений."""
+        if not self._no_message_reconnect_timeout:
+            return
+
         while self._running:
-            if time.monotonic() - self._last_message_time > self._no_message_reconnect_timeout:  # type: ignore
+            if time.monotonic() - self._last_message_time > self._no_message_reconnect_timeout:
                 logger.error("Websocket is not responding, restarting...")
                 await self.restart()
                 return

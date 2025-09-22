@@ -1498,7 +1498,7 @@ class Client(ClientMixin, BaseClient):
         )
         url = self._BASE_SPOT_URL + "/api/v3/userDataStream"
 
-        return await self._make_request("POST", url, True)
+        return await super()._make_request("POST", url, headers=self._get_headers())
 
     async def renew_listen_key(self, listen_key: str) -> dict:
         """Обновление ключа прослушивания для подключения к пользовательскому вебсокету.
@@ -1513,7 +1513,7 @@ class Client(ClientMixin, BaseClient):
         url = self._BASE_SPOT_URL + "/api/v3/userDataStream"
         params = {"listenKey": listen_key}
 
-        return await self._make_request("PUT", url, True, params=params)
+        return await super()._make_request("PUT", url, params=params, headers=self._get_headers())
 
     async def close_listen_key(self, listen_key: str) -> dict:
         """Закрытие ключа прослушивания для подключения к пользовательскому вебсокету.
@@ -1528,7 +1528,9 @@ class Client(ClientMixin, BaseClient):
         url = self._BASE_SPOT_URL + "/api/v3/userDataStream"
         params = {"listenKey": listen_key}
 
-        return await self._make_request("DELETE", url, True, params=params)
+        return await super()._make_request(
+            "DELETE", url, params=params, headers=self._get_headers()
+        )
 
     # ========== FUTURES LISTEN KEY ENDPOINTS ==========
 
@@ -1539,7 +1541,7 @@ class Client(ClientMixin, BaseClient):
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/listenKey"
 
-        return await self._make_request("POST", url, True)
+        return await super()._make_request("POST", url, headers=self._get_headers())
 
     async def futures_renew_listen_key(self) -> dict:
         """Обновление ключа прослушивания для подключения к пользовательскому вебсокету.
@@ -1548,7 +1550,7 @@ class Client(ClientMixin, BaseClient):
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/listenKey"
 
-        return await self._make_request("PUT", url, True)
+        return await super()._make_request("PUT", url, headers=self._get_headers())
 
     async def futures_close_listen_key(self) -> dict:
         """Закрытие ключа прослушивания для подключения к пользовательскому вебсокету.
@@ -1557,4 +1559,4 @@ class Client(ClientMixin, BaseClient):
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/listenKey"
 
-        return await self._make_request("DELETE", url, True)
+        return await super()._make_request("DELETE", url, headers=self._get_headers())

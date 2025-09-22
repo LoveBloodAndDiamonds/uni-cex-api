@@ -1,25 +1,142 @@
 __all__ = ["IUniWebsocketManager"]
 
 from abc import ABC, abstractmethod
+from collections.abc import Awaitable, Callable
+from typing import Any
 
-from unicex._base.asyncio import BaseWebsocket
+from unicex._base.asyncio import Websocket
+from unicex.enums import Timeframe
 
 
 class IUniWebsocketManager(ABC):
-    """Интерфейс для реализации менеджера вебсокетов."""
-
-    # def __init__(self, client: ISyncUniClient | None = None) -> None:
-    #     """Инициализирует менеджер вебсокетов."""
-    #     self._client = client
-
-    # @abstractmethod
-    # def trades(self, *args, **kwargs) -> BaseSyncWebsocket:
-    #     """Возвращает вебсокет для получения сделок."""
-
-    # @abstractmethod
-    # def aggtrades(self, *args, **kwargs) -> BaseSyncWebsocket:
-    #     """Возвращает вебсокет для получения аггрегированных сделок."""
+    """Интерфейс для реализации менеджера асинхронных вебсокетов."""
 
     @abstractmethod
-    def klines(self, *args, **kwargs) -> BaseWebsocket:
-        """Возвращает вебсокет для получения свечей."""
+    def klines(
+        self,
+        callback: Callable[[Any], Awaitable[None]],
+        symbol: str | None,
+        symbols: list[str] | None,
+        timeframe: Timeframe,
+    ) -> Websocket:
+        """Унифицированный интерфейс для открытия вебсокет соединения для получения свечей.
+
+        Должен быть передан либо один символ (``symbol``), либо список символов (``symbols``).
+
+        Параметры:
+            callback (Callable[[Any], Awaitable[None]]): Асинхронная функция, вызываемая для каждого сообщения.
+            symbol (str | None): Символ, для которого нужно открыть соединение.
+            symbols (list[str] | None): Список символов, для которых нужно открыть соединение.
+            timeframe (Timeframe): Временной интервал свечей.
+
+        Возвращает:
+            BaseWebsocket: Объект вебсокета для управления соединением.
+        """
+        pass
+
+    @abstractmethod
+    def futures_klines(
+        self,
+        callback: Callable[[Any], Awaitable[None]],
+        symbol: str | None,
+        symbols: list[str] | None,
+        timeframe: Timeframe,
+    ) -> Websocket:
+        """Унифицированный интерфейс для открытия вебсокет соединения фьючерсов для получения свечей.
+
+        Должен быть передан либо один символ (``symbol``), либо список символов (``symbols``).
+
+        Параметры:
+            callback (Callable[[Any], Awaitable[None]]): Асинхронная функция обратного вызова.
+            symbol (str | None): Символ, для которого нужно открыть соединение.
+            symbols (list[str] | None): Список символов, для которых нужно открыть соединение.
+            timeframe (Timeframe): Временной интервал свечей.
+
+        Возвращает:
+            BaseWebsocket: Объект вебсокета.
+        """
+        pass
+
+    @abstractmethod
+    def trades(
+        self,
+        callback: Callable[[Any], Awaitable[None]],
+        symbol: str | None,
+        symbols: list[str] | None,
+    ) -> Websocket:
+        """Унифицированный интерфейс для открытия вебсокет соединения для получения сделок.
+
+        Должен быть передан либо один символ (``symbol``), либо список символов (``symbols``).
+
+        Параметры:
+            callback (Callable[[Any], Awaitable[None]]): Асинхронная функция обратного вызова.
+            symbol (str | None): Символ, для которого нужно открыть соединение.
+            symbols (list[str] | None): Список символов, для которых нужно открыть соединение.
+
+        Возвращает:
+            BaseWebsocket: Объект вебсокета.
+        """
+        pass
+
+    @abstractmethod
+    def aggtrades(
+        self,
+        callback: Callable[[Any], Awaitable[None]],
+        symbol: str | None,
+        symbols: list[str] | None,
+    ) -> Websocket:
+        """Унифицированный интерфейс для открытия вебсокет соединения для получения агрегированных сделок.
+
+        Должен быть передан либо один символ (``symbol``), либо список символов (``symbols``).
+
+        Параметры:
+            callback (Callable[[Any], Awaitable[None]]): Асинхронная функция обратного вызова.
+            symbol (str | None): Символ, для которого нужно открыть соединение.
+            symbols (list[str] | None): Список символов, для которых нужно открыть соединение.
+
+        Возвращает:
+            BaseWebsocket: Объект вебсокета.
+        """
+        pass
+
+    @abstractmethod
+    def futures_trades(
+        self,
+        callback: Callable[[Any], Awaitable[None]],
+        symbol: str | None,
+        symbols: list[str] | None,
+    ) -> Websocket:
+        """Унифицированный интерфейс для открытия вебсокет соединения фьючерсов для получения сделок.
+
+        Должен быть передан либо один символ (``symbol``), либо список символов (``symbols``).
+
+        Параметры:
+            callback (Callable[[Any], Awaitable[None]]): Асинхронная функция обратного вызова.
+            symbol (str | None): Символ, для которого нужно открыть соединение.
+            symbols (list[str] | None): Список символов, для которых нужно открыть соединение.
+
+        Возвращает:
+            BaseWebsocket: Объект вебсокета.
+        """
+        pass
+
+    @abstractmethod
+    def futures_aggtrades(
+        self,
+        callback: Callable[[Any], Awaitable[None]],
+        symbol: str | None,
+        symbols: list[str] | None,
+    ) -> Websocket:
+        """Унифицированный интерфейс для открытия вебсокет соединения фьючерсов для получения агрегированных сделок.
+
+        Должен быть передан либо один символ (``symbol``), либо список символов (``symbols``).
+
+        Параметры:
+            callback (Callable[[Any], Awaitable[None]]): Асинхронная функция обратного вызова.
+            symbol (str | None): Символ, для которого нужно открыть соединение.
+            symbols (list[str] | None): Список символов, для которых нужно открыть соединение.
+
+        Возвращает:
+            BaseWebsocket: Объект вебсокета.
+        """
+        pass

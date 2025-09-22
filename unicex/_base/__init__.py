@@ -1,6 +1,6 @@
 __all__ = [
     "BaseClient",
-    "BaseWebsocket",
+    "Websocket",
 ]
 
-from .sync import BaseClient, BaseWebsocket
+from .sync import BaseClient, Websocket

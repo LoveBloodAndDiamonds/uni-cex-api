@@ -5,7 +5,7 @@ import threading
 import time
 from collections.abc import Callable
 
-from unicex._base import BaseWebsocket
+from unicex._base import Websocket
 from unicex.exceptions import NotSupported
 
 from .._base import UserWebsocketMixin
@@ -35,7 +35,7 @@ class UserWebsocket(UserWebsocketMixin):
         self._type = type
 
         self._listen_key: str | None = None
-        self._ws: BaseWebsocket | None = None
+        self._ws: Websocket | None = None
         self._keepalive_thread: threading.Thread | None = None
 
         self._running = False
@@ -56,7 +56,7 @@ class UserWebsocket(UserWebsocketMixin):
 
         # Останавливаем вебсокет
         try:
-            if isinstance(self._ws, BaseWebsocket):
+            if isinstance(self._ws, Websocket):
                 self._ws.stop()
         except Exception as e:
             logger.error(f"Error stopping WebSocket: {e}")
@@ -83,7 +83,7 @@ class UserWebsocket(UserWebsocketMixin):
 
     def _start_ws(self, ws_url: str) -> None:
         """Запускает WebSocket для User Data Stream."""
-        self._ws = BaseWebsocket(
+        self._ws = Websocket(
             callback=self._callback, url=ws_url, no_message_reconnect_timeout=None
         )
         self._ws.start()

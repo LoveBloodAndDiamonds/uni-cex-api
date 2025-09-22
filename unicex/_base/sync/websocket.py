@@ -1,4 +1,4 @@
-__all__ = ["BaseWebsocket"]
+__all__ = ["Websocket"]
 
 import logging
 import threading
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-class BaseWebsocket:
+class Websocket:
     """Базовый класс синхронного вебсокета."""
 
     MAX_QUEUE_SIZE: int = 100

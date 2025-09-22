@@ -1,7 +1,7 @@
 __all__ = [
     "BaseClient",
-    "BaseWebsocket",
+    "Websocket",
 ]
 
 from .client import BaseClient
-from .websocket import BaseWebsocket
+from .websocket import Websocket

@@ -1,12 +1,10 @@
-__all__ = ["ClientMixin", "WebsocketManagerMixin", "UserWebsocketMixin"]
+__all__ = ["ClientMixin"]
 
 import time
 from typing import Any
 
-from unicex.exceptions import NotAuthorized, NotSupported
+from unicex.exceptions import NotAuthorized
 from unicex.utils import dict_to_query_string, filter_params, generate_hmac_sha256_signature
-
-from .types import AccountType
 
 
 class ClientMixin:
@@ -79,62 +77,3 @@ class ClientMixin:
 
         headers = self._get_headers()
         return payload, headers
-
-
-class WebsocketManagerMixin:
-    """Миксин для менеджеров вебсокетов Binance. Содержит общий функционал для работы с WS API Binance."""
-
-    _BASE_SPOT_URL: str = "wss://stream.binance.com:9443"
-    """Базовый URL для вебсокета на спот."""
-
-    _BASE_FUTURES_URL: str = "wss://fstream.binance.com"
-    """Базовый URL для вебсокета на фьючерсы."""
-
-    def _generate_stream_url(
-        self,
-        type: str,
-        url: str,
-        symbol: str | None = None,
-        symbols: list[str] | None = None,
-    ) -> str:
-        """Генерирует URL для вебсокета Binance. Параметры symbol и symbols не могут быть использованы вместе.
-
-        Параметры:
-            type (StreamType): Тип вебсокета.
-            url (str): Базовый URL для вебсокета.
-            symbol (str | None): Символ для подписки.
-            symbols (list[str] | None): Список символов для подписки.
-
-        Возвращает:
-            str: URL для вебсокета.
-        """
-        if symbol and symbols:
-            raise ValueError("Parameters symbol and symbols cannot be used together")
-        if symbol:
-            return f"{url}/ws/{symbol.lower()}@{type}"
-        if symbols:
-            streams = "/".join(f"{s.lower()}@{type}" for s in symbols)
-            return f"{url}/stream?streams={streams}"
-        return f"{url}/ws/{type}"
-
-
-class UserWebsocketMixin:
-    """Миксин для пользовательского вебсокета Binance. Содержит общий функционал для работы с пользовательским WS API Binance."""
-
-    _BASE_SPOT_WSS: str = "wss://stream.binance.com:9443"
-    """Базовый URL для вебсокета на спот."""
-
-    _BASE_FUTURES_WSS: str = "wss://fstream.binance.com"
-    """Базовый URL для вебсокета на фьючерсы."""
-
-    _RENEW_INTERVAL: int = 30 * 60
-    """Интервал продления listenKey (сек.)"""
-
-    @classmethod
-    def _create_ws_url(cls, type: AccountType, listen_key: str) -> str:
-        """Создает URL для подключения к WebSocket."""
-        if type == "FUTURES":
-            return f"{cls._BASE_FUTURES_WSS}/ws/{listen_key}"
-        if type == "SPOT":
-            return f"{cls._BASE_SPOT_WSS}/ws/{listen_key}"
-        raise NotSupported(f"Account type '{type}' not supported")

@@ -4,7 +4,7 @@ from collections.abc import Callable
 from logging import getLogger
 
 from unicex._abc import IUniWebsocketManager
-from unicex._base import BaseWebsocket
+from unicex._base import Websocket
 from unicex.enums import Exchange, Timeframe
 
 from ..adapter import Adapter
@@ -31,7 +31,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         Эти сообщения проходят через адаптер и отправляются в callback.
 
         Параметры:
-            message (Any): Сырое сообщение с вебсокета.
+            raw_msg (dict): Сырое сообщение с вебсокета.
             adapter_func (Callable): Функция адаптера, которая преобразует сырое сообщение в объект.
             callback (Callable): Функция, которая будет вызвана для каждого полученного сообщения.
         """
@@ -42,7 +42,7 @@ class UniWebsocketManager(IUniWebsocketManager):
             return
         callback(adapted_msg)
 
-    def klines(self, callback: Callable, symbol: str, timeframe: Timeframe) -> BaseWebsocket:
+    def klines(self, callback: Callable, symbol: str, timeframe: Timeframe) -> Websocket:
         """Унифицированный интерфейс для открытия вебсокет соединения для получения свечей.
         Все полученные сообщения будут преобразованы в объекты Kline и переданы в callback.
 
@@ -64,7 +64,7 @@ class UniWebsocketManager(IUniWebsocketManager):
 
     def futures_klines(
         self, callback: Callable, symbol: str, timeframe: Timeframe
-    ) -> BaseWebsocket:
+    ) -> Websocket:
         """Унифицированный интерфейс для открытия вебсокет соединения фьючерсов для получения свечей.
 
         Параметры:
@@ -83,7 +83,7 @@ class UniWebsocketManager(IUniWebsocketManager):
             interval=timeframe.to_exchange_format(Exchange.BINANCE),  # type: ignore
         )
 
-    def trades(self, callback: Callable, symbol: str) -> BaseWebsocket:
+    def trades(self, callback: Callable, symbol: str) -> Websocket:
         """Унифицированный интерфейс для открытия вебсокет соединения для получения сделок.
 
         Параметры:
@@ -100,7 +100,7 @@ class UniWebsocketManager(IUniWebsocketManager):
             symbol=symbol,
         )
 
-    def aggtrades(self, callback: Callable, symbol: str) -> BaseWebsocket:
+    def aggtrades(self, callback: Callable, symbol: str) -> Websocket:
         """Унифицированный интерфейс для открытия вебсокет соединения для получения агрегированных сделок.
 
         Параметры:
@@ -117,7 +117,7 @@ class UniWebsocketManager(IUniWebsocketManager):
             symbol=symbol,
         )
 
-    def futures_trades(self, callback: Callable, symbol: str) -> BaseWebsocket:
+    def futures_trades(self, callback: Callable, symbol: str) -> Websocket:
         """Унифицированный интерфейс для открытия вебсокет соединения для получения сделок.
 
         Параметры:
@@ -134,7 +134,7 @@ class UniWebsocketManager(IUniWebsocketManager):
             symbol=symbol,
         )
 
-    def futures_aggtrades(self, callback: Callable, symbol: str) -> BaseWebsocket:
+    def futures_aggtrades(self, callback: Callable, symbol: str) -> Websocket:
         """Унифицированный интерфейс для открытия вебсокет соединения для получения агрегированных сделок.
 
         Параметры:

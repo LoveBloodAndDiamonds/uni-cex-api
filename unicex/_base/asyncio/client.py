@@ -62,7 +62,7 @@ class BaseClient:
         Создать клиент можно и через __init__, но в таком случае session: `aiohttp.ClientSession` - обязательный параметр.
 
         Возвращает:
-            BaseAsyncClient: Созданный экземпляр клиента.
+            BaseClient: Созданный экземпляр клиента.
         """
         return cls(
             session=session or aiohttp.ClientSession(),
