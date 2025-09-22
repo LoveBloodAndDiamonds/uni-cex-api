@@ -3,7 +3,8 @@ __all__ = ["BaseWebsocket"]
 import asyncio
 import logging
 import time
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 import orjson
 import websockets  # async
@@ -23,7 +24,7 @@ class BaseWebsocket:
 
     def __init__(
         self,
-        callback: Callable,
+        callback: Callable[[Any], Awaitable[None]],
         url: str,
         subscription_messages: list[dict] | list[str] | None = None,
         ping_interval: int | float = 10,
@@ -36,7 +37,7 @@ class BaseWebsocket:
         """Инициализация вебсокета.
 
         Параметры:
-            callback (Callable): Функция обратного вызова для обработки сообщений.
+            callback (Callable[[Any], Awaitable[None]]): Асинхронная функция обратного вызова для обработки сообщений.
             subscription_messages (list[dict] | list[str] | None): Список сообщений для подписки.
             ping_interval (int | float | None): Интервал отправки пинга (сек.).
             ping_message (str | None): Сообщение для пинга, если не указано - отправляется обычный PING FRAME.

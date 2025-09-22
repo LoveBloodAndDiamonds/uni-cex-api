@@ -3,8 +3,10 @@ __all__ = ["ClientMixin", "WebsocketManagerMixin", "UserWebsocketMixin"]
 import time
 from typing import Any
 
-from unicex.exceptions import NotAuthorized
+from unicex.exceptions import NotAuthorized, NotSupported
 from unicex.utils import dict_to_query_string, filter_params, generate_hmac_sha256_signature
+
+from .types import AccountType
 
 
 class ClientMixin:
@@ -127,3 +129,12 @@ class UserWebsocketMixin:
 
     _RENEW_INTERVAL: int = 30 * 60
     """Интервал продления listenKey (сек.)"""
+
+    @classmethod
+    def _create_ws_url(cls, type: AccountType, listen_key: str) -> str:
+        """Создает URL для подключения к WebSocket."""
+        if type == "FUTURES":
+            return f"{cls._BASE_FUTURES_WSS}/ws/{listen_key}"
+        if type == "SPOT":
+            return f"{cls._BASE_SPOT_WSS}/ws/{listen_key}"
+        raise NotSupported(f"Account type '{type}' not supported")

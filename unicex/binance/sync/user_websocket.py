@@ -44,7 +44,7 @@ class UserWebsocket(UserWebsocketMixin):
         """Запускает пользовательский стрим с автопродлением listenKey."""
         self._running = True
         self._listen_key = self._create_listen_key()
-        self._start_ws(self._create_ws_url(self._listen_key))
+        self._start_ws(self._create_ws_url(self._type, self._listen_key))  # type: ignore
 
         # Фоновое продление ключа прослушивания
         self._keepalive_thread = threading.Thread(target=self._keepalive_loop, daemon=True)
@@ -120,14 +120,6 @@ class UserWebsocket(UserWebsocketMixin):
                 if self._running:
                     return
                 time.sleep(1)
-
-    def _create_ws_url(self, listen_key: str) -> str:
-        """Создает URL для подключения к WebSocket."""
-        if self._type == "FUTURES":
-            return f"{self._BASE_FUTURES_WSS}/ws/{listen_key}"
-        if self._type == "SPOT":
-            return f"{self._BASE_SPOT_WSS}/ws/{listen_key}"
-        raise NotSupported(f"Account type '{self._type}' not supported")
 
     def _create_listen_key(self) -> str:
         """Создает новый listenKey для User Data Stream в зависимости от типа аккаунта."""

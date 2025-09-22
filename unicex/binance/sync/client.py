@@ -1490,7 +1490,7 @@ class Client(ClientMixin, BaseClient):
         https://developers.binance.com/docs/binance-spot-api-docs/testnet/rest-api/user-data-stream-endpoints-deprecated#start-user-data-stream-user_stream-deprecated
         """
         warnings.warn(
-            "[!IMPORTANT] These requests have been deprecated, which means we will remove them in the future. Please subscribe to the User Data Stream through the WebSocket API instead.",
+            "These requests have been deprecated, which means we will remove them in the future. Please subscribe to the User Data Stream through the WebSocket API instead.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -1504,7 +1504,7 @@ class Client(ClientMixin, BaseClient):
         https://developers.binance.com/docs/binance-spot-api-docs/testnet/rest-api/user-data-stream-endpoints-deprecated#keepalive-user-data-stream-user_stream-deprecated
         """
         warnings.warn(
-            "[!IMPORTANT] These requests have been deprecated, which means we will remove them in the future. Please subscribe to the User Data Stream through the WebSocket API instead.",
+            "These requests have been deprecated, which means we will remove them in the future. Please subscribe to the User Data Stream through the WebSocket API instead.",
             DeprecationWarning,
             stacklevel=2,
         )
