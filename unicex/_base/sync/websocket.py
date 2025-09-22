@@ -5,6 +5,7 @@ import threading
 import time
 from collections import deque
 from collections.abc import Callable
+from typing import Any
 
 import orjson
 from websocket import WebSocket, WebSocketApp  # sync
@@ -23,7 +24,7 @@ class Websocket:
 
     def __init__(
         self,
-        callback: Callable,
+        callback: Callable[[Any], None],
         url: str,
         subscription_messages: list[dict] | list[str] | None = None,
         ping_interval: int | float | None = 10,

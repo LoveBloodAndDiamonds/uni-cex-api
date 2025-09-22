@@ -5,9 +5,9 @@ import warnings
 from typing import Any, Literal
 
 from unicex._base import BaseClient
-from unicex.binance._base import ClientMixin
 from unicex.types import RequestMethod
 
+from .._mixins import ClientMixin
 from ..types import (
     AutoCloseType,
     FuturesOrderType,

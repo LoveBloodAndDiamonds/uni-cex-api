@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from logging import getLogger
 from typing import Any
 
-from unicex._abc.asyncio import IUniWebsocketManager
+from unicex._abc import IUniWebsocketManager
 from unicex._base.asyncio import Websocket
 from unicex.enums import Exchange, Timeframe
 
@@ -134,9 +134,7 @@ class UniWebsocketManager(IUniWebsocketManager):
             symbol=symbol,
         )
 
-    def futures_trades(
-        self, callback: Callable[[Any], Awaitable[None]], symbol: str
-    ) -> Websocket:
+    def futures_trades(self, callback: Callable[[Any], Awaitable[None]], symbol: str) -> Websocket:
         """Унифицированный интерфейс для открытия вебсокет соединения для получения сделок.
 
         Параметры:

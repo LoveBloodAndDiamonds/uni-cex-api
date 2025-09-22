@@ -1,14 +1,19 @@
 __all__ = ["WebsocketManager"]
 
 
+from collections.abc import Awaitable, Callable
+from typing import Any
+
 from unicex._base.asyncio import Websocket
 
-from .._base import BaseWebsocketManager
+from .._factories import WebsocketManagerFactory
 from .client import Client
 from .user_websocket import UserWebsocket
 
 
-class WebsocketManager(BaseWebsocketManager[Client, Websocket, UserWebsocket]):
+class WebsocketManager(
+    WebsocketManagerFactory[Client, Websocket, UserWebsocket, Callable[[Any], Awaitable[None]]]
+):
     """Менеджер асинхронных вебсокетов для Binance."""
 
     def __init__(self, client: Client | None = None) -> None:

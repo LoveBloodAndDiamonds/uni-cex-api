@@ -7,7 +7,7 @@ from typing import Any, Literal
 from unicex._base.asyncio import BaseClient
 from unicex.types import RequestMethod
 
-from .._base import ClientMixin
+from .._mixins import ClientMixin
 from ..types import (
     AutoCloseType,
     FuturesOrderType,

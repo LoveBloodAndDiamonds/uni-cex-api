@@ -5,4 +5,5 @@ __all__ = [
 ]
 
 from .adapter import IAdapter
-from .sync import IUniClient, IUniWebsocketManager
+from .sync import IUniClient
+from .uni_websocket_manager import IUniWebsocketManager

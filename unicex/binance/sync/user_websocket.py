@@ -4,11 +4,12 @@ import logging
 import threading
 import time
 from collections.abc import Callable
+from typing import Any
 
 from unicex._base import Websocket
 from unicex.exceptions import NotSupported
 
-from .._base import UserWebsocketMixin
+from .._mixins import UserWebsocketMixin
 from ..types import AccountType
 from .client import Client
 
@@ -22,7 +23,7 @@ class UserWebsocket(UserWebsocketMixin):
     Поддержка типов аккаунта: "SPOT" и "FUTURES" (USDT‑M фьючерсы).
     """
 
-    def __init__(self, callback: Callable, client: Client, type: AccountType) -> None:
+    def __init__(self, callback: Callable[[Any], None], client: Client, type: AccountType) -> None:
         """Инициализирует пользовательский вебсокет.
 
         Параметры:
@@ -83,9 +84,7 @@ class UserWebsocket(UserWebsocketMixin):
 
     def _start_ws(self, ws_url: str) -> None:
         """Запускает WebSocket для User Data Stream."""
-        self._ws = Websocket(
-            callback=self._callback, url=ws_url, no_message_reconnect_timeout=None
-        )
+        self._ws = Websocket(callback=self._callback, url=ws_url, no_message_reconnect_timeout=None)
         self._ws.start()
         logger.info(f"User websocket started: ...{ws_url[-5:]}")
 

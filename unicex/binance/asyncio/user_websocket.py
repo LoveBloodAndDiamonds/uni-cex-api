@@ -8,7 +8,7 @@ from typing import Any
 from unicex._base.asyncio import Websocket
 from unicex.exceptions import NotSupported
 
-from .._base import UserWebsocketMixin
+from .._mixins import UserWebsocketMixin
 from ..types import AccountType
 from .client import Client
 
@@ -90,9 +90,7 @@ class UserWebsocket(UserWebsocketMixin):
 
     async def _start_ws(self, ws_url: str) -> None:
         """Запускает WebSocket для User Data Stream."""
-        self._ws = Websocket(
-            callback=self._callback, url=ws_url, no_message_reconnect_timeout=None
-        )
+        self._ws = Websocket(callback=self._callback, url=ws_url, no_message_reconnect_timeout=None)
         await self._ws.start()
         logger.info(f"User websocket started: ...{ws_url[-5:]}")
 
