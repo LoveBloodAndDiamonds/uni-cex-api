@@ -1,31 +1,77 @@
 __all__ = ["UniWebsocketManager"]
 
 from collections.abc import Callable
+from logging import getLogger
 from typing import Any
 
+from unicex._abc import IUniWebsocketManager
 from unicex._base import Websocket
+from unicex.enums import Exchange, Timeframe
 
-from .._factories import UniWebsocketManagerFactory
+from ..adapter import Adapter
 from .client import Client
 from .uni_client import UniClient
 from .websocket_manager import WebsocketManager
 
 
-class UniWebsocketManager(
-    UniWebsocketManagerFactory[
-        Client,
-        UniClient,
-        WebsocketManager,
-        Websocket,
-        Callable[[Any], None],
-    ]
-):
-    """Синхронный унифицированный менеджер вебсокетов для Binance."""
+class UniWebsocketManager(IUniWebsocketManager):
+    """Унифицированный менеджер вебсокетов Binance."""
 
     def __init__(self, client: Client | UniClient | None = None) -> None:
-        """Инициализирует синхронный унифицированный менеджер вебсокетов для Binance.
+        """Инициализирует фабрику унифицированного менеджера вебсокетов."""
+        if isinstance(client, UniClient):
+            client = client.client
+        self._websocket_manager = WebsocketManager(client)
+        self._adapter = Adapter()
+        self._logger = getLogger(__name__)
 
-        Параметры:
-            client (Client | UniClient | None): Клиент для работы с Binance.
-        """
-        super().__init__(websocket_manager_cls=WebsocketManager, sync=True, client=client)
+    def _make_wrapper(self, adapter_func: Callable[[dict], Any], callback: Callable) -> Callable:
+        """Создает обертку над callback, применяя адаптер к сырым сообщениям."""
+
+        def _wrapper(raw_msg: dict) -> None:
+            try:
+                adapted = adapter_func(raw_msg)
+            except Exception as e:  # noqa: BLE001
+                self._logger.error(f"Failed to adapt message: {e}")
+                return
+            callback(adapted)
+
+        return _wrapper
+
+    def klines(self, callback: Callable, symbol: str, timeframe: Timeframe) -> Websocket:
+        """Открывает соединение для получения свечей и адаптирует сообщения."""
+        wrapper = self._make_wrapper(self._adapter.klines_message, callback)
+        return self._websocket_manager.klines(
+            callback=wrapper,
+            symbol=symbol,
+            interval=timeframe.to_exchange_format(Exchange.BINANCE),  # type: ignore
+        )
+
+    def futures_klines(self, callback: Callable, symbol: str, timeframe: Timeframe) -> Websocket:
+        """Открывает соединение фьючерсов для получения свечей и адаптирует сообщения."""
+        wrapper = self._make_wrapper(self._adapter.futures_klines_message, callback)
+        return self._websocket_manager.futures_klines(
+            callback=wrapper,
+            symbol=symbol,
+            interval=timeframe.to_exchange_format(Exchange.BINANCE),  # type: ignore
+        )
+
+    def trades(self, callback: Callable, symbol: str) -> Websocket:
+        """Открывает соединение для получения сделок и адаптирует сообщения."""
+        wrapper = self._make_wrapper(self._adapter.trades_message, callback)
+        return self._websocket_manager.trade(callback=wrapper, symbol=symbol)
+
+    def aggtrades(self, callback: Callable, symbol: str) -> Websocket:
+        """Открывает соединение для получения агрегированных сделок и адаптирует сообщения."""
+        wrapper = self._make_wrapper(self._adapter.aggtrades_message, callback)
+        return self._websocket_manager.agg_trade(callback=wrapper, symbol=symbol)
+
+    def futures_trades(self, callback: Callable, symbol: str) -> Websocket:
+        """Открывает соединение для получения фьючерсных сделок и адаптирует сообщения."""
+        wrapper = self._make_wrapper(self._adapter.futures_trades_message, callback)
+        return self._websocket_manager.futures_trade(callback=wrapper, symbol=symbol)
+
+    def futures_aggtrades(self, callback: Callable, symbol: str) -> Websocket:
+        """Открывает соединение для получения фьючерсных агрегированных сделок и адаптирует сообщения."""
+        wrapper = self._make_wrapper(self._adapter.futures_aggtrades_message, callback)
+        return self._websocket_manager.futures_agg_trade(callback=wrapper, symbol=symbol)
