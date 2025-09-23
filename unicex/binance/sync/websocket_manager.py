@@ -105,16 +105,16 @@ class WebsocketManager(WebsocketManagerMixin):
     def klines(
         self,
         callback: Callable,
-        symbol: str | None,
         interval: SpotTimeframe,
+        symbol: str | None = None,
         symbols: list[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения свечей.
 
         Параметры:
             callback (Callable): Функция для обработки сообщений.
-            symbol (str | None): Один символ для подписки.
             interval (SpotTimeframe): Временной интервал свечей.
+            symbol (str | None): Один символ для подписки.
             symbols (list[str] | None): Список символов для мультиплекс‑подключения.
 
         Возвращает:
@@ -217,16 +217,16 @@ class WebsocketManager(WebsocketManagerMixin):
     def symbol_rolling_window_ticker(
         self,
         callback: Callable,
-        symbol: str | None,
         window: RollingWindowSize,
+        symbol: str | None = None,
         symbols: list[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения статистики тикера за указанное окно времени.
 
         Параметры:
             callback (Callable): Функция для обработки сообщений.
-            symbol (str | None): Один символ для подписки.
             window (RollingWindowSize): Размер окна статистики.
+            symbol (str | None): Один символ для подписки.
             symbols (list[str] | None): Список символов для мультиплекс‑подключения.
 
         Возвращает:
@@ -299,16 +299,16 @@ class WebsocketManager(WebsocketManagerMixin):
     def book_depth(
         self,
         callback: Callable,
-        symbol: str | None,
         levels: BookDepthLevels,
+        symbol: str | None = None,
         symbols: list[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения стакана глубиной N уровней.
 
         Параметры:
             callback (Callable): Функция для обработки сообщений.
-            symbol (str | None): Один символ для подписки.
             levels (BookDepthLevels): Глубина стакана (уровни).
+            symbol (str | None): Один символ для подписки.
             symbols (list[str] | None): Список символов для мультиплекс‑подключения.
 
         Возвращает:
@@ -382,16 +382,16 @@ class WebsocketManager(WebsocketManagerMixin):
     def futures_klines(
         self,
         callback: Callable,
-        symbol: str | None,
         interval: FuturesTimeframe,
+        symbol: str | None = None,
         symbols: list[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения свечей.
 
         Параметры:
             callback (Callable): Функция для обработки сообщений.
-            symbol (str | None): Один символ для подписки.
             interval (FuturesTimeframe): Временной интервал свечей.
+            symbol (str | None): Один символ для подписки.
             symbols (list[str] | None): Список символов для мультиплекс‑подключения.
 
         Возвращает:
@@ -494,16 +494,16 @@ class WebsocketManager(WebsocketManagerMixin):
     def futures_book_depth(
         self,
         callback: Callable,
-        symbol: str | None,
         levels: BookDepthLevels,
+        symbol: str | None = None,
         symbols: list[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения стакана глубиной N уровней.
 
         Параметры:
             callback (Callable): Функция для обработки сообщений.
-            symbol (str | None): Один символ для подписки.
             levels (BookDepthLevels): Глубина стакана (уровни).
+            symbol (str | None): Один символ для подписки.
             symbols (list[str] | None): Список символов для мультиплекс‑подключения.
 
         Возвращает:
@@ -557,16 +557,16 @@ class WebsocketManager(WebsocketManagerMixin):
     def futures_symbol_mark_price(
         self,
         callback: Callable,
-        symbol: str | None = None,
         interval: MarkPriceUpdateSpeed = "1s",
+        symbol: str | None = None,
         symbols: list[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения mark price и funding rate по символам.
 
         Параметры:
             callback (Callable): Функция для обработки сообщений.
-            symbol (str | None): Один символ для подписки.
             interval (MarkPriceUpdateSpeed): Частота обновления ("1s" или пусто).
+            symbol (str | None): Один символ для подписки.
             symbols (list[str] | None): Список символов для мультиплекс‑подключения.
 
         Возвращает:

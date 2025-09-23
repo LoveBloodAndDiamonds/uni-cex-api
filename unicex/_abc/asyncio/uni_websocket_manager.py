@@ -7,6 +7,8 @@ from typing import Any
 from unicex._base.asyncio import Websocket
 from unicex.enums import Timeframe
 
+type CallbackType = Callable[[Any], Awaitable[None]]
+
 
 class IUniWebsocketManager(ABC):
     """Интерфейс для реализации менеджера асинхронных вебсокетов."""
@@ -14,7 +16,7 @@ class IUniWebsocketManager(ABC):
     @abstractmethod
     def klines(
         self,
-        callback: Callable[[Any], Awaitable[None]],
+        callback: CallbackType,
         symbol: str | None,
         symbols: list[str] | None,
         timeframe: Timeframe,
@@ -30,14 +32,14 @@ class IUniWebsocketManager(ABC):
             timeframe (Timeframe): Временной интервал свечей.
 
         Возвращает:
-            BaseWebsocket: Объект вебсокета для управления соединением.
+            Websocket: Объект вебсокета для управления соединением.
         """
         pass
 
     @abstractmethod
     def futures_klines(
         self,
-        callback: Callable[[Any], Awaitable[None]],
+        callback: CallbackType,
         symbol: str | None,
         symbols: list[str] | None,
         timeframe: Timeframe,
@@ -53,14 +55,14 @@ class IUniWebsocketManager(ABC):
             timeframe (Timeframe): Временной интервал свечей.
 
         Возвращает:
-            BaseWebsocket: Объект вебсокета.
+            Websocket: Объект вебсокета.
         """
         pass
 
     @abstractmethod
     def trades(
         self,
-        callback: Callable[[Any], Awaitable[None]],
+        callback: CallbackType,
         symbol: str | None,
         symbols: list[str] | None,
     ) -> Websocket:
@@ -74,14 +76,14 @@ class IUniWebsocketManager(ABC):
             symbols (list[str] | None): Список символов, для которых нужно открыть соединение.
 
         Возвращает:
-            BaseWebsocket: Объект вебсокета.
+            Websocket: Объект вебсокета.
         """
         pass
 
     @abstractmethod
     def aggtrades(
         self,
-        callback: Callable[[Any], Awaitable[None]],
+        callback: CallbackType,
         symbol: str | None,
         symbols: list[str] | None,
     ) -> Websocket:
@@ -95,14 +97,14 @@ class IUniWebsocketManager(ABC):
             symbols (list[str] | None): Список символов, для которых нужно открыть соединение.
 
         Возвращает:
-            BaseWebsocket: Объект вебсокета.
+            Websocket: Объект вебсокета.
         """
         pass
 
     @abstractmethod
     def futures_trades(
         self,
-        callback: Callable[[Any], Awaitable[None]],
+        callback: CallbackType,
         symbol: str | None,
         symbols: list[str] | None,
     ) -> Websocket:
@@ -116,14 +118,14 @@ class IUniWebsocketManager(ABC):
             symbols (list[str] | None): Список символов, для которых нужно открыть соединение.
 
         Возвращает:
-            BaseWebsocket: Объект вебсокета.
+            Websocket: Объект вебсокета.
         """
         pass
 
     @abstractmethod
     def futures_aggtrades(
         self,
-        callback: Callable[[Any], Awaitable[None]],
+        callback: CallbackType,
         symbol: str | None,
         symbols: list[str] | None,
     ) -> Websocket:
@@ -137,6 +139,6 @@ class IUniWebsocketManager(ABC):
             symbols (list[str] | None): Список символов, для которых нужно открыть соединение.
 
         Возвращает:
-            BaseWebsocket: Объект вебсокета.
+            Websocket: Объект вебсокета.
         """
         pass

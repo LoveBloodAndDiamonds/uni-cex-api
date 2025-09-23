@@ -1,5 +1,5 @@
 from unicex.enums import Timeframe
-from unicex.exchanges.binance import UniBinanceWebsocketManager, BinanceWebsocketManager
+from unicex.binance import UniWebsocketManager
 from unicex.types import KlineDict
 
 
@@ -14,8 +14,8 @@ def callback(msg):
 
 def main() -> None:
     """Main entry point for the application."""
-    sm = BinanceWebsocketManager()
-    socket = sm.futures_klines(symbol="BTCUSDT", callback=callback, interval="1m")
+    sm = UniWebsocketManager()
+    socket = sm.futures_klines(callback=callback, timeframe=Timeframe.DAY_1)
     socket.start()
 
     import time
