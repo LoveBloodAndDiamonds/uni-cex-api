@@ -77,26 +77,106 @@ class WebsocketManager(WebsocketManagerMixin):
         )
         return Websocket(callback=callback, url=url)
 
-    def agg_trade(self, callback: Callable, symbol: str) -> Websocket:
-        """Создает вебсокет для получения агрегированных сделок."""
-        url = self._generate_stream_url(type="aggTrade", url=self._BASE_SPOT_URL, symbol=symbol)
-        return Websocket(callback=callback, url=url)
+    def agg_trade(
+        self,
+        callback: Callable,
+        symbol: str | None = None,
+        symbols: list[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для получения агрегированных сделок.
 
-    def klines(self, callback: Callable, symbol: str, interval: SpotTimeframe) -> Websocket:
-        """Создает вебсокет для получения свечей."""
+        Параметры:
+            callback (Callable): Функция для обработки сообщений.
+            symbol (str | None): Один символ для подписки.
+            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            Websocket: Экземпляр вебсокета.
+        """
         url = self._generate_stream_url(
-            type=f"kline_{interval}", url=self._BASE_SPOT_URL, symbol=symbol
+            type="aggTrade",
+            url=self._BASE_SPOT_URL,
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
         )
         return Websocket(callback=callback, url=url)
 
-    def depth_stream(self, callback: Callable, symbol: str) -> Websocket:
-        """Создает вебсокет для получения событий изменения стакана (без лимита глубины)."""
-        url = self._generate_stream_url(type="depth", url=self._BASE_SPOT_URL, symbol=symbol)
+    def klines(
+        self,
+        callback: Callable,
+        symbol: str | None,
+        interval: SpotTimeframe,
+        symbols: list[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для получения свечей.
+
+        Параметры:
+            callback (Callable): Функция для обработки сообщений.
+            symbol (str | None): Один символ для подписки.
+            interval (SpotTimeframe): Временной интервал свечей.
+            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            Websocket: Экземпляр вебсокета.
+        """
+        url = self._generate_stream_url(
+            type=f"kline_{interval}",
+            url=self._BASE_SPOT_URL,
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
+        )
         return Websocket(callback=callback, url=url)
 
-    def symbol_mini_ticker(self, callback: Callable, symbol: str) -> Websocket:
-        """Создает вебсокет для получения мини-статистики тикера за последние 24 ч. (Не за сутки)."""
-        url = self._generate_stream_url(type="miniTicker", url=self._BASE_SPOT_URL, symbol=symbol)
+    def depth_stream(
+        self,
+        callback: Callable,
+        symbol: str | None = None,
+        symbols: list[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для получения событий изменения стакана (без лимита глубины).
+
+        Параметры:
+            callback (Callable): Функция для обработки сообщений.
+            symbol (str | None): Один символ для подписки.
+            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            Websocket: Экземпляр вебсокета.
+        """
+        url = self._generate_stream_url(
+            type="depth",
+            url=self._BASE_SPOT_URL,
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
+        )
+        return Websocket(callback=callback, url=url)
+
+    def symbol_mini_ticker(
+        self,
+        callback: Callable,
+        symbol: str | None = None,
+        symbols: list[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для мини‑статистики тикера за последние 24 часа.
+
+        Параметры:
+            callback (Callable): Функция для обработки сообщений.
+            symbol (str | None): Один символ для подписки.
+            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            Websocket: Экземпляр вебсокета.
+        """
+        url = self._generate_stream_url(
+            type="miniTicker",
+            url=self._BASE_SPOT_URL,
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
+        )
         return Websocket(callback=callback, url=url)
 
     def mini_ticker(self, callback: Callable) -> Websocket:
@@ -104,9 +184,29 @@ class WebsocketManager(WebsocketManagerMixin):
         url = self._generate_stream_url(type="!miniTicker@arr", url=self._BASE_SPOT_URL)
         return Websocket(callback=callback, url=url)
 
-    def symbol_ticker(self, callback: Callable, symbol: str) -> Websocket:
-        """Создает вебсокет для получения расширенной статистики тикера за последние 24 ч. (Не за сутки)."""
-        url = self._generate_stream_url(type="ticker", url=self._BASE_SPOT_URL, symbol=symbol)
+    def symbol_ticker(
+        self,
+        callback: Callable,
+        symbol: str | None = None,
+        symbols: list[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для расширенной статистики тикера за последние 24 часа.
+
+        Параметры:
+            callback (Callable): Функция для обработки сообщений.
+            symbol (str | None): Один символ для подписки.
+            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            Websocket: Экземпляр вебсокета.
+        """
+        url = self._generate_stream_url(
+            type="ticker",
+            url=self._BASE_SPOT_URL,
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
+        )
         return Websocket(callback=callback, url=url)
 
     def ticker(self, callback: Callable) -> Websocket:
@@ -115,11 +215,29 @@ class WebsocketManager(WebsocketManagerMixin):
         return Websocket(callback=callback, url=url)
 
     def symbol_rolling_window_ticker(
-        self, callback: Callable, symbol: str, window: RollingWindowSize
+        self,
+        callback: Callable,
+        symbol: str | None,
+        window: RollingWindowSize,
+        symbols: list[str] | None = None,
     ) -> Websocket:
-        """Создает вебсокет для получения статистики тикера за указанное окно времени."""
+        """Создает вебсокет для получения статистики тикера за указанное окно времени.
+
+        Параметры:
+            callback (Callable): Функция для обработки сообщений.
+            symbol (str | None): Один символ для подписки.
+            window (RollingWindowSize): Размер окна статистики.
+            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            Websocket: Экземпляр вебсокета.
+        """
         url = self._generate_stream_url(
-            type=f"ticker_{window}", url=self._BASE_SPOT_URL, symbol=symbol
+            type=f"ticker_{window}",
+            url=self._BASE_SPOT_URL,
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
         )
         return Websocket(callback=callback, url=url)
 
@@ -128,20 +246,80 @@ class WebsocketManager(WebsocketManagerMixin):
         url = self._generate_stream_url(type=f"!ticker_{window}@arr", url=self._BASE_SPOT_URL)
         return Websocket(callback=callback, url=url)
 
-    def avg_price(self, callback: Callable, symbol: str) -> Websocket:
-        """Создает вебсокет для получения среднего прайса (Average Price)."""
-        url = self._generate_stream_url(type="avgPrice", url=self._BASE_SPOT_URL, symbol=symbol)
-        return Websocket(callback=callback, url=url)
+    def avg_price(
+        self,
+        callback: Callable,
+        symbol: str | None = None,
+        symbols: list[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для получения среднего прайса (Average Price).
 
-    def book_ticker(self, callback: Callable, symbol: str) -> Websocket:
-        """Создает вебсокет для получения лучших бид/аск по символу."""
-        url = self._generate_stream_url(type="bookTicker", url=self._BASE_SPOT_URL, symbol=symbol)
-        return Websocket(callback=callback, url=url)
+        Параметры:
+            callback (Callable): Функция для обработки сообщений.
+            symbol (str | None): Один символ для подписки.
+            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
 
-    def book_depth(self, callback: Callable, symbol: str, levels: BookDepthLevels) -> Websocket:
-        """Создает вебсокет для получения стакана глубиной N уровней."""
+        Возвращает:
+            Websocket: Экземпляр вебсокета.
+        """
         url = self._generate_stream_url(
-            type=f"depth{levels}", url=self._BASE_SPOT_URL, symbol=symbol
+            type="avgPrice",
+            url=self._BASE_SPOT_URL,
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
+        )
+        return Websocket(callback=callback, url=url)
+
+    def book_ticker(
+        self,
+        callback: Callable,
+        symbol: str | None = None,
+        symbols: list[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для получения лучших бид/аск по символам.
+
+        Параметры:
+            callback (Callable): Функция для обработки сообщений.
+            symbol (str | None): Один символ для подписки.
+            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            Websocket: Экземпляр вебсокета.
+        """
+        url = self._generate_stream_url(
+            type="bookTicker",
+            url=self._BASE_SPOT_URL,
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
+        )
+        return Websocket(callback=callback, url=url)
+
+    def book_depth(
+        self,
+        callback: Callable,
+        symbol: str | None,
+        levels: BookDepthLevels,
+        symbols: list[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для получения стакана глубиной N уровней.
+
+        Параметры:
+            callback (Callable): Функция для обработки сообщений.
+            symbol (str | None): Один символ для подписки.
+            levels (BookDepthLevels): Глубина стакана (уровни).
+            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            Websocket: Экземпляр вебсокета.
+        """
+        url = self._generate_stream_url(
+            type=f"depth{levels}",
+            url=self._BASE_SPOT_URL,
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
         )
         return Websocket(callback=callback, url=url)
 
@@ -151,29 +329,105 @@ class WebsocketManager(WebsocketManagerMixin):
             raise NotAuthorized("You must provide authorized client.")
         return UserWebsocket(callback=callback, client=self.client, type="SPOT")
 
-    def futures_trade(self, callback: Callable, symbol: str) -> Websocket:
-        """Создает вебсокет для получения сделок."""
-        url = self._generate_stream_url(type="trade", url=self._BASE_FUTURES_URL, symbol=symbol)
-        return Websocket(callback=callback, url=url)
-
-    def futures_agg_trade(self, callback: Callable, symbol: str) -> Websocket:
-        """Создает вебсокет для получения агрегированных сделок."""
-        url = self._generate_stream_url(type="aggTrade", url=self._BASE_FUTURES_URL, symbol=symbol)
-        return Websocket(callback=callback, url=url)
-
-    def futures_klines(
-        self, callback: Callable, symbol: str, interval: FuturesTimeframe
+    def futures_trade(
+        self,
+        callback: Callable,
+        symbol: str | None = None,
+        symbols: list[str] | None = None,
     ) -> Websocket:
-        """Создает вебсокет для получения свечей."""
+        """Создает вебсокет для получения сделок.
+
+        Параметры:
+            callback (Callable): Функция для обработки сообщений.
+            symbol (str | None): Один символ для подписки.
+            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            Websocket: Экземпляр вебсокета.
+        """
         url = self._generate_stream_url(
-            type=f"kline_{interval}", url=self._BASE_FUTURES_URL, symbol=symbol
+            type="trade",
+            url=self._BASE_FUTURES_URL,
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
         )
         return Websocket(callback=callback, url=url)
 
-    def futures_symbol_mini_ticker(self, callback: Callable, symbol: str) -> Websocket:
-        """Создает вебсокет для получения мини-статистики тикера за последние 24 ч. (Не за сутки)."""
+    def futures_agg_trade(
+        self,
+        callback: Callable,
+        symbol: str | None = None,
+        symbols: list[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для получения агрегированных сделок.
+
+        Параметры:
+            callback (Callable): Функция для обработки сообщений.
+            symbol (str | None): Один символ для подписки.
+            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            Websocket: Экземпляр вебсокета.
+        """
         url = self._generate_stream_url(
-            type="miniTicker", url=self._BASE_FUTURES_URL, symbol=symbol
+            type="aggTrade",
+            url=self._BASE_FUTURES_URL,
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
+        )
+        return Websocket(callback=callback, url=url)
+
+    def futures_klines(
+        self,
+        callback: Callable,
+        symbol: str | None,
+        interval: FuturesTimeframe,
+        symbols: list[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для получения свечей.
+
+        Параметры:
+            callback (Callable): Функция для обработки сообщений.
+            symbol (str | None): Один символ для подписки.
+            interval (FuturesTimeframe): Временной интервал свечей.
+            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            Websocket: Экземпляр вебсокета.
+        """
+        url = self._generate_stream_url(
+            type=f"kline_{interval}",
+            url=self._BASE_FUTURES_URL,
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
+        )
+        return Websocket(callback=callback, url=url)
+
+    def futures_symbol_mini_ticker(
+        self,
+        callback: Callable,
+        symbol: str | None = None,
+        symbols: list[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для мини‑статистики тикера за последние 24 часа.
+
+        Параметры:
+            callback (Callable): Функция для обработки сообщений.
+            symbol (str | None): Один символ для подписки.
+            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            Websocket: Экземпляр вебсокета.
+        """
+        url = self._generate_stream_url(
+            type="miniTicker",
+            url=self._BASE_FUTURES_URL,
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
         )
         return Websocket(callback=callback, url=url)
 
@@ -182,9 +436,29 @@ class WebsocketManager(WebsocketManagerMixin):
         url = self._generate_stream_url(type="!miniTicker@arr", url=self._BASE_FUTURES_URL)
         return Websocket(callback=callback, url=url)
 
-    def futures_symbol_ticker(self, callback: Callable, symbol: str) -> Websocket:
-        """Создает вебсокет для получения расширенной статистики тикера за последние 24 ч. (Не за сутки)."""
-        url = self._generate_stream_url(type="ticker", url=self._BASE_FUTURES_URL, symbol=symbol)
+    def futures_symbol_ticker(
+        self,
+        callback: Callable,
+        symbol: str | None = None,
+        symbols: list[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для расширенной статистики тикера за последние 24 часа.
+
+        Параметры:
+            callback (Callable): Функция для обработки сообщений.
+            symbol (str | None): Один символ для подписки.
+            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            Websocket: Экземпляр вебсокета.
+        """
+        url = self._generate_stream_url(
+            type="ticker",
+            url=self._BASE_FUTURES_URL,
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
+        )
         return Websocket(callback=callback, url=url)
 
     def futures_ticker(self, callback: Callable) -> Websocket:
@@ -192,25 +466,81 @@ class WebsocketManager(WebsocketManagerMixin):
         url = self._generate_stream_url(type="!ticker@arr", url=self._BASE_FUTURES_URL)
         return Websocket(callback=callback, url=url)
 
-    def futures_book_ticker(self, callback: Callable, symbol: str) -> Websocket:
-        """Создает вебсокет для получения лучших бид/аск по символу."""
+    def futures_book_ticker(
+        self,
+        callback: Callable,
+        symbol: str | None = None,
+        symbols: list[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для получения лучших бид/аск по символам.
+
+        Параметры:
+            callback (Callable): Функция для обработки сообщений.
+            symbol (str | None): Один символ для подписки.
+            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            Websocket: Экземпляр вебсокета.
+        """
         url = self._generate_stream_url(
-            type="bookTicker", url=self._BASE_FUTURES_URL, symbol=symbol
+            type="bookTicker",
+            url=self._BASE_FUTURES_URL,
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
         )
         return Websocket(callback=callback, url=url)
 
     def futures_book_depth(
-        self, callback: Callable, symbol: str, levels: BookDepthLevels
+        self,
+        callback: Callable,
+        symbol: str | None,
+        levels: BookDepthLevels,
+        symbols: list[str] | None = None,
     ) -> Websocket:
-        """Создает вебсокет для получения стакана глубиной N уровней."""
+        """Создает вебсокет для получения стакана глубиной N уровней.
+
+        Параметры:
+            callback (Callable): Функция для обработки сообщений.
+            symbol (str | None): Один символ для подписки.
+            levels (BookDepthLevels): Глубина стакана (уровни).
+            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            Websocket: Экземпляр вебсокета.
+        """
         url = self._generate_stream_url(
-            type=f"depth{levels}", url=self._BASE_FUTURES_URL, symbol=symbol
+            type=f"depth{levels}",
+            url=self._BASE_FUTURES_URL,
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
         )
         return Websocket(callback=callback, url=url)
 
-    def futures_depth_stream(self, callback: Callable, symbol: str) -> Websocket:
-        """Создает вебсокет для получения событий изменения стакана (без лимита глубины)."""
-        url = self._generate_stream_url(type="depth", url=self._BASE_FUTURES_URL, symbol=symbol)
+    def futures_depth_stream(
+        self,
+        callback: Callable,
+        symbol: str | None = None,
+        symbols: list[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для получения событий изменения стакана (без лимита глубины).
+
+        Параметры:
+            callback (Callable): Функция для обработки сообщений.
+            symbol (str | None): Один символ для подписки.
+            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            Websocket: Экземпляр вебсокета.
+        """
+        url = self._generate_stream_url(
+            type="depth",
+            url=self._BASE_FUTURES_URL,
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
+        )
         return Websocket(callback=callback, url=url)
 
     def futures_mark_price(
@@ -227,15 +557,32 @@ class WebsocketManager(WebsocketManagerMixin):
     def futures_symbol_mark_price(
         self,
         callback: Callable,
-        symbol: str,
+        symbol: str | None = None,
         interval: MarkPriceUpdateSpeed = "1s",
+        symbols: list[str] | None = None,
     ) -> Websocket:
-        """Создает вебсокет для получения mark price и funding rate для всех тикеров."""
+        """Создает вебсокет для получения mark price и funding rate по символам.
+
+        Параметры:
+            callback (Callable): Функция для обработки сообщений.
+            symbol (str | None): Один символ для подписки.
+            interval (MarkPriceUpdateSpeed): Частота обновления ("1s" или пусто).
+            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            Websocket: Экземпляр вебсокета.
+        """
         if interval == "1s":
-            type = f"markPrice@{interval}"
+            t = f"markPrice@{interval}"
         else:
-            type = "markPrice"
-        url = self._generate_stream_url(type=type, url=self._BASE_FUTURES_URL, symbol=symbol)
+            t = "markPrice"
+        url = self._generate_stream_url(
+            type=t,
+            url=self._BASE_FUTURES_URL,
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
+        )
         return Websocket(callback=callback, url=url)
 
     def futures_continuous_klines(
@@ -252,10 +599,28 @@ class WebsocketManager(WebsocketManagerMixin):
         )
         return Websocket(callback=callback, url=url)
 
-    def liquidation_order(self, callback: Callable, symbol: str) -> Websocket:
-        """Создает вебсокет для получения ликвидационных ордеров по символу."""
+    def liquidation_order(
+        self,
+        callback: Callable,
+        symbol: str | None = None,
+        symbols: list[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для получения ликвидационных ордеров по символам.
+
+        Параметры:
+            callback (Callable): Функция для обработки сообщений.
+            symbol (str | None): Один символ для подписки.
+            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            Websocket: Экземпляр вебсокета.
+        """
         url = self._generate_stream_url(
-            type="forceOrder", url=self._BASE_FUTURES_URL, symbol=symbol
+            type="forceOrder",
+            url=self._BASE_FUTURES_URL,
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
         )
         return Websocket(callback=callback, url=url)
 
@@ -264,10 +629,28 @@ class WebsocketManager(WebsocketManagerMixin):
         url = self._generate_stream_url(type="!forceOrder@arr", url=self._BASE_FUTURES_URL)
         return Websocket(callback=callback, url=url)
 
-    def futures_composite_index(self, callback: Callable, symbol: str) -> Websocket:
-        """Создает вебсокет для получения информации по композитному индексу (Не работает на 2025.09.07)."""
+    def futures_composite_index(
+        self,
+        callback: Callable,
+        symbol: str | None = None,
+        symbols: list[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для получения информации по композитному индексу.
+
+        Параметры:
+            callback (Callable): Функция для обработки сообщений.
+            symbol (str | None): Один символ для подписки.
+            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            Websocket: Экземпляр вебсокета.
+        """
         url = self._generate_stream_url(
-            type="compositeIndex", url=self._BASE_FUTURES_URL, symbol=symbol
+            type="compositeIndex",
+            url=self._BASE_FUTURES_URL,
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
         )
         return Websocket(callback=callback, url=url)
 
