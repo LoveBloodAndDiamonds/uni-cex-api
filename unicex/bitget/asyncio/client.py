@@ -20,7 +20,25 @@ class Client(ClientMixin, BaseClient):
         params: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
     ) -> Any:
-        """Выполняет HTTP-запрос к эндпоинтам Bitget API."""
+        """Выполняет HTTP-запрос к эндпоинтам Bitget API.
+
+        Если `signed=True`:
+            - генерирует `timestamp` и `signature`;
+            - добавляет авторизационные заголовки (`ACCESS-KEY`, `ACCESS-PASSPHRASE`, `ACCESS-TIMESTAMP`, `ACCESS-SIGN`).
+
+        Если `signed=False`:
+            - выполняет публичный запрос без подписи.
+
+        Параметры:
+            method (`RequestMethod`): HTTP-метод (`"GET"`, `"POST"`, и т. п.).
+            endpoint (`str`): Относительный путь эндпоинта (например, `"/api/spot/v1/market/tickers"`).
+            signed (`bool`): Приватный запрос (с подписью) или публичный. По умолчанию `False`.
+            params (`dict[str, Any] | None`): Query-параметры запроса.
+            data (`dict[str, Any] | None`): Тело запроса для `POST/PUT`.
+
+        Возвращает:
+            `Any`: Ответ API в формате JSON (`dict` или `list`), как вернул сервер.
+        """
         url, params, data, headers = self._prepare_request_params(
             method=method,
             endpoint=endpoint,
