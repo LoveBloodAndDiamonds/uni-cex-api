@@ -13,10 +13,10 @@ from unicex.types import KlineDict, TickerDailyDict
 
 from ..adapter import IAdapter
 
-TClient = TypeVar("TClient", bound=BaseClient)
+TClient = TypeVar("TClient", bound="BaseClient")
 
 
-class IUniClient(Generic[TClient], ABC):  # noqa: UP046
+class IUniClient(ABC, Generic[TClient]):
     """Интерфейс для реализации синхронного унифицированного клиента."""
 
     def __init__(
@@ -77,7 +77,7 @@ class IUniClient(Generic[TClient], ABC):  # noqa: UP046
         """Возвращает клиент биржи.
 
         Возвращает:
-            TClient: Клиент биржи.
+            BaseClient: Клиент биржи.
         """
         return self._client
 
@@ -87,8 +87,9 @@ class IUniClient(Generic[TClient], ABC):  # noqa: UP046
         """Возвращает класс клиента для конкретной биржи.
 
         Возвращает:
-            type[TClient]: Класс клиента.
+            type[BaseClient]: Класс клиента.
         """
+        pass
 
     @cached_property
     @abstractmethod
@@ -98,6 +99,7 @@ class IUniClient(Generic[TClient], ABC):  # noqa: UP046
         Возвращает:
             IAdapter: Реализация адаптера.
         """
+        pass
 
     @abstractmethod
     def tickers(self, only_usdt: bool) -> list[str]:
@@ -109,6 +111,7 @@ class IUniClient(Generic[TClient], ABC):  # noqa: UP046
         Возвращает:
             list[str]: Список тикеров.
         """
+        pass
 
     @abstractmethod
     def futures_tickers(self, only_usdt: bool) -> list[str]:
@@ -120,6 +123,7 @@ class IUniClient(Generic[TClient], ABC):  # noqa: UP046
         Возвращает:
             list[str]: Список тикеров.
         """
+        pass
 
     @abstractmethod
     def last_price(self) -> dict[str, float]:
@@ -128,6 +132,7 @@ class IUniClient(Generic[TClient], ABC):  # noqa: UP046
         Возвращает:
             dict[str, float]: Словарь с последними ценами для каждого тикера.
         """
+        pass
 
     @abstractmethod
     def futures_last_price(self) -> dict[str, float]:
@@ -136,6 +141,7 @@ class IUniClient(Generic[TClient], ABC):  # noqa: UP046
         Возвращает:
             dict[str, float]: Словарь с последними ценами для каждого тикера.
         """
+        pass
 
     @abstractmethod
     def ticker_24h(self) -> dict[str, TickerDailyDict]:
@@ -144,6 +150,7 @@ class IUniClient(Generic[TClient], ABC):  # noqa: UP046
         Возвращает:
             dict[str, TickerDailyDict]: Словарь с статистикой за последние 24 часа для каждого тикера.
         """
+        pass
 
     @abstractmethod
     def futures_ticker_24h(self) -> dict[str, TickerDailyDict]:
@@ -152,6 +159,7 @@ class IUniClient(Generic[TClient], ABC):  # noqa: UP046
         Возвращает:
             dict[str, TickerDailyDict]: Словарь с статистикой за последние 24 часа для каждого тикера.
         """
+        pass
 
     @abstractmethod
     def klines(
@@ -169,6 +177,7 @@ class IUniClient(Generic[TClient], ABC):  # noqa: UP046
         Возвращает:
             list[KlineDict]: Список свечей.
         """
+        pass
 
     @abstractmethod
     def futures_klines(
@@ -186,6 +195,7 @@ class IUniClient(Generic[TClient], ABC):  # noqa: UP046
         Возвращает:
             list[KlineDict]: Список свечей.
         """
+        pass
 
     @abstractmethod
     def funding_rate(self, only_usdt: bool) -> dict[str, float]:
@@ -197,6 +207,7 @@ class IUniClient(Generic[TClient], ABC):  # noqa: UP046
         Возвращает:
             dict[str, float]: Ставка финансирования для каждого тикера в %.
         """
+        pass
 
     @overload
     def open_interest(self, symbol: str) -> float: ...
@@ -215,3 +226,4 @@ class IUniClient(Generic[TClient], ABC):  # noqa: UP046
         Возвращает:
             float: Объем открытых позиций в монетах.
         """
+        pass

@@ -332,6 +332,15 @@ class WebsocketManager(WebsocketManagerMixin):
             raise NotAuthorized("You must provide authorized client.")
         return UserWebsocket(callback=callback, client=self.client, type="SPOT")
 
+    def multiplex_socket(self, callback: CallbackType, streams: str) -> Websocket:
+        """Создает вебсокет для мультиплексирования нескольких стримов в один.
+
+        Параметры:
+            callback (CallbackType): Функция обратного вызова для обработки сообщений.
+            streams (str): Строка с перечислением стримов.
+        """
+        return Websocket(callback=callback, url=self._BASE_SPOT_URL + "?" + streams)
+
     def futures_trade(
         self,
         callback: CallbackType,
@@ -663,12 +672,36 @@ class WebsocketManager(WebsocketManagerMixin):
         return Websocket(callback=callback, url=url)
 
     def futures_multi_assets_index(self, callback: CallbackType) -> Websocket:
-        """Создает вебсокет для получения индекса активов в режиме Multi-Assets Mode."""
+        """Создает вебсокет для получения индекса активов в режиме Multi-Assets Mode.
+
+
+        Параметры:
+            callback (CallbackType): Функция обратного вызова для обработки сообщений.
+
+        Возвращает:
+            Websocket: Вебсокет для получения индекса активов в режиме Multi-Assets Mode.
+        """
         url = self._generate_stream_url(type="!assetIndex@arr", url=self._BASE_FUTURES_URL)
         return Websocket(callback=callback, url=url)
 
     def futures_user_data_stream(self, callback: CallbackType) -> UserWebsocket:
-        """Создает вебсокет для получения информации о пользовательских данных."""
+        """Создает вебсокет для получения информации о пользовательских данных.
+
+        Параметры:
+            callback (CallbackType): Функция обратного вызова для обработки сообщений.
+
+        Возвращает:
+            UserWebsocket: Вебсокет для получения информации о пользовательских данных.
+        """
         if not self.client or not self.client.is_authorized():
             raise NotAuthorized("You must provide authorized client.")
         return UserWebsocket(callback=callback, client=self.client, type="FUTURES")
+
+    def futures_multiplex_socket(self, callback: CallbackType, streams: str) -> Websocket:
+        """Создает вебсокет для мультиплексирования нескольких стримов в один.
+
+        Параметры:
+            callback (CallbackType): Функция обратного вызова для обработки сообщений.
+            streams (str): Строка с перечислением стримов.
+        """
+        return Websocket(callback=callback, url=self._BASE_FUTURES_URL + "?" + streams)

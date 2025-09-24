@@ -13,10 +13,10 @@ from unicex.types import KlineDict, TickerDailyDict
 
 from ..adapter import IAdapter
 
-TClient = TypeVar("TClient", bound=BaseClient)
+TClient = TypeVar("TClient", bound="BaseClient")
 
 
-class IUniClient(Generic[TClient], ABC):  # noqa: UP046
+class IUniClient(ABC, Generic[TClient]):
     """Интерфейс для реализации асинхронного унифицированного клиента."""
 
     def __init__(
@@ -33,14 +33,14 @@ class IUniClient(Generic[TClient], ABC):  # noqa: UP046
         """Инициализация клиента.
 
         Параметры:
-            api_key (str | None): Ключ API для аутентификации.
-            api_secret (str | None): Секретный ключ API для аутентификации.
-            session (aiohttp.ClientSession): Сессия для выполнения HTTP-запросов.
-            logger (logging.Logger | None): Логгер для вывода информации.
-            max_retries (int): Максимальное количество повторных попыток запроса.
-            retry_delay (int | float): Задержка между повторными попытками.
-            proxies (list[str] | None): Список HTTP(S) прокси для циклического использования.
-            timeout (int): Максимальное время ожидания ответа от сервера.
+            api_key (`str | None`): Ключ API для аутентификации.
+            api_secret (`str | None`): Секретный ключ API для аутентификации.
+            session (`aiohttp.ClientSession`): Сессия для выполнения HTTP-запросов.
+            logger (`logging.Logger | None`): Логгер для вывода информации.
+            max_retries (`int`): Максимальное количество повторных попыток запроса.
+            retry_delay (`int | float`): Задержка между повторными попытками.
+            proxies (`list[str] | None`): Список HTTP(S) прокси для циклического использования.
+            timeout (`int`): Максимальное время ожидания ответа от сервера.
         """
         self._client: TClient = self.client_cls(
             api_key=api_key,
@@ -66,11 +66,20 @@ class IUniClient(Generic[TClient], ABC):  # noqa: UP046
         timeout: int = 10,
     ) -> Self:
         """Создает инстанцию клиента.
-
         Создать клиент можно и через __init__, но в таком случае session: `aiohttp.ClientSession` - обязательный параметр.
 
+        Параметры:
+            api_key (`str | None`): Ключ API для аутентификации.
+            api_secret (`str | None`): Секретный ключ API для аутентификации.
+            session (`aiohttp.ClientSession | None`): Сессия для выполнения HTTP-запросов.
+            logger (`logging.Logger | None`): Логгер для вывода информации.
+            max_retries (`int`): Максимальное количество повторных попыток запроса.
+            retry_delay (`int | float`): Задержка между повторными попытками.
+            proxies (`list[str] | None`): Список HTTP(S) прокси для циклического использования.
+            timeout (`int`): Максимальное время ожидания ответа от сервера.
+
         Возвращает:
-            `unicex._base.asyncio.client.Client`: Созданный экземпляр клиента.
+            `IUniClient`: Созданный экземпляр клиента.
         """
         return cls(
             session=session or aiohttp.ClientSession(),
@@ -85,7 +94,14 @@ class IUniClient(Generic[TClient], ABC):  # noqa: UP046
 
     @classmethod
     def from_client(cls, client: TClient) -> Self:
-        """Создает UniClient из уже существующего BinanceClient."""
+        """Создает UniClient из уже существующего BinanceClient.
+
+        Параметры:
+            client (`TClient`): Экземпляр BinanceClient.
+
+        Возвращает:
+            `IUniClient`: Созданный экземпляр клиента.
+        """
         instance = cls.__new__(cls)  # создаем пустой объект без вызова __init__
         instance._client = client
         return instance
@@ -111,7 +127,7 @@ class IUniClient(Generic[TClient], ABC):  # noqa: UP046
         """Возвращает клиент биржи.
 
         Возвращает:
-            AClient: Клиент биржи.
+            `TClient`: Клиент биржи.
         """
         return self._client
 
@@ -121,8 +137,9 @@ class IUniClient(Generic[TClient], ABC):  # noqa: UP046
         """Возвращает класс клиента для конкретной биржи.
 
         Возвращает:
-            type[AClient]: Класс клиента.
+            `type[TClient]`: Класс клиента.
         """
+        pass
 
     @cached_property
     @abstractmethod
@@ -130,62 +147,69 @@ class IUniClient(Generic[TClient], ABC):  # noqa: UP046
         """Возвращает реализацию адаптера под конкретную биржу.
 
         Возвращает:
-            IAdapter: Реализация адаптера.
+            `IAdapter`: Реализация адаптера.
         """
+        pass
 
     @abstractmethod
     async def tickers(self, only_usdt: bool) -> list[str]:
         """Возвращает список тикеров.
 
         Параметры:
-            only_usdt (bool): Если True, возвращает только тикеры в паре к USDT.
+            only_usdt (`bool`): Если True, возвращает только тикеры в паре к USDT.
 
         Возвращает:
-            list[str]: Список тикеров.
+            `list[str]`: Список тикеров.
         """
+        pass
 
     @abstractmethod
     async def futures_tickers(self, only_usdt: bool) -> list[str]:
         """Возвращает список тикеров.
 
         Параметры:
-            only_usdt (bool): Если True, возвращает только тикеры в паре к USDT.
+            only_usdt (`bool`): Если True, возвращает только тикеры в паре к USDT.
 
         Возвращает:
-            list[str]: Список тикеров.
+            `list[str]`: Список тикеров.
         """
+        pass
 
     @abstractmethod
     async def last_price(self) -> dict[str, float]:
         """Возвращает последнюю цену для каждого тикера.
 
         Возвращает:
-            dict[str, float]: Словарь с последними ценами для каждого тикера.
+            `dict[str, float]`: Словарь с последними ценами для каждого тикера.
         """
+        pass
 
     @abstractmethod
     async def futures_last_price(self) -> dict[str, float]:
         """Возвращает последнюю цену для каждого тикера.
 
         Возвращает:
-            dict[str, float]: Словарь с последними ценами для каждого тикера.
+            `dict[str, float]`: Словарь с последними ценами для каждого тикера.
         """
+        pass
 
     @abstractmethod
     async def ticker_24h(self) -> dict[str, TickerDailyDict]:
         """Возвращает статистику за последние 24 часа для каждого тикера.
 
         Возвращает:
-            dict[str, TickerDailyDict]: Словарь с статистикой за последние 24 часа для каждого тикера.
+            `dict[str, TickerDailyDict]`: Словарь с статистикой за последние 24 часа для каждого тикера.
         """
+        pass
 
     @abstractmethod
     async def futures_ticker_24h(self) -> dict[str, TickerDailyDict]:
         """Возвращает статистику за последние 24 часа для каждого тикера.
 
         Возвращает:
-            dict[str, TickerDailyDict]: Словарь с статистикой за последние 24 часа для каждого тикера.
+            `dict[str, TickerDailyDict]`: Словарь с статистикой за последние 24 часа для каждого тикера.
         """
+        pass
 
     @abstractmethod
     async def klines(
@@ -194,15 +218,16 @@ class IUniClient(Generic[TClient], ABC):  # noqa: UP046
         """Возвращает список свечей.
 
         Параметры:
-            symbol (str): Название тикера.
-            limit (int): Количество свечей.
-            interval (Timeframe): Таймфрейм свечей.
-            start_time (int): Время начала периода в миллисекундах.
-            end_time (int): Время окончания периода в миллисекундах.
+            symbol (`str`): Название тикера.
+            limit (`int`): Количество свечей.
+            interval (`Timeframe`): Таймфрейм свечей.
+            start_time (`int`): Время начала периода в миллисекундах.
+            end_time (`int`): Время окончания периода в миллисекундах.
 
         Возвращает:
-            list[KlineDict]: Список свечей.
+            `list[KlineDict]`: Список свечей.
         """
+        pass
 
     @abstractmethod
     async def futures_klines(
@@ -211,26 +236,28 @@ class IUniClient(Generic[TClient], ABC):  # noqa: UP046
         """Возвращает список свечей.
 
         Параметры:
-            symbol (str): Название тикера.
-            limit (int): Количество свечей.
-            interval (Timeframe): Таймфрейм свечей.
-            start_time (int): Время начала периода в миллисекундах.
-            end_time (int): Время окончания периода в миллисекундах.
+            symbol (`str`): Название тикера.
+            limit (`int`): Количество свечей.
+            interval (`Timeframe`): Таймфрейм свечей.
+            start_time (`int`): Время начала периода в миллисекундах.
+            end_time (`int`): Время окончания периода в миллисекундах.
 
         Возвращает:
-            list[KlineDict]: Список свечей.
+            `list[KlineDict]`: Список свечей.
         """
+        pass
 
     @abstractmethod
     async def funding_rate(self, only_usdt: bool) -> dict[str, float]:
         """Возвращает ставку финансирования для всех тикеров.
 
         Параметры:
-            only_usdt (bool): Если True, возвращает только тикеры в паре к USDT.
+            only_usdt (`bool`): Если True, возвращает только тикеры в паре к USDT.
 
         Возвращает:
-            dict[str, float]: Ставка финансирования для каждого тикера.
+            `dict[str, float]`: Ставка финансирования для каждого тикера.
         """
+        pass
 
     @overload
     async def open_interest(self, symbol: str) -> float: ...
@@ -244,8 +271,9 @@ class IUniClient(Generic[TClient], ABC):  # noqa: UP046
         если тикер не указан.
 
         Параметры:
-            symbol (str | None): Название тикера (Опционально).
+            symbol (`str | None`): Название тикера (Опционально).
 
         Возвращает:
-            float: Объем открытых позиций в монетах.
+            `float`: Объем открытых позиций в монетах.
         """
+        pass

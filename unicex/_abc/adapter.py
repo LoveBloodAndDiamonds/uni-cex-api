@@ -19,6 +19,7 @@ class IAdapter(ABC):
         Возвращает:
             list[str]: Список тикеров.
         """
+        pass
 
     @staticmethod
     @abstractmethod
@@ -32,6 +33,7 @@ class IAdapter(ABC):
         Возвращает:
             list[str]: Список тикеров.
         """
+        pass
 
     @staticmethod
     @abstractmethod
@@ -46,6 +48,7 @@ class IAdapter(ABC):
         Возвращает:
             dict[str, TickerDailyDict]: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
         """
+        pass
 
     @staticmethod
     @abstractmethod
@@ -60,6 +63,7 @@ class IAdapter(ABC):
         Возвращает:
             dict[str, TickerDailyDict]: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
         """
+        pass
 
     @staticmethod
     @abstractmethod
@@ -73,6 +77,7 @@ class IAdapter(ABC):
         Возвращает:
             dict[str, float]: Словарь, где ключ - тикер, а значение - последняя цена.
         """
+        pass
 
     @staticmethod
     @abstractmethod
@@ -86,6 +91,7 @@ class IAdapter(ABC):
         Возвращает:
             dict[str, float]: Словарь, где ключ - тикер, а значение - последняя цена.
         """
+        pass
 
     @staticmethod
     @abstractmethod
@@ -99,6 +105,7 @@ class IAdapter(ABC):
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
         """
+        pass
 
     @staticmethod
     @abstractmethod
@@ -112,6 +119,7 @@ class IAdapter(ABC):
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
         """
+        pass
 
     @staticmethod
     @abstractmethod
@@ -126,6 +134,7 @@ class IAdapter(ABC):
         Возвращает:
             dict[str, float]: Словарь, где ключ - тикер, а значение - ставка финансирования.
         """
+        pass
 
     @staticmethod
     @abstractmethod
@@ -139,6 +148,7 @@ class IAdapter(ABC):
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
         """
+        pass
 
     @staticmethod
     @abstractmethod
@@ -152,58 +162,59 @@ class IAdapter(ABC):
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
         """
+        pass
 
     @staticmethod
     @abstractmethod
     def aggtrades_message(raw_msg: Any) -> list[AggTradeDict]:
-        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
-        аггрегированных сделке/сделках в унифицированный вид.
+        """Преобразует сырое сообщение вебсокета с агрегированными сделками в унифицированный формат.
 
         Параметры:
             raw_msg (Any): Сырое сообщение с вебсокета.
 
         Возвращает:
-            list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
+            list[AggTradeDict]: Список сделок в унифицированном формате.
         """
+        pass
 
     @staticmethod
     @abstractmethod
     def futures_aggtrades_message(raw_msg: Any) -> list[AggTradeDict]:
-        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
-        аггрегированных сделке/сделках в унифицированный вид.
+        """Преобразует сырое сообщение вебсокета с агрегированными сделками в унифицированный формат.
 
         Параметры:
             raw_msg (Any): Сырое сообщение с вебсокета.
 
         Возвращает:
-            list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
+            list[AggTradeDict]: Список сделок в унифицированном формате.
         """
+        pass
 
     @staticmethod
     @abstractmethod
     def trades_message(raw_msg: Any) -> list[TradeDict]:
-        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
-        сделке/сделках в унифицированный вид.
+        """Преобразует сырое сообщение вебсокета со сделками в унифицированный формат.
 
         Параметры:
             raw_msg (Any): Сырое сообщение с вебсокета.
 
         Возвращает:
-            list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
+            list[TradeDict]: Список сделок в унифицированном формате.
         """
+        pass
 
     @staticmethod
     @abstractmethod
     def futures_trades_message(raw_msg: Any) -> list[TradeDict]:
-        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
-        сделке/сделках в унифицированный вид.
+        """Преобразует сырое сообщение вебсокета со сделками в унифицированный формат.
 
         Параметры:
             raw_msg (Any): Сырое сообщение с вебсокета.
 
         Возвращает:
-            list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
+            list[TradeDict]: Список сделок в унифицированном формате.
         """
+        pass
 
     @staticmethod
     @abstractmethod
@@ -218,3 +229,4 @@ class IAdapter(ABC):
             float | dict[str, float]: Объем открытых позиций в монетах или словарь,
             где ключи - название тикера, а значения - объемы открытых позиций в монетах.
         """
+        pass
