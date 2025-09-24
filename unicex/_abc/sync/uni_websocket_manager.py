@@ -24,14 +24,14 @@ class IUniWebsocketManager(ABC):
         """Открывает стрим свечей (spot) с унификацией сообщений.
 
         Параметры:
-            callback (Callable[[Any], None]): Функция обработки сообщений.
-            timeframe (Timeframe): Временной интервал свечей.
-            symbol (str | None): Один символ для подписки.
-            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
+            callback (`Callable[[Any], Awaitable[None]]`): Асинхронная функция обработки сообщений.
+            timeframe (`Timeframe`): Временной интервал свечей.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
                 Должен быть указан либо `symbol`, либо `symbols`.
 
         Возвращает:
-            Websocket: Экземпляр вебсокета для управления соединением.
+            `Websocket`: Экземпляр вебсокета для управления соединением.
         """
         pass
 
@@ -46,14 +46,14 @@ class IUniWebsocketManager(ABC):
         """Открывает стрим свечей (futures) с унификацией сообщений.
 
         Параметры:
-            callback (Callable[[Any], None]): Функция обработки сообщений.
-            timeframe (Timeframe): Временной интервал свечей.
-            symbol (str | None): Один символ для подписки.
-            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
+            callback (`Callable[[Any], Awaitable[None]]`): Асинхронная функция обработки сообщений.
+            timeframe (`Timeframe`): Временной интервал свечей.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
                 Должен быть указан либо `symbol`, либо `symbols`.
 
         Возвращает:
-            Websocket: Экземпляр вебсокета.
+            `Websocket`: Экземпляр вебсокета.
         """
         pass
 
@@ -67,12 +67,12 @@ class IUniWebsocketManager(ABC):
         """Открывает стрим сделок (spot) с унификацией сообщений.
 
         Параметры:
-            callback (Callable[[Any], None]): Функция обработки сообщений.
-            symbol (str | None): Один символ для подписки.
-            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
+            callback (`Callable[[Any], Awaitable[None]]`): Асинхронная функция обработки сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
-            Websocket: Экземпляр вебсокета.
+            `Websocket`: Экземпляр вебсокета.
         """
         pass
 
@@ -86,12 +86,12 @@ class IUniWebsocketManager(ABC):
         """Открывает стрим агрегированных сделок (spot) с унификацией сообщений.
 
         Параметры:
-            callback (Callable[[Any], None]): Функция обработки сообщений.
-            symbol (str | None): Один символ для подписки.
-            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
+            callback (`Callable[[Any], Awaitable[None]]`): Асинхронная функция обработки сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
-            Websocket: Экземпляр вебсокета.
+            `Websocket`: Экземпляр вебсокета.
         """
         pass
 
@@ -105,12 +105,12 @@ class IUniWebsocketManager(ABC):
         """Открывает стрим сделок (futures) с унификацией сообщений.
 
         Параметры:
-            callback (Callable[[Any], None]): Функция обработки сообщений.
-            symbol (str | None): Один символ для подписки.
-            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
+            callback (`Callable[[Any], Awaitable[None]]`): Асинхронная функция обработки сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
-            Websocket: Экземпляр вебсокета.
+            `Websocket`: Экземпляр вебсокета.
         """
         pass
 
@@ -124,11 +124,11 @@ class IUniWebsocketManager(ABC):
         """Открывает стрим агрегированных сделок (futures) с унификацией сообщений.
 
         Параметры:
-            callback (Callable[[Any], None]): Функция обработки сообщений.
-            symbol (str | None): Один символ для подписки.
-            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
+            callback (`Callable[[Any], Awaitable[None]]`): Асинхронная функция обработки сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
-            Websocket: Экземпляр вебсокета.
+            `Websocket`: Экземпляр вебсокета.
         """
         pass

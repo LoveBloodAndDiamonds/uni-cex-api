@@ -53,14 +53,14 @@ class Client(ClientMixin, BaseClient):
         Если signed=False, запрос отправляется как публичный.
 
         Параметры:
-            method (str): HTTP метод ("GET", "POST", "DELETE" и т.д.).
-            url (str): Полный URL эндпоинта Binance API.
-            signed (bool): Нужно ли подписывать запрос.
-            params (dict | None): Query-параметры.
-            data (dict | None): Тело запроса.
+            method (`str`): HTTP метод ("GET", "POST", "DELETE" и т.д.).
+            url (`str`): Полный URL эндпоинта Binance API.
+            signed (`bool`): Нужно ли подписывать запрос.
+            params (`dict | None`): Query-параметры.
+            data (`dict | None`): Тело запроса.
 
         Возвращает:
-            dict: Ответ в формате JSON.
+            `dict`: Ответ в формате JSON.
         """
         payload, headers = self._prepare_payload(signed=signed, params=params, data=data)
 

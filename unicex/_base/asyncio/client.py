@@ -11,7 +11,7 @@ from unicex.types import RequestMethod
 
 
 class BaseClient:
-    """Базовый асинхронный класс для создания клиентов для работы с API."""
+    """Базовый асинхронный класс для работы с API."""
 
     def __init__(
         self,
@@ -27,14 +27,14 @@ class BaseClient:
         """Инициализация клиента.
 
         Параметры:
-            api_key (str | None): Ключ API для аутентификации.
-            api_secret (str | None): Секретный ключ API для аутентификации.
-            session (aiohttp.ClientSession): Сессия для выполнения HTTP-запросов.
-            logger (logging.Logger | None): Логгер для вывода информации.
-            max_retries (int): Максимальное количество повторных попыток запроса.
-            retry_delay (int | float): Задержка между повторными попытками.
-            proxies (list[str] | None): Список HTTP(S) прокси для циклического использования.
-            timeout (int): Максимальное время ожидания ответа от сервера.
+            session (`aiohttp.ClientSession`): Сессия для выполнения HTTP‑запросов.
+            api_key (`str | None`): Ключ API для аутентификации.
+            api_secret (`str | None`): Секретный ключ API для аутентификации.
+            logger (`logging.Logger | None`): Логгер для вывода информации.
+            max_retries (`int`): Максимальное количество повторных попыток запроса.
+            retry_delay (`int | float`): Задержка между повторными попытками, сек.
+            proxies (`list[str] | None`): Список HTTP(S)‑прокси для циклического использования.
+            timeout (`int`): Максимальное время ожидания ответа от сервера, сек.
         """
         self._api_key = api_key
         self._api_secret = api_secret
@@ -57,12 +57,20 @@ class BaseClient:
         proxies: list[str] | None = None,
         timeout: int = 10,
     ) -> Self:
-        """Создает инстанцию клиента.
+        """Создаёт инстанцию клиента.
 
-        Создать клиент можно и через __init__, но в таком случае session: `aiohttp.ClientSession` - обязательный параметр.
+        Параметры:
+            api_key (`str | None`): Ключ API для аутентификации.
+            api_secret (`str | None`): Секретный ключ API для аутентификации.
+            session (`aiohttp.ClientSession | None`): Сессия для HTTP‑запросов (если не передана, будет создана).
+            logger (`logging.Logger | None`): Логгер для вывода информации.
+            max_retries (`int`): Максимум повторов при ошибках запроса.
+            retry_delay (`int | float`): Задержка между повторами, сек.
+            proxies (`list[str] | None`): Список HTTP(S)‑прокси.
+            timeout (`int`): Таймаут ответа сервера, сек.
 
         Возвращает:
-            BaseClient: Созданный экземпляр клиента.
+            `Self`: Созданный экземпляр клиента.
         """
         return cls(
             session=session or aiohttp.ClientSession(),
@@ -80,7 +88,11 @@ class BaseClient:
         await self._session.close()
 
     def is_authorized(self) -> bool:
-        """Проверяет, наличие апи ключей в инстансе клиента."""
+        """Проверяет наличие API‑ключей у клиента.
+
+        Возвращает:
+            `bool`: Признак наличия ключей.
+        """
         return self._api_key is not None and self._api_secret is not None
 
     async def __aenter__(self) -> Self:
@@ -99,17 +111,17 @@ class BaseClient:
         data: dict[str, Any] | None = None,
         headers: dict[str, Any] | None = None,
     ) -> Any:
-        """Выполняет HTTP-запрос к API биржи.
+        """Выполняет HTTP‑запрос к API биржи.
 
         Параметры:
-            method (RequestMethod): HTTP-метод запроса.
-            url (str): Полный URL API.
-            params (dict[str, Any] | None): Параметры запроса (query string).
-            data (dict[str, Any] | None): Тело запроса для POST/PUT.
-            headers (dict[str, Any] | None): Заголовки запроса.
+            method (`RequestMethod`): HTTP‑метод запроса.
+            url (`str`): Полный URL API.
+            params (`dict[str, Any] | None`): Параметры запроса (query string).
+            data (`dict[str, Any] | None`): Тело запроса для POST/PUT.
+            headers (`dict[str, Any] | None`): Заголовки запроса.
 
         Возвращает:
-            dict | list: Ответ API в формате JSON.
+            `dict | list`: Ответ API в формате JSON.
         """
         self._logger.debug(
             f"Request: {method} {url} | Params: {params} | Data: {data} | Headers: {headers}"
@@ -142,13 +154,13 @@ class BaseClient:
         ) from errors[-1]
 
     async def _handle_response(self, response: aiohttp.ClientResponse) -> Any:
-        """Функция обрабатывает ответ от HTTP запроса.
+        """Обрабатывает HTTP‑ответ.
 
         Параметры:
-            response (aiohttp.ClientResponse): Ответ от HTTP запроса.
+            response (`aiohttp.ClientResponse`): Ответ HTTP‑запроса.
 
         Возвращает:
-            dict | list: Обработанный ответ в виде словаря или списка.
+            `dict | list`: Ответ API в формате JSON.
         """
         response.raise_for_status()
         result = await response.json()

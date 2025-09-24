@@ -23,8 +23,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         """Инициализирует унифицированный менеджер вебсокетов.
 
         Параметры:
-            client (Client | UniClient | None): Клиент Binance или унифицированный клиент.
-                Если передан UniClient, из него будет извлечён исходный клиент.
+            client (`Client | UniClient | None`): Клиент Binance или унифицированный клиент. Нужен для подключения к приватным топикам.
         """
         if isinstance(client, UniClient):
             client = client.client
@@ -57,15 +56,15 @@ class UniWebsocketManager(IUniWebsocketManager):
         """Создаёт вебсокет для получения свечей на споте с унификацией сообщений.
 
         Параметры:
-            callback (Callable[[Any], Awaitable[None]]): Асинхронная функция обработки
-                адаптированных сообщений.
-            timeframe (Timeframe): Временной интервал свечей (унифицированный).
-            symbol (str | None): Один символ для подписки.
-            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
-                Должен быть указан либо `symbol`, либо `symbols`.
+            callback (`CallbackType`): Асинхронная функция обработки адаптированных сообщений.
+            timeframe (`Timeframe`): Временной интервал свечей (унифицированный).
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Должен быть указан либо `symbol`, либо `symbols`.
 
         Возвращает:
-            Websocket: Экземпляр вебсокета для управления соединением.
+            `Websocket`: Экземпляр вебсокета для управления соединением.
         """
         wrapper = self._make_wrapper(self._adapter.klines_message, callback)
         return self._websocket_manager.klines(
@@ -85,15 +84,15 @@ class UniWebsocketManager(IUniWebsocketManager):
         """Создаёт вебсокет для получения свечей на фьючерсах с унификацией сообщений.
 
         Параметры:
-            callback (Callable[[Any], Awaitable[None]]): Асинхронная функция обработки
-                адаптированных сообщений.
-            timeframe (Timeframe): Временной интервал свечей (унифицированный).
-            symbol (str | None): Один символ для подписки.
-            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
-                Должен быть указан либо `symbol`, либо `symbols`.
+            callback (`CallbackType`): Асинхронная функция обработки адаптированных сообщений.
+            timeframe (`Timeframe`): Временной интервал свечей (унифицированный).
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Должен быть указан либо `symbol`, либо `symbols`.
 
         Возвращает:
-            Websocket: Экземпляр вебсокета для управления соединением.
+            `Websocket`: Экземпляр вебсокета для управления соединением.
         """
         wrapper = self._make_wrapper(self._adapter.futures_klines_message, callback)
         return self._websocket_manager.futures_klines(
@@ -109,14 +108,14 @@ class UniWebsocketManager(IUniWebsocketManager):
         """Создаёт вебсокет для получения сделок на споте с унификацией сообщений.
 
         Параметры:
-            callback (Callable[[Any], Awaitable[None]]): Асинхронная функция обработки
-                адаптированных сообщений.
-            symbol (str | None): Один символ для подписки.
-            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
-                Должен быть указан либо `symbol`, либо `symbols`.
+            callback (`CallbackType`): Асинхронная функция обработки адаптированных сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Должен быть указан либо `symbol`, либо `symbols`.
 
         Возвращает:
-            Websocket: Экземпляр вебсокета для управления соединением.
+            `Websocket`: Экземпляр вебсокета для управления соединением.
         """
         wrapper = self._make_wrapper(self._adapter.trades_message, callback)
         return self._websocket_manager.trade(callback=wrapper, symbol=symbol, symbols=symbols)
@@ -127,14 +126,14 @@ class UniWebsocketManager(IUniWebsocketManager):
         """Создаёт вебсокет для получения агрегированных сделок на споте с унификацией сообщений.
 
         Параметры:
-            callback (Callable[[Any], Awaitable[None]]): Асинхронная функция обработки
-                адаптированных сообщений.
-            symbol (str | None): Один символ для подписки.
-            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
-                Должен быть указан либо `symbol`, либо `symbols`.
+            callback (`CallbackType`): Асинхронная функция обработки адаптированных сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Должен быть указан либо `symbol`, либо `symbols`.
 
         Возвращает:
-            Websocket: Экземпляр вебсокета для управления соединением.
+            `Websocket`: Экземпляр вебсокета для управления соединением.
         """
         wrapper = self._make_wrapper(self._adapter.aggtrades_message, callback)
         return self._websocket_manager.agg_trade(callback=wrapper, symbol=symbol, symbols=symbols)
@@ -145,14 +144,15 @@ class UniWebsocketManager(IUniWebsocketManager):
         """Создаёт вебсокет для получения сделок на фьючерсах с унификацией сообщений.
 
         Параметры:
-            callback (Callable[[Any], Awaitable[None]]): Асинхронная функция обработки
+            callback (`CallbackType`): Асинхронная функция обработки
                 адаптированных сообщений.
-            symbol (str | None): Один символ для подписки.
-            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
-                Должен быть указан либо `symbol`, либо `symbols`.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Должен быть указан либо `symbol`, либо `symbols`.
 
         Возвращает:
-            Websocket: Экземпляр вебсокета для управления соединением.
+            `Websocket`: Экземпляр вебсокета для управления соединением.
         """
         wrapper = self._make_wrapper(self._adapter.futures_trades_message, callback)
         return self._websocket_manager.futures_trade(
@@ -165,14 +165,14 @@ class UniWebsocketManager(IUniWebsocketManager):
         """Создаёт вебсокет для получения агрегированных сделок на фьючерсах с унификацией сообщений.
 
         Параметры:
-            callback (Callable[[Any], Awaitable[None]]): Асинхронная функция обработки
-                адаптированных сообщений.
-            symbol (str | None): Один символ для подписки.
-            symbols (list[str] | None): Список символов для мультиплекс‑подключения.
-                Должен быть указан либо `symbol`, либо `symbols`.
+            callback (`CallbackType`): Асинхронная функция обработки адаптированных сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Должен быть указан либо `symbol`, либо `symbols`.
 
         Возвращает:
-            Websocket: Экземпляр вебсокета для управления соединением.
+            `Websocket`: Экземпляр вебсокета для управления соединением.
         """
         wrapper = self._make_wrapper(self._adapter.futures_aggtrades_message, callback)
         return self._websocket_manager.futures_agg_trade(

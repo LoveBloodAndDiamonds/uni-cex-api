@@ -42,7 +42,7 @@ class IUniClient(ABC, Generic[TClient]):
             proxies (`list[str] | None`): Список HTTP(S) прокси для циклического использования.
             timeout (`int`): Максимальное время ожидания ответа от сервера.
         """
-        self._client: TClient = self.client_cls(
+        self._client: TClient = self._client_cls(
             api_key=api_key,
             api_secret=api_secret,
             session=session,
@@ -107,7 +107,11 @@ class IUniClient(ABC, Generic[TClient]):
         return instance
 
     def is_authorized(self) -> bool:
-        """Проверяет, наличие апи ключей в инстансе клиента."""
+        """Проверяет, наличие апи ключей в инстансе клиента.
+
+        Возвращает:
+            `bool`: True, если апи ключи присутствуют, иначе False.
+        """
         return self._client._api_key is not None and self._client._api_secret is not None
 
     async def close(self) -> None:
@@ -133,7 +137,7 @@ class IUniClient(ABC, Generic[TClient]):
 
     @property
     @abstractmethod
-    def client_cls(self) -> type[TClient]:
+    def _client_cls(self) -> type[TClient]:
         """Возвращает класс клиента для конкретной биржи.
 
         Возвращает:

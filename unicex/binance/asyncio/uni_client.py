@@ -23,7 +23,7 @@ class UniClient(IUniClient[Client]):
         return Adapter()
 
     @property
-    def client_cls(self) -> type[Client]:
+    def _client_cls(self) -> type[Client]:
         """Возвращает класс клиента для Binance.
 
         Возвращает:

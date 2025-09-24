@@ -37,14 +37,15 @@ class Websocket:
         """Инициализация вебсокета.
 
         Параметры:
-            callback (Callable): Функция обратного вызова для обработки сообщений.
-            subscription_messages (list[dict] | list[str] | None): Список сообщений для подписки.
-            ping_interval (int | float | None): Интервал отправки пинга (сек.).
-            ping_message (str | None): Сообщение для пинга, если не указано - отправляется обычный PING FRAME.
-            pong_message (str | None): Сообщение для погна, если не указано - отправляется обычный PONG FRAME.
-            no_message_reconnect_timeout (int | float | None): Время ожидания без сообщений для переподключения (сек.).
-            reconnect_timeout (int | float | None): Время ожидания переподключения (сек.).
-            worker_count (int): Количество потоков для обработки сообщений.
+            callback (`Callable[[Any], None]`): Обработчик входящих сообщений.
+            url (`str`): URL вебсокета.
+            subscription_messages (`list[dict] | list[str] | None`): Сообщения для подписки после подключения.
+            ping_interval (`int | float | None`): Интервал отправки ping, сек.
+            ping_message (`str | None`): Сообщение для ping (если не указано — используется ping‑frame).
+            pong_message (`str | None`): Сообщение для pong (если не указано — используется pong‑frame).
+            no_message_reconnect_timeout (`int | float | None`): Таймаут без сообщений до рестарта, сек.
+            reconnect_timeout (`int | float | None`): Пауза перед переподключением, сек.
+            worker_count (`int`): Количество рабочих потоков.
         """
         self._callback = callback
         self._subscription_messages = subscription_messages or []
@@ -75,7 +76,7 @@ class Websocket:
         self._running = False
 
     def start(self) -> None:
-        """Запустить вебсокет в потоке."""
+        """Запускает вебсокет в отдельном потоке."""
         # Проверяем что вебсокет еще не запущен
         if self._running:
             raise RuntimeError("Websocket is already running")
@@ -212,7 +213,7 @@ class Websocket:
         logger.info(f"Websocket closed with status code {status_code} and reason {reason}")
 
     def _on_ping(self, ws: WebSocket, message: str) -> None:
-        """Обработчик события получения пинга."""
+        """Обработчик события получения ping."""
         logger.info(f"Websocket received ping: {message}")
         if self._pong_message:
             ws.pong(self._pong_message)
@@ -220,7 +221,7 @@ class Websocket:
             ws.pong()
 
     def _healthcheck_task(self) -> None:
-        """Проверка работоспособности вебсокета исходя из времени последнего сообщения."""
+        """Проверяет работоспособность по времени последнего сообщения."""
         if not self._no_message_reconnect_timeout:
             return
 

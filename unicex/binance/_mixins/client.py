@@ -44,14 +44,14 @@ class ClientMixin:
             - возвращает только отфильтрованные params/data.
 
         Параметры:
-            signed (bool): Нужно ли подписывать запрос.
-            params (dict | None): Параметры для query string.
-            data (dict | None): Параметры для тела запроса.
+            signed (`bool`): Нужно ли подписывать запрос.
+            params (`dict | None`): Параметры для query string.
+            data (`dict | None`): Параметры для тела запроса.
 
         Возвращает:
             tuple:
-                - payload (dict): Параметры/тело запроса с подписью (если нужно).
-                - headers (dict | None): Заголовки для запроса или None.
+                - payload (`dict`): Параметры/тело запроса с подписью (если нужно).
+                - headers (`dict | None`): Заголовки для запроса или None.
         """
         # Фильтруем параметры от None значений
         params = filter_params(params) if params else {}

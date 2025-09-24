@@ -37,14 +37,15 @@ class Websocket:
         """Инициализация вебсокета.
 
         Параметры:
-            callback (Callable[[Any], Awaitable[None]]): Асинхронная функция обратного вызова для обработки сообщений.
-            subscription_messages (list[dict] | list[str] | None): Список сообщений для подписки.
-            ping_interval (int | float | None): Интервал отправки пинга (сек.).
-            ping_message (str | None): Сообщение для пинга, если не указано - отправляется обычный PING FRAME.
-            pong_message (str | None): Сообщение для погна, если не указано - отправляется обычный PONG FRAME.
-            no_message_reconnect_timeout (int | float | None): Время ожидания без сообщений для переподключения (сек.).
-            reconnect_timeout (int | float | None): Время ожидания переподключения (сек.).
-            worker_count (int): Количество потоков для обработки сообщений.
+            callback (`Callable[[Any], Awaitable[None]]`): Обработчик входящих сообщений.
+            url (`str`): URL вебсокета.
+            subscription_messages (`list[dict] | list[str] | None`): Сообщения для подписки после подключения.
+            ping_interval (`int | float`): Интервал отправки ping, сек.
+            ping_message (`str | None`): Сообщение для ping (если не указано — используется ping‑frame).
+            pong_message (`str | None`): Сообщение для pong (если не указано — используется pong‑frame).
+            no_message_reconnect_timeout (`int | float | None`): Таймаут ожидания без сообщений до рестарта, сек.
+            reconnect_timeout (`int | float | None`): Пауза перед переподключением, сек.
+            worker_count (`int`): Количество рабочих задач для обработки сообщений.
         """
         self._callback = callback
         self._url = url
@@ -61,7 +62,7 @@ class Websocket:
         self._running = False
 
     async def start(self) -> None:
-        """Запустить вебсокет."""
+        """Запускает вебсокет и рабочие задачи."""
         # Проверяем что вебсокет еще не запущен
         if self._running:
             raise RuntimeError("Websocket is already running")
@@ -71,7 +72,7 @@ class Websocket:
         await self._connect()
 
     async def stop(self) -> None:
-        """Остановить вебсокет."""
+        """Останавливает вебсокет и рабочие задачи."""
         self._running = False
         for task in self._tasks:
             task.cancel()
@@ -86,13 +87,13 @@ class Websocket:
                 break
 
     async def restart(self) -> None:
-        """Перезапустить вебсокет."""
+        """Перезапускает вебсокет."""
         await self.stop()
         await asyncio.sleep(self._reconnect_timeout)
         await self.start()
 
     async def _connect(self) -> None:
-        """Подключиться к вебсокету."""
+        """Подключается к вебсокету и настраивает соединение."""
         logger.debug(f"Estabilishing connection with {self._url}")
         async for conn in websockets.connect(uri=self._url, **self._generate_ws_kwargs()):
             try:
@@ -112,7 +113,7 @@ class Websocket:
                 await self._after_disconnect()
 
     async def _handle_message(self, message: str) -> None:
-        """Обрабатывает сообщение из вебсокета."""
+        """Обрабатывает входящее сообщение вебсокета."""
         try:
             # Обновленяем время последнего сообщения
             self._last_message_time = time.monotonic()
@@ -129,13 +130,13 @@ class Websocket:
                 logger.error(f"Failed to decode JSON message: {message}, error: {e}")
 
     def _check_queue_size(self) -> None:
-        """Проверяет размер очереди сообщений и выбрасывает ошибку, если он превышает максимальный размер."""
+        """Проверяет размер очереди и выбрасывает ошибку при переполнении."""
         qsize = self._queue.qsize()
         if qsize >= self.MAX_QUEUE_SIZE:
             raise QueueOverflowError("Message queue is overflow")
 
     async def _after_connect(self, conn: ClientConnection) -> None:
-        """Вызывается после установки соединения с вебсокетом."""
+        """Вызывается после установки соединения."""
         # Подписываемся на топики
         await self._send_subscribe_messages(conn)
 
@@ -194,7 +195,7 @@ class Websocket:
         return ws_kwargs
 
     async def _custom_ping_task(self, conn: ClientConnection) -> None:
-        """Периодически отправляет кастомный ping."""
+        """Периодически отправляет пользовательский ping."""
         while self._running and self._ping_message:
             try:
                 await conn.send(self._ping_message)

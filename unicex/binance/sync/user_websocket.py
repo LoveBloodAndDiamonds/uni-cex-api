@@ -27,9 +27,9 @@ class UserWebsocket(UserWebsocketMixin):
         """Инициализирует пользовательский вебсокет.
 
         Параметры:
-            callback (Callable): Функция обратного вызова, которая принимает сообщение с вебсокета.
-            client (BinanceClient): Авторизованный клиент Binance.
-            type (AccountType): Тип аккаунта ("SPOT" | "FUTURES").
+            callback (`Callable`): Функция обратного вызова, которая принимает сообщение с вебсокета.
+            client (`Client`): Авторизованный клиент Binance.
+            type (`AccountType`): Тип аккаунта ("SPOT" | "FUTURES").
         """
         self._callback = callback
         self._client = client

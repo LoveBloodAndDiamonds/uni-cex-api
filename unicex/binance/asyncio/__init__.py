@@ -1,3 +1,5 @@
+"""Пакет содержит асинхронные клиенты и менеджеры для работы с биржей Binance."""
+
 __all__ = ["Client", "UniClient", "UserWebsocket", "WebsocketManager", "UniWebsocketManager"]
 
 from .client import Client

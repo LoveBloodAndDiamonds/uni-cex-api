@@ -3,11 +3,13 @@ __all__ = [
     "KlineDict",
     "TradeDict",
     "AggTradeDict",
+    "RequestMethod",
 ]
 
 from typing import Literal, TypedDict
 
 type RequestMethod = Literal["GET", "POST", "PUT", "DELETE"]
+"""Типы методов HTTP запросов."""
 
 
 class TickerDailyDict(TypedDict):

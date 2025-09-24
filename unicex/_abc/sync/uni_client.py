@@ -42,7 +42,7 @@ class IUniClient(ABC, Generic[TClient]):
             proxies (list[str] | None): Список HTTP(S) прокси для циклического использования.
             timeout (int): Максимальное время ожидания ответа от сервера.
         """
-        self._client: TClient = self.client_cls(
+        self._client: TClient = self._client_cls(
             api_key=api_key,
             api_secret=api_secret,
             session=session,
@@ -77,17 +77,17 @@ class IUniClient(ABC, Generic[TClient]):
         """Возвращает клиент биржи.
 
         Возвращает:
-            BaseClient: Клиент биржи.
+            `TClient`: Клиент биржи.
         """
         return self._client
 
     @property
     @abstractmethod
-    def client_cls(self) -> type[TClient]:
+    def _client_cls(self) -> type[TClient]:
         """Возвращает класс клиента для конкретной биржи.
 
         Возвращает:
-            type[BaseClient]: Класс клиента.
+            `type[TClient]`: Класс клиента.
         """
         pass
 
@@ -97,7 +97,7 @@ class IUniClient(ABC, Generic[TClient]):
         """Возвращает реализацию адаптера под конкретную биржу.
 
         Возвращает:
-            IAdapter: Реализация адаптера.
+            `IAdapter`: Реализация адаптера.
         """
         pass
 
@@ -106,10 +106,10 @@ class IUniClient(ABC, Generic[TClient]):
         """Возвращает список тикеров.
 
         Параметры:
-            only_usdt (bool): Если True, возвращает только тикеры в паре к USDT.
+            only_usdt (`bool`): Если True, возвращает только тикеры в паре к USDT.
 
         Возвращает:
-            list[str]: Список тикеров.
+            `list[str]`: Список тикеров.
         """
         pass
 
@@ -118,10 +118,10 @@ class IUniClient(ABC, Generic[TClient]):
         """Возвращает список тикеров.
 
         Параметры:
-            only_usdt (bool): Если True, возвращает только тикеры в паре к USDT.
+            only_usdt (`bool`): Если True, возвращает только тикеры в паре к USDT.
 
         Возвращает:
-            list[str]: Список тикеров.
+            `list[str]`: Список тикеров.
         """
         pass
 
@@ -130,7 +130,7 @@ class IUniClient(ABC, Generic[TClient]):
         """Возвращает последнюю цену для каждого тикера.
 
         Возвращает:
-            dict[str, float]: Словарь с последними ценами для каждого тикера.
+            `dict[str, float]`: Словарь с последними ценами для каждого тикера.
         """
         pass
 
@@ -139,7 +139,7 @@ class IUniClient(ABC, Generic[TClient]):
         """Возвращает последнюю цену для каждого тикера.
 
         Возвращает:
-            dict[str, float]: Словарь с последними ценами для каждого тикера.
+            `dict[str, float]`: Словарь с последними ценами для каждого тикера.
         """
         pass
 
@@ -148,7 +148,7 @@ class IUniClient(ABC, Generic[TClient]):
         """Возвращает статистику за последние 24 часа для каждого тикера.
 
         Возвращает:
-            dict[str, TickerDailyDict]: Словарь с статистикой за последние 24 часа для каждого тикера.
+            `dict[str, TickerDailyDict]`: Словарь с статистикой за последние 24 часа для каждого тикера.
         """
         pass
 
@@ -157,7 +157,7 @@ class IUniClient(ABC, Generic[TClient]):
         """Возвращает статистику за последние 24 часа для каждого тикера.
 
         Возвращает:
-            dict[str, TickerDailyDict]: Словарь с статистикой за последние 24 часа для каждого тикера.
+            `dict[str, TickerDailyDict]`: Словарь с статистикой за последние 24 часа для каждого тикера.
         """
         pass
 
@@ -168,14 +168,14 @@ class IUniClient(ABC, Generic[TClient]):
         """Возвращает список свечей.
 
         Параметры:
-            symbol (str): Название тикера.
-            limit (int): Количество свечей.
-            interval (Timeframe): Таймфрейм свечей.
-            start_time (int): Время начала периода в миллисекундах.
-            end_time (int): Время окончания периода в миллисекундах.
+            symbol (`str`): Название тикера.
+            limit (`int`): Количество свечей.
+            interval (`Timeframe`): Таймфрейм свечей.
+            start_time (`int`): Время начала периода в миллисекундах.
+            end_time (`int`): Время окончания периода в миллисекундах.
 
         Возвращает:
-            list[KlineDict]: Список свечей.
+            `list[KlineDict]`: Список свечей.
         """
         pass
 
@@ -186,14 +186,14 @@ class IUniClient(ABC, Generic[TClient]):
         """Возвращает список свечей.
 
         Параметры:
-            symbol (str): Название тикера.
-            limit (int): Количество свечей.
-            interval (Timeframe): Таймфрейм свечей.
-            start_time (int): Время начала периода в миллисекундах.
-            end_time (int): Время окончания периода в миллисекундах.
+            symbol (`str`): Название тикера.
+            limit (`int`): Количество свечей.
+            interval (`Timeframe`): Таймфрейм свечей.
+            start_time (`int`): Время начала периода в миллисекундах.
+            end_time (`int`): Время окончания периода в миллисекундах.
 
         Возвращает:
-            list[KlineDict]: Список свечей.
+            `list[KlineDict]`: Список свечей.
         """
         pass
 
@@ -202,10 +202,10 @@ class IUniClient(ABC, Generic[TClient]):
         """Возвращает ставку финансирования для всех тикеров.
 
         Параметры:
-            only_usdt (bool): Если True, возвращает только тикеры в паре к USDT.
+            only_usdt (`bool`): Если True, возвращает только тикеры в паре к USDT.
 
         Возвращает:
-            dict[str, float]: Ставка финансирования для каждого тикера в %.
+            `dict[str, float]`: Ставка финансирования для каждого тикера.
         """
         pass
 
@@ -221,9 +221,9 @@ class IUniClient(ABC, Generic[TClient]):
         если тикер не указан.
 
         Параметры:
-            symbol (str | None): Название тикера (Опционально).
+            symbol (`str | None`): Название тикера (Опционально).
 
         Возвращает:
-            float: Объем открытых позиций в монетах.
+            `float`: Объем открытых позиций в монетах.
         """
         pass

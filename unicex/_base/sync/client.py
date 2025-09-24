@@ -12,7 +12,7 @@ from unicex.types import RequestMethod
 
 
 class BaseClient:
-    """Базовый синхронный класс для создания клиентов для работы с API."""
+    """Базовый синхронный класс для работы с API."""
 
     def __init__(
         self,
@@ -28,14 +28,14 @@ class BaseClient:
         """Инициализация клиента.
 
         Параметры:
-            api_key (str | None): Ключ API для аутентификации.
-            api_secret (str | None): Секретный ключ API для аутентификации.
-            session (requests.Session): Сессия для выполнения HTTP-запросов.
-            logger (logging.Logger | None): Логгер для вывода информации.
-            max_retries (int): Максимальное количество повторных попыток запроса.
-            retry_delay (int | float): Задержка между повторными попытками.
-            proxies (list[str] | None): Список HTTP(S) прокси для циклического использования.
-            timeout (int): Максимальное время ожидания ответа от сервера.
+            api_key (`str | None`): Ключ API для аутентификации.
+            api_secret (`str | None`): Секретный ключ API для аутентификации.
+            session (`requests.Session | None`): Сессия для выполнения HTTP‑запросов.
+            logger (`logging.Logger | None`): Логгер для вывода информации.
+            max_retries (`int`): Максимальное количество повторных попыток запроса.
+            retry_delay (`int | float`): Задержка между повторными попытками, сек.
+            proxies (`list[str] | None`): Список HTTP(S)‑прокси для циклического использования.
+            timeout (`int`): Максимальное время ожидания ответа от сервера, сек.
         """
         self._api_key = api_key
         self._api_secret = api_secret
@@ -51,11 +51,19 @@ class BaseClient:
         self._session.close()
 
     def is_authorized(self) -> bool:
-        """Проверяет, наличие апи ключей в инстансе клиента."""
+        """Проверяет наличие API‑ключей у клиента.
+
+        Возвращает:
+            `bool`: Признак наличия ключей.
+        """
         return self._api_key is not None and self._api_secret is not None
 
     def __enter__(self) -> Self:
-        """Вход в контекст."""
+        """Вход в контекст.
+
+        Возвращает:
+            `Self`: Текущий экземпляр клиента.
+        """
         return self
 
     def __exit__(self, *_):
@@ -71,18 +79,18 @@ class BaseClient:
         json: dict[str, Any] | None = None,
         headers: dict[str, Any] | None = None,
     ) -> Any:
-        """Выполняет HTTP-запрос к API биржи.
+        """Выполняет HTTP‑запрос к API биржи.
 
         Параметры:
-            method (RequestMethod): HTTP-метод запроса.
-            url (str): Полный URL API.
-            params (dict[str, Any] | None): Параметры запроса (query string).
-            data (dict[str, Any] | None): Тело запроса (application/x-www-form-urlencoded).
-            json (dict[str, Any] | None): Тело запроса (application/json).
-            headers (dict[str, Any] | None): Заголовки запроса.
+            method (`RequestMethod`): HTTP‑метод запроса.
+            url (`str`): Полный URL API.
+            params (`dict[str, Any] | None`): Параметры запроса (query string).
+            data (`dict[str, Any] | None`): Тело запроса (application/x-www-form-urlencoded).
+            json (`dict[str, Any] | None`): Тело запроса (application/json).
+            headers (`dict[str, Any] | None`): Заголовки запроса.
 
         Возвращает:
-            dict | list: Ответ API в формате JSON.
+            `dict | list`: Ответ API в формате JSON.
         """
         self._logger.debug(
             f"Request: {method} {url} | Params: {params} | Data: {data} | Headers: {headers}"
@@ -122,13 +130,13 @@ class BaseClient:
         ) from errors[-1]
 
     def _handle_response(self, response: requests.Response) -> Any:
-        """Функция обрабатывает ответ от HTTP запроса.
+        """Обрабатывает HTTP‑ответ.
 
         Параметры:
-            response (requests.Response): Ответ от HTTP запроса.
+            response (`requests.Response`): Ответ HTTP‑запроса.
 
         Возвращает:
-            dict | list: Обработанный ответ в виде словаря или списка.
+            `dict | list`: Ответ API в формате JSON.
         """
         try:
             response.raise_for_status()
