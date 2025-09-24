@@ -55,7 +55,14 @@ class IUniClient(ABC, Generic[TClient]):
 
     @classmethod
     def from_client(cls, client: TClient) -> Self:
-        """Создает UniClient из уже существующего BinanceClient."""
+        """Создает UniClient из уже существующего Client.
+
+        Принимает:
+            client (`TClient`): Экземпляр Client.
+
+        Возвращает:
+            `Self`: Созданный экземпляр клиента.
+        """
         instance = cls.__new__(cls)  # создаем пустой объект без вызова __init__
         instance._client = client
         return instance
