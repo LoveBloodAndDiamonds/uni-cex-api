@@ -18,6 +18,7 @@ class BaseClient:
         session: aiohttp.ClientSession,
         api_key: str | None = None,
         api_secret: str | None = None,
+        api_passphrase: str | None = None,
         logger: LoggerLike | None = None,
         max_retries: int = 3,
         retry_delay: int | float = 0.1,
@@ -30,6 +31,7 @@ class BaseClient:
             session (`aiohttp.ClientSession`): Сессия для выполнения HTTP‑запросов.
             api_key (`str | None`): Ключ API для аутентификации.
             api_secret (`str | None`): Секретный ключ API для аутентификации.
+            api_passphrase (`str | None`): Пароль API для аутентификации (Bitget).
             logger (`LoggerLike | None`): Логгер для вывода информации.
             max_retries (`int`): Максимальное количество повторных попыток запроса.
             retry_delay (`int | float`): Задержка между повторными попытками, сек.
@@ -38,6 +40,7 @@ class BaseClient:
         """
         self._api_key = api_key
         self._api_secret = api_secret
+        self._api_passphrase = api_passphrase
         self._session = session
         self._logger = logger or _logger
         self._max_retries = max(max_retries, 1)
@@ -50,6 +53,7 @@ class BaseClient:
         cls,
         api_key: str | None = None,
         api_secret: str | None = None,
+        api_passphrase: str | None = None,
         session: aiohttp.ClientSession | None = None,
         logger: LoggerLike | None = None,
         max_retries: int = 3,
@@ -62,6 +66,7 @@ class BaseClient:
         Параметры:
             api_key (`str | None`): Ключ API для аутентификации.
             api_secret (`str | None`): Секретный ключ API для аутентификации.
+            api_passphrase (`str | None`): Пароль API для аутентификации (Bitget).
             session (`aiohttp.ClientSession | None`): Сессия для HTTP‑запросов (если не передана, будет создана).
             logger (`LoggerLike | None`): Логгер для вывода информации.
             max_retries (`int`): Максимум повторов при ошибках запроса.
@@ -76,6 +81,7 @@ class BaseClient:
             session=session or aiohttp.ClientSession(),
             api_key=api_key,
             api_secret=api_secret,
+            api_passphrase=api_passphrase,
             logger=logger,
             max_retries=max_retries,
             retry_delay=retry_delay,

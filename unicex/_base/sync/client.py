@@ -18,6 +18,7 @@ class BaseClient:
         self,
         api_key: str | None = None,
         api_secret: str | None = None,
+        api_passphrase: str | None = None,
         session: requests.Session | None = None,
         logger: LoggerLike | None = None,
         max_retries: int = 3,
@@ -30,6 +31,7 @@ class BaseClient:
         Параметры:
             api_key (`str | None`): Ключ API для аутентификации.
             api_secret (`str | None`): Секретный ключ API для аутентификации.
+            api_passphrase (`str | None`): Пароль API для аутентификации (Bitget).
             session (`requests.Session | None`): Сессия для выполнения HTTP‑запросов.
             logger (`LoggerLike | None`): Логгер для вывода информации.
             max_retries (`int`): Максимальное количество повторных попыток запроса.
@@ -39,6 +41,7 @@ class BaseClient:
         """
         self._api_key = api_key
         self._api_secret = api_secret
+        self._api_passphrase = api_passphrase
         self._session = session or requests.Session()
         self._logger = logger or _logger
         self._max_retries = max(max_retries, 1)
