@@ -9,7 +9,7 @@ from .._mixins import ClientMixin
 
 
 class Client(ClientMixin, BaseClient):
-    """Клиент для работы с Binance API."""
+    """Клиент для работы с Bitget API."""
 
     async def _make_request(
         self,
@@ -35,3 +35,20 @@ class Client(ClientMixin, BaseClient):
             data=data,
             headers=headers,
         )
+
+    # ========== COMMON PUBLIC ==========
+
+    async def server_time(self) -> dict:
+        """Получение серверного времени.
+
+        https://www.bitget.com/api-doc/common/intro
+        """
+        return await self._make_request("GET", "/api/v2/public/time")
+
+    # ========== PUBLIC SPOT ENDPOINTS ==========
+
+    # ========== PRIVATE SPOT ENDPOINTS ==========
+
+    # ========== PUBLIC FUTURES ENDPOINTS ==========
+
+    # ========== PRIVATE FUTURES ENDPOINTS ==========

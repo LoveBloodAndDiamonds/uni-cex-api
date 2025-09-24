@@ -16,6 +16,8 @@ async def main() -> None:
         api_key=API_KEY, api_secret=API_SECRET, api_passphrase=API_PASSPHRASE
     )
 
+    response = await client.futures_account(product_type="USDT-FUTURES", margin_coin="USDT")
+
     # POST SIGNED
     # response = await client._make_request(
     #     method="POST",
@@ -32,9 +34,9 @@ async def main() -> None:
     # )
 
     # GET UNSIGNED (+PARAMS)
-    response = await client._make_request(
-        method="GET", endpoint="/api/v2/spot/public/coins", params={"coin": "BGB"}
-    )
+    # response = await client._make_request(
+    #     method="GET", endpoint="/api/v2/spot/public/coins", params={"coin": "BGB"}
+    # )
 
     # GET UNSIGNED (-PARAMS)
     # response = await client._make_request(
@@ -51,11 +53,11 @@ async def main() -> None:
     # )
 
     # GET SIGNED (-PARAMS)
-    response = await client._make_request(
-        method="GET",
-        endpoint="/api/v2/spot/account/assets",
-        signed=True,
-    )
+    # response = await client._make_request(
+    #     method="GET",
+    #     endpoint="/api/v2/spot/account/assets",
+    #     signed=True,
+    # )
 
     from pprint import pp
 
