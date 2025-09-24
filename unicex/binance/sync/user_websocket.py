@@ -57,7 +57,9 @@ class UserWebsocket(UserWebsocketMixin):
         self._start_ws(self._create_ws_url(self._type, self._listen_key))  # type: ignore
 
         # Фоновое продление ключа прослушивания
-        self._keepalive_thread = threading.Thread(target=self._keepalive_loop, daemon=True)
+        self._keepalive_thread = threading.Thread(
+            target=self._keepalive_loop, name="WebsocketKeepaliveThread", daemon=True
+        )
         self._keepalive_thread.start()
 
     def stop(self) -> None:

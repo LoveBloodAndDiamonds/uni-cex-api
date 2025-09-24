@@ -1,6 +1,9 @@
 __all__ = ["WebsocketManagerMixin"]
 
 
+from collections.abc import Collection
+
+
 class WebsocketManagerMixin:
     """Миксин для менеджеров вебсокетов Binance."""
 
@@ -15,7 +18,7 @@ class WebsocketManagerMixin:
         type: str,
         url: str,
         symbol: str | None = None,
-        symbols: list[str] | None = None,
+        symbols: Collection[str] | None = None,
         require_symbol: bool = False,
     ) -> str:
         """Генерирует URL для вебсокета Binance. Параметры symbol и symbols не могут быть использованы вместе.
@@ -24,7 +27,7 @@ class WebsocketManagerMixin:
             type (`str`): Тип вебсокета.
             url (`str`): Базовый URL для вебсокета.
             symbol (`str | None`): Символ для подписки.
-            symbols (`list[str] | None`): Список символов для подписки.
+            symbols (`Collection[str] | None`): Список символов для подписки.
             require_symbol (`bool`): Требуется ли символ для подписки.
 
         Возвращает:

@@ -89,6 +89,7 @@ class Websocket:
         # Запускаем вебсокет
         self._ws_thread = threading.Thread(
             target=self._ws.run_forever,
+            name="WebsocketThread",
             kwargs=self._generate_ws_kwargs(),
             daemon=True,
         )
@@ -100,6 +101,7 @@ class Websocket:
         # Запускаем поток для проверки времени последнего сообщения
         self._healthcheck_thread = threading.Thread(
             target=self._healthcheck_task,
+            name="WebsocketHealthcheckThread",
             daemon=True,
         )
         self._healthcheck_thread.start()
@@ -108,7 +110,7 @@ class Websocket:
         for i in range(self._worker_count):
             worker = threading.Thread(
                 target=self._worker,
-                name=f"WebsocketWorker-{i}",
+                name=f"WebsocketWorkerThread-{i}",
                 daemon=True,
             )
             self._workers.append(worker)

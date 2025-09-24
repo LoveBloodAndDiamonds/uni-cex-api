@@ -1,7 +1,7 @@
 __all__ = ["IUniWebsocketManager"]
 
 from abc import ABC, abstractmethod
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Collection
 from typing import Any, overload
 
 from unicex._base.asyncio import Websocket
@@ -30,7 +30,7 @@ class IUniWebsocketManager(ABC):
         timeframe: Timeframe,
         *,
         symbol: None = None,
-        symbols: list[str],
+        symbols: Collection[str],
     ) -> Websocket: ...
 
     @abstractmethod
@@ -39,7 +39,7 @@ class IUniWebsocketManager(ABC):
         callback: CallbackType,
         timeframe: Timeframe,
         symbol: str | None = None,
-        symbols: list[str] | None = None,
+        symbols: Collection[str] | None = None,
     ) -> Websocket:
         """Открывает стрим свечей (spot) с унификацией сообщений.
 
@@ -47,7 +47,7 @@ class IUniWebsocketManager(ABC):
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             timeframe (`Timeframe`): Временной интервал свечей.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
 
         Должен быть указан либо `symbol`, либо `symbols`.
 
@@ -73,7 +73,7 @@ class IUniWebsocketManager(ABC):
         timeframe: Timeframe,
         *,
         symbol: None = None,
-        symbols: list[str],
+        symbols: Collection[str],
     ) -> Websocket: ...
 
     @abstractmethod
@@ -82,7 +82,7 @@ class IUniWebsocketManager(ABC):
         callback: CallbackType,
         timeframe: Timeframe,
         symbol: str | None = None,
-        symbols: list[str] | None = None,
+        symbols: Collection[str] | None = None,
     ) -> Websocket:
         """Открывает стрим свечей (futures) с унификацией сообщений.
 
@@ -90,7 +90,7 @@ class IUniWebsocketManager(ABC):
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             timeframe (`Timeframe`): Временной интервал свечей.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
 
         Должен быть указан либо `symbol`, либо `symbols`.
 
@@ -114,7 +114,7 @@ class IUniWebsocketManager(ABC):
         callback: CallbackType,
         *,
         symbol: None = None,
-        symbols: list[str],
+        symbols: Collection[str],
     ) -> Websocket: ...
 
     @abstractmethod
@@ -122,14 +122,14 @@ class IUniWebsocketManager(ABC):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: list[str] | None = None,
+        symbols: Collection[str] | None = None,
     ) -> Websocket:
         """Открывает стрим сделок (spot) с унификацией сообщений.
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
 
         Должен быть указан либо `symbol`, либо `symbols`.
 
@@ -153,7 +153,7 @@ class IUniWebsocketManager(ABC):
         callback: CallbackType,
         *,
         symbol: None = None,
-        symbols: list[str],
+        symbols: Collection[str],
     ) -> Websocket: ...
 
     @abstractmethod
@@ -161,14 +161,14 @@ class IUniWebsocketManager(ABC):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: list[str] | None = None,
+        symbols: Collection[str] | None = None,
     ) -> Websocket:
         """Открывает стрим агрегированных сделок (spot) с унификацией сообщений.
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
 
         Должен быть указан либо `symbol`, либо `symbols`.
 
@@ -192,7 +192,7 @@ class IUniWebsocketManager(ABC):
         callback: CallbackType,
         *,
         symbol: None = None,
-        symbols: list[str],
+        symbols: Collection[str],
     ) -> Websocket: ...
 
     @abstractmethod
@@ -200,14 +200,14 @@ class IUniWebsocketManager(ABC):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: list[str] | None = None,
+        symbols: Collection[str] | None = None,
     ) -> Websocket:
         """Открывает стрим сделок (futures) с унификацией сообщений.
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
 
         Должен быть указан либо `symbol`, либо `symbols`.
 
@@ -231,7 +231,7 @@ class IUniWebsocketManager(ABC):
         callback: CallbackType,
         *,
         symbol: None = None,
-        symbols: list[str],
+        symbols: Collection[str],
     ) -> Websocket: ...
 
     @abstractmethod
@@ -239,14 +239,14 @@ class IUniWebsocketManager(ABC):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: list[str] | None = None,
+        symbols: Collection[str] | None = None,
     ) -> Websocket:
         """Открывает стрим агрегированных сделок (futures) с унификацией сообщений.
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
 
         Должен быть указан либо `symbol`, либо `symbols`.
 

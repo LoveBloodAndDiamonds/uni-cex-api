@@ -2,6 +2,7 @@ __all__ = ["IUniClient"]
 
 from abc import ABC, abstractmethod
 from functools import cached_property
+from itertools import batched
 from typing import Generic, Self, TypeVar, overload
 
 import requests
@@ -108,7 +109,7 @@ class IUniClient(ABC, Generic[TClient]):
         pass
 
     @abstractmethod
-    def tickers(self, only_usdt: bool) -> list[str]:
+    def tickers(self, only_usdt: bool = True) -> list[str]:
         """Возвращает список тикеров.
 
         Параметры:
@@ -118,9 +119,24 @@ class IUniClient(ABC, Generic[TClient]):
             `list[str]`: Список тикеров.
         """
         pass
+
+    def tickers_batched(
+        self, only_usdt: bool = True, batch_size: int = 20
+    ) -> list[tuple[str, ...]]:
+        """Возвращает список тикеров в чанках.
+
+        Параметры:
+            only_usdt (`bool`): Если True, возвращает только тикеры в паре к USDT.
+            batch_size (`int`): Размер чанка.
+
+        Возвращает:
+            `list[list[str]]`: Список тикеров в чанках.
+        """
+        tickers = self.tickers(only_usdt=only_usdt)
+        return list(batched(tickers, n=batch_size, strict=False))
 
     @abstractmethod
-    def futures_tickers(self, only_usdt: bool) -> list[str]:
+    def futures_tickers(self, only_usdt: bool = True) -> list[str]:
         """Возвращает список тикеров.
 
         Параметры:
@@ -130,6 +146,21 @@ class IUniClient(ABC, Generic[TClient]):
             `list[str]`: Список тикеров.
         """
         pass
+
+    def futures_tickers_batched(
+        self, only_usdt: bool = True, batch_size: int = 20
+    ) -> list[tuple[str, ...]]:
+        """Возвращает список тикеров в чанках.
+
+        Параметры:
+            only_usdt (`bool`): Если True, возвращает только тикеры в паре к USDT.
+            batch_size (`int`): Размер чанка.
+
+        Возвращает:
+            `list[list[str]]`: Список тикеров в чанках.
+        """
+        tickers = self.futures_tickers(only_usdt=only_usdt)
+        return list(batched(tickers, n=batch_size, strict=False))
 
     @abstractmethod
     def last_price(self) -> dict[str, float]:
@@ -169,14 +200,19 @@ class IUniClient(ABC, Generic[TClient]):
 
     @abstractmethod
     def klines(
-        self, symbol: str, limit: int, interval: Timeframe, start_time: int, end_time: int
+        self,
+        symbol: str,
+        interval: Timeframe,
+        limit: int | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
     ) -> list[KlineDict]:
         """Возвращает список свечей.
 
         Параметры:
             symbol (`str`): Название тикера.
-            limit (`int`): Количество свечей.
             interval (`Timeframe`): Таймфрейм свечей.
+            limit (`int`): Количество свечей.
             start_time (`int`): Время начала периода в миллисекундах.
             end_time (`int`): Время окончания периода в миллисекундах.
 
@@ -187,14 +223,19 @@ class IUniClient(ABC, Generic[TClient]):
 
     @abstractmethod
     def futures_klines(
-        self, symbol: str, limit: int, interval: Timeframe, start_time: int, end_time: int
+        self,
+        symbol: str,
+        interval: Timeframe,
+        limit: int | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
     ) -> list[KlineDict]:
         """Возвращает список свечей.
 
         Параметры:
             symbol (`str`): Название тикера.
-            limit (`int`): Количество свечей.
             interval (`Timeframe`): Таймфрейм свечей.
+            limit (`int`): Количество свечей.
             start_time (`int`): Время начала периода в миллисекундах.
             end_time (`int`): Время окончания периода в миллисекундах.
 
@@ -204,7 +245,7 @@ class IUniClient(ABC, Generic[TClient]):
         pass
 
     @abstractmethod
-    def funding_rate(self, only_usdt: bool) -> dict[str, float]:
+    def funding_rate(self, only_usdt: bool = False) -> dict[str, float]:
         """Возвращает ставку финансирования для всех тикеров.
 
         Параметры:

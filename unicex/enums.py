@@ -1,3 +1,5 @@
+"""Модуль, который описывает перечисления."""
+
 __all__ = [
     "MarketType",
     "Exchange",
@@ -24,6 +26,7 @@ class Exchange(StrEnum):
 
     BINANCE = "BINANCE"
     BYBIT = "BYBIT"
+    BITGET = "BITGET"
 
     def __add__(self, market_type: "MarketType") -> tuple["Exchange", "MarketType"]:
         """Возвращает кортеж из биржи и типа рынка."""

@@ -47,7 +47,11 @@ class UniWebsocketManager(IUniWebsocketManager):
             except Exception as e:  # noqa: BLE001
                 self._logger.error(f"Failed to adapt message: {e}")
                 return
-            callback(adapted)
+            if isinstance(adapted, list):
+                for item in adapted:
+                    callback(item)
+            else:
+                callback(adapted)
 
         return _wrapper
 

@@ -2,6 +2,7 @@ __all__ = ["IUniClient"]
 
 from abc import ABC, abstractmethod
 from functools import cached_property
+from itertools import batched
 from typing import Generic, Self, TypeVar, overload
 
 import aiohttp
@@ -155,7 +156,7 @@ class IUniClient(ABC, Generic[TClient]):
         pass
 
     @abstractmethod
-    async def tickers(self, only_usdt: bool) -> list[str]:
+    async def tickers(self, only_usdt: bool = True) -> list[str]:
         """Возвращает список тикеров.
 
         Параметры:
@@ -165,9 +166,24 @@ class IUniClient(ABC, Generic[TClient]):
             `list[str]`: Список тикеров.
         """
         pass
+
+    async def tickers_batched(
+        self, only_usdt: bool = True, batch_size: int = 20
+    ) -> list[tuple[str, ...]]:
+        """Возвращает список тикеров в чанках.
+
+        Параметры:
+            only_usdt (`bool`): Если True, возвращает только тикеры в паре к USDT.
+            batch_size (`int`): Размер чанка.
+
+        Возвращает:
+            `list[list[str]]`: Список тикеров в чанках.
+        """
+        tickers = await self.tickers(only_usdt=only_usdt)
+        return list(batched(tickers, n=batch_size, strict=False))
 
     @abstractmethod
-    async def futures_tickers(self, only_usdt: bool) -> list[str]:
+    async def futures_tickers(self, only_usdt: bool = True) -> list[str]:
         """Возвращает список тикеров.
 
         Параметры:
@@ -177,6 +193,21 @@ class IUniClient(ABC, Generic[TClient]):
             `list[str]`: Список тикеров.
         """
         pass
+
+    async def futures_tickers_batched(
+        self, only_usdt: bool = True, batch_size: int = 20
+    ) -> list[tuple[str, ...]]:
+        """Возвращает список тикеров в чанках.
+
+        Параметры:
+            only_usdt (`bool`): Если True, возвращает только тикеры в паре к USDT.
+            batch_size (`int`): Размер чанка.
+
+        Возвращает:
+            `list[list[str]]`: Список тикеров в чанках.
+        """
+        tickers = await self.futures_tickers(only_usdt=only_usdt)
+        return list(batched(tickers, n=batch_size, strict=False))
 
     @abstractmethod
     async def last_price(self) -> dict[str, float]:
@@ -216,14 +247,19 @@ class IUniClient(ABC, Generic[TClient]):
 
     @abstractmethod
     async def klines(
-        self, symbol: str, limit: int, interval: Timeframe, start_time: int, end_time: int
+        self,
+        symbol: str,
+        interval: Timeframe,
+        limit: int | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
     ) -> list[KlineDict]:
         """Возвращает список свечей.
 
         Параметры:
             symbol (`str`): Название тикера.
-            limit (`int`): Количество свечей.
             interval (`Timeframe`): Таймфрейм свечей.
+            limit (`int`): Количество свечей.
             start_time (`int`): Время начала периода в миллисекундах.
             end_time (`int`): Время окончания периода в миллисекундах.
 
@@ -234,14 +270,19 @@ class IUniClient(ABC, Generic[TClient]):
 
     @abstractmethod
     async def futures_klines(
-        self, symbol: str, limit: int, interval: Timeframe, start_time: int, end_time: int
+        self,
+        symbol: str,
+        interval: Timeframe,
+        limit: int | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
     ) -> list[KlineDict]:
         """Возвращает список свечей.
 
         Параметры:
             symbol (`str`): Название тикера.
-            limit (`int`): Количество свечей.
             interval (`Timeframe`): Таймфрейм свечей.
+            limit (`int`): Количество свечей.
             start_time (`int`): Время начала периода в миллисекундах.
             end_time (`int`): Время окончания периода в миллисекундах.
 
@@ -251,7 +292,7 @@ class IUniClient(ABC, Generic[TClient]):
         pass
 
     @abstractmethod
-    async def funding_rate(self, only_usdt: bool) -> dict[str, float]:
+    async def funding_rate(self, only_usdt: bool = False) -> dict[str, float]:
         """Возвращает ставку финансирования для всех тикеров.
 
         Параметры:

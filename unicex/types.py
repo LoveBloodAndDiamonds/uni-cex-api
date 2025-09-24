@@ -1,3 +1,5 @@
+"""Модуль, который предоставляет типы данных для работы с библиотекой."""
+
 __all__ = [
     "TickerDailyDict",
     "KlineDict",
@@ -10,9 +12,9 @@ __all__ = [
 from logging import Logger as LoggingLogger
 from typing import Literal, TypedDict
 
-from loguru import Logger as LoguruLogger
+import loguru
 
-type LoggerLike = LoggingLogger | LoguruLogger
+type LoggerLike = LoggingLogger | loguru.Logger
 """Объединение логгеров: loguru._logger.Logger или logging.Logger."""
 
 type RequestMethod = Literal["GET", "POST", "PUT", "DELETE"]
