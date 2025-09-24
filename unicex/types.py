@@ -4,9 +4,16 @@ __all__ = [
     "TradeDict",
     "AggTradeDict",
     "RequestMethod",
+    "LoggerLike",
 ]
 
+from logging import Logger as LoggingLogger
 from typing import Literal, TypedDict
+
+from loguru import Logger as LoguruLogger
+
+type LoggerLike = LoggingLogger | LoguruLogger
+"""Объединение логгеров: loguru._logger.Logger или logging.Logger."""
 
 type RequestMethod = Literal["GET", "POST", "PUT", "DELETE"]
 """Типы методов HTTP запросов."""

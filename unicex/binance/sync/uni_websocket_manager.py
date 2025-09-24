@@ -1,12 +1,14 @@
 __all__ = ["UniWebsocketManager"]
 
 from collections.abc import Callable
-from logging import getLogger
 from typing import Any
+
+from loguru import logger as _logger
 
 from unicex._abc import IUniWebsocketManager
 from unicex._base import Websocket
 from unicex.enums import Exchange, Timeframe
+from unicex.types import LoggerLike
 
 from ..adapter import Adapter
 from .client import Client
@@ -19,18 +21,20 @@ type CallbackType = Callable[[Any], None]
 class UniWebsocketManager(IUniWebsocketManager):
     """Синхронный унифицированный менеджер вебсокетов Binance."""
 
-    def __init__(self, client: Client | UniClient | None = None) -> None:
+    def __init__(
+        self, client: Client | UniClient | None = None, logger: LoggerLike | None = None
+    ) -> None:
         """Инициализирует унифицированный менеджер вебсокетов.
 
         Параметры:
             client (Client | UniClient | None): Клиент Binance или унифицированный клиент.
-                Если передан UniClient, из него будет извлечён исходный клиент.
+            logger (`LoggerLike | None`): Логгер для записи логов.
         """
         if isinstance(client, UniClient):
             client = client.client
         self._websocket_manager = WebsocketManager(client)
         self._adapter = Adapter()
-        self._logger = getLogger(__name__)
+        self._logger = logger or _logger
 
     def _make_wrapper(
         self, adapter_func: Callable[[dict], Any], callback: CallbackType

@@ -1,19 +1,18 @@
 __all__ = ["UserWebsocket"]
 
 import asyncio
-import logging
 from collections.abc import Awaitable, Callable
 from typing import Any
 
+from loguru import logger as _logger
+
 from unicex._base.asyncio import Websocket
 from unicex.exceptions import NotSupported
+from unicex.types import LoggerLike
 
 from .._mixins import UserWebsocketMixin
 from ..types import AccountType
 from .client import Client
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 class UserWebsocket(UserWebsocketMixin):
@@ -23,7 +22,12 @@ class UserWebsocket(UserWebsocketMixin):
     """
 
     def __init__(
-        self, callback: Callable[[Any], Awaitable[None]], client: Client, type: AccountType
+        self,
+        callback: Callable[[Any], Awaitable[None]],
+        client: Client,
+        type: AccountType,
+        logger: LoggerLike | None = None,
+        **kwargs: Any,  # Не дадим сломаться, если юзер передал ненужные аргументы
     ) -> None:
         """Инициализирует асинхронный пользовательский вебсокет для работы с биржей Binance.
 
@@ -31,6 +35,7 @@ class UserWebsocket(UserWebsocketMixin):
             callback (`Callable`): Асинхронная функция обратного вызова, которая принимает сообщение с вебсокета.
             client (`Client`): Авторизованный клиент Binance.
             type (`AccountType`): Тип аккаунта ("SPOT" | "FUTURES").
+            logger (`LoggerLike | None`): Логгер для записи логов.
         """
         self._callback = callback
         self._client = client
@@ -39,6 +44,8 @@ class UserWebsocket(UserWebsocketMixin):
         self._listen_key: str | None = None
         self._ws: Websocket | None = None
         self._keepalive_task: asyncio.Task | None = None
+
+        self._logger = logger or _logger
 
         self._running = False
 
@@ -60,7 +67,7 @@ class UserWebsocket(UserWebsocketMixin):
             if isinstance(self._ws, Websocket):
                 await self._ws.stop()
         except Exception as e:
-            logger.error(f"Error stopping WebSocket: {e}")
+            self._logger.error(f"Error stopping WebSocket: {e}")
 
         # Ожидаем завершения фонового продления ключа прослушивания
         if isinstance(self._keepalive_task, asyncio.Task):
@@ -70,18 +77,18 @@ class UserWebsocket(UserWebsocketMixin):
             except asyncio.CancelledError:
                 pass
             except Exception as e:
-                logger.error(f"Error stopping keepalive task: {e}")
+                self._logger.error(f"Error stopping keepalive task: {e}")
 
         # Закрываем ключ прослушивания
         try:
             if self._listen_key:
                 await self._close_listen_key(self._listen_key)
         except Exception as e:
-            logger.error(f"Error closing listenKey: {e}")
+            self._logger.error(f"Error closing listenKey: {e}")
         finally:
             self._listen_key = None
 
-        logger.info("User websocket stopped")
+        self._logger.info("User websocket stopped")
 
     async def restart(self) -> None:
         """Перезапускает WebSocket для User Data Stream."""
@@ -92,7 +99,7 @@ class UserWebsocket(UserWebsocketMixin):
         """Запускает WebSocket для User Data Stream."""
         self._ws = Websocket(callback=self._callback, url=ws_url, no_message_reconnect_timeout=None)
         await self._ws.start()
-        logger.info(f"User websocket started: ...{ws_url[-5:]}")
+        self._logger.info(f"User websocket started: ...{ws_url[-5:]}")
 
     async def _keepalive_loop(self) -> None:
         """Фоновый цикл продления listenKey и восстановления сессии при необходимости."""
@@ -105,7 +112,7 @@ class UserWebsocket(UserWebsocketMixin):
                         raise RuntimeError(f"Can not renew listenKey: {response}")
 
                     if listen_key != self._listen_key:
-                        logger.info(
+                        self._logger.info(
                             f"Listen key changed: {self._listen_key} -> {listen_key}. Restarting websocket"
                         )
                         await self.restart()
@@ -118,7 +125,7 @@ class UserWebsocket(UserWebsocketMixin):
                     raise NotSupported(f"Account type '{self._type}' not supported")
 
             except Exception as e:
-                logger.error(f"Error while keeping alive: {e}")
+                self._logger.error(f"Error while keeping alive: {e}")
                 await self.restart()
                 return
 

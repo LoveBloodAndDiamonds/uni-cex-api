@@ -1,14 +1,14 @@
 __all__ = ["BaseClient"]
 
-import logging
 import time
 from itertools import cycle
 from typing import Any, Self
 
 import requests
+from loguru import logger as _logger
 
 from unicex.exceptions import UniCexException
-from unicex.types import RequestMethod
+from unicex.types import LoggerLike, RequestMethod
 
 
 class BaseClient:
@@ -19,7 +19,7 @@ class BaseClient:
         api_key: str | None = None,
         api_secret: str | None = None,
         session: requests.Session | None = None,
-        logger: logging.Logger | None = None,
+        logger: LoggerLike | None = None,
         max_retries: int = 3,
         retry_delay: int | float = 0.1,
         proxies: list[str] | None = None,
@@ -31,7 +31,7 @@ class BaseClient:
             api_key (`str | None`): Ключ API для аутентификации.
             api_secret (`str | None`): Секретный ключ API для аутентификации.
             session (`requests.Session | None`): Сессия для выполнения HTTP‑запросов.
-            logger (`logging.Logger | None`): Логгер для вывода информации.
+            logger (`LoggerLike | None`): Логгер для вывода информации.
             max_retries (`int`): Максимальное количество повторных попыток запроса.
             retry_delay (`int | float`): Задержка между повторными попытками, сек.
             proxies (`list[str] | None`): Список HTTP(S)‑прокси для циклического использования.
@@ -40,7 +40,7 @@ class BaseClient:
         self._api_key = api_key
         self._api_secret = api_secret
         self._session = session or requests.Session()
-        self._logger = logger or logging.getLogger()
+        self._logger = logger or _logger
         self._max_retries = max(max_retries, 1)
         self._retry_delay = max(retry_delay, 0)
         self._proxies_cycle = cycle(proxies) if proxies else None

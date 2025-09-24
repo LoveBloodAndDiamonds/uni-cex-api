@@ -1,6 +1,5 @@
 __all__ = ["IUniClient"]
 
-import logging
 from abc import ABC, abstractmethod
 from functools import cached_property
 from typing import Generic, Self, TypeVar, overload
@@ -9,7 +8,7 @@ import requests
 
 from unicex._base import BaseClient
 from unicex.enums import Timeframe
-from unicex.types import KlineDict, TickerDailyDict
+from unicex.types import KlineDict, LoggerLike, TickerDailyDict
 
 from ..adapter import IAdapter
 
@@ -24,7 +23,7 @@ class IUniClient(ABC, Generic[TClient]):
         api_key: str | None = None,
         api_secret: str | None = None,
         session: requests.Session | None = None,
-        logger: logging.Logger | None = None,
+        logger: LoggerLike | None = None,
         max_retries: int = 3,
         retry_delay: int | float = 0.1,
         proxies: list[str] | None = None,
@@ -36,7 +35,7 @@ class IUniClient(ABC, Generic[TClient]):
             api_key (str | None): Ключ API для аутентификации.
             api_secret (str | None): Секретный ключ API для аутентификации.
             session (requests.Session): Сессия для выполнения HTTP-запросов.
-            logger (logging.Logger | None): Логгер для вывода информации.
+            logger (LoggerLike | None): Логгер для вывода информации.
             max_retries (int): Максимальное количество повторных попыток запроса.
             retry_delay (int | float): Задержка между повторными попытками.
             proxies (list[str] | None): Список HTTP(S) прокси для циклического использования.

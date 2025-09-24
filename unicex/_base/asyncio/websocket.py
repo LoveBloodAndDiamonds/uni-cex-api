@@ -1,19 +1,17 @@
 __all__ = ["Websocket"]
 
 import asyncio
-import logging
 import time
 from collections.abc import Awaitable, Callable
 from typing import Any
 
 import orjson
-import websockets  # async
+import websockets
+from loguru import logger as _logger
 from websockets.asyncio.client import ClientConnection
 
 from unicex.exceptions import QueueOverflowError
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+from unicex.types import LoggerLike
 
 
 class Websocket:
@@ -33,6 +31,8 @@ class Websocket:
         no_message_reconnect_timeout: int | float | None = 60,
         reconnect_timeout: int | float | None = 5,
         worker_count: int = 2,
+        logger: LoggerLike | None = None,
+        **kwargs: Any,  # Не дадим сломаться, если юзер передал ненужные аргументы
     ) -> None:
         """Инициализация вебсокета.
 
@@ -46,6 +46,7 @@ class Websocket:
             no_message_reconnect_timeout (`int | float | None`): Таймаут ожидания без сообщений до рестарта, сек.
             reconnect_timeout (`int | float | None`): Пауза перед переподключением, сек.
             worker_count (`int`): Количество рабочих задач для обработки сообщений.
+            logger (`LoggerLike | None`): Логгер для записи логов.
         """
         self._callback = callback
         self._url = url
@@ -57,6 +58,7 @@ class Websocket:
         self._reconnect_timeout = reconnect_timeout or 0
         self._last_message_time = time.monotonic()
         self._worker_count = worker_count
+        self._logger = logger or _logger
         self._tasks: list[asyncio.Task] = []
         self._queue = asyncio.Queue()
         self._running = False
@@ -94,10 +96,10 @@ class Websocket:
 
     async def _connect(self) -> None:
         """Подключается к вебсокету и настраивает соединение."""
-        logger.debug(f"Estabilishing connection with {self._url}")
+        self._logger.debug(f"Estabilishing connection with {self._url}")
         async for conn in websockets.connect(uri=self._url, **self._generate_ws_kwargs()):
             try:
-                logger.info(f"Websocket connection was established to {self._url}")
+                self._logger.info(f"Websocket connection was established to {self._url}")
                 await self._after_connect(conn)
 
                 # Цикл получения сообщений
@@ -106,7 +108,7 @@ class Websocket:
                     await self._handle_message(message)
 
             except websockets.exceptions.ConnectionClosed:
-                logger.error("Websocket connection was closed unexpectedly")
+                self._logger.error("Websocket connection was closed unexpectedly")
                 continue
             finally:
                 await asyncio.sleep(self._reconnect_timeout)
@@ -125,9 +127,9 @@ class Websocket:
             self._check_queue_size()
         except orjson.JSONDecodeError as e:
             if message in ["ping", "pong"]:
-                logger.debug(f"{self} Received ping message: {message}")
+                self._logger.debug(f"{self} Received ping message: {message}")
             else:
-                logger.error(f"Failed to decode JSON message: {message}, error: {e}")
+                self._logger.error(f"Failed to decode JSON message: {message}, error: {e}")
 
     def _check_queue_size(self) -> None:
         """Проверяет размер очереди и выбрасывает ошибку при переполнении."""
@@ -174,7 +176,7 @@ class Websocket:
         """Отправляет сообщения с подпиской на топики, если нужно."""
         for message in self._subscription_messages:
             await conn.send(message)
-            logger.debug(f"Sent subscribe message: {message}")
+            self._logger.debug(f"Sent subscribe message: {message}")
 
     async def _worker(self) -> None:
         """Обрабатывает сообщения из очереди."""
@@ -183,7 +185,7 @@ class Websocket:
                 data = await self._queue.get()  # Получаем сообщение
                 await self._callback(data)  # Передаем в callback
             except Exception as e:
-                logger.error(f"{self} Error({type(e)}) while processing message: {e}")
+                self._logger.error(f"{self} Error({type(e)}) while processing message: {e}")
             finally:
                 self._queue.task_done()
 
@@ -199,9 +201,9 @@ class Websocket:
         while self._running and self._ping_message:
             try:
                 await conn.send(self._ping_message)
-                logger.debug(f"Sent ping message: {self._ping_message}")
+                self._logger.debug(f"Sent ping message: {self._ping_message}")
             except Exception as e:
-                logger.error(f"Error sending ping: {e}")
+                self._logger.error(f"Error sending ping: {e}")
                 return
             await asyncio.sleep(self._ping_interval)
 
@@ -212,7 +214,7 @@ class Websocket:
 
         while self._running:
             if time.monotonic() - self._last_message_time > self._no_message_reconnect_timeout:
-                logger.error("Websocket is not responding, restarting...")
+                self._logger.error("Websocket is not responding, restarting...")
                 await self.restart()
                 return
             await asyncio.sleep(1)

@@ -1,6 +1,5 @@
 __all__ = ["Websocket"]
 
-import logging
 import threading
 import time
 from collections import deque
@@ -8,12 +7,11 @@ from collections.abc import Callable
 from typing import Any
 
 import orjson
-from websocket import WebSocket, WebSocketApp  # sync
+from loguru import logger as _logger
+from websocket import WebSocket, WebSocketApp
 
 from unicex.exceptions import QueueOverflowError
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+from unicex.types import LoggerLike
 
 
 class Websocket:
@@ -33,6 +31,8 @@ class Websocket:
         no_message_reconnect_timeout: int | float | None = 60,
         reconnect_timeout: int | float | None = 5,
         worker_count: int = 2,
+        logger: LoggerLike | None = None,
+        **kwargs: Any,  # Не дадим сломаться, если юзер передал ненужные аргументы
     ) -> None:
         """Инициализация вебсокета.
 
@@ -46,6 +46,7 @@ class Websocket:
             no_message_reconnect_timeout (`int | float | None`): Таймаут без сообщений до рестарта, сек.
             reconnect_timeout (`int | float | None`): Пауза перед переподключением, сек.
             worker_count (`int`): Количество рабочих потоков.
+            logger (`LoggerLike | None`): Логгер для записи логов.
         """
         self._callback = callback
         self._subscription_messages = subscription_messages or []
@@ -53,6 +54,7 @@ class Websocket:
         self._ping_message = ping_message
         self._pong_message = pong_message
         self._no_message_reconnect_timeout = no_message_reconnect_timeout
+        self._logger = logger or _logger
         self._reconnect_timeout = reconnect_timeout or 0
         self._last_message_time: float | None = None
         self._healthcheck_thread: threading.Thread | None = None
@@ -82,7 +84,7 @@ class Websocket:
             raise RuntimeError("Websocket is already running")
         self._running = True
 
-        logger.info("Starting websocket")
+        self._logger.info("Starting websocket")
 
         # Запускаем вебсокет
         self._ws_thread = threading.Thread(
@@ -114,7 +116,7 @@ class Websocket:
 
     def stop(self) -> None:
         """Останавливает вебсокет и поток."""
-        logger.info("Stopping websocket")
+        self._logger.info("Stopping websocket")
         self._running = False
 
         # Останавливаем поток проверки последнего времени сообщения
@@ -122,14 +124,14 @@ class Websocket:
             if isinstance(self._healthcheck_thread, threading.Thread):
                 self._healthcheck_thread.join(timeout=1)
         except Exception as e:
-            logger.error(f"Error stopping healthcheck thread: {e}")
+            self._logger.error(f"Error stopping healthcheck thread: {e}")
 
         # Останавилваем вебсокет
         try:
             if self._ws:
                 self._ws.close()  # отправляем "close frame"
         except Exception as e:
-            logger.error(f"Error closing websocket: {e}")
+            self._logger.error(f"Error closing websocket: {e}")
 
         # Ждем остановки вебсокета
         try:
@@ -137,7 +139,7 @@ class Websocket:
                 self._ws_thread.join(timeout=5)  # ждём завершения потока
                 self._ws_thread = None
         except Exception as e:
-            logger.error(f"Error stopping websocket thread: {e}")
+            self._logger.error(f"Error stopping websocket thread: {e}")
 
         # Ждем остановки воркеров
         for worker in self._workers:
@@ -145,7 +147,7 @@ class Websocket:
                 if worker.is_alive():
                     worker.join(timeout=1)
             except Exception as e:
-                logger.error(f"Error stopping worker: {e}")
+                self._logger.error(f"Error stopping worker: {e}")
         self._workers.clear()
 
     def restart(self) -> None:
@@ -166,7 +168,7 @@ class Websocket:
 
                 self._callback(message)
             except Exception as e:
-                logger.error(f"Error in worker: {e}")
+                self._logger.error(f"Error in worker: {e}")
             time.sleep(0.01)  # чтобы не крутиться на пустой очереди
 
     def _generate_ws_kwargs(self) -> dict:
@@ -180,7 +182,7 @@ class Websocket:
 
     def _on_open(self, ws: WebSocket) -> None:
         """Обработчик события открытия вебсокета."""
-        logger.info("Websocket opened")
+        self._logger.info("Websocket opened")
         for subscription_message in self._subscription_messages:
             if isinstance(subscription_message, dict):
                 subscription_message = orjson.dumps(subscription_message)  # noqa: PLW2901
@@ -192,9 +194,9 @@ class Websocket:
             message = orjson.loads(message)
         except orjson.JSONDecodeError as e:
             if message in ["ping", "pong"]:
-                logger.debug(f"{self} Received ping message: {message}")
+                self._logger.debug(f"{self} Received ping message: {message}")
             else:
-                logger.error(f"Failed to decode JSON message: {message}, error: {e}")
+                self._logger.error(f"Failed to decode JSON message: {message}, error: {e}")
 
         self._last_message_time = time.monotonic()
 
@@ -205,16 +207,16 @@ class Websocket:
 
     def _on_error(self, _: WebSocket, error: Exception) -> None:
         """Обработчик события ошибки вебсокета."""
-        logger.error(f"Websocket error: {error}")
+        self._logger.error(f"Websocket error: {error}")
         self.restart()
 
     def _on_close(self, _: WebSocket, status_code: int, reason: str) -> None:
         """Обработчик события закрытия вебсокета."""
-        logger.info(f"Websocket closed with status code {status_code} and reason {reason}")
+        self._logger.info(f"Websocket closed with status code {status_code} and reason {reason}")
 
     def _on_ping(self, ws: WebSocket, message: str) -> None:
         """Обработчик события получения ping."""
-        logger.info(f"Websocket received ping: {message}")
+        self._logger.info(f"Websocket received ping: {message}")
         if self._pong_message:
             ws.pong(self._pong_message)
         else:
@@ -228,8 +230,8 @@ class Websocket:
         while self._running:
             try:
                 if time.monotonic() - self._last_message_time > self._no_message_reconnect_timeout:  # type: ignore
-                    logger.error("Websocket no message timeout triggered")
+                    self._logger.error("Websocket no message timeout triggered")
                     self.restart()
             except Exception as e:
-                logger.error(f"Error checking websocket health: {e}")
+                self._logger.error(f"Error checking websocket health: {e}")
             time.sleep(1)

@@ -1,20 +1,19 @@
 __all__ = ["UserWebsocket"]
 
-import logging
 import threading
 import time
 from collections.abc import Callable
 from typing import Any
 
+from loguru import logger as _logger
+
 from unicex._base import Websocket
 from unicex.exceptions import NotSupported
+from unicex.types import LoggerLike
 
 from .._mixins import UserWebsocketMixin
 from ..types import AccountType
 from .client import Client
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 class UserWebsocket(UserWebsocketMixin):
@@ -23,13 +22,21 @@ class UserWebsocket(UserWebsocketMixin):
     Поддержка типов аккаунта: "SPOT" и "FUTURES" (USDT‑M фьючерсы).
     """
 
-    def __init__(self, callback: Callable[[Any], None], client: Client, type: AccountType) -> None:
+    def __init__(
+        self,
+        callback: Callable[[Any], None],
+        client: Client,
+        type: AccountType,
+        logger: LoggerLike | None = None,
+        **kwargs: Any,  # Не дадим сломаться, если юзер передал ненужные аргументы
+    ) -> None:
         """Инициализирует пользовательский вебсокет.
 
         Параметры:
             callback (`Callable`): Функция обратного вызова, которая принимает сообщение с вебсокета.
             client (`Client`): Авторизованный клиент Binance.
             type (`AccountType`): Тип аккаунта ("SPOT" | "FUTURES").
+            logger (`LoggerLike | None`): Логгер для записи логов.
         """
         self._callback = callback
         self._client = client
@@ -38,6 +45,8 @@ class UserWebsocket(UserWebsocketMixin):
         self._listen_key: str | None = None
         self._ws: Websocket | None = None
         self._keepalive_thread: threading.Thread | None = None
+
+        self._logger = logger or _logger
 
         self._running = False
 
@@ -60,7 +69,7 @@ class UserWebsocket(UserWebsocketMixin):
             if isinstance(self._ws, Websocket):
                 self._ws.stop()
         except Exception as e:
-            logger.error(f"Error stopping WebSocket: {e}")
+            self._logger.error(f"Error stopping WebSocket: {e}")
 
         # Ожидаем завершения фонового продления ключа прослушивания
         if isinstance(self._keepalive_thread, threading.Thread):
@@ -71,11 +80,11 @@ class UserWebsocket(UserWebsocketMixin):
             if self._listen_key:
                 self._close_listen_key(self._listen_key)
         except Exception as e:
-            logger.error(f"Error closing listenKey: {e}")
+            self._logger.error(f"Error closing listenKey: {e}")
         finally:
             self._listen_key = None
 
-        logger.info("User websocket stopped")
+        self._logger.info("User websocket stopped")
 
     def restart(self) -> None:
         """Перезапускает WebSocket для User Data Stream."""
@@ -86,7 +95,7 @@ class UserWebsocket(UserWebsocketMixin):
         """Запускает WebSocket для User Data Stream."""
         self._ws = Websocket(callback=self._callback, url=ws_url, no_message_reconnect_timeout=None)
         self._ws.start()
-        logger.info(f"User websocket started: ...{ws_url[-5:]}")
+        self._logger.info(f"User websocket started: ...{ws_url[-5:]}")
 
     def _keepalive_loop(self) -> None:
         """Фоновый цикл продления listenKey и восстановления сессии при необходимости."""
@@ -99,7 +108,7 @@ class UserWebsocket(UserWebsocketMixin):
                         raise RuntimeError(f"Can not renew listenKey: {response}")
 
                     if listen_key != self._listen_key:
-                        logger.info(
+                        self._logger.info(
                             f"Listen key changed: {self._listen_key} -> {listen_key}. Restarting websocket"
                         )
                         return self.restart()
@@ -111,7 +120,7 @@ class UserWebsocket(UserWebsocketMixin):
                     raise NotSupported(f"Account type '{self._type}' not supported")
 
             except Exception as e:
-                logger.error(f"Error while keeping alive: {e}")
+                self._logger.error(f"Error while keeping alive: {e}")
                 return self.restart()
 
             # Ждём до следующего продления
