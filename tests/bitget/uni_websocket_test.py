@@ -14,11 +14,11 @@ async def main() -> None:
 
     socket = uwm.trades(
         callback=callback,
-        # symbol="BTCUSDT",
-        symbols=[
-            "ETHUSDT",
-            "XRPUSDT",
-        ],
+        symbol="BTCUSDT",
+        # symbols=[
+        #     "ETHUSDT",
+        #     "XRPUSDT",
+        # ],
     )
 
     await socket.start()

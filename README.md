@@ -42,6 +42,8 @@
 - AdapterError можно сделать красивее и удобнее
 - Может быть uni socket manager будет принимать тип рынка?
 - Добавить дефолтный overload для uniclient uniwebsoccketmanager
+- Добавить ссылку на доку во все вебсокет менеджер эндпоинты
+- Определить в каком порядке возвращать значения из адаптера (это касается всех методов)
 - Проверить типы BitgetClient
 ```
 2025-09-24 13:14:03.812 | ERROR    | unicex._base.sync.websocket:_on_error:212 - Websocket error: Message queue is overflow

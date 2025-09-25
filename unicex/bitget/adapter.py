@@ -214,7 +214,10 @@ class Adapter(IAdapter):
                     p=float(trade["price"]),
                     v=float(trade["size"]),
                 )
-                for trade in raw_msg["data"]
+                for trade in sorted(
+                    raw_msg["data"],
+                    key=lambda x: int(x["ts"]),  # Bitget присылает пачку трейдов в обратном порядке
+                )
             ]
         except Exception as e:
             raise AdapterError(

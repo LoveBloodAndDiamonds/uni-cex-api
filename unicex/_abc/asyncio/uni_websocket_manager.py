@@ -40,7 +40,7 @@ class IUniWebsocketManager(ABC):
         async def _wrapper(raw_msg: dict) -> None:
             try:
                 adapted = adapter_func(raw_msg)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 self._logger.warning(f"Failed to adapt message: {e}")
                 return
             if isinstance(adapted, list):
