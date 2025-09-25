@@ -81,12 +81,7 @@ class Websocket:
         self._tasks.clear()
 
         # Очистка очереди
-        while not self._queue.empty():
-            try:
-                self._queue.get_nowait()
-                self._queue.task_done()
-            except Exception:
-                break
+        self._queue = asyncio.Queue()
 
     async def restart(self) -> None:
         """Перезапускает вебсокет."""
@@ -165,12 +160,7 @@ class Websocket:
         self._tasks.clear()
 
         # Очистить очередь
-        while not self._queue.empty():
-            try:
-                self._queue.get_nowait()
-                self._queue.task_done()
-            except Exception:
-                break
+        self._queue = asyncio.Queue()
 
     async def _send_subscribe_messages(self, conn: ClientConnection) -> None:
         """Отправляет сообщения с подпиской на топики, если нужно."""

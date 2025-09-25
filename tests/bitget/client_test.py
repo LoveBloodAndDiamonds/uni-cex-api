@@ -17,6 +17,12 @@ async def main() -> None:
         api_key=API_KEY, api_secret=API_SECRET, api_passphrase=API_PASSPHRASE
     )
 
+    re = await client.get_orderbook(symbol="BGBUSDT")
+
+    pp(re)
+
+    return
+
     # POST SIGNED
     # response = await client.place_order(
     #     symbol="BGBUSDT",
