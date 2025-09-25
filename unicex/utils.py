@@ -5,12 +5,14 @@ __all__ = [
     "generate_hmac_sha256_signature",
     "sort_params_by_alphabetical_order",
     "filter_params",
+    "batched_list",
 ]
 
 import base64
 import hashlib
 import hmac
 import json
+from collections.abc import Iterable
 from typing import Literal
 from urllib.parse import urlencode
 
@@ -76,3 +78,23 @@ def generate_hmac_sha256_signature(
         return base64.b64encode(digest).decode()
     else:
         raise ValueError("encoding must be 'hex' or 'base64'")
+
+
+def batched_list[T](iterable: Iterable[T], n: int) -> list[list[T]]:
+    """Разбивает последовательность на чанки фиксированного размера.
+
+    Всегда возвращает список списков (list[list[T]]).
+    """
+    if n <= 0:
+        raise ValueError("n must be greater than 0")
+
+    result: list[list[T]] = []
+    batch: list[T] = []
+    for item in iterable:
+        batch.append(item)
+        if len(batch) == n:
+            result.append(batch)
+            batch = []
+    if batch:
+        result.append(batch)
+    return result

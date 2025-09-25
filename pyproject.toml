@@ -1,6 +1,6 @@
 [project]
 name = "unicex"
-version = "0.1.6"
+version = "0.1.8"
 description = "Unified Crypto Exchange API "
 readme = "README.md"
 license = {file = "LICENSE"}

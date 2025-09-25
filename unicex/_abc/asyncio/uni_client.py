@@ -1,9 +1,7 @@
 __all__ = ["IUniClient"]
 
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
 from functools import cached_property
-from itertools import batched
 from typing import Generic, Self, TypeVar, overload
 
 import aiohttp
@@ -11,6 +9,7 @@ import aiohttp
 from unicex._base.asyncio import BaseClient
 from unicex.enums import Timeframe
 from unicex.types import KlineDict, LoggerLike, TickerDailyDict
+from unicex.utils import batched_list
 
 from ..adapter import IAdapter
 
@@ -176,7 +175,7 @@ class IUniClient(ABC, Generic[TClient]):
 
     async def tickers_batched(
         self, only_usdt: bool = True, batch_size: int = 20
-    ) -> list[Sequence[str]]:
+    ) -> list[list[str]]:
         """Возвращает список тикеров в чанках.
 
         Параметры:
@@ -187,7 +186,7 @@ class IUniClient(ABC, Generic[TClient]):
             `list[list[str]]`: Список тикеров в чанках.
         """
         tickers = await self.tickers(only_usdt=only_usdt)
-        return list(batched(tickers, n=batch_size))
+        return batched_list(tickers, batch_size)
 
     @abstractmethod
     async def futures_tickers(self, only_usdt: bool = True) -> list[str]:
@@ -203,7 +202,7 @@ class IUniClient(ABC, Generic[TClient]):
 
     async def futures_tickers_batched(
         self, only_usdt: bool = True, batch_size: int = 20
-    ) -> list[Sequence[str]]:
+    ) -> list[list[str]]:
         """Возвращает список тикеров в чанках.
 
         Параметры:
@@ -214,7 +213,7 @@ class IUniClient(ABC, Generic[TClient]):
             `list[list[str]]`: Список тикеров в чанках.
         """
         tickers = await self.futures_tickers(only_usdt=only_usdt)
-        return list(batched(tickers, n=batch_size))
+        return batched_list(tickers, batch_size)
 
     @abstractmethod
     async def last_price(self) -> dict[str, float]:
