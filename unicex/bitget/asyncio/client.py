@@ -75,7 +75,7 @@ class Client(ClientMixin, BaseClient):
     async def server_time(self) -> dict:
         """Получение серверного времени.
 
-        https://www.bitget.com/api-doc/common/intro
+        https://www.bitget.com/api-doc/common/public/Get-Server-Time
         """
         return await self._make_request("GET", "/api/v2/public/time")
 
@@ -95,7 +95,7 @@ class Client(ClientMixin, BaseClient):
     async def get_all_trade_rate(
         self,
         business: BusinessType,
-    ) -> list[dict]:
+    ) -> dict:
         """Получение торговых ставок по всем парам для заданной линии.
 
         https://www.bitget.com/api-doc/common/public/Get-All-Trade-Rate
@@ -107,7 +107,7 @@ class Client(ClientMixin, BaseClient):
     async def funding_assets(
         self,
         coin: str | None = None,
-    ) -> list[dict]:
+    ) -> dict:
         """Получение информации о фандинговых активах (балансах).
 
         https://www.bitget.com/api-doc/common/account/Funding-Assets
@@ -116,7 +116,7 @@ class Client(ClientMixin, BaseClient):
 
         return await self._make_request("GET", "/api/v2/account/funding-assets", params=params)
 
-    async def all_account_balance(self) -> list[dict]:
+    async def all_account_balance(self) -> dict:
         """Получение балансов по всем типам аккаунтов.
 
         https://www.bitget.com/api-doc/common/account/All-Account-Balance
@@ -128,7 +128,7 @@ class Client(ClientMixin, BaseClient):
     async def get_coin_list(
         self,
         coin: str | None = None,
-    ) -> list[dict]:
+    ) -> dict:
         """Получение списка монет (информация по валютам).
 
         https://www.bitget.com/api-doc/spot/market/Get-Coin-List
@@ -140,7 +140,7 @@ class Client(ClientMixin, BaseClient):
     async def get_symbols(
         self,
         symbol: str | None = None,
-    ) -> list[dict]:
+    ) -> dict:
         """Получение списка торговых пар / конфигураций символов.
 
         https://www.bitget.com/api-doc/spot/market/Get-Symbols
@@ -149,7 +149,7 @@ class Client(ClientMixin, BaseClient):
 
         return await self._make_request("GET", "/api/v2/spot/public/symbols", params=params)
 
-    async def get_vip_fee_rate(self) -> list[dict]:
+    async def get_vip_fee_rate(self) -> dict:
         """Получение VIP ставок комиссии на спотовом рынке.
 
         https://www.bitget.com/api-doc/spot/market/Get-VIP-Fee-Rate
@@ -159,7 +159,7 @@ class Client(ClientMixin, BaseClient):
     async def get_tickers(
         self,
         symbol: str | None = None,
-    ) -> list[dict]:
+    ) -> dict:
         """Получение информации по тикерам (все или конкретная пара).
 
         https://www.bitget.com/api-doc/spot/market/Get-Tickers
@@ -248,7 +248,7 @@ class Client(ClientMixin, BaseClient):
         self,
         symbol: str,
         limit: int | None = None,
-    ) -> list[dict]:
+    ) -> dict:
         """Получение последних совершённых сделок.
 
         https://www.bitget.com/api-doc/spot/market/Get-Recent-Trades
@@ -264,7 +264,7 @@ class Client(ClientMixin, BaseClient):
         start_time: int | None = None,
         end_time: int | None = None,
         id_less_than: str | None = None,
-    ) -> list[dict]:
+    ) -> dict:
         """Получение исторических сделок на рынке.
 
         https://www.bitget.com/api-doc/spot/market/Get-Market-Trades
@@ -366,7 +366,7 @@ class Client(ClientMixin, BaseClient):
     async def batch_cancel_replace_order(
         self,
         order_list: list[dict],
-    ) -> list[dict]:
+    ) -> dict:
         """Пакетная отмена существующих ордеров и размещение новых.
 
         https://www.bitget.com/api-doc/spot/trade/Batch-Cancel-Replace-Order
@@ -455,7 +455,7 @@ class Client(ClientMixin, BaseClient):
         client_oid: str | None = None,
         request_time: int | None = None,
         receive_window: int | None = None,
-    ) -> list[dict]:
+    ) -> dict:
         """Получение информации об ордере.
 
         https://www.bitget.com/api-doc/spot/trade/Get-Order-Info
@@ -484,7 +484,7 @@ class Client(ClientMixin, BaseClient):
         tpsl_type: TpslType | None = None,
         request_time: int | None = None,
         receive_window: int | None = None,
-    ) -> list[dict]:
+    ) -> dict:
         """Получение списка активных (не исполненных) ордеров.
 
         https://www.bitget.com/api-doc/spot/trade/Get-Unfilled-Orders
@@ -516,7 +516,7 @@ class Client(ClientMixin, BaseClient):
         tpsl_type: TpslType | None = None,
         request_time: int | None = None,
         receive_window: int | None = None,
-    ) -> list[dict]:
+    ) -> dict:
         """Получение истории ордеров (за последние 90 дней).
 
         https://www.bitget.com/api-doc/spot/trade/Get-History-Orders
@@ -545,7 +545,7 @@ class Client(ClientMixin, BaseClient):
         end_time: int | None = None,
         limit: int | None = None,
         id_less_than: str | None = None,
-    ) -> list[dict]:
+    ) -> dict:
         """Получение списка исполненных сделок (fills).
 
         https://www.bitget.com/api-doc/spot/trade/Get-Fills
@@ -667,7 +667,7 @@ class Client(ClientMixin, BaseClient):
     async def get_plan_sub_order(
         self,
         plan_order_id: str,
-    ) -> list[dict]:
+    ) -> dict:
         """Получение списка суб-ордеров (исполненных частей планового ордера).
 
         https://www.bitget.com/api-doc/spot/plan/Get-Plan-Sub-Order
@@ -722,7 +722,7 @@ class Client(ClientMixin, BaseClient):
 
     async def get_account_assets(
         self, coin: str | None = None, asset_type: AssetType | None = None
-    ) -> list[dict]:
+    ) -> dict:
         """Получение списка активов на спотовом аккаунте.
 
         https://www.bitget.com/api-doc/spot/account/Get-Account-Assets
