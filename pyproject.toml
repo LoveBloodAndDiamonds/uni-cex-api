@@ -1,13 +1,13 @@
 [project]
 name = "unicex"
-version = "0.1.1"
+version = "0.1.2"
 description = "Unified Crypto Exchange API "
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [
   { name = "LoveBloodAndDiamonds", email = "ayazshakirzyanov27@gmail.com" }
 ]
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
     "aiohttp>=3.12.15",
     "loguru>=0.7.3",
