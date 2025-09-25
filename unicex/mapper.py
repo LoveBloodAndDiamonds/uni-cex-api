@@ -41,28 +41,30 @@ def get_uni_client(exchange: Exchange) -> type[IUniClient]: ...
 
 
 @overload
-def get_uni_client(exchange: Exchange, sync: Literal[True]) -> type[IUniClient]: ...
+def get_uni_client(exchange: Exchange, is_async: Literal[True]) -> type[IUniAioClient]: ...
 
 
 @overload
-def get_uni_client(exchange: Exchange, sync: Literal[False]) -> type[IUniAioClient]: ...
+def get_uni_client(exchange: Exchange, is_async: Literal[False]) -> type[IUniClient]: ...
 
 
-def get_uni_client(exchange: Exchange, sync: bool = True) -> type[IUniClient] | type[IUniAioClient]:
+def get_uni_client(
+    exchange: Exchange, is_async: bool = False
+) -> type[IUniClient] | type[IUniAioClient]:
     """Возвращает унифицированный клиент для указанной биржи.
 
     Параметры:
         exchange (`Exchange`): Биржа.
-        sync (`bool`): Если True, возвращает синхронный клиент. Иначе - асинхронный. По умолчанию True.
+        is_async (`bool`): Если True, возвращает асинхронный клиент. Иначе - синхронный. По умолчанию False.
 
     Возвращает:
         `type[IUniClient] | type[IUniAioClient]`: Унифицированный клиент для указанной биржи.
     """
     try:
-        if sync:
-            return _UNI_CLIENT_MAPPER[exchange]
-        else:
+        if is_async:
             return _UNI_AIO_CLIENT_MAPPER[exchange]
+        else:
+            return _UNI_CLIENT_MAPPER[exchange]
     except KeyError as e:
         raise NotSupported(f"Unsupported exchange: {exchange}") from e
 
@@ -73,32 +75,32 @@ def get_uni_websocket_manager(exchange: Exchange) -> type[IUniWebsocketManager]:
 
 @overload
 def get_uni_websocket_manager(
-    exchange: Exchange, sync: Literal[True]
-) -> type[IUniWebsocketManager]: ...
+    exchange: Exchange, is_async: Literal[True]
+) -> type[IUniAioWebsocketManager]: ...
 
 
 @overload
 def get_uni_websocket_manager(
-    exchange: Exchange, sync: Literal[False]
-) -> type[IUniAioWebsocketManager]: ...
+    exchange: Exchange, is_async: Literal[False]
+) -> type[IUniWebsocketManager]: ...
 
 
 def get_uni_websocket_manager(
-    exchange: Exchange, sync: bool = True
+    exchange: Exchange, is_async: bool = True
 ) -> type[IUniWebsocketManager] | type[IUniAioWebsocketManager]:
     """Возвращает унифицированный вебсокет-менеджер для указанной биржи.
 
     Параметры:
         exchange (`Exchange`): Биржа.
-        sync (`bool`): Если True, возвращает синхронный вебсокет-менеджер. Иначе - асинхронный. По умолчанию True.
+        is_async (`bool`): Если True, возвращает асинхронный вебсокет-менеджер. Иначе - синхронный. По умолчанию True.
 
     Возвращает:
         `type[IUniWebsocketManager] | type[IUniAioWebsocketManager]`: Унифицированный вебсокет-менеджер для указанной биржи.
     """
     try:
-        if sync:
-            return _UNI_WS_MANAGER_MAPPER[exchange]
-        else:
+        if is_async:
             return _UNI_AIO_WS_MANAGER_MAPPER[exchange]
+        else:
+            return _UNI_WS_MANAGER_MAPPER[exchange]
     except KeyError as e:
         raise NotSupported(f"Unsupported exchange: {exchange}") from e
