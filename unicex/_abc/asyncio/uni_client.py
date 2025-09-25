@@ -186,7 +186,7 @@ class IUniClient(ABC, Generic[TClient]):
             `list[list[str]]`: Список тикеров в чанках.
         """
         tickers = await self.tickers(only_usdt=only_usdt)
-        return list(batched(tickers, n=batch_size, strict=False))
+        return list(batched(tickers, n=batch_size))
 
     @abstractmethod
     async def futures_tickers(self, only_usdt: bool = True) -> list[str]:
@@ -213,7 +213,7 @@ class IUniClient(ABC, Generic[TClient]):
             `list[list[str]]`: Список тикеров в чанках.
         """
         tickers = await self.futures_tickers(only_usdt=only_usdt)
-        return list(batched(tickers, n=batch_size, strict=False))
+        return list(batched(tickers, n=batch_size))
 
     @abstractmethod
     async def last_price(self) -> dict[str, float]:
