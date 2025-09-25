@@ -24,6 +24,7 @@ class IUniClient(ABC, Generic[TClient]):
         session: aiohttp.ClientSession,
         api_key: str | None = None,
         api_secret: str | None = None,
+        api_passphrase: str | None = None,
         logger: LoggerLike | None = None,
         max_retries: int = 3,
         retry_delay: int | float = 0.1,
@@ -35,6 +36,7 @@ class IUniClient(ABC, Generic[TClient]):
         Параметры:
             api_key (`str | None`): Ключ API для аутентификации.
             api_secret (`str | None`): Секретный ключ API для аутентификации.
+            api_passphrase (`str | None`): Пароль API для аутентификации (Bitget).
             session (`aiohttp.ClientSession`): Сессия для выполнения HTTP-запросов.
             logger (`LoggerLike | None`): Логгер для вывода информации.
             max_retries (`int`): Максимальное количество повторных попыток запроса.
@@ -45,6 +47,7 @@ class IUniClient(ABC, Generic[TClient]):
         self._client: TClient = self._client_cls(
             api_key=api_key,
             api_secret=api_secret,
+            api_passphrase=api_passphrase,
             session=session,
             logger=logger,
             max_retries=max_retries,
@@ -58,6 +61,7 @@ class IUniClient(ABC, Generic[TClient]):
         cls,
         api_key: str | None = None,
         api_secret: str | None = None,
+        api_passphrase: str | None = None,
         session: aiohttp.ClientSession | None = None,
         logger: LoggerLike | None = None,
         max_retries: int = 3,
@@ -71,6 +75,7 @@ class IUniClient(ABC, Generic[TClient]):
         Параметры:
             api_key (`str | None`): Ключ API для аутентификации.
             api_secret (`str | None`): Секретный ключ API для аутентификации.
+            api_passphrase (`str | None`): Пароль API для аутентификации (Bitget).
             session (`aiohttp.ClientSession | None`): Сессия для выполнения HTTP-запросов.
             logger (`LoggerLike | None`): Логгер для вывода информации.
             max_retries (`int`): Максимальное количество повторных попыток запроса.
@@ -85,6 +90,7 @@ class IUniClient(ABC, Generic[TClient]):
             session=session or aiohttp.ClientSession(),
             api_key=api_key,
             api_secret=api_secret,
+            api_passphrase=api_passphrase,
             logger=logger,
             max_retries=max_retries,
             retry_delay=retry_delay,
