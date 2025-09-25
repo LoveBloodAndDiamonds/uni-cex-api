@@ -174,6 +174,8 @@ class Websocket:
             try:
                 data = await self._queue.get()  # Получаем сообщение
                 await self._callback(data)  # Передаем в callback
+            except asyncio.exceptions.CancelledError:
+                pass
             except Exception as e:
                 self._logger.error(f"{self} Error({type(e)}) while processing message: {e}")
             finally:
