@@ -4,14 +4,52 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Collection
 from typing import Any, overload
 
-from unicex._base import Websocket
+from loguru import logger as _logger
+
+from unicex._base import BaseClient, Websocket
 from unicex.enums import Timeframe
+from unicex.types import LoggerLike
+
+from .uni_client import IUniClient
 
 type CallbackType = Callable[[Any], None]
 
 
 class IUniWebsocketManager(ABC):
     """Интерфейс менеджера синхронных унифицированных вебсокетов."""
+
+    def __init__(
+        self, client: BaseClient | IUniClient | None = None, logger: LoggerLike | None = None
+    ) -> None:
+        """Инициализирует унифицированный менеджер вебсокетов.
+
+        Параметры:
+            client (`BaseClient | IUniClient | None`): Клиент или унифицированный клиент. Нужен для подключения к приватным топикам.
+            logger (`LoggerLike | None`): Логгер для записи логов.
+        """
+        if isinstance(client, IUniClient):
+            client = client.client
+        self._client = client
+        self._logger = logger or _logger
+
+    def _make_wrapper(
+        self, adapter_func: Callable[[dict], Any], callback: CallbackType
+    ) -> CallbackType:
+        """Создает обертку над callback, применяя адаптер к сырым сообщениям."""
+
+        def _wrapper(raw_msg: dict) -> None:
+            try:
+                adapted = adapter_func(raw_msg)
+            except Exception as e:  # noqa: BLE001
+                self._logger.error(f"Failed to adapt message: {e}")
+                return
+            if isinstance(adapted, list):
+                for item in adapted:
+                    callback(item)
+            else:
+                callback(adapted)
+
+        return _wrapper
 
     @overload
     def klines(

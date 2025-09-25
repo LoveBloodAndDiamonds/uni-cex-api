@@ -3,8 +3,6 @@ __all__ = ["UniWebsocketManager"]
 from collections.abc import Callable
 from typing import Any
 
-from loguru import logger as _logger
-
 from unicex._abc import IUniWebsocketManager
 from unicex._base import Websocket
 from unicex.enums import Exchange, Timeframe
@@ -30,30 +28,9 @@ class UniWebsocketManager(IUniWebsocketManager):
             client (Client | UniClient | None): Клиент Binance или унифицированный клиент.
             logger (`LoggerLike | None`): Логгер для записи логов.
         """
-        if isinstance(client, UniClient):
-            client = client.client
-        self._websocket_manager = WebsocketManager(client)
+        super().__init__(client=client, logger=logger)
+        self._websocket_manager = WebsocketManager(self._client)  # type: ignore
         self._adapter = Adapter()
-        self._logger = logger or _logger
-
-    def _make_wrapper(
-        self, adapter_func: Callable[[dict], Any], callback: CallbackType
-    ) -> CallbackType:
-        """Создает обертку над callback, применяя адаптер к сырым сообщениям."""
-
-        def _wrapper(raw_msg: dict) -> None:
-            try:
-                adapted = adapter_func(raw_msg)
-            except Exception as e:  # noqa: BLE001
-                self._logger.error(f"Failed to adapt message: {e}")
-                return
-            if isinstance(adapted, list):
-                for item in adapted:
-                    callback(item)
-            else:
-                callback(adapted)
-
-        return _wrapper
 
     def klines(
         self,

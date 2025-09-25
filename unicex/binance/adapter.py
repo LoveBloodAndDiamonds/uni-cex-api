@@ -21,9 +21,11 @@ class Adapter(IAdapter):
             list[str]: Список тикеров.
         """
         try:
-            if only_usdt:
-                return [item["symbol"] for item in raw_data if item["symbol"].endswith("USDT")]
-            return [item["symbol"] for item in raw_data]
+            return [
+                item["symbol"]
+                for item in raw_data
+                if not only_usdt or item["symbol"].endswith("USDT")
+            ]
         except Exception as e:
             raise AdapterError(
                 f"({type(e)}): {e}. Can not convert {raw_data} to unified tickers."
@@ -43,51 +45,35 @@ class Adapter(IAdapter):
         return Adapter.tickers(raw_data, only_usdt)
 
     @staticmethod
-    def ticker_24h(raw_data: list[dict], only_usdt: bool = True) -> dict[str, TickerDailyDict]:
+    def ticker_24h(raw_data: list[dict]) -> dict[str, TickerDailyDict]:
         """Преобразует сырой ответ, в котором содержатся данные о тикере за последние 24 часа в унифицированный формат.
 
         Параметры:
             raw_data (Any): Сырой ответ с биржи.
-            only_usdt (bool): Флаг, указывающий, нужно ли включать только тикеры в паре к USDT.
 
         Возвращает:
             dict[str, TickerDailyDict]: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
         """
         try:
-            if only_usdt:
-                result = {}
-                for item in raw_data:
-                    symbol = item["symbol"]
-                    if symbol.endswith("USDT"):
-                        result[symbol] = TickerDailyDict(
-                            p=float(item["priceChangePercent"]),
-                            q=float(item["quoteVolume"]),  # Объем торгов в долларах
-                            v=float(item["volume"]),  # Объем торгов в монетах
-                        )
-            else:
-                result = {
-                    item["symbol"]: TickerDailyDict(
-                        p=float(item["priceChangePercent"]),
-                        q=float(item["quoteVolume"]),  # Объем торгов в долларах
-                        v=float(item["volume"]),  # Объем торгов в монетах
-                    )
-                    for item in raw_data
-                }
-            return result
+            return {
+                item["symbol"]: TickerDailyDict(
+                    p=float(item["priceChangePercent"]),
+                    q=float(item["quoteVolume"]),  # объём в долларах
+                    v=float(item["volume"]),  # объём в монетах
+                )
+                for item in raw_data
+            }
         except Exception as e:
             raise AdapterError(
                 f"({type(e)}): {e}. Can not convert {raw_data} to unified ticker 24h."
             ) from e
 
     @staticmethod
-    def futures_ticker_24h(
-        raw_data: list[dict], only_usdt: bool = True
-    ) -> dict[str, TickerDailyDict]:
+    def futures_ticker_24h(raw_data: list[dict]) -> dict[str, TickerDailyDict]:
         """Преобразует сырой ответ, в котором содержатся данные о тикере за последние 24 часа в унифицированный формат.
 
         Параметры:
             raw_data (list[dict]): Сырой ответ с биржи.
-            only_usdt (bool): Флаг, указывающий, нужно ли включать только тикеры в паре к USDT.
 
         Возвращает:
             dict[str, TickerDailyDict]: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
@@ -167,23 +153,16 @@ class Adapter(IAdapter):
         return Adapter.klines(raw_data)
 
     @staticmethod
-    def funding_rate(raw_data: list[dict], only_usdt: bool = True) -> dict[str, float]:
+    def funding_rate(raw_data: list[dict]) -> dict[str, float]:
         """Преобразует сырой ответ, в котором содержатся данные о ставках финансирования тикеров в унифицированный формат.
 
         Параметры:
             raw_data (list[dict]): Сырой ответ с биржи.
-            only_usdt (bool): Флаг, указывающий, нужно ли возвращать только ставки финансирования для USDT-тикеров.
 
         Возвращает:
             dict[str, float]: Словарь, где ключ - тикер, а значение - ставка финансирования.
         """
         try:
-            if only_usdt:
-                return {
-                    item["symbol"]: float(item["lastFundingRate"]) * 100
-                    for item in raw_data
-                    if item["symbol"].endswith("USDT")
-                }
             return {item["symbol"]: float(item["lastFundingRate"]) * 100 for item in raw_data}
         except Exception as e:
             raise AdapterError(

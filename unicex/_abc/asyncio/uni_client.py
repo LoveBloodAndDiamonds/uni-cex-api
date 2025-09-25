@@ -292,11 +292,8 @@ class IUniClient(ABC, Generic[TClient]):
         pass
 
     @abstractmethod
-    async def funding_rate(self, only_usdt: bool = False) -> dict[str, float]:
+    async def funding_rate(self) -> dict[str, float]:
         """Возвращает ставку финансирования для всех тикеров.
-
-        Параметры:
-            only_usdt (`bool`): Если True, возвращает только тикеры в паре к USDT.
 
         Возвращает:
             `dict[str, float]`: Ставка финансирования для каждого тикера.
