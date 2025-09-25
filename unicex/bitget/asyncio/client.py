@@ -186,6 +186,20 @@ class Client(ClientMixin, BaseClient):
 
         return await self._make_request("GET", "/api/v2/spot/market/merge-depth", params=params)
 
+    async def get_orderbook(
+        self,
+        symbol: str,
+        type: str | None = None,
+        limit: str | None = None,
+    ) -> dict:
+        """Получение книги ордеров (orderbook depth).
+
+        https://www.bitget.com/api-doc/spot/market/Get-Orderbook
+        """
+        params = {"symbol": symbol, "type": type, "limit": limit}
+
+        return await self._make_request("GET", "/api/v2/spot/market/orderbook", params=params)
+
     async def get_candle_data(
         self,
         symbol: str,
