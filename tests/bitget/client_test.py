@@ -17,7 +17,9 @@ async def main() -> None:
         api_key=API_KEY, api_secret=API_SECRET, api_passphrase=API_PASSPHRASE
     )
 
-    re = await client.get_orderbook(symbol="BGBUSDT")
+    # re = await client.get_orderbook(symbol="BGBUSDT")
+
+    re = await client.get_account_assets(coin="BTC")
 
     pp(re)
 

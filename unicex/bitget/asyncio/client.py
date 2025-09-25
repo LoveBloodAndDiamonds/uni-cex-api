@@ -744,7 +744,7 @@ class Client(ClientMixin, BaseClient):
         params = {"coin": coin, "assetType": asset_type}
 
         return await self._make_request(
-            "GET", "/api/v2/spot/account/asset", signed=True, params=params
+            "GET", "/api/v2/spot/account/assets", signed=True, params=params
         )
 
     # ========== PUBLIC FUTURES ENDPOINTS ==========
