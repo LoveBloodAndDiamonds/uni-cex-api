@@ -1,6 +1,7 @@
 __all__ = ["IUniClient"]
 
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from functools import cached_property
 from itertools import batched
 from typing import Generic, Self, TypeVar, overload
@@ -175,7 +176,7 @@ class IUniClient(ABC, Generic[TClient]):
 
     async def tickers_batched(
         self, only_usdt: bool = True, batch_size: int = 20
-    ) -> list[tuple[str, ...]]:
+    ) -> list[Sequence[str]]:
         """Возвращает список тикеров в чанках.
 
         Параметры:
@@ -202,7 +203,7 @@ class IUniClient(ABC, Generic[TClient]):
 
     async def futures_tickers_batched(
         self, only_usdt: bool = True, batch_size: int = 20
-    ) -> list[tuple[str, ...]]:
+    ) -> list[Sequence[str]]:
         """Возвращает список тикеров в чанках.
 
         Параметры:

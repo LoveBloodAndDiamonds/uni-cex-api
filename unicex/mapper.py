@@ -14,6 +14,8 @@ from .binance import UniClient as BinanceUniClient
 from .binance import UniWebsocketManager as BinanceUniWebsocketManager
 from .binance.asyncio import UniClient as BinanceUniAioClient
 from .binance.asyncio import UniWebsocketManager as BinanceUniAioWebsocketManager
+from .bitget.asyncio import UniClient as BitgetUniAioClient
+from .bitget.asyncio import UniWebsocketManager as BitgetUniAioWebsocketManager
 from .enums import Exchange
 from .exceptions import NotSupported
 
@@ -21,7 +23,8 @@ _UNI_CLIENT_MAPPER: dict[Exchange, type[IUniClient]] = {Exchange.BINANCE: Binanc
 """Маппер, который связывает биржу и синхронную реализацию унифицированного клиента."""
 
 _UNI_AIO_CLIENT_MAPPER: dict[Exchange, type[IUniAioClient]] = {
-    Exchange.BINANCE: BinanceUniAioClient
+    Exchange.BINANCE: BinanceUniAioClient,
+    Exchange.BITGET: BitgetUniAioClient,
 }
 """Маппер, который связывает биржу и асинхронную реализацию унифицированного клиента."""
 
@@ -31,7 +34,8 @@ _UNI_WS_MANAGER_MAPPER: dict[Exchange, type[IUniWebsocketManager]] = {
 """Маппер, который связывает биржу и синхронную реализацию унифицированного вебсокет-менеджера."""
 
 _UNI_AIO_WS_MANAGER_MAPPER: dict[Exchange, type[IUniAioWebsocketManager]] = {
-    Exchange.BINANCE: BinanceUniAioWebsocketManager
+    Exchange.BINANCE: BinanceUniAioWebsocketManager,
+    Exchange.BITGET: BitgetUniAioWebsocketManager,
 }
 """Маппер, который связывает биржу и асинхронную реализацию унифицированного вебсокет-менеджера."""
 
