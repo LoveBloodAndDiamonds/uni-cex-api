@@ -41,7 +41,7 @@ class IUniWebsocketManager(ABC):
             try:
                 adapted = adapter_func(raw_msg)
             except Exception as e:  # noqa: BLE001
-                self._logger.error(f"Failed to adapt message: {e}")
+                self._logger.warning(f"Failed to adapt message: {e}")
                 return
             if isinstance(adapted, list):
                 for item in adapted:
