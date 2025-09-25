@@ -49,7 +49,7 @@ class BaseClient:
         self._proxies_cycle = cycle(proxies) if proxies else None
         self._timeout = timeout
 
-    def close(self) -> None:
+    def close_connection(self) -> None:
         """Закрывает сессию."""
         self._session.close()
 
@@ -71,7 +71,7 @@ class BaseClient:
 
     def __exit__(self, *_):
         """Выход из контекста."""
-        self.close()
+        self.close_connection()
 
     def _make_request(
         self,

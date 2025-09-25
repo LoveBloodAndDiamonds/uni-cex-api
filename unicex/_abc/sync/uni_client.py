@@ -1,6 +1,7 @@
 __all__ = ["IUniClient"]
 
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from functools import cached_property
 from itertools import batched
 from typing import Generic, Self, TypeVar, overload
@@ -70,9 +71,9 @@ class IUniClient(ABC, Generic[TClient]):
         instance._client = client
         return instance
 
-    def close(self) -> None:
+    def close_connection(self) -> None:
         """Закрывает сессию клиента."""
-        self._client.close()
+        self._client.close_connection()
 
     def __enter__(self) -> Self:
         """Вход в контекст."""
@@ -80,7 +81,7 @@ class IUniClient(ABC, Generic[TClient]):
 
     def __exit__(self, *_) -> None:
         """Выход из контекста."""
-        self.close()
+        self.close_connection()
 
     @property
     def client(self) -> TClient:
@@ -123,9 +124,7 @@ class IUniClient(ABC, Generic[TClient]):
         """
         pass
 
-    def tickers_batched(
-        self, only_usdt: bool = True, batch_size: int = 20
-    ) -> list[tuple[str, ...]]:
+    def tickers_batched(self, only_usdt: bool = True, batch_size: int = 20) -> list[Sequence[str]]:
         """Возвращает список тикеров в чанках.
 
         Параметры:
@@ -152,7 +151,7 @@ class IUniClient(ABC, Generic[TClient]):
 
     def futures_tickers_batched(
         self, only_usdt: bool = True, batch_size: int = 20
-    ) -> list[tuple[str, ...]]:
+    ) -> list[Sequence[str]]:
         """Возвращает список тикеров в чанках.
 
         Параметры:

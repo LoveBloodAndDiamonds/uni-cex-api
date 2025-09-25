@@ -89,7 +89,7 @@ class BaseClient:
             timeout=timeout,
         )
 
-    async def close(self) -> None:
+    async def close_connection(self) -> None:
         """Закрывает сессию."""
         await self._session.close()
 
@@ -107,7 +107,7 @@ class BaseClient:
 
     async def __aexit__(self, *_) -> None:
         """Выход из асинхронного контекста."""
-        await self.close()
+        await self.close_connection()
 
     async def _make_request(
         self,

@@ -121,9 +121,9 @@ class IUniClient(ABC, Generic[TClient]):
         """
         return self._client._api_key is not None and self._client._api_secret is not None
 
-    async def close(self) -> None:
+    async def close_connection(self) -> None:
         """Закрывает сессию клиента."""
-        await self._client.close()
+        await self._client.close_connection()
 
     async def __aenter__(self) -> Self:
         """Вход в асинхронный контекст."""
@@ -131,7 +131,7 @@ class IUniClient(ABC, Generic[TClient]):
 
     async def __aexit__(self, *_) -> None:
         """Выход из асинхронного контекста."""
-        await self.close()
+        await self.close_connection()
 
     @property
     def client(self) -> TClient:
