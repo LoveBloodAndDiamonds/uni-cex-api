@@ -1,6 +1,6 @@
 __all__ = ["WebsocketManager"]
 
-from collections.abc import Callable, Collection
+from collections.abc import Callable, Sequence
 from typing import Any
 
 from unicex._base import Websocket
@@ -38,14 +38,14 @@ class WebsocketManager(WebsocketManagerMixin):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения сделок.
 
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -63,14 +63,14 @@ class WebsocketManager(WebsocketManagerMixin):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения агрегированных сделок.
 
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -89,7 +89,7 @@ class WebsocketManager(WebsocketManagerMixin):
         callback: CallbackType,
         interval: SpotTimeframe,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения свечей.
 
@@ -97,7 +97,7 @@ class WebsocketManager(WebsocketManagerMixin):
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
             interval (`SpotTimeframe`): Временной интервал свечей.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -115,14 +115,14 @@ class WebsocketManager(WebsocketManagerMixin):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения событий изменения стакана (без лимита глубины).
 
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -140,14 +140,14 @@ class WebsocketManager(WebsocketManagerMixin):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для мини‑статистики тикера за последние 24 часа.
 
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -170,14 +170,14 @@ class WebsocketManager(WebsocketManagerMixin):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для расширенной статистики тикера за последние 24 часа.
 
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -208,7 +208,7 @@ class WebsocketManager(WebsocketManagerMixin):
         callback: CallbackType,
         window: RollingWindowSize,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения статистики тикера за указанное окно времени.
 
@@ -216,7 +216,7 @@ class WebsocketManager(WebsocketManagerMixin):
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             window (`RollingWindowSize`): Размер окна статистики.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -239,14 +239,14 @@ class WebsocketManager(WebsocketManagerMixin):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения среднего прайса (Average Price).
 
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -264,14 +264,14 @@ class WebsocketManager(WebsocketManagerMixin):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения лучших бид/аск по символам.
 
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -290,7 +290,7 @@ class WebsocketManager(WebsocketManagerMixin):
         callback: CallbackType,
         levels: BookDepthLevels,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения стакана глубиной N уровней.
 
@@ -298,7 +298,7 @@ class WebsocketManager(WebsocketManagerMixin):
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             levels (`BookDepthLevels`): Глубина стакана (уровни).
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -336,14 +336,14 @@ class WebsocketManager(WebsocketManagerMixin):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения сделок.
 
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -361,14 +361,14 @@ class WebsocketManager(WebsocketManagerMixin):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения агрегированных сделок.
 
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -387,7 +387,7 @@ class WebsocketManager(WebsocketManagerMixin):
         callback: CallbackType,
         interval: FuturesTimeframe,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения свечей.
 
@@ -395,7 +395,7 @@ class WebsocketManager(WebsocketManagerMixin):
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             interval (`FuturesTimeframe`): Временной интервал свечей.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -413,14 +413,14 @@ class WebsocketManager(WebsocketManagerMixin):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для мини‑статистики тикера за последние 24 часа.
 
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -450,14 +450,14 @@ class WebsocketManager(WebsocketManagerMixin):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для расширенной статистики тикера за последние 24 часа.
 
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -487,14 +487,14 @@ class WebsocketManager(WebsocketManagerMixin):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения лучших бид/аск по символам.
 
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -513,7 +513,7 @@ class WebsocketManager(WebsocketManagerMixin):
         callback: CallbackType,
         symbol: str | None,
         levels: BookDepthLevels,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения стакана глубиной N уровней.
 
@@ -521,7 +521,7 @@ class WebsocketManager(WebsocketManagerMixin):
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
             levels (`BookDepthLevels`): Глубина стакана (уровни).
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -539,14 +539,14 @@ class WebsocketManager(WebsocketManagerMixin):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения событий изменения стакана (без лимита глубины).
 
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -584,7 +584,7 @@ class WebsocketManager(WebsocketManagerMixin):
         callback: CallbackType,
         interval: MarkPriceUpdateSpeed = "1s",
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения mark price и funding rate по символам.
 
@@ -592,7 +592,7 @@ class WebsocketManager(WebsocketManagerMixin):
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             interval (`MarkPriceUpdateSpeed`): Частота обновления ("1s" или пусто).
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -628,14 +628,14 @@ class WebsocketManager(WebsocketManagerMixin):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения ликвидационных ордеров по символам.
 
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -658,14 +658,14 @@ class WebsocketManager(WebsocketManagerMixin):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения информации по композитному индексу.
 
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.

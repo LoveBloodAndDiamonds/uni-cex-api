@@ -42,6 +42,7 @@
 - Прокидывать ошибку дальше: 2025-09-24 13:08:06.552 | ERROR    | unicex._base.sync.websocket:_on_error:212 - Websocket error: Message queue is overflow
 - Потестить bitget
 - AdapterError можно сделать красивее и удобнее
+- Может быть uni socket manager будет принимать тип рынка?
 - Проверить типы BitgetClient
 ```
 2025-09-24 13:14:03.812 | ERROR    | unicex._base.sync.websocket:_on_error:212 - Websocket error: Message queue is overflow

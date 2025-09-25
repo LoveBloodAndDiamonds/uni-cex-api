@@ -1,7 +1,7 @@
 __all__ = ["WebsocketManagerMixin"]
 
 import json
-from collections.abc import Collection
+from collections.abc import Sequence
 from typing import Literal
 
 
@@ -16,7 +16,7 @@ class WebsocketManagerMixin:
         topic: str,
         market_type: Literal["SPOT", "USDT-FUTURES"],
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> str:
         """Сформировать сообщение для подписки на вебсокет.
 
@@ -24,7 +24,7 @@ class WebsocketManagerMixin:
             topic (`str`): Канал подписки (например: "ticker", "candle1m", "depth").
             market_type (`"SPOT" | "USDT-FUTURES"`): Тип рынка для подписки.
             symbol (`str | None`): Торговая пара. Нельзя использовать одновременно с `symbols`.
-            symbols (`Collection[str] | None`): Список торговых пар. Нельзя использовать одновременно с `symbol`.
+            symbols (`Sequence[str] | None`): Список торговых пар. Нельзя использовать одновременно с `symbol`.
 
         Возвращает:
             `str`: JSON-строка с сообщением для подписки на вебсокет.
