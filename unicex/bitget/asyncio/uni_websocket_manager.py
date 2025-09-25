@@ -1,55 +1,36 @@
 __all__ = ["IUniWebsocketManager"]
 
-from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable, Collection
 from typing import Any, overload
 
-from loguru import logger as _logger
-
-from unicex._base.asyncio import BaseClient, Websocket
+from unicex._abc.asyncio import IUniWebsocketManager
+from unicex._base.asyncio import Websocket
 from unicex.enums import Timeframe
 from unicex.types import LoggerLike
 
-from .uni_client import IUniClient
+from ..adapter import Adapter
+from .client import Client
+from .uni_client import UniClient
+from .websocket_manager import WebsocketManager
 
 type CallbackType = Callable[[Any], Awaitable[None]]
 
 
-class IUniWebsocketManager(ABC):
-    """Интерфейс менеджера асинхронных унифицированных вебсокетов."""
+class UniWebsocketManager(IUniWebsocketManager):
+    """Реализация менеджера асинхронных унифицированных вебсокетов."""
 
     def __init__(
-        self, client: BaseClient | IUniClient | None = None, logger: LoggerLike | None = None
+        self, client: Client | UniClient | None = None, logger: LoggerLike | None = None
     ) -> None:
         """Инициализирует унифицированный менеджер вебсокетов.
 
         Параметры:
-            client (`BaseClient | IUniClient | None`): Клиент или унифицированный клиент. Нужен для подключения к приватным топикам.
+            client (`Client | UniClient | None`): Клиент Binance или унифицированный клиент. Нужен для подключения к приватным топикам.
             logger (`LoggerLike | None`): Логгер для записи логов.
         """
-        if isinstance(client, IUniClient):
-            client = client.client
-        self._client = client
-        self._logger = logger or _logger
-
-    def _make_wrapper(
-        self, adapter_func: Callable[[dict], Any], callback: CallbackType
-    ) -> CallbackType:
-        """Создает обертку над callback, применяя адаптер к сырым сообщениям."""
-
-        async def _wrapper(raw_msg: dict) -> None:
-            try:
-                adapted = adapter_func(raw_msg)
-            except Exception as e:  # noqa: BLE001
-                self._logger.warning(f"Failed to adapt message: {e}")
-                return
-            if isinstance(adapted, list):
-                for item in adapted:
-                    await callback(item)
-            else:
-                await callback(adapted)
-
-        return _wrapper
+        super().__init__(client=client, logger=logger)
+        self._websocket_manager = WebsocketManager(self._client)  # type: ignore
+        self._adapter = Adapter()
 
     @overload
     def klines(
@@ -71,7 +52,6 @@ class IUniWebsocketManager(ABC):
         symbols: Collection[str],
     ) -> Websocket: ...
 
-    @abstractmethod
     def klines(
         self,
         callback: CallbackType,
@@ -92,7 +72,7 @@ class IUniWebsocketManager(ABC):
         Возвращает:
             `Websocket`: Экземпляр вебсокета для управления соединением.
         """
-        pass
+        raise NotImplementedError()
 
     @overload
     def futures_klines(
@@ -114,7 +94,6 @@ class IUniWebsocketManager(ABC):
         symbols: Collection[str],
     ) -> Websocket: ...
 
-    @abstractmethod
     def futures_klines(
         self,
         callback: CallbackType,
@@ -135,7 +114,7 @@ class IUniWebsocketManager(ABC):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        pass
+        raise NotImplementedError()
 
     @overload
     def trades(
@@ -155,7 +134,6 @@ class IUniWebsocketManager(ABC):
         symbols: Collection[str],
     ) -> Websocket: ...
 
-    @abstractmethod
     def trades(
         self,
         callback: CallbackType,
@@ -174,7 +152,8 @@ class IUniWebsocketManager(ABC):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        pass
+        wrapper = self._make_wrapper(self._adapter.trades_message, callback)
+        return self._websocket_manager.trade(callback=wrapper, symbol=symbol, symbols=symbols)
 
     @overload
     def aggtrades(
@@ -194,7 +173,6 @@ class IUniWebsocketManager(ABC):
         symbols: Collection[str],
     ) -> Websocket: ...
 
-    @abstractmethod
     def aggtrades(
         self,
         callback: CallbackType,
@@ -213,7 +191,7 @@ class IUniWebsocketManager(ABC):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        pass
+        raise NotImplementedError()
 
     @overload
     def futures_trades(
@@ -233,7 +211,6 @@ class IUniWebsocketManager(ABC):
         symbols: Collection[str],
     ) -> Websocket: ...
 
-    @abstractmethod
     def futures_trades(
         self,
         callback: CallbackType,
@@ -252,7 +229,7 @@ class IUniWebsocketManager(ABC):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        pass
+        raise NotImplementedError()
 
     @overload
     def futures_aggtrades(
@@ -272,7 +249,6 @@ class IUniWebsocketManager(ABC):
         symbols: Collection[str],
     ) -> Websocket: ...
 
-    @abstractmethod
     def futures_aggtrades(
         self,
         callback: CallbackType,
@@ -291,4 +267,4 @@ class IUniWebsocketManager(ABC):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        pass
+        raise NotImplementedError()

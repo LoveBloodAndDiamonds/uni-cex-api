@@ -1,14 +1,14 @@
-from abc import ABC, abstractmethod
 from typing import Any
 
+from unicex._abc import IAdapter
+from unicex.exceptions import AdapterError
 from unicex.types import AggTradeDict, KlineDict, TickerDailyDict, TradeDict
 
 
-class IAdapter(ABC):
-    """Интерфейс для создания адаптеров, которые преобразовывают ответы с бирж в унифицированный формат."""
+class Adapter(IAdapter):
+    """Преобразовываeт ответы с бирж в унифицированный формат."""
 
     @staticmethod
-    @abstractmethod
     def tickers(raw_data: Any, only_usdt: bool) -> list[str]:
         """Преобразует сырой ответ, в котором содержатся данные о тикерах в список тикеров.
 
@@ -19,10 +19,15 @@ class IAdapter(ABC):
         Возвращает:
             list[str]: Список тикеров.
         """
-        pass
+        try:
+            data = raw_data.get("data", [])
+            return [
+                item["symbol"] for item in data if not only_usdt or item["symbol"].endswith("USDT")
+            ]
+        except Exception as e:
+            raise AdapterError(f"({type(e)}): {e}. Can not convert {raw_data} to tickers.") from e
 
     @staticmethod
-    @abstractmethod
     def futures_tickers(raw_data: Any, only_usdt: bool) -> list[str]:
         """Преобразует сырой ответ, в котором содержатся данные о тикерах в список тикеров.
 
@@ -33,10 +38,9 @@ class IAdapter(ABC):
         Возвращает:
             list[str]: Список тикеров.
         """
-        pass
+        raise NotImplementedError()
 
     @staticmethod
-    @abstractmethod
     def ticker_24h(raw_data: Any) -> dict[str, TickerDailyDict]:
         """Преобразует сырой ответ, в котором содержатся данные о тикере за последние 24 часа
         в унифицированный формат.
@@ -47,10 +51,21 @@ class IAdapter(ABC):
         Возвращает:
             dict[str, TickerDailyDict]: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
         """
-        pass
+        try:
+            return {
+                item["symbol"]: TickerDailyDict(
+                    p=round(float(item["change24h"]) * 100, 2),  # конвертируем в проценты
+                    v=float(item["baseVolume"]),  # объём в COIN
+                    q=float(item["usdtVolume"]),  # объём в USDT
+                )
+                for item in raw_data.get("data", [])
+            }
+        except Exception as e:
+            raise AdapterError(
+                f"({type(e)}): {e}. Can not convert {raw_data} to ticker 24h."
+            ) from e
 
     @staticmethod
-    @abstractmethod
     def futures_ticker_24h(raw_data: Any) -> dict[str, TickerDailyDict]:
         """Преобразует сырой ответ, в котором содержатся данные о тикере за последние 24 часа
         в унифицированный формат.
@@ -61,10 +76,9 @@ class IAdapter(ABC):
         Возвращает:
             dict[str, TickerDailyDict]: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
         """
-        pass
+        raise NotImplementedError()
 
     @staticmethod
-    @abstractmethod
     def last_price(raw_data: Any) -> dict[str, float]:
         """Преобразует сырой ответ, в котором содержатся данные о последних ценах тикеров
         в унифицированный формат.
@@ -75,10 +89,9 @@ class IAdapter(ABC):
         Возвращает:
             dict[str, float]: Словарь, где ключ - тикер, а значение - последняя цена.
         """
-        pass
+        raise NotImplementedError()
 
     @staticmethod
-    @abstractmethod
     def futures_last_price(raw_data: Any) -> dict[str, float]:
         """Преобразует сырой ответ, в котором содержатся данные о последних ценах тикеров
         в унифицированный формат.
@@ -89,10 +102,9 @@ class IAdapter(ABC):
         Возвращает:
             dict[str, float]: Словарь, где ключ - тикер, а значение - последняя цена.
         """
-        pass
+        raise NotImplementedError()
 
     @staticmethod
-    @abstractmethod
     def klines(raw_data: Any) -> list[KlineDict]:
         """Преобразует сырой ответ, в котором содержатся данные о котировках тикеров в
         унифицированный формат.
@@ -103,10 +115,9 @@ class IAdapter(ABC):
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
         """
-        pass
+        raise NotImplementedError()
 
     @staticmethod
-    @abstractmethod
     def futures_klines(raw_data: Any) -> list[KlineDict]:
         """Преобразует сырой ответ, в котором содержатся данные о котировках тикеров в
         унифицированный формат.
@@ -117,10 +128,9 @@ class IAdapter(ABC):
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
         """
-        pass
+        raise NotImplementedError()
 
     @staticmethod
-    @abstractmethod
     def funding_rate(raw_data: Any) -> dict[str, float]:
         """Преобразует сырой ответ, в котором содержатся данные о ставках финансирования
         тикеров в унифицированный формат.
@@ -131,10 +141,9 @@ class IAdapter(ABC):
         Возвращает:
             dict[str, float]: Словарь, где ключ - тикер, а значение - ставка финансирования.
         """
-        pass
+        raise NotImplementedError()
 
     @staticmethod
-    @abstractmethod
     def klines_message(raw_msg: Any) -> list[KlineDict]:
         """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
         свече/свечах в унифицированный вид.
@@ -145,10 +154,9 @@ class IAdapter(ABC):
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
         """
-        pass
+        raise NotImplementedError()
 
     @staticmethod
-    @abstractmethod
     def futures_klines_message(raw_msg: Any) -> list[KlineDict]:
         """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
         свече/свечах в унифицированный вид.
@@ -159,10 +167,9 @@ class IAdapter(ABC):
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
         """
-        pass
+        raise NotImplementedError()
 
     @staticmethod
-    @abstractmethod
     def aggtrades_message(raw_msg: Any) -> list[AggTradeDict]:
         """Преобразует сырое сообщение вебсокета с агрегированными сделками в унифицированный формат.
 
@@ -172,10 +179,9 @@ class IAdapter(ABC):
         Возвращает:
             list[AggTradeDict]: Список сделок в унифицированном формате.
         """
-        pass
+        raise NotImplementedError()
 
     @staticmethod
-    @abstractmethod
     def futures_aggtrades_message(raw_msg: Any) -> list[AggTradeDict]:
         """Преобразует сырое сообщение вебсокета с агрегированными сделками в унифицированный формат.
 
@@ -185,10 +191,9 @@ class IAdapter(ABC):
         Возвращает:
             list[AggTradeDict]: Список сделок в унифицированном формате.
         """
-        pass
+        raise NotImplementedError()
 
     @staticmethod
-    @abstractmethod
     def trades_message(raw_msg: Any) -> list[TradeDict]:
         """Преобразует сырое сообщение вебсокета со сделками в унифицированный формат.
 
@@ -198,10 +203,25 @@ class IAdapter(ABC):
         Возвращает:
             list[TradeDict]: Список сделок в унифицированном формате.
         """
-        pass
+        try:
+            symbol = raw_msg["arg"]["instId"]
+
+            return [
+                AggTradeDict(
+                    t=int(trade["ts"]),
+                    s=symbol,
+                    S=trade["side"].upper(),
+                    p=float(trade["price"]),
+                    v=float(trade["size"]),
+                )
+                for trade in raw_msg["data"]
+            ]
+        except Exception as e:
+            raise AdapterError(
+                f"({type(e)}): {e}. Can not convert {raw_msg} to unified aggtrades."
+            ) from e
 
     @staticmethod
-    @abstractmethod
     def futures_trades_message(raw_msg: Any) -> list[TradeDict]:
         """Преобразует сырое сообщение вебсокета со сделками в унифицированный формат.
 
@@ -211,10 +231,9 @@ class IAdapter(ABC):
         Возвращает:
             list[TradeDict]: Список сделок в унифицированном формате.
         """
-        pass
+        raise NotImplementedError()
 
     @staticmethod
-    @abstractmethod
     def open_interest(raw_data: Any) -> float | dict[str, float]:
         """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
         объеме открытых позиций в унифицированный вид.
@@ -226,4 +245,4 @@ class IAdapter(ABC):
             float | dict[str, float]: Объем открытых позиций в монетах или словарь,
             где ключи - название тикера, а значения - объемы открытых позиций в монетах.
         """
-        pass
+        raise NotImplementedError()

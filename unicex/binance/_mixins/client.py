@@ -36,9 +36,7 @@ class ClientMixin:
         """Подготавливает payload и заголовки для запроса.
 
         Если signed=True:
-            - добавляет timestamp и recvWindow;
-            - формирует HMAC SHA256 подпись;
-            - возвращает заголовки с X-MBX-APIKEY.
+            - добавляет подпись и все обязательные параметры в заголовки
 
         Если signed=False:
             - возвращает только отфильтрованные params/data.
@@ -73,6 +71,7 @@ class ClientMixin:
         payload["signature"] = generate_hmac_sha256_signature(
             self._api_secret,  # type: ignore[attr-defined]
             query_string,
+            "hex",
         )
 
         headers = self._get_headers()

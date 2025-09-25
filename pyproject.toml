@@ -10,6 +10,7 @@ authors = [
 requires-python = ">=3.13"
 dependencies = [
     "aiohttp>=3.12.15",
+    "loguru>=0.7.3",
     "orjson>=3.11.3",
     "requests>=2.32.5",
     "websocket-client>=1.8.0",

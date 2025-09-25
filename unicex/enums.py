@@ -1,3 +1,5 @@
+"""Модуль, который описывает перечисления."""
+
 __all__ = [
     "MarketType",
     "Exchange",
@@ -24,6 +26,7 @@ class Exchange(StrEnum):
 
     BINANCE = "BINANCE"
     BYBIT = "BYBIT"
+    BITGET = "BITGET"
 
     def __add__(self, market_type: "MarketType") -> tuple["Exchange", "MarketType"]:
         """Возвращает кортеж из биржи и типа рынка."""
@@ -95,6 +98,20 @@ class Timeframe(StrEnum):
                 Timeframe.DAY_1: "D",
                 Timeframe.WEEK_1: "W",
                 Timeframe.MONTH_1: "M",
+            },
+            Exchange.BITGET: {
+                Timeframe.MIN_1: "1m",
+                Timeframe.MIN_5: "5m",
+                Timeframe.MIN_15: "15m",
+                Timeframe.MIN_30: "30m",
+                Timeframe.HOUR_1: "1h",
+                Timeframe.HOUR_4: "4h",
+                Timeframe.HOUR_6: "6h",
+                Timeframe.HOUR_12: "12h",
+                Timeframe.DAY_1: "1d",
+                Timeframe.DAY_3: "3d",
+                Timeframe.WEEK_1: "1w",
+                Timeframe.MONTH_1: "1M",
             },
         }
 
