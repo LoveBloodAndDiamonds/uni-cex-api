@@ -6,22 +6,6 @@ from unicex._base.asyncio import BaseClient
 from unicex.types import RequestMethod
 
 from .._mixins import ClientMixin
-from ..types import (
-    AssetType,
-    BatchMode,
-    BusinessType,
-    KlineType,
-    MergeDepthLimit,
-    MergeDepthPrecision,
-    OrderType,
-    PlanType,
-    Side,
-    SpotGranularity,
-    StpMode,
-    TimeInForce,
-    TpslType,
-    TriggerType,
-)
 
 
 class Client(ClientMixin, BaseClient):
@@ -82,7 +66,7 @@ class Client(ClientMixin, BaseClient):
     async def get_trade_rate(
         self,
         symbol: str,
-        business: BusinessType,
+        business: str,
     ) -> dict:
         """Получение торговой ставки (комиссии) для пары.
 
@@ -94,7 +78,7 @@ class Client(ClientMixin, BaseClient):
 
     async def get_all_trade_rate(
         self,
-        business: BusinessType,
+        business: str,
     ) -> dict:
         """Получение торговых ставок по всем парам для заданной линии.
 
@@ -171,8 +155,8 @@ class Client(ClientMixin, BaseClient):
     async def merge_orderbook(
         self,
         symbol: str,
-        precision: MergeDepthPrecision | None = None,
-        limit: MergeDepthLimit | None = None,
+        precision: str | None = None,
+        limit: str | None = None,
     ) -> dict:
         """Получение объединённой книги ордеров (merge depth).
 
@@ -203,11 +187,11 @@ class Client(ClientMixin, BaseClient):
     async def get_candle_data(
         self,
         symbol: str,
-        granularity: SpotGranularity,
+        granularity: str,
         start_time: int | None = None,
         end_time: int | None = None,
         limit: int | None = None,
-        kline_type: KlineType | None = None,
+        kline_type: str | None = None,
     ) -> list[list]:
         """Получение данных свечей (klines).
 
@@ -239,7 +223,7 @@ class Client(ClientMixin, BaseClient):
     async def get_history_candle_data(
         self,
         symbol: str,
-        granularity: SpotGranularity,
+        granularity: str,
         start_time: int | None = None,
         end_time: int | None = None,
         limit: int | None = None,
@@ -298,17 +282,17 @@ class Client(ClientMixin, BaseClient):
     async def place_order(
         self,
         symbol: str,
-        side: Side,
-        order_type: OrderType,
-        force: TimeInForce | None = None,
+        side: str,
+        order_type: str,
+        force: str | None = None,
         price: str | None = None,
         size: str | None = None,
         client_oid: str | None = None,
         trigger_price: str | None = None,
-        tpsl_type: TpslType | None = None,
+        tpsl_type: str | None = None,
         request_time: str | None = None,
         receive_window: str | None = None,
-        stp_mode: StpMode | None = None,
+        stp_mode: str | None = None,
         preset_take_profit_price: str | None = None,
         execute_take_profit_price: str | None = None,
         preset_stop_loss_price: str | None = None,
@@ -396,7 +380,7 @@ class Client(ClientMixin, BaseClient):
         symbol: str,
         order_id: str | None = None,
         client_oid: str | None = None,
-        tpsl_type: TpslType | None = None,
+        tpsl_type: str | None = None,
     ) -> dict:
         """Отмена спотового ордера.
 
@@ -416,7 +400,7 @@ class Client(ClientMixin, BaseClient):
     async def batch_place_orders(
         self,
         symbol: str,
-        batch_mode: BatchMode | None = None,
+        batch_mode: str | None = None,
         order_list: list[dict] | None = None,
     ) -> dict:
         """Пакетное размещение спотовых ордеров.
@@ -434,7 +418,7 @@ class Client(ClientMixin, BaseClient):
     async def batch_cancel_orders(
         self,
         symbol: str | None = None,
-        batch_mode: BatchMode | None = None,
+        batch_mode: str | None = None,
         order_list: list[dict] | None = None,
     ) -> dict:
         """Пакетная отмена спотовых ордеров.
@@ -495,7 +479,7 @@ class Client(ClientMixin, BaseClient):
         id_less_than: str | None = None,
         limit: int | None = None,
         order_id: str | None = None,
-        tpsl_type: TpslType | None = None,
+        tpsl_type: str | None = None,
         request_time: int | None = None,
         receive_window: int | None = None,
     ) -> dict:
@@ -527,7 +511,7 @@ class Client(ClientMixin, BaseClient):
         id_less_than: str | None = None,
         limit: int | None = None,
         order_id: str | None = None,
-        tpsl_type: TpslType | None = None,
+        tpsl_type: str | None = None,
         request_time: int | None = None,
         receive_window: int | None = None,
     ) -> dict:
@@ -580,15 +564,15 @@ class Client(ClientMixin, BaseClient):
     async def place_plan_order(
         self,
         symbol: str,
-        side: Side,
+        side: str,
         trigger_price: str,
-        order_type: OrderType,
+        order_type: str,
         size: str,
-        trigger_type: TriggerType,
+        trigger_type: str,
         execute_price: str | None = None,
-        plan_type: PlanType | None = None,
+        plan_type: str | None = None,
         client_oid: str | None = None,
-        stp_mode: StpMode | None = None,
+        stp_mode: str | None = None,
     ) -> dict:
         """Размещение планового ордера (trigger / conditional order).
 
@@ -615,7 +599,7 @@ class Client(ClientMixin, BaseClient):
         self,
         trigger_price: str,
         size: str,
-        order_type: OrderType,
+        order_type: str,
         order_id: str | None = None,
         client_oid: str | None = None,
         execute_price: str | None = None,
@@ -735,7 +719,7 @@ class Client(ClientMixin, BaseClient):
         return await self._make_request("GET", "/api/v2/spot/account/info", signed=True)
 
     async def get_account_assets(
-        self, coin: str | None = None, asset_type: AssetType | None = None
+        self, coin: str | None = None, asset_type: str | None = None
     ) -> dict:
         """Получение списка активов на спотовом аккаунте.
 

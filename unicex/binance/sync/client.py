@@ -2,34 +2,12 @@ __all__ = ["Client"]
 
 import json
 import warnings
-from typing import Any, Literal
+from typing import Any
 
 from unicex._base import BaseClient
 from unicex.types import RequestMethod
 
 from .._mixins import ClientMixin
-from ..types import (
-    AutoCloseType,
-    FuturesOrderType,
-    FuturesTimeframe,
-    FuturesTimeInForce,
-    FuturesTransferType,
-    IncomeType,
-    MarginType,
-    NewOrderRespType,
-    OrderType,
-    PositionSide,
-    PriceMatch,
-    SelfTradePreventionMode,
-    Side,
-    SpotTimeframe,
-    StatsPeriod,
-    TickerType,
-    TimeInForce,
-    TransferType,
-    WindowSize,
-    WorkingType,
-)
 
 
 class Client(ClientMixin, BaseClient):
@@ -158,7 +136,7 @@ class Client(ClientMixin, BaseClient):
     def klines(
         self,
         symbol: str,
-        interval: SpotTimeframe,
+        interval: str,
         start_time: int | None = None,
         end_time: int | None = None,
         time_zone: str | None = None,
@@ -183,7 +161,7 @@ class Client(ClientMixin, BaseClient):
     def ui_klines(
         self,
         symbol: str,
-        interval: SpotTimeframe,
+        interval: str,
         start_time: int | None = None,
         end_time: int | None = None,
         time_zone: str | None = None,
@@ -219,7 +197,7 @@ class Client(ClientMixin, BaseClient):
         self,
         symbol: str | None = None,
         symbols: list[str] | None = None,
-        type: TickerType | None = None,
+        type: str | None = None,
     ) -> dict | list[dict]:
         """Получение статистики изменения цен и объема за 24 часа.
 
@@ -235,7 +213,7 @@ class Client(ClientMixin, BaseClient):
         symbol: str | None = None,
         symbols: list[str] | None = None,
         time_zone: str | None = None,
-        type: TickerType | None = None,
+        type: str | None = None,
     ) -> dict | list[dict]:
         """Статистика изменения цен за торговый день.
 
@@ -279,8 +257,8 @@ class Client(ClientMixin, BaseClient):
         self,
         symbol: str | None = None,
         symbols: list[str] | None = None,
-        window_size: WindowSize | None = None,
-        type: TickerType | None = None,
+        window_size: str | None = None,
+        type: str | None = None,
     ) -> dict | list[dict]:
         """Статистика изменения цен в скользящем окне.
 
@@ -324,17 +302,17 @@ class Client(ClientMixin, BaseClient):
     def order_create(
         self,
         symbol: str,
-        side: Side,
-        type: OrderType,
+        side: str,
+        type: str,
         quantity: float | None = None,
         quote_order_qty: float | None = None,
         price: float | None = None,
         stop_price: float | None = None,
-        time_in_force: TimeInForce | None = None,
+        time_in_force: str | None = None,
         new_client_order_id: str | None = None,
         iceberg_qty: float | None = None,
-        new_order_resp_type: NewOrderRespType | None = None,
-        self_trade_prevention_mode: SelfTradePreventionMode | None = None,
+        new_order_resp_type: str | None = None,
+        self_trade_prevention_mode: str | None = None,
     ) -> dict:
         """Создание нового ордера на спот-рынке.
 
@@ -361,17 +339,17 @@ class Client(ClientMixin, BaseClient):
     def order_test(
         self,
         symbol: str,
-        side: Side,
-        type: OrderType,
+        side: str,
+        type: str,
         quantity: float | None = None,
         quote_order_qty: float | None = None,
         price: float | None = None,
         stop_price: float | None = None,
-        time_in_force: TimeInForce | None = None,
+        time_in_force: str | None = None,
         new_client_order_id: str | None = None,
         iceberg_qty: float | None = None,
-        new_order_resp_type: NewOrderRespType | None = None,
-        self_trade_prevention_mode: SelfTradePreventionMode | None = None,
+        new_order_resp_type: str | None = None,
+        self_trade_prevention_mode: str | None = None,
     ) -> dict:
         """Тестирование нового ордера (не выполняется реально).
 
@@ -439,7 +417,7 @@ class Client(ClientMixin, BaseClient):
     def oco_order_create(
         self,
         symbol: str,
-        side: Side,
+        side: str,
         quantity: float,
         price: float,
         stop_price: float,
@@ -447,9 +425,9 @@ class Client(ClientMixin, BaseClient):
         list_client_order_id: str | None = None,
         limit_client_order_id: str | None = None,
         stop_client_order_id: str | None = None,
-        stop_limit_time_in_force: TimeInForce | None = None,
-        new_order_resp_type: NewOrderRespType | None = None,
-        self_trade_prevention_mode: SelfTradePreventionMode | None = None,
+        stop_limit_time_in_force: str | None = None,
+        new_order_resp_type: str | None = None,
+        self_trade_prevention_mode: str | None = None,
         limit_iceberg_qty: float | None = None,
         stop_iceberg_qty: float | None = None,
     ) -> dict:
@@ -770,7 +748,7 @@ class Client(ClientMixin, BaseClient):
     def futures_klines(
         self,
         symbol: str,
-        interval: FuturesTimeframe,
+        interval: str,
         start_time: int | None = None,
         end_time: int | None = None,
         limit: int | None = None,
@@ -843,7 +821,7 @@ class Client(ClientMixin, BaseClient):
     def open_interest_hist(
         self,
         symbol: str,
-        period: StatsPeriod,
+        period: str,
         start_time: int | None = None,
         end_time: int | None = None,
         limit: int | None = None,
@@ -866,7 +844,7 @@ class Client(ClientMixin, BaseClient):
     def futures_long_short_ratio_accounts(
         self,
         symbol: str,
-        period: StatsPeriod,
+        period: str,
         start_time: int | None = None,
         end_time: int | None = None,
         limit: int | None = None,
@@ -889,7 +867,7 @@ class Client(ClientMixin, BaseClient):
     def futures_long_short_ratio_positions(
         self,
         symbol: str,
-        period: StatsPeriod,
+        period: str,
         start_time: int | None = None,
         end_time: int | None = None,
         limit: int | None = None,
@@ -912,7 +890,7 @@ class Client(ClientMixin, BaseClient):
     def futures_global_long_short_ratio(
         self,
         symbol: str,
-        period: StatsPeriod,
+        period: str,
         start_time: int | None = None,
         end_time: int | None = None,
         limit: int | None = None,
@@ -935,7 +913,7 @@ class Client(ClientMixin, BaseClient):
     def futures_taker_long_short_ratio(
         self,
         symbol: str,
-        period: StatsPeriod,
+        period: str,
         start_time: int | None = None,
         end_time: int | None = None,
         limit: int | None = None,
@@ -1015,8 +993,8 @@ class Client(ClientMixin, BaseClient):
     def futures_order_create(
         self,
         symbol: str,
-        side: Side,
-        type: FuturesOrderType,
+        side: str,
+        type: str,
         quantity: float | None = None,
         reduce_only: bool | None = None,
         price: float | None = None,
@@ -1025,12 +1003,12 @@ class Client(ClientMixin, BaseClient):
         close_position: bool | None = None,
         activation_price: float | None = None,
         callback_rate: float | None = None,
-        time_in_force: FuturesTimeInForce | None = None,
-        working_type: WorkingType | None = None,
+        time_in_force: str | None = None,
+        working_type: str | None = None,
         price_protect: bool | None = None,
-        position_side: PositionSide | None = None,
-        price_match: PriceMatch | None = None,
-        self_trade_prevention_mode: SelfTradePreventionMode | None = None,
+        position_side: str | None = None,
+        price_match: str | None = None,
+        self_trade_prevention_mode: str | None = None,
         good_till_date: int | None = None,
     ) -> dict:
         """Создание нового ордера на фьючерсах.
@@ -1066,10 +1044,10 @@ class Client(ClientMixin, BaseClient):
         order_id: int | None = None,
         orig_client_order_id: str | None = None,
         symbol: str | None = None,
-        side: Side | None = None,
+        side: str | None = None,
         quantity: float | None = None,
         price: float | None = None,
-        price_match: PriceMatch | None = None,
+        price_match: str | None = None,
     ) -> dict:
         """Изменение ордера на фьючерсах.
 
@@ -1203,7 +1181,7 @@ class Client(ClientMixin, BaseClient):
     def futures_income(
         self,
         symbol: str | None = None,
-        income_type: IncomeType | None = None,
+        income_type: str | None = None,
         start_time: int | None = None,
         end_time: int | None = None,
         limit: int | None = None,
@@ -1233,7 +1211,7 @@ class Client(ClientMixin, BaseClient):
 
         return self._make_request("POST", url, True, data=data)
 
-    def futures_margin_type_change(self, symbol: str, margin_type: MarginType) -> dict:
+    def futures_margin_type_change(self, symbol: str, margin_type: str) -> dict:
         """Изменение типа маржи на фьючерсах.
 
         https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Change-Margin-Type
@@ -1246,9 +1224,9 @@ class Client(ClientMixin, BaseClient):
     def futures_position_margin_modify(
         self,
         symbol: str,
-        position_side: PositionSide,
+        position_side: str,
         amount: float,
-        type: Literal[1, 2],
+        type: int,
     ) -> dict:
         """Изменение изолированной маржи позиции.
 
@@ -1267,7 +1245,7 @@ class Client(ClientMixin, BaseClient):
     def futures_position_margin_history(
         self,
         symbol: str,
-        type: Literal[1, 2] | None = None,
+        type: int | None = None,
         start_time: int | None = None,
         end_time: int | None = None,
         limit: int | None = None,
@@ -1310,7 +1288,7 @@ class Client(ClientMixin, BaseClient):
     def futures_force_orders(
         self,
         symbol: str | None = None,
-        auto_close_type: AutoCloseType | None = None,
+        auto_close_type: str | None = None,
         start_time: int | None = None,
         end_time: int | None = None,
         limit: int | None = None,
@@ -1392,7 +1370,7 @@ class Client(ClientMixin, BaseClient):
 
     def asset_transfer(
         self,
-        type: TransferType,
+        type: str,
         asset: str,
         amount: float,
         from_symbol: str | None = None,
@@ -1415,7 +1393,7 @@ class Client(ClientMixin, BaseClient):
 
     def asset_transfer_history(
         self,
-        type: TransferType,
+        type: str,
         start_time: int | None = None,
         end_time: int | None = None,
         current: int | None = None,
@@ -1444,7 +1422,7 @@ class Client(ClientMixin, BaseClient):
         self,
         asset: str,
         amount: float,
-        type: FuturesTransferType,
+        type: str,
     ) -> dict:
         """Перевод между спотом и фьючерсами.
 

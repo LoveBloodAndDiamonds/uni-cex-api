@@ -2,8 +2,7 @@ __all__ = ["UserWebsocketMixin"]
 
 
 from unicex.exceptions import NotSupported
-
-from ..types import AccountType
+from unicex.types import AccountType
 
 
 class UserWebsocketMixin:

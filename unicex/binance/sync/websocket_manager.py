@@ -7,14 +7,6 @@ from unicex._base import Websocket
 from unicex.exceptions import NotAuthorized
 
 from .._mixins import WebsocketManagerMixin
-from ..types import (
-    BookDepthLevels,
-    ContinuousContractType,
-    FuturesTimeframe,
-    MarkPriceUpdateSpeed,
-    RollingWindowSize,
-    SpotTimeframe,
-)
 from .client import Client
 from .user_websocket import UserWebsocket
 
@@ -87,7 +79,7 @@ class WebsocketManager(WebsocketManagerMixin):
     def klines(
         self,
         callback: CallbackType,
-        interval: SpotTimeframe,
+        interval: str,
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
@@ -96,7 +88,7 @@ class WebsocketManager(WebsocketManagerMixin):
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            interval (`SpotTimeframe`): Временной интервал свечей.
+            interval (`str`): Временной интервал свечей.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
@@ -162,7 +154,14 @@ class WebsocketManager(WebsocketManagerMixin):
         return Websocket(callback=callback, url=url, **self._ws_kwargs)
 
     def mini_ticker(self, callback: CallbackType) -> Websocket:
-        """Создает вебсокет для получения мини-статистики всех тикеров за последние 24 ч."""
+        """Создает вебсокет для получения мини-статистики всех тикеров за последние 24 ч.
+
+        Параметры:
+            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
         url = self._generate_stream_url(type="!miniTicker@arr", url=self._BASE_SPOT_URL)
         return Websocket(callback=callback, url=url, **self._ws_kwargs)
 
@@ -206,7 +205,7 @@ class WebsocketManager(WebsocketManagerMixin):
     def symbol_rolling_window_ticker(
         self,
         callback: CallbackType,
-        window: RollingWindowSize,
+        window: str,
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
@@ -214,7 +213,7 @@ class WebsocketManager(WebsocketManagerMixin):
 
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
-            window (`RollingWindowSize`): Размер окна статистики.
+            window (`str`): Размер окна статистики.
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
@@ -230,8 +229,16 @@ class WebsocketManager(WebsocketManagerMixin):
         )
         return Websocket(callback=callback, url=url, **self._ws_kwargs)
 
-    def rolling_window_ticker(self, callback: CallbackType, window: RollingWindowSize) -> Websocket:
-        """Создает вебсокет для получения статистики всех тикеров за указанное окно времени."""
+    def rolling_window_ticker(self, callback: CallbackType, window: str) -> Websocket:
+        """Создает вебсокет для получения статистики всех тикеров за указанное окно времени.
+
+        Параметры:
+            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            window (`str`): Размер окна статистики.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
         url = self._generate_stream_url(type=f"!ticker_{window}@arr", url=self._BASE_SPOT_URL)
         return Websocket(callback=callback, url=url, **self._ws_kwargs)
 
@@ -288,7 +295,7 @@ class WebsocketManager(WebsocketManagerMixin):
     def book_depth(
         self,
         callback: CallbackType,
-        levels: BookDepthLevels,
+        levels: str,
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
@@ -296,7 +303,7 @@ class WebsocketManager(WebsocketManagerMixin):
 
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
-            levels (`BookDepthLevels`): Глубина стакана (уровни).
+            levels (`str`): Глубина стакана (уровни).
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
@@ -313,7 +320,14 @@ class WebsocketManager(WebsocketManagerMixin):
         return Websocket(callback=callback, url=url, **self._ws_kwargs)
 
     def user_data_stream(self, callback: CallbackType) -> UserWebsocket:
-        """Создает вебсокет для получения информации о пользовательских данных."""
+        """Создает вебсокет для получения информации о пользовательских данных.
+
+        Параметры:
+            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+
+        Возвращает:
+            `UserWebsocket`: Объект для управления вебсокет соединением.
+        """
         if not self.client or not self.client.is_authorized():
             raise NotAuthorized("You must provide authorized client.")
         return UserWebsocket(callback=callback, client=self.client, type="SPOT", **self._ws_kwargs)
@@ -385,7 +399,7 @@ class WebsocketManager(WebsocketManagerMixin):
     def futures_klines(
         self,
         callback: CallbackType,
-        interval: FuturesTimeframe,
+        interval: str,
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
@@ -393,7 +407,7 @@ class WebsocketManager(WebsocketManagerMixin):
 
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
-            interval (`FuturesTimeframe`): Временной интервал свечей.
+            interval (`str`): Временной интервал свечей.
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
@@ -512,7 +526,7 @@ class WebsocketManager(WebsocketManagerMixin):
         self,
         callback: CallbackType,
         symbol: str | None,
-        levels: BookDepthLevels,
+        levels: str,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения стакана глубиной N уровней.
@@ -520,7 +534,7 @@ class WebsocketManager(WebsocketManagerMixin):
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            levels (`BookDepthLevels`): Глубина стакана (уровни).
+            levels (`str`): Глубина стакана (уровни).
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
@@ -560,14 +574,12 @@ class WebsocketManager(WebsocketManagerMixin):
         )
         return Websocket(callback=callback, url=url, **self._ws_kwargs)
 
-    def futures_mark_price(
-        self, callback: CallbackType, interval: MarkPriceUpdateSpeed = "1s"
-    ) -> Websocket:
+    def futures_mark_price(self, callback: CallbackType, interval: str = "1s") -> Websocket:
         """Создает вебсокет для получения mark price и funding rate для всех тикеров.
 
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
-            interval (`MarkPriceUpdateSpeed`): Частота обновления ("1s" или пусто).
+            interval (`str`): Частота обновления ("1s" или пусто).
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -582,7 +594,7 @@ class WebsocketManager(WebsocketManagerMixin):
     def futures_symbol_mark_price(
         self,
         callback: CallbackType,
-        interval: MarkPriceUpdateSpeed = "1s",
+        interval: str = "1s",
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
@@ -590,7 +602,7 @@ class WebsocketManager(WebsocketManagerMixin):
 
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
-            interval (`MarkPriceUpdateSpeed`): Частота обновления ("1s" или пусто).
+            interval (`str`): Частота обновления ("1s" или пусто).
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
@@ -614,10 +626,20 @@ class WebsocketManager(WebsocketManagerMixin):
         self,
         callback: CallbackType,
         pair: str,
-        contract_type: ContinuousContractType,
-        interval: FuturesTimeframe,
+        contract_type: str,
+        interval: str,
     ) -> Websocket:
-        """Создает вебсокет для получения свечей по непрерывным контрактам (continuous contract)."""
+        """Создает вебсокет для получения свечей по непрерывным контрактам (continuous contract).
+
+        Параметры:
+            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            pair (`str`): Название пары.
+            contract_type (`str`): Тип контракта.
+            interval (`str`): Временной интервал свечей..
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
         url = self._generate_stream_url(
             type=f"{pair.lower()}_{contract_type}@continuousKline_{interval}",
             url=self._BASE_FUTURES_URL,
@@ -680,7 +702,14 @@ class WebsocketManager(WebsocketManagerMixin):
         return Websocket(callback=callback, url=url, **self._ws_kwargs)
 
     def futures_contract_info(self, callback: CallbackType) -> Websocket:
-        """Создает вебсокет для получения информации о контрактах (Contract Info Stream)."""
+        """Создает вебсокет для получения информации о контрактах (Contract Info Stream).
+
+        Параметры:
+            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
         url = self._generate_stream_url(type="!contractInfo", url=self._BASE_FUTURES_URL)
         return Websocket(callback=callback, url=url, **self._ws_kwargs)
 
