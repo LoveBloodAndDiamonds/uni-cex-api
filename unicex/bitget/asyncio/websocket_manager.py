@@ -33,6 +33,8 @@ class WebsocketManager(WebsocketManagerMixin):
     ) -> Websocket:
         """Создает вебсокет для получения сделок.
 
+        https://www.bitget.com/api-doc/spot/websocket/public/Trades-Channel
+
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.

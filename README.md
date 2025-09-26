@@ -62,7 +62,8 @@
 + Пересмотреть политику Literal в types
 + Потестить bitget
 + Может быть uni socket manager будет принимать тип рынка?
-- AdapterError можно сделать красивее и удобнее
-- Добавить дефолтный overload для uniclient uniwebsoccketmanager
++ AdapterError можно сделать красивее и удобнее
++ Добавить дефолтный overload для uniclient uniwebsoccketmanager
+- Добавить overload ко всем методам где None,None
 - Добавить ссылку на доку во все вебсокет менеджер эндпоинты
 - Определить в каком порядке возвращать значения из адаптера (это касается всех методов)
