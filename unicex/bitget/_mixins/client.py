@@ -74,6 +74,7 @@ class ClientMixin:
                     "ACCESS-PASSPHRASE": self._api_passphrase,  # type: ignore[attr-defined]
                     "ACCESS-TIMESTAMP": timestamp,
                     "ACCESS-SIGN": signature,
+                    "locale": "en-US",
                 }
             )
         return headers

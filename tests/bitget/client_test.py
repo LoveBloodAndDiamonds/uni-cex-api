@@ -19,11 +19,11 @@ async def main() -> None:
 
     # re = await client.get_orderbook(symbol="BGBUSDT")
 
-    # re = await client.get_account_assets(coin="BTC")
+    re = await client.get_account_assets(coin="BGB2")
 
-    # pp(re)
+    pp(re)
 
-    # return
+    return
 
     # POST SIGNED
     response = await client.place_order(

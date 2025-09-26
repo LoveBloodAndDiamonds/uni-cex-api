@@ -1,6 +1,7 @@
 __all__ = ["BaseClient"]
 
 import asyncio
+import json
 from itertools import cycle
 from typing import Any, Self
 
@@ -169,27 +170,45 @@ class BaseClient:
         Возвращает:
             `dict | list`: Ответ API в формате JSON.
         """
+        response_text = await response.text()
+        status_code = response.status
+
+        # Парсинг JSON
+        try:
+            response_json = json.loads(response_text)
+        except json.JSONDecodeError as e:
+            raise ResponseError(
+                f"JSONDecodeError: {e}. Response: {response_text}. Status code: {response.status}",
+                status_code=status_code,
+                response_text=response_text,
+            ) from None
+
+        # Проверка HTTP-статуса
         try:
             response.raise_for_status()
         except Exception as e:
-            response_text = await response.text()
+            error_code = next(
+                (
+                    response_json[k]
+                    for k in ("code", "err_code", "errCode", "status")
+                    if k in response_json
+                ),
+                "",
+            )
             raise ResponseError(
-                f"HTTP error: {e}. Response: {response_text}. Status code: {response.status}"
-            ) from e
+                f"HTTP error: {e}. Response: {response_json}. Status code: {response.status}",
+                status_code=status_code,
+                code=error_code,
+                response_text=response_text,
+                response_json=response_json,
+            ) from None
 
+        # Логирование ответа
         try:
-            result = await response.json()
-        except Exception as e:
-            raise ResponseError(
-                f"JSONDecodeError error: {e}. Response: {response.text}. Status code: {response.status}"
-            ) from e
-
-        try:
-            result_str: str = str(result)
             self._logger.debug(
-                f"Response: {result_str[:100]}{'...' if len(result_str) > 100 else ''}"
+                f"Response: {response_text[:300]}{'...' if len(response_text) > 300 else ''}"
             )
         except Exception as e:
-            self._logger.error(f"Error while log response: {e}")
+            self._logger.error(f"Error while logging response: {e}")
 
-        return result
+        return response_json
