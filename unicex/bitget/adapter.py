@@ -1,14 +1,15 @@
 from typing import Any
 
 from unicex._abc import IAdapter
-from unicex.exceptions import AdapterError
 from unicex.types import AggTradeDict, KlineDict, TickerDailyDict, TradeDict
+from unicex.utils import catch_adapter_errors
 
 
 class Adapter(IAdapter):
     """Преобразовываeт ответы с бирж в унифицированный формат."""
 
     @staticmethod
+    @catch_adapter_errors
     def tickers(raw_data: Any, only_usdt: bool) -> list[str]:
         """Преобразует сырой ответ, в котором содержатся данные о тикерах в список тикеров.
 
@@ -19,15 +20,11 @@ class Adapter(IAdapter):
         Возвращает:
             list[str]: Список тикеров.
         """
-        try:
-            data = raw_data.get("data", [])
-            return [
-                item["symbol"] for item in data if not only_usdt or item["symbol"].endswith("USDT")
-            ]
-        except Exception as e:
-            raise AdapterError(f"({type(e)}): {e}. Can not convert {raw_data} to tickers.") from e
+        data = raw_data.get("data", [])
+        return [item["symbol"] for item in data if not only_usdt or item["symbol"].endswith("USDT")]
 
     @staticmethod
+    @catch_adapter_errors
     def futures_tickers(raw_data: Any, only_usdt: bool) -> list[str]:
         """Преобразует сырой ответ, в котором содержатся данные о тикерах в список тикеров.
 
@@ -41,6 +38,7 @@ class Adapter(IAdapter):
         raise NotImplementedError()
 
     @staticmethod
+    @catch_adapter_errors
     def ticker_24h(raw_data: Any) -> dict[str, TickerDailyDict]:
         """Преобразует сырой ответ, в котором содержатся данные о тикере за последние 24 часа
         в унифицированный формат.
@@ -51,21 +49,17 @@ class Adapter(IAdapter):
         Возвращает:
             dict[str, TickerDailyDict]: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
         """
-        try:
-            return {
-                item["symbol"]: TickerDailyDict(
-                    p=round(float(item["change24h"]) * 100, 2),  # конвертируем в проценты
-                    v=float(item["baseVolume"]),  # объём в COIN
-                    q=float(item["usdtVolume"]),  # объём в USDT
-                )
-                for item in raw_data.get("data", [])
-            }
-        except Exception as e:
-            raise AdapterError(
-                f"({type(e)}): {e}. Can not convert {raw_data} to ticker 24h."
-            ) from e
+        return {
+            item["symbol"]: TickerDailyDict(
+                p=round(float(item["change24h"]) * 100, 2),  # конвертируем в проценты
+                v=float(item["baseVolume"]),  # объём в COIN
+                q=float(item["usdtVolume"]),  # объём в USDT
+            )
+            for item in raw_data.get("data", [])
+        }
 
     @staticmethod
+    @catch_adapter_errors
     def futures_ticker_24h(raw_data: Any) -> dict[str, TickerDailyDict]:
         """Преобразует сырой ответ, в котором содержатся данные о тикере за последние 24 часа
         в унифицированный формат.
@@ -79,6 +73,7 @@ class Adapter(IAdapter):
         raise NotImplementedError()
 
     @staticmethod
+    @catch_adapter_errors
     def last_price(raw_data: Any) -> dict[str, float]:
         """Преобразует сырой ответ, в котором содержатся данные о последних ценах тикеров
         в унифицированный формат.
@@ -92,6 +87,7 @@ class Adapter(IAdapter):
         raise NotImplementedError()
 
     @staticmethod
+    @catch_adapter_errors
     def futures_last_price(raw_data: Any) -> dict[str, float]:
         """Преобразует сырой ответ, в котором содержатся данные о последних ценах тикеров
         в унифицированный формат.
@@ -105,6 +101,7 @@ class Adapter(IAdapter):
         raise NotImplementedError()
 
     @staticmethod
+    @catch_adapter_errors
     def klines(raw_data: Any) -> list[KlineDict]:
         """Преобразует сырой ответ, в котором содержатся данные о котировках тикеров в
         унифицированный формат.
@@ -118,6 +115,7 @@ class Adapter(IAdapter):
         raise NotImplementedError()
 
     @staticmethod
+    @catch_adapter_errors
     def futures_klines(raw_data: Any) -> list[KlineDict]:
         """Преобразует сырой ответ, в котором содержатся данные о котировках тикеров в
         унифицированный формат.
@@ -131,6 +129,7 @@ class Adapter(IAdapter):
         raise NotImplementedError()
 
     @staticmethod
+    @catch_adapter_errors
     def funding_rate(raw_data: Any) -> dict[str, float]:
         """Преобразует сырой ответ, в котором содержатся данные о ставках финансирования
         тикеров в унифицированный формат.
@@ -144,6 +143,7 @@ class Adapter(IAdapter):
         raise NotImplementedError()
 
     @staticmethod
+    @catch_adapter_errors
     def klines_message(raw_msg: Any) -> list[KlineDict]:
         """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
         свече/свечах в унифицированный вид.
@@ -157,6 +157,7 @@ class Adapter(IAdapter):
         raise NotImplementedError()
 
     @staticmethod
+    @catch_adapter_errors
     def futures_klines_message(raw_msg: Any) -> list[KlineDict]:
         """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
         свече/свечах в унифицированный вид.
@@ -170,6 +171,7 @@ class Adapter(IAdapter):
         raise NotImplementedError()
 
     @staticmethod
+    @catch_adapter_errors
     def aggtrades_message(raw_msg: Any) -> list[AggTradeDict]:
         """Преобразует сырое сообщение вебсокета с агрегированными сделками в унифицированный формат.
 
@@ -182,6 +184,7 @@ class Adapter(IAdapter):
         raise NotImplementedError()
 
     @staticmethod
+    @catch_adapter_errors
     def futures_aggtrades_message(raw_msg: Any) -> list[AggTradeDict]:
         """Преобразует сырое сообщение вебсокета с агрегированными сделками в унифицированный формат.
 
@@ -194,6 +197,7 @@ class Adapter(IAdapter):
         raise NotImplementedError()
 
     @staticmethod
+    @catch_adapter_errors
     def trades_message(raw_msg: Any) -> list[TradeDict]:
         """Преобразует сырое сообщение вебсокета со сделками в унифицированный формат.
 
@@ -203,28 +207,24 @@ class Adapter(IAdapter):
         Возвращает:
             list[TradeDict]: Список сделок в унифицированном формате.
         """
-        try:
-            symbol = raw_msg["arg"]["instId"]
+        symbol = raw_msg["arg"]["instId"]
 
-            return [
-                AggTradeDict(
-                    t=int(trade["ts"]),
-                    s=symbol,
-                    S=trade["side"].upper(),
-                    p=float(trade["price"]),
-                    v=float(trade["size"]),
-                )
-                for trade in sorted(
-                    raw_msg["data"],
-                    key=lambda x: int(x["ts"]),  # Bitget присылает пачку трейдов в обратном порядке
-                )
-            ]
-        except Exception as e:
-            raise AdapterError(
-                f"({type(e)}): {e}. Can not convert {raw_msg} to unified aggtrades."
-            ) from e
+        return [
+            AggTradeDict(
+                t=int(trade["ts"]),
+                s=symbol,
+                S=trade["side"].upper(),
+                p=float(trade["price"]),
+                v=float(trade["size"]),
+            )
+            for trade in sorted(
+                raw_msg["data"],
+                key=lambda x: int(x["ts"]),  # Bitget присылает пачку трейдов в обратном порядке
+            )
+        ]
 
     @staticmethod
+    @catch_adapter_errors
     def futures_trades_message(raw_msg: Any) -> list[TradeDict]:
         """Преобразует сырое сообщение вебсокета со сделками в унифицированный формат.
 
@@ -237,6 +237,7 @@ class Adapter(IAdapter):
         raise NotImplementedError()
 
     @staticmethod
+    @catch_adapter_errors
     def open_interest(raw_data: Any) -> float | dict[str, float]:
         """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
         объеме открытых позиций в унифицированный вид.
