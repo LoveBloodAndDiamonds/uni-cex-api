@@ -66,7 +66,7 @@ class PumpDumpScreener:
         # Освобождаем ресурсы
         for websocket in websockets:
             websocket.stop()
-        self.client.close()
+        self.client.close_connection()
 
     def stop(self) -> None:
         """Остановка скринера пампов и дампов."""
@@ -78,11 +78,11 @@ class PumpDumpScreener:
         while self.running:
             time.sleep(1)
 
-    def _get_chunked_tickers_list(self) -> list[tuple[str, ...]]:
+    def _get_chunked_tickers_list(self) -> list[list[str]]:
         """Получение списка тикеров."""
         if self.market_type == MarketType.SPOT:
-            return self.client.tickers_batched()
-        return self.client.futures_tickers_batched()
+            return self.client.tickers_batched()  # type: ignore
+        return self.client.futures_tickers_batched()  # type: ignore
 
     def _create_aggtrades_websockets(
         self, tickers_chunks: list[tuple[str, ...]]

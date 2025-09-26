@@ -8,10 +8,9 @@ from loguru import logger as _logger
 
 from unicex._base.asyncio import Websocket
 from unicex.exceptions import NotSupported
-from unicex.types import LoggerLike
+from unicex.types import AccountType, LoggerLike
 
 from .._mixins import UserWebsocketMixin
-from ..types import AccountType
 from .client import Client
 
 
@@ -34,7 +33,7 @@ class UserWebsocket(UserWebsocketMixin):
         Параметры:
             callback (`Callable`): Асинхронная функция обратного вызова, которая принимает сообщение с вебсокета.
             client (`Client`): Авторизованный клиент Binance.
-            type (`AccountType`): Тип аккаунта ("SPOT" | "FUTURES").
+            type (`str`): Тип аккаунта ("SPOT" | "FUTURES").
             logger (`LoggerLike | None`): Логгер для записи логов.
         """
         self._callback = callback

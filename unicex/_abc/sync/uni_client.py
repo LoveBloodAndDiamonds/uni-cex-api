@@ -1,6 +1,7 @@
 __all__ = ["IUniClient"]
 
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from functools import cached_property
 from itertools import batched
 from typing import Generic, Self, TypeVar, overload
@@ -23,6 +24,7 @@ class IUniClient(ABC, Generic[TClient]):
         self,
         api_key: str | None = None,
         api_secret: str | None = None,
+        api_passphrase: str | None = None,
         session: requests.Session | None = None,
         logger: LoggerLike | None = None,
         max_retries: int = 3,
@@ -35,6 +37,7 @@ class IUniClient(ABC, Generic[TClient]):
         Параметры:
             api_key (str | None): Ключ API для аутентификации.
             api_secret (str | None): Секретный ключ API для аутентификации.
+            api_passphrase (`str | None`): Пароль API для аутентификации (Bitget).
             session (requests.Session): Сессия для выполнения HTTP-запросов.
             logger (LoggerLike | None): Логгер для вывода информации.
             max_retries (int): Максимальное количество повторных попыток запроса.
@@ -45,6 +48,7 @@ class IUniClient(ABC, Generic[TClient]):
         self._client: TClient = self._client_cls(
             api_key=api_key,
             api_secret=api_secret,
+            api_passphrase=api_passphrase,
             session=session,
             logger=logger,
             max_retries=max_retries,
@@ -67,9 +71,9 @@ class IUniClient(ABC, Generic[TClient]):
         instance._client = client
         return instance
 
-    def close(self) -> None:
+    def close_connection(self) -> None:
         """Закрывает сессию клиента."""
-        self._client.close()
+        self._client.close_connection()
 
     def __enter__(self) -> Self:
         """Вход в контекст."""
@@ -77,7 +81,7 @@ class IUniClient(ABC, Generic[TClient]):
 
     def __exit__(self, *_) -> None:
         """Выход из контекста."""
-        self.close()
+        self.close_connection()
 
     @property
     def client(self) -> TClient:
@@ -120,9 +124,7 @@ class IUniClient(ABC, Generic[TClient]):
         """
         pass
 
-    def tickers_batched(
-        self, only_usdt: bool = True, batch_size: int = 20
-    ) -> list[tuple[str, ...]]:
+    def tickers_batched(self, only_usdt: bool = True, batch_size: int = 20) -> list[Sequence[str]]:
         """Возвращает список тикеров в чанках.
 
         Параметры:
@@ -133,7 +135,7 @@ class IUniClient(ABC, Generic[TClient]):
             `list[list[str]]`: Список тикеров в чанках.
         """
         tickers = self.tickers(only_usdt=only_usdt)
-        return list(batched(tickers, n=batch_size, strict=False))
+        return list(batched(tickers, n=batch_size))
 
     @abstractmethod
     def futures_tickers(self, only_usdt: bool = True) -> list[str]:
@@ -149,7 +151,7 @@ class IUniClient(ABC, Generic[TClient]):
 
     def futures_tickers_batched(
         self, only_usdt: bool = True, batch_size: int = 20
-    ) -> list[tuple[str, ...]]:
+    ) -> list[Sequence[str]]:
         """Возвращает список тикеров в чанках.
 
         Параметры:
@@ -160,7 +162,7 @@ class IUniClient(ABC, Generic[TClient]):
             `list[list[str]]`: Список тикеров в чанках.
         """
         tickers = self.futures_tickers(only_usdt=only_usdt)
-        return list(batched(tickers, n=batch_size, strict=False))
+        return list(batched(tickers, n=batch_size))
 
     @abstractmethod
     def last_price(self) -> dict[str, float]:

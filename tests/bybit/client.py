@@ -9,7 +9,7 @@ from unicex.exceptions import NotAuthorized
 from unicex.types import RequestMethod
 from unicex.utils import filter_params, generate_hmac_sha256_signature
 
-from .types import Category, FuturesCategory, OrderType, Side, Timeframe
+from .types import Category, FuturesCategory, Timeframe
 
 
 class _BaseBybitClient(BaseClient):
@@ -385,8 +385,8 @@ class BybitClient(_BaseBybitClient):
         self,
         category: Category,
         symbol: str,
-        side: Side,
-        orderType: OrderType,
+        side: str,
+        orderType: str,
         qty: str,
         price: str | None = None,
         timeInForce: str | None = None,
@@ -424,7 +424,7 @@ class BybitClient(_BaseBybitClient):
             "category": category,
             "symbol": symbol,
             "side": side,
-            "orderType": orderType,
+            "orderType": str,
             "qty": qty,
             "price": price,
             "timeInForce": timeInForce,

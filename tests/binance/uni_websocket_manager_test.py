@@ -15,7 +15,7 @@ def callback(msg):
 def main() -> None:
     """Main entry point for the application."""
     sm = UniWebsocketManager()
-    socket = sm.futures_klines(callback=callback, timeframe=Timeframe.DAY_1)
+    socket = sm.futures_trades(callback=callback, symbol="BTCUSDT")
     socket.start()
 
     import time

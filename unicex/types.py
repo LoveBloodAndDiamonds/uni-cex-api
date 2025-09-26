@@ -7,6 +7,7 @@ __all__ = [
     "AggTradeDict",
     "RequestMethod",
     "LoggerLike",
+    "AccountType",
 ]
 
 from logging import Logger as LoggingLogger
@@ -91,3 +92,7 @@ class AggTradeDict(TradeDict):
     """Модель агрегированной сделки."""
 
     pass
+
+
+type AccountType = Literal["SPOT", "FUTURES"]
+"""Тип аккаунта."""

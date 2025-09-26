@@ -9,10 +9,9 @@ from loguru import logger as _logger
 
 from unicex._base import Websocket
 from unicex.exceptions import NotSupported
-from unicex.types import LoggerLike
+from unicex.types import AccountType, LoggerLike
 
 from .._mixins import UserWebsocketMixin
-from ..types import AccountType
 from .client import Client
 
 

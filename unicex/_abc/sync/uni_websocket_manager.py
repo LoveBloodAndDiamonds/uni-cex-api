@@ -1,7 +1,7 @@
 __all__ = ["IUniWebsocketManager"]
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Collection
+from collections.abc import Callable, Sequence
 from typing import Any, overload
 
 from loguru import logger as _logger
@@ -40,7 +40,7 @@ class IUniWebsocketManager(ABC):
         def _wrapper(raw_msg: dict) -> None:
             try:
                 adapted = adapter_func(raw_msg)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 self._logger.warning(f"Failed to adapt message: {e}")
                 return
             if isinstance(adapted, list):
@@ -68,7 +68,7 @@ class IUniWebsocketManager(ABC):
         timeframe: Timeframe,
         *,
         symbol: None = None,
-        symbols: Collection[str],
+        symbols: Sequence[str],
     ) -> Websocket: ...
 
     @abstractmethod
@@ -77,7 +77,7 @@ class IUniWebsocketManager(ABC):
         callback: CallbackType,
         timeframe: Timeframe,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Открывает стрим свечей (spot) с унификацией сообщений.
 
@@ -85,7 +85,7 @@ class IUniWebsocketManager(ABC):
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             timeframe (`Timeframe`): Временной интервал свечей.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Должен быть указан либо `symbol`, либо `symbols`.
 
@@ -111,7 +111,7 @@ class IUniWebsocketManager(ABC):
         timeframe: Timeframe,
         *,
         symbol: None = None,
-        symbols: Collection[str],
+        symbols: Sequence[str],
     ) -> Websocket: ...
 
     @abstractmethod
@@ -120,7 +120,7 @@ class IUniWebsocketManager(ABC):
         callback: CallbackType,
         timeframe: Timeframe,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Открывает стрим свечей (futures) с унификацией сообщений.
 
@@ -128,7 +128,7 @@ class IUniWebsocketManager(ABC):
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             timeframe (`Timeframe`): Временной интервал свечей.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Должен быть указан либо `symbol`, либо `symbols`.
 
@@ -152,7 +152,7 @@ class IUniWebsocketManager(ABC):
         callback: CallbackType,
         *,
         symbol: None = None,
-        symbols: Collection[str],
+        symbols: Sequence[str],
     ) -> Websocket: ...
 
     @abstractmethod
@@ -160,14 +160,14 @@ class IUniWebsocketManager(ABC):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Открывает стрим сделок (spot) с унификацией сообщений.
 
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Должен быть указан либо `symbol`, либо `symbols`.
 
@@ -191,7 +191,7 @@ class IUniWebsocketManager(ABC):
         callback: CallbackType,
         *,
         symbol: None = None,
-        symbols: Collection[str],
+        symbols: Sequence[str],
     ) -> Websocket: ...
 
     @abstractmethod
@@ -199,14 +199,14 @@ class IUniWebsocketManager(ABC):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Открывает стрим агрегированных сделок (spot) с унификацией сообщений.
 
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Должен быть указан либо `symbol`, либо `symbols`.
 
@@ -230,7 +230,7 @@ class IUniWebsocketManager(ABC):
         callback: CallbackType,
         *,
         symbol: None = None,
-        symbols: Collection[str],
+        symbols: Sequence[str],
     ) -> Websocket: ...
 
     @abstractmethod
@@ -238,14 +238,14 @@ class IUniWebsocketManager(ABC):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Открывает стрим сделок (futures) с унификацией сообщений.
 
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Должен быть указан либо `symbol`, либо `symbols`.
 
@@ -269,7 +269,7 @@ class IUniWebsocketManager(ABC):
         callback: CallbackType,
         *,
         symbol: None = None,
-        symbols: Collection[str],
+        symbols: Sequence[str],
     ) -> Websocket: ...
 
     @abstractmethod
@@ -277,14 +277,14 @@ class IUniWebsocketManager(ABC):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Открывает стрим агрегированных сделок (futures) с унификацией сообщений.
 
         Параметры:
             callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Должен быть указан либо `symbol`, либо `symbols`.
 

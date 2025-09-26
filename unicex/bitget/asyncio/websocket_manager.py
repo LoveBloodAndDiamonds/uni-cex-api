@@ -1,7 +1,7 @@
 __all__ = ["WebsocketManager"]
 
 
-from collections.abc import Awaitable, Callable, Collection
+from collections.abc import Awaitable, Callable, Sequence
 from typing import Any
 
 from unicex._base.asyncio import Websocket
@@ -29,14 +29,16 @@ class WebsocketManager(WebsocketManagerMixin):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: Collection[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения сделок.
+
+        https://www.bitget.com/api-doc/spot/websocket/public/Trades-Channel
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`Collection[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.

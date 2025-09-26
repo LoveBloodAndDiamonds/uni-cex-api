@@ -71,7 +71,12 @@ class Websocket:
         self._running = True
 
         # Запускаем вебсокет
-        await self._connect()
+        try:
+            await self._connect()
+        except Exception as e:
+            self._logger.error(f"Failed to connect to websocket: {e}")
+            self._running = False
+            raise
 
     async def stop(self) -> None:
         """Останавливает вебсокет и рабочие задачи."""
@@ -81,12 +86,7 @@ class Websocket:
         self._tasks.clear()
 
         # Очистка очереди
-        while not self._queue.empty():
-            try:
-                self._queue.get_nowait()
-                self._queue.task_done()
-            except Exception:
-                break
+        self._queue = asyncio.Queue()
 
     async def restart(self) -> None:
         """Перезапускает вебсокет."""
@@ -165,12 +165,7 @@ class Websocket:
         self._tasks.clear()
 
         # Очистить очередь
-        while not self._queue.empty():
-            try:
-                self._queue.get_nowait()
-                self._queue.task_done()
-            except Exception:
-                break
+        self._queue = asyncio.Queue()
 
     async def _send_subscribe_messages(self, conn: ClientConnection) -> None:
         """Отправляет сообщения с подпиской на топики, если нужно."""
@@ -184,10 +179,11 @@ class Websocket:
             try:
                 data = await self._queue.get()  # Получаем сообщение
                 await self._callback(data)  # Передаем в callback
+            except asyncio.exceptions.CancelledError:
+                break
             except Exception as e:
                 self._logger.error(f"{self} Error({type(e)}) while processing message: {e}")
-            finally:
-                self._queue.task_done()
+            self._queue.task_done()
 
     def _generate_ws_kwargs(self) -> dict:
         """Генерирует аргументы для запуска вебсокета."""

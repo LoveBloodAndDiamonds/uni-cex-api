@@ -5,14 +5,20 @@ __all__ = [
     "generate_hmac_sha256_signature",
     "sort_params_by_alphabetical_order",
     "filter_params",
+    "batched_list",
+    "catch_adapter_errors",
 ]
 
 import base64
 import hashlib
 import hmac
 import json
+from collections.abc import Callable, Iterable
+from functools import wraps
 from typing import Literal
 from urllib.parse import urlencode
+
+from unicex.exceptions import AdapterError
 
 
 def filter_params(params: dict) -> dict:
@@ -76,3 +82,61 @@ def generate_hmac_sha256_signature(
         return base64.b64encode(digest).decode()
     else:
         raise ValueError("encoding must be 'hex' or 'base64'")
+
+
+def batched_list[T](iterable: Iterable[T], n: int) -> list[list[T]]:
+    """Разбивает последовательность на чанки фиксированного размера.
+
+    Всегда возвращает список списков (list[list[T]]).
+    """
+    if n <= 0:
+        raise ValueError("n must be greater than 0")
+
+    result: list[list[T]] = []
+    batch: list[T] = []
+    for item in iterable:
+        batch.append(item)
+        if len(batch) == n:
+            result.append(batch)
+            batch = []
+    if batch:
+        result.append(batch)
+    return result
+
+
+def catch_adapter_errors(func: Callable):
+    """Декоратор для унификации обработки ошибок в адаптерах.
+
+    Перехватывает все исключения внутри функции и выбрасывает AdapterError
+    с подробным сообщением, включающим тип и текст исходного исключения,
+    а также имя функции.
+
+    Параметры:
+        func (Callable): Декорируемая функция.
+
+    Возвращает:
+        Callable: Обёрнутую функцию, выбрасывающую AdapterError при ошибке.
+    """
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            args_repr = repr(args)
+            if len(args_repr) > 200:
+                args_preview = args_repr[:200] + "... (truncated)"
+            else:
+                args_preview = args_repr
+
+            kwargs_repr = repr(kwargs)
+            if len(kwargs_repr) > 200:
+                kwargs_preview = kwargs_repr[:200] + "... (truncated)"
+            else:
+                kwargs_preview = kwargs_repr
+
+            raise AdapterError(
+                f"({type(e).__name__}): {e}. Can not convert input (args={args_preview}, kwargs={kwargs_preview}) in function `{func.__name__}`."
+            ) from e
+
+    return wrapper

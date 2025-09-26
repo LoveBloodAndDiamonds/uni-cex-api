@@ -2,7 +2,6 @@ __all__ = ["IUniClient"]
 
 from abc import ABC, abstractmethod
 from functools import cached_property
-from itertools import batched
 from typing import Generic, Self, TypeVar, overload
 
 import aiohttp
@@ -10,6 +9,7 @@ import aiohttp
 from unicex._base.asyncio import BaseClient
 from unicex.enums import Timeframe
 from unicex.types import KlineDict, LoggerLike, TickerDailyDict
+from unicex.utils import batched_list
 
 from ..adapter import IAdapter
 
@@ -24,6 +24,7 @@ class IUniClient(ABC, Generic[TClient]):
         session: aiohttp.ClientSession,
         api_key: str | None = None,
         api_secret: str | None = None,
+        api_passphrase: str | None = None,
         logger: LoggerLike | None = None,
         max_retries: int = 3,
         retry_delay: int | float = 0.1,
@@ -35,6 +36,7 @@ class IUniClient(ABC, Generic[TClient]):
         Параметры:
             api_key (`str | None`): Ключ API для аутентификации.
             api_secret (`str | None`): Секретный ключ API для аутентификации.
+            api_passphrase (`str | None`): Пароль API для аутентификации (Bitget).
             session (`aiohttp.ClientSession`): Сессия для выполнения HTTP-запросов.
             logger (`LoggerLike | None`): Логгер для вывода информации.
             max_retries (`int`): Максимальное количество повторных попыток запроса.
@@ -45,6 +47,7 @@ class IUniClient(ABC, Generic[TClient]):
         self._client: TClient = self._client_cls(
             api_key=api_key,
             api_secret=api_secret,
+            api_passphrase=api_passphrase,
             session=session,
             logger=logger,
             max_retries=max_retries,
@@ -58,6 +61,7 @@ class IUniClient(ABC, Generic[TClient]):
         cls,
         api_key: str | None = None,
         api_secret: str | None = None,
+        api_passphrase: str | None = None,
         session: aiohttp.ClientSession | None = None,
         logger: LoggerLike | None = None,
         max_retries: int = 3,
@@ -71,6 +75,7 @@ class IUniClient(ABC, Generic[TClient]):
         Параметры:
             api_key (`str | None`): Ключ API для аутентификации.
             api_secret (`str | None`): Секретный ключ API для аутентификации.
+            api_passphrase (`str | None`): Пароль API для аутентификации (Bitget).
             session (`aiohttp.ClientSession | None`): Сессия для выполнения HTTP-запросов.
             logger (`LoggerLike | None`): Логгер для вывода информации.
             max_retries (`int`): Максимальное количество повторных попыток запроса.
@@ -85,6 +90,7 @@ class IUniClient(ABC, Generic[TClient]):
             session=session or aiohttp.ClientSession(),
             api_key=api_key,
             api_secret=api_secret,
+            api_passphrase=api_passphrase,
             logger=logger,
             max_retries=max_retries,
             retry_delay=retry_delay,
@@ -114,9 +120,9 @@ class IUniClient(ABC, Generic[TClient]):
         """
         return self._client._api_key is not None and self._client._api_secret is not None
 
-    async def close(self) -> None:
+    async def close_connection(self) -> None:
         """Закрывает сессию клиента."""
-        await self._client.close()
+        await self._client.close_connection()
 
     async def __aenter__(self) -> Self:
         """Вход в асинхронный контекст."""
@@ -124,7 +130,7 @@ class IUniClient(ABC, Generic[TClient]):
 
     async def __aexit__(self, *_) -> None:
         """Выход из асинхронного контекста."""
-        await self.close()
+        await self.close_connection()
 
     @property
     def client(self) -> TClient:
@@ -169,7 +175,7 @@ class IUniClient(ABC, Generic[TClient]):
 
     async def tickers_batched(
         self, only_usdt: bool = True, batch_size: int = 20
-    ) -> list[tuple[str, ...]]:
+    ) -> list[list[str]]:
         """Возвращает список тикеров в чанках.
 
         Параметры:
@@ -180,7 +186,7 @@ class IUniClient(ABC, Generic[TClient]):
             `list[list[str]]`: Список тикеров в чанках.
         """
         tickers = await self.tickers(only_usdt=only_usdt)
-        return list(batched(tickers, n=batch_size, strict=False))
+        return batched_list(tickers, batch_size)
 
     @abstractmethod
     async def futures_tickers(self, only_usdt: bool = True) -> list[str]:
@@ -196,7 +202,7 @@ class IUniClient(ABC, Generic[TClient]):
 
     async def futures_tickers_batched(
         self, only_usdt: bool = True, batch_size: int = 20
-    ) -> list[tuple[str, ...]]:
+    ) -> list[list[str]]:
         """Возвращает список тикеров в чанках.
 
         Параметры:
@@ -207,7 +213,7 @@ class IUniClient(ABC, Generic[TClient]):
             `list[list[str]]`: Список тикеров в чанках.
         """
         tickers = await self.futures_tickers(only_usdt=only_usdt)
-        return list(batched(tickers, n=batch_size, strict=False))
+        return batched_list(tickers, batch_size)
 
     @abstractmethod
     async def last_price(self) -> dict[str, float]:
