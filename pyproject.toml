@@ -25,6 +25,7 @@ dependencies = [
 [project.urls]
 Github = "https://github.com/LoveBloodAndDiamonds/uni-cex-api"
 Author = "https://t.me/LoveBloodAndDiamonds"
+Readthedocs = "https://unicex.readthedocs.io/ru/latest/"
 
 [dependency-groups]
 dev = [
