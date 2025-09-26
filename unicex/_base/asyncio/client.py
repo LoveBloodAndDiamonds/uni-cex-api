@@ -181,7 +181,7 @@ class BaseClient:
             result = await response.json()
         except Exception as e:
             raise ResponseError(
-                f"JSONDecodeError error: {e}. Response: {response.text}. Status code: {response.status_code}"
+                f"JSONDecodeError error: {e}. Response: {response.text}. Status code: {response.status}"
             ) from e
 
         try:
