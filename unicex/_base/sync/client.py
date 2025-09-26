@@ -7,7 +7,7 @@ from typing import Any, Self
 import requests
 from loguru import logger as _logger
 
-from unicex.exceptions import UniCexException
+from unicex.exceptions import ResponseError
 from unicex.types import LoggerLike, RequestMethod
 
 
@@ -144,24 +144,24 @@ class BaseClient:
         try:
             response.raise_for_status()
         except Exception as e:
-            raise UniCexException(
+            raise ResponseError(
                 f"HTTP error: {e}. Response: {response.text}. Status code: {response.status_code}"
             ) from e
 
         if not response.content:
-            raise UniCexException(f"Empty response. Status code: {response.status_code}")
+            raise ResponseError(f"Empty response. Status code: {response.status_code}")
 
         try:
             result = response.json()
         except requests.exceptions.JSONDecodeError as e:
-            raise UniCexException(
+            raise ResponseError(
                 f"JSONDecodeError error: {e}. Response: {response.text}. Status code: {response.status_code}"
             ) from e
 
         try:
             result_str: str = str(result)
             self._logger.debug(
-                f"Response: {result_str[:100]} {'...' if len(result_str) > 100 else ''}"
+                f"Response: {result_str[:100]}{'...' if len(result_str) > 100 else ''}"
             )
         except Exception as e:
             self._logger.error(f"Error while log response: {e}")

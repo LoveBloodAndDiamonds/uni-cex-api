@@ -71,7 +71,12 @@ class Websocket:
         self._running = True
 
         # Запускаем вебсокет
-        await self._connect()
+        try:
+            await self._connect()
+        except Exception as e:
+            self._logger.error(f"Failed to connect to websocket: {e}")
+            self._running = False
+            raise
 
     async def stop(self) -> None:
         """Останавливает вебсокет и рабочие задачи."""

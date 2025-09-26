@@ -7,6 +7,7 @@ from typing import Any, Self
 import aiohttp
 from loguru import logger as _logger
 
+from unicex.exceptions import ResponseError
 from unicex.types import LoggerLike, RequestMethod
 
 
@@ -168,13 +169,25 @@ class BaseClient:
         Возвращает:
             `dict | list`: Ответ API в формате JSON.
         """
-        response.raise_for_status()
-        result = await response.json()
+        try:
+            response.raise_for_status()
+        except Exception as e:
+            response_text = await response.text()
+            raise ResponseError(
+                f"HTTP error: {e}. Response: {response_text}. Status code: {response.status}"
+            ) from e
+
+        try:
+            result = await response.json()
+        except Exception as e:
+            raise ResponseError(
+                f"JSONDecodeError error: {e}. Response: {response.text}. Status code: {response.status_code}"
+            ) from e
 
         try:
             result_str: str = str(result)
             self._logger.debug(
-                f"Response: {result_str[:100]} {'...' if len(result_str) > 100 else ''}"
+                f"Response: {result_str[:100]}{'...' if len(result_str) > 100 else ''}"
             )
         except Exception as e:
             self._logger.error(f"Error while log response: {e}")

@@ -19,21 +19,21 @@ async def main() -> None:
 
     # re = await client.get_orderbook(symbol="BGBUSDT")
 
-    re = await client.get_account_assets(coin="BTC")
+    # re = await client.get_account_assets(coin="BTC")
 
-    pp(re)
+    # pp(re)
 
-    return
+    # return
 
     # POST SIGNED
-    # response = await client.place_order(
-    #     symbol="BGBUSDT",
-    #     side="buy",
-    #     order_type="limit",
-    #     force="gtc",
-    #     price="5.240",
-    #     size="0.4",
-    # )
+    response = await client.place_order(
+        symbol="BGBUSDT",
+        side="buy",
+        order_type="limit",
+        force="gtc",
+        price="5.24011231231231231231232132",
+        size="0.4",
+    )
     """
     {'code': '00000',
      'msg': 'success',
@@ -41,6 +41,10 @@ async def main() -> None:
      'data': {'orderId': '1355001216939143169',
               'clientOid': '99d435bb-dfa9-424d-b0d9-6796644be302'}}
     """
+
+    pp(response)
+
+    return
 
     response = await client.place_order(
         symbol="BGBUSDT",

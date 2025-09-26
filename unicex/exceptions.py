@@ -37,3 +37,10 @@ class QueueOverflowError(UniCexException):
     """Исключение, возникающее при переполнении очереди сообщений."""
 
     pass
+
+
+@dataclass
+class ResponseError(UniCexException):
+    """Исключение, возникающее при ошибке ответа."""
+
+    pass
