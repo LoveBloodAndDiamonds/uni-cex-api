@@ -1,6 +1,6 @@
 __all__ = ["UniWebsocketManager"]
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 from unicex._abc import IUniWebsocketManager
@@ -8,16 +8,16 @@ from unicex._base import Websocket
 from unicex.enums import Exchange, Timeframe
 from unicex.types import LoggerLike
 
-from ..adapter import Adapter
+from .adapter import Adapter
 from .client import Client
 from .uni_client import UniClient
 from .websocket_manager import WebsocketManager
 
-type CallbackType = Callable[[Any], None]
+type CallbackType = Callable[[Any], Awaitable[None]]
 
 
 class UniWebsocketManager(IUniWebsocketManager):
-    """Синхронный унифицированный менеджер вебсокетов Binance."""
+    """Унифицированный менеджер асинхронных вебсокетов Binance."""
 
     def __init__(
         self, client: Client | UniClient | None = None, logger: LoggerLike | None = None
@@ -25,7 +25,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         """Инициализирует унифицированный менеджер вебсокетов.
 
         Параметры:
-            client (Client | UniClient | None): Клиент Binance или унифицированный клиент.
+            client (`Client | UniClient | None`): Клиент Binance или унифицированный клиент. Нужен для подключения к приватным топикам.
             logger (`LoggerLike | None`): Логгер для записи логов.
         """
         super().__init__(client=client, logger=logger)
@@ -42,7 +42,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         """Создаёт вебсокет для получения свечей на споте с унификацией сообщений.
 
         Параметры:
-            callback (`CallbackType`): Функция обработки адаптированных сообщений.
+            callback (`CallbackType`): Асинхронная функция обработки адаптированных сообщений.
             timeframe (`Timeframe`): Временной интервал свечей (унифицированный).
             symbol (`str | None`): Один символ для подписки.
             symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
@@ -70,7 +70,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         """Создаёт вебсокет для получения свечей на фьючерсах с унификацией сообщений.
 
         Параметры:
-            callback (`CallbackType`): Функция обработки адаптированных сообщений.
+            callback (`CallbackType`): Асинхронная функция обработки адаптированных сообщений.
             timeframe (`Timeframe`): Временной интервал свечей (унифицированный).
             symbol (`str | None`): Один символ для подписки.
             symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
@@ -94,7 +94,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         """Создаёт вебсокет для получения сделок на споте с унификацией сообщений.
 
         Параметры:
-            callback (`CallbackType`): Функция обработки адаптированных сообщений.
+            callback (`CallbackType`): Асинхронная функция обработки адаптированных сообщений.
             symbol (`str | None`): Один символ для подписки.
             symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
 
@@ -112,7 +112,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         """Создаёт вебсокет для получения агрегированных сделок на споте с унификацией сообщений.
 
         Параметры:
-            callback (`CallbackType`): Функция обработки адаптированных сообщений.
+            callback (`CallbackType`): Асинхронная функция обработки адаптированных сообщений.
             symbol (`str | None`): Один символ для подписки.
             symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
 
@@ -130,7 +130,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         """Создаёт вебсокет для получения сделок на фьючерсах с унификацией сообщений.
 
         Параметры:
-            callback (`CallbackType`): Функция обработки
+            callback (`CallbackType`): Асинхронная функция обработки
                 адаптированных сообщений.
             symbol (`str | None`): Один символ для подписки.
             symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
@@ -151,7 +151,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         """Создаёт вебсокет для получения агрегированных сделок на фьючерсах с унификацией сообщений.
 
         Параметры:
-            callback (`CallbackType`): Функция обработки адаптированных сообщений.
+            callback (`CallbackType`): Асинхронная функция обработки адаптированных сообщений.
             symbol (`str | None`): Один символ для подписки.
             symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
 

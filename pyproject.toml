@@ -4,7 +4,7 @@ name = "unicex"
 # •	PATCH (x.y.Z) → увеличивается при багфиксе, который не ломает совместимость.
 # •	MINOR (x.Y.z) → увеличивается при добавлении новой функциональности, но без ломающих изменений (backward-compatible).
 # •	MAJOR (X.y.z) → увеличивается при изменениях, которые ломают обратную совместимость.
-version = "0.1.17"
+version = "0.2.0"
 
 description = "Unified Crypto Exchange API "
 readme = "README.md"
@@ -17,8 +17,6 @@ dependencies = [
     "aiohttp>=3.12.15",
     "loguru>=0.7.3",
     "orjson>=3.11.3",
-    "requests>=2.32.5",
-    "websocket-client>=1.8.0",
     "websockets>=15.0.1",
 ]
 

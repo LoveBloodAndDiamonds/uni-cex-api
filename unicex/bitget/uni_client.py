@@ -3,11 +3,11 @@ __all__ = ["UniClient"]
 from functools import cached_property
 from typing import overload
 
-from unicex._abc.asyncio import IUniClient
+from unicex._abc import IUniClient
 from unicex.enums import Timeframe
 from unicex.types import KlineDict, TickerDailyDict
 
-from ..adapter import Adapter
+from .adapter import Adapter
 from .client import Client
 
 

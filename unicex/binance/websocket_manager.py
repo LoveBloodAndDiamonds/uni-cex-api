@@ -1,20 +1,25 @@
 __all__ = ["WebsocketManager"]
 
-from collections.abc import Callable, Sequence
+from collections.abc import Awaitable, Callable, Sequence
 from typing import Any
 
 from unicex._base import Websocket
 from unicex.exceptions import NotAuthorized
 
-from .._mixins import WebsocketManagerMixin
 from .client import Client
 from .user_websocket import UserWebsocket
 
-type CallbackType = Callable[[Any], None]
+type CallbackType = Callable[[Any], Awaitable[None]]
 
 
-class WebsocketManager(WebsocketManagerMixin):
-    """Менеджер вебсокетов для Binance."""
+class WebsocketManager:
+    """Менеджер асинхронных вебсокетов для Binance."""
+
+    _BASE_SPOT_URL: str = "wss://stream.binance.com:9443"
+    """Базовый URL для вебсокета на спот."""
+
+    _BASE_FUTURES_URL: str = "wss://fstream.binance.com"
+    """Базовый URL для вебсокета на фьючерсы."""
 
     def __init__(self, client: Client | None = None, **ws_kwargs: Any) -> None:
         """Инициализирует менеджер вебсокетов для Binance.
@@ -25,6 +30,37 @@ class WebsocketManager(WebsocketManagerMixin):
         """
         self.client = client
         self._ws_kwargs = ws_kwargs
+
+    def _generate_stream_url(
+        self,
+        type: str,
+        url: str,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+        require_symbol: bool = False,
+    ) -> str:
+        """Генерирует URL для вебсокета Binance. Параметры symbol и symbols не могут быть использованы вместе.
+
+        Параметры:
+            type (`str`): Тип вебсокета.
+            url (`str`): Базовый URL для вебсокета.
+            symbol (`str | None`): Символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для подписки.
+            require_symbol (`bool`): Требуется ли символ для подписки.
+
+        Возвращает:
+            str: URL для вебсокета.
+        """
+        if symbol and symbols:
+            raise ValueError("Parameters symbol and symbols cannot be used together")
+        if require_symbol and not (symbol or symbols):
+            raise ValueError("Either symbol or symbols must be provided")
+        if symbol:
+            return f"{url}/ws/{symbol.lower()}@{type}"
+        if symbols:
+            streams = "/".join(f"{s.lower()}@{type}" for s in symbols)
+            return f"{url}/stream?streams={streams}"
+        return f"{url}/ws/{type}"
 
     def trade(
         self,
@@ -37,7 +73,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams#trade-streams
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
@@ -64,7 +100,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams#aggregate-trade-streams
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
@@ -92,7 +128,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams#klinecandlestick-streams-for-utc
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
             interval (`str`): Временной интервал свечей.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
@@ -121,7 +157,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams#diff-depth-stream
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             update_speed (`str | None`): Скорость обновления стакана ("1000ms" | "100ms"). По умолчанию "1000ms".
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
@@ -149,7 +185,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams#individual-symbol-mini-ticker-stream
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
@@ -171,7 +207,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams#individual-symbol-mini-ticker-stream
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -190,7 +226,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams#individual-symbol-ticker-streams
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
@@ -212,7 +248,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams#all-market-tickers-stream
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -232,7 +268,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams#individual-symbol-rolling-window-statistics-streams
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             window (`str`): Размер окна статистики.
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
@@ -255,7 +291,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams#all-market-rolling-window-statistics-streams
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             window (`str`): Размер окна статистики.
 
         Возвращает:
@@ -275,7 +311,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams#average-price
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
@@ -302,7 +338,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams#individual-symbol-book-ticker-streams
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
@@ -331,7 +367,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams#partial-book-depth-streams
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             levels (`str`): Глубина стакана (уровни).
             update_speed (`str | None`): Скорость обновления стакана ("100ms" | "1000ms"). По умолчанию: "1000ms".
             symbol (`str | None`): Один символ для подписки.
@@ -361,7 +397,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams#diff-depth-stream
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             update_speed (`str | None`): Скорость обновления стакана ("100ms" | "1000ms"). По умолчанию: "1000ms".
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
@@ -384,7 +420,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/binance-spot-api-docs/user-data-stream
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
 
         Возвращает:
             `UserWebsocket`: Объект для управления вебсокет соединением.
@@ -397,7 +433,7 @@ class WebsocketManager(WebsocketManagerMixin):
         """Создает вебсокет для мультиплексирования нескольких стримов в один.
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             streams (`str`): Строка с перечислением стримов.
 
         Возвращает:
@@ -418,7 +454,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/Aggregate-Trade-Streams
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
@@ -445,7 +481,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/Aggregate-Trade-Streams
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
@@ -473,7 +509,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/Kline-Candlestick-Streams
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             interval (`str`): Временной интервал свечей.
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
@@ -501,7 +537,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/Individual-Symbol-Mini-Ticker-Stream
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
@@ -523,7 +559,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/All-Market-Mini-Tickers-Stream
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -542,7 +578,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/Individual-Symbol-Ticker-Streams
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
@@ -564,7 +600,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/All-Market-Tickers-Streams
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -583,7 +619,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/Individual-Symbol-Book-Ticker-Streams
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
@@ -605,7 +641,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/All-Book-Tickers-Stream
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -626,7 +662,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/Partial-Book-Depth-Streams
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
             levels (`str`): Глубина стакана (уровни).
             update_speed (`str`): Скорость обновления стакана (100ms | 500ms | None). По умолчанию - 250ms.
@@ -656,7 +692,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/Diff-Book-Depth-Streams
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             update_speed (`str`): Скорость обновления стакана (100ms | 500ms | None). По умолчанию - 250ms.
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
@@ -681,7 +717,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/Mark-Price-Stream-for-All-market
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             update_speed (`str`): Частота обновления ("1s" или пусто). По умолчанию "3s".
 
         Возвращает:
@@ -705,7 +741,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/Mark-Price-Stream
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             update_speed (`str`): Частота обновления ("1s" или пусто). По умолчанию "3s".
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
@@ -734,7 +770,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/Continuous-Contract-Kline-Candlestick-Streams
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             pair (`str`): Название пары.
             contract_type (`str`): Тип контракта.
             interval (`str`): Временной интервал свечей..
@@ -759,7 +795,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/Liquidation-Order-Streams
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
@@ -781,7 +817,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/All-Market-Liquidation-Order-Streams
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -800,7 +836,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/Composite-Index-Symbol-Information-Streams
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
@@ -822,7 +858,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/Contract-Info-Stream
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -836,7 +872,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/Multi-Assets-Mode-Asset-Index
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -850,7 +886,7 @@ class WebsocketManager(WebsocketManagerMixin):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/user-data-streams
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
 
         Возвращает:
             `UserWebsocket`: Вебсокет для получения информации о пользовательских данных.
@@ -865,7 +901,7 @@ class WebsocketManager(WebsocketManagerMixin):
         """Создает вебсокет для мультиплексирования нескольких стримов в один.
 
         Параметры:
-            callback (`CallbackType`): Функция обратного вызова для обработки сообщений.
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             streams (`str`): Строка с перечислением стримов.
 
         Возвращает:

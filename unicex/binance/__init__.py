@@ -1,13 +1,9 @@
-"""Пакет, содержащий реализации синхронных и асинхронных клиентов и менеджеров для работы с биржей Binance."""
+"""Пакет, содержащий реализации клиентов и менеджеров для работы с биржей Binance."""
 
-__all__ = [
-    "Adapter",
-    "Client",
-    "UniClient",
-    "UniWebsocketManager",
-    "UserWebsocket",
-    "WebsocketManager",
-]
+__all__ = ["Client", "UniClient", "UserWebsocket", "WebsocketManager", "UniWebsocketManager"]
 
-from .adapter import Adapter
-from .sync import Client, UniClient, UniWebsocketManager, UserWebsocket, WebsocketManager
+from .client import Client
+from .uni_client import UniClient
+from .uni_websocket_manager import UniWebsocketManager
+from .user_websocket import UserWebsocket
+from .websocket_manager import WebsocketManager
