@@ -1,6 +1,6 @@
 import asyncio
 
-from unicex.bitget.asyncio import UniClient
+from unicex.bitget import UniClient
 from pprint import pp
 
 
