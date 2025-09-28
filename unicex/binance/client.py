@@ -119,7 +119,7 @@ class Client(BaseClient):
             )
         return await super()._make_request(method=method, url=url, params=payload, headers=headers)
 
-    # ========== PUBLIC SPOT ENDPOINTS ==========
+    # topic: general endpoints
 
     async def ping(self) -> dict:
         """Проверка подключения к REST API.
@@ -147,6 +147,8 @@ class Client(BaseClient):
         url = self._BASE_SPOT_URL + "/api/v3/exchangeInfo"
 
         return await self._make_request("GET", url)
+
+    # topic: market data endpoints
 
     async def depth(self, symbol: str, limit: int | None = None) -> dict:
         """Получение книги ордеров.
@@ -263,7 +265,7 @@ class Client(BaseClient):
 
         return await self._make_request("GET", url, params=params)
 
-    async def ticker_24h(
+    async def ticker_24hr(
         self,
         symbol: str | None = None,
         symbols: list[str] | None = None,
@@ -311,7 +313,7 @@ class Client(BaseClient):
 
         return await self._make_request("GET", url, params=params)
 
-    async def ticker_book(
+    async def ticker_book_ticker(
         self, symbol: str | None = None, symbols: list[str] | None = None
     ) -> dict | list[dict]:
         """Получение лучших цен bid/ask в книге ордеров.
@@ -323,7 +325,7 @@ class Client(BaseClient):
 
         return await self._make_request("GET", url, params=params)
 
-    async def ticker_rolling_window(
+    async def ticker(
         self,
         symbol: str | None = None,
         symbols: list[str] | None = None,
@@ -344,30 +346,7 @@ class Client(BaseClient):
 
         return await self._make_request("GET", url, params=params)
 
-    # ========== PRIVATE SPOT ENDPOINTS ==========
-
-    async def all_orders(
-        self,
-        symbol: str,
-        order_id: int | None = None,
-        start_time: int | None = None,
-        end_time: int | None = None,
-        limit: int | None = None,
-    ) -> list[dict]:
-        """Получение всех ордеров (активных, отмененных, исполненных) для символа.
-
-        https://developers.binance.com/docs/binance-spot-api-docs/rest-api/spot-trading-endpoints#all-orders-user_data
-        """
-        url = self._BASE_SPOT_URL + "/api/v3/allOrders"
-        params = {
-            "symbol": symbol,
-            "orderId": order_id,
-            "startTime": start_time,
-            "endTime": end_time,
-            "limit": limit,
-        }
-
-        return await self._make_request("GET", url, True, params=params)
+    # topic: trading endpoints
 
     async def order_create(
         self,
@@ -591,6 +570,8 @@ class Client(BaseClient):
 
         return await self._make_request("GET", url, True)
 
+    # topic: account endpoints
+
     async def account(self) -> dict:
         """Получение информации об аккаунте (балансы, комиссии и т.д.).
 
@@ -616,6 +597,42 @@ class Client(BaseClient):
             "orderId": order_id,
             "origClientOrderId": orig_client_order_id,
         }
+
+        return await self._make_request("GET", url, True, params=params)
+
+    async def all_orders(
+        self,
+        symbol: str,
+        order_id: int | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+    ) -> list[dict]:
+        """Получение всех ордеров (активных, отмененных, исполненных) для символа.
+
+        https://developers.binance.com/docs/binance-spot-api-docs/rest-api/spot-trading-endpoints#all-orders-user_data
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/allOrders"
+        params = {
+            "symbol": symbol,
+            "orderId": order_id,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", url, True, params=params)
+
+    async def all_open_orders(
+        self,
+        symbol: str | None = None,
+    ) -> list[dict]:
+        """Получение всех ордеров активных ордеров.
+
+        https://developers.binance.com/docs/binance-spot-api-docs/rest-api/account-endpoints#current-open-orders-user_data
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/allOrders"
+        params = {"symbol": symbol}
 
         return await self._make_request("GET", url, True, params=params)
 
@@ -711,7 +728,7 @@ class Client(BaseClient):
 
         return await self._make_request("GET", url, True, params=params)
 
-    # ========== PUBLIC FUTURES ENDPOINTS ==========
+    # topic: futures market data
 
     async def futures_ping(self) -> dict:
         """Проверка подключения к REST API.
@@ -795,7 +812,7 @@ class Client(BaseClient):
 
         return await self._make_request("GET", url, params=params)
 
-    async def futures_ticker_24h(self, symbol: str | None = None) -> dict | list[dict]:
+    async def futures_ticker_24hr(self, symbol: str | None = None) -> dict | list[dict]:
         """Получение статистики изменения цен и объема за 24 часа.
 
         https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/24hr-Ticker-Price-Change-Statistics
@@ -1022,7 +1039,7 @@ class Client(BaseClient):
 
         return await self._make_request("GET", url, True)
 
-    # ========== PRIVATE FUTURES ENDPOINTS ==========
+    # topic: futures account
 
     async def futures_account(self) -> dict:
         """Получение информации об аккаунте фьючерсов.
@@ -1059,6 +1076,8 @@ class Client(BaseClient):
         url = self._BASE_FUTURES_URL + "/fapi/v1/multiAssetsMargin"
 
         return await self._make_request("GET", url, True)
+
+    # topic: futures trade
 
     async def futures_order_create(
         self,
@@ -1530,7 +1549,7 @@ class Client(BaseClient):
 
         return await self._make_request("GET", url, True, params=params)
 
-    # ========== SPOT LISTEN KEY ENDPOINTS ==========
+    # topic: user data streams
 
     async def listen_key(self) -> dict:
         """Создание ключа прослушивания для подключения к пользовательскому вебсокету.
@@ -1578,7 +1597,7 @@ class Client(BaseClient):
             "DELETE", url, params=params, headers=self._get_headers()
         )
 
-    # ========== FUTURES LISTEN KEY ENDPOINTS ==========
+    # topic: futures user data streams
 
     async def futures_listen_key(self) -> dict:
         """Создание ключа прослушивания для подключения к пользовательскому вебсокету.
