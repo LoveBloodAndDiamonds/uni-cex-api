@@ -1,6 +1,6 @@
 import asyncio
 
-from unicex.bitget.asyncio import UniWebsocketManager
+from unicex.bitget import UniWebsocketManager
 from unicex import TradeDict
 
 

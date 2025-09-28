@@ -183,7 +183,12 @@ class Websocket:
                 break
             except Exception as e:
                 self._logger.error(f"{self} Error({type(e)}) while processing message: {e}")
-            self._queue.task_done()
+
+            try:
+                self._queue.task_done()
+            except Exception as e:
+                if self._running:
+                    self._logger.error(f"{self} Error({type(e)}) while marking task done: {e}")
 
     def _generate_ws_kwargs(self) -> dict:
         """Генерирует аргументы для запуска вебсокета."""

@@ -3,4 +3,5 @@ __all__ = [
     "Websocket",
 ]
 
-from .sync import BaseClient, Websocket
+from .client import BaseClient
+from .websocket import Websocket

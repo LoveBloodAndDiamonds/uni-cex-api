@@ -1,7 +1,7 @@
 import asyncio
 import os
 
-from unicex.bitget.asyncio import Client
+from unicex.bitget import Client
 from pprint import pp
 
 

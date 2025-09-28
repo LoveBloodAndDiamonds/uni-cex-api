@@ -1,6 +1,6 @@
 import asyncio
 
-from unicex.binance.asyncio import WebsocketManager, Client
+from unicex.binance import WebsocketManager, Client
 from os import getenv
 
 

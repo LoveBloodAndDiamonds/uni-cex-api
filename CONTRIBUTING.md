@@ -55,16 +55,14 @@
   - Адаптер преобразует сырой ответ/API‑сообщения биржи в унифицированные типы (`unicex/types.py`).
 - `unicex/<exchange>/_mixins/`
   - Общий функционал и константы для REST/WebSocket этой биржи: базовые URL, подготовка подписи, генерация stream‑URL и т.д.
-- `unicex/<exchange>/asyncio/`
-  - `client.py` — асинхронный клиент биржи (сырой, «не унифицированный»), методы 1:1 с эндпоинтами API.
+- `unicex/<exchange>/`
+  - `client.py` — асинхронный «сырой» REST‑клиент, методы 1:1 с эндпоинтами API.
   - `websocket_manager.py` — менеджер сырых WS‑стримов (без адаптации сообщений).
-  - `uni_client.py` — унифицированный клиент, поверх `client.py`, возвращает унифицированные типы с помощью `adapter.py`.
+  - `uni_client.py` — унифицированный клиент, работает поверх `client.py`, возвращая унифицированные типы через `adapter.py`.
   - `uni_websocket_manager.py` — унифицированный менеджер WS: оборачивает колбэки и подает на них адаптированные сообщения.
   - `user_websocket.py` (если нужен) — приватные стримы: создание/продление/закрытие listenKey/токенов.
-- `unicex/<exchange>/sync/` (опционально)
-  - Аналогичная структура для синхронной версии (если делаете синхронную реализацию).
 - `unicex/<exchange>/__init__.py`
-  - Явный экспорт основных классов (`__all__`) и реэкспорт синхронных/асинхронных реализаций.
+  - Явный экспорт основных классов (`__all__`) и реэкспорт асинхронных реализаций.
 
 Дополнительно:
 - `unicex/enums.py` — при необходимости добавьте маппинг таймфреймов в `Timeframe.mapping[Exchange.<EXCHANGE>]`.
@@ -100,9 +98,9 @@ class Adapter(IAdapter):
         ...
 ```
 
-### Асинхронный клиент (`asyncio/client.py`)
+### Асинхронный клиент (`client.py`)
 
-- Наследуйтесь от `unicex._base.asyncio.BaseClient` и используйте собственный `ClientMixin` в `_<exchange>/_mixins/client.py`.
+- Наследуйтесь от `unicex._base.BaseClient` и используйте собственный `ClientMixin` в `_<exchange>/_mixins/client.py`.
 - Методы — это «сырые» эндпоинты 1:1 с API биржи; не выполняют адаптацию, только HTTP.
 - Подпись запросов/заголовки/таймстемпы/recvWindow и пр. — оформляйте в миксине (см. Binance: `_mixins/client.py`), а в `client.py` вызывайте единый `_make_request`.
 - Докстринги для таких методов — «Описание + ссылка на документацию эндпоинта».
@@ -124,30 +122,30 @@ class Client(ClientMixin, BaseClient):
         return await self._make_request("GET", url, params=params)
 ```
 
-### Менеджер «сырых» вебсокетов (`asyncio/websocket_manager.py`)
+### Менеджер «сырых» вебсокетов (`websocket_manager.py`)
 
 - Отвечает за создание `Websocket` с правильными URL; без адаптации сообщений.
-- Логика сборки URL — в миксине (`_mixins/websocket_manager.py`), сам вебсокет создаётся через `unicex._base.asyncio.Websocket`.
+- Логика сборки URL — в миксине (`_mixins/websocket_manager.py`), сам вебсокет создаётся через `unicex._base.Websocket`.
 - Докстринги: «Описание + ссылка на документацию стрима».
 - Именование методов соответствует стримам биржи (`trade`, `agg_trade`, `klines`, ...) и имеет спотовые/фьючерсные варианты.
 
-### Унифицированный клиент (`asyncio/uni_client.py`)
+### Унифицированный клиент (`uni_client.py`)
 
-- Наследуйтесь от `unicex._abc.asyncio.IUniClient[Client]`.
+- Наследуйтесь от `unicex._abc.IUniClient[Client]`.
 - Реализуйте `@cached_property adapter` и `_client_cls`.
 - Публичные методы используют «сырой» клиент, а затем адаптер:
   - пример: `raw = await self._client.ticker_price(); return self.adapter.last_price(raw)`.
 - Для передачи таймфреймов используйте `Timeframe.to_exchange_format(Exchange.<EXCHANGE>)`.
 - Докстринги — в стиле проекта: описание + параметры + «Возвращает».
 
-### Унифицированный менеджер вебсокетов (`asyncio/uni_websocket_manager.py`)
+### Унифицированный менеджер вебсокетов (`uni_websocket_manager.py`)
 
-- Наследуйтесь от `unicex._abc.asyncio.IUniWebsocketManager`.
+- Наследуйтесь от `unicex._abc.IUniWebsocketManager`.
 - В конструкторе создайте «сырой» `WebsocketManager` и `Adapter`.
 - Каждый метод должен оборачивать пользовательский callback через `self._make_wrapper(<adapter_fn>, callback)` и вызывать соответствующий метод «сырого» `WebsocketManager`.
 - Следите за семантикой symbol/symbols (они взаимоисключаемы) и используйте унифицированные таймфреймы.
 
-### Пользовательские вебсокеты (`asyncio/user_websocket.py`, опционально)
+### Пользовательские вебсокеты (`user_websocket.py`, опционально)
 
 - Если биржа поддерживает приватные стримы, реализуйте класс по образцу Binance:
   - создание/продление/закрытие listenKey/токенов,
@@ -209,13 +207,13 @@ class Client(ClientMixin, BaseClient):
 
 ## Интеграция новой биржи — чеклист
 
-- [ ] Создан пакет `unicex/<exchange>/` с подпакетами `asyncio/` (+ `sync/` при необходимости) и `_mixins/`.
+- [ ] Создан пакет `unicex/<exchange>/` с подпакетом `_mixins/`.
 - [ ] Реализован `adapter.py` (все методы `IAdapter`, декоратор `@catch_adapter_errors`).
 - [ ] Реализован асинхронный сырой `client.py` и `websocket_manager.py`.
-- [ ] Реализован `asyncio/uni_client.py` и `asyncio/uni_websocket_manager.py`.
-- [ ] (Опционально) Реализован `asyncio/user_websocket.py` для приватных стримов.
+- [ ] Реализован `uni_client.py` и `uni_websocket_manager.py`.
+- [ ] (Опционально) Реализован `user_websocket.py` для приватных стримов.
 - [ ] Добавлены экспорты в `unicex/<exchange>/__init__.py`.
-- [ ] Добавлены маппинги в `unicex/mapper.py` (async/sync, если есть).
+- [ ] Добавлены маппинги в `unicex/mapper.py`.
 - [ ] При необходимости — добавлен маппинг таймфреймов в `unicex/enums.py`.
 - [ ] Локальная проверка: `ruff`, `pyright`, запуск примеров/скриптов.
 - [ ] PR с описанием и ссылками на документацию эндпоинтов.

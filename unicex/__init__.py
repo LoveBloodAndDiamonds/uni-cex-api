@@ -20,21 +20,31 @@ __all__ = [
     "IUniClient",
     "IUniWebsocketManager",
     "IAdapter",
-    "IUniAsyncClient",
-    "IUniAsyncWebsocketManager",
     # Base clients and websockets
     "Websocket",
     "BaseClient",
-    "AsyncWebsocket",
-    "BaseAsyncClient",
+    # Binance
+    "BinanceClient",
+    "BinanceUniClient",
+    "BinanceWebsocketManager",
+    "BinanceUniWebsocketManager",
+    # Bitget
+    "BitgetClient",
+    "BitgetUniClient",
+    "BitgetUniWebsocketManager",
+    "BitgetWebsocketManager",
 ]
 
 from ._abc import IAdapter, IUniClient, IUniWebsocketManager
-from ._abc.asyncio import IUniClient as IUniAsyncClient
-from ._abc.asyncio import IUniWebsocketManager as IUniAsyncWebsocketManager
 from ._base import BaseClient, Websocket
-from ._base.asyncio import BaseClient as BaseAsyncClient
-from ._base.asyncio import Websocket as AsyncWebsocket
+from .binance import Client as BinanceClient
+from .binance import UniClient as BinanceUniClient
+from .binance import UniWebsocketManager as BinanceUniWebsocketManager
+from .binance import WebsocketManager as BinanceWebsocketManager
+from .bitget import Client as BitgetClient
+from .bitget import UniClient as BitgetUniClient
+from .bitget import UniWebsocketManager as BitgetUniWebsocketManager
+from .bitget import WebsocketManager as BitgetWebsocketManager
 from .enums import Exchange, MarketType, Side, Timeframe
 from .mapper import get_uni_client, get_uni_websocket_manager
 from .types import AggTradeDict, KlineDict, LoggerLike, RequestMethod, TickerDailyDict, TradeDict
