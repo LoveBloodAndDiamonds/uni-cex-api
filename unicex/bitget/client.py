@@ -168,9 +168,9 @@ class Client(BaseClient):
             headers=headers,
         )
 
-    # ========== COMMON PUBLIC ==========
+    # topic: common
 
-    async def server_time(self) -> dict:
+    async def get_server_time(self) -> dict:
         """Получение серверного времени.
 
         https://www.bitget.com/api-doc/common/public/Get-Server-Time
@@ -190,7 +190,7 @@ class Client(BaseClient):
 
         return await self._make_request("GET", "/api/v2/common/trade-rate", params=params)
 
-    async def get_all_trade_rate(
+    async def get_business_line_all_symbol_trade_rate(
         self,
         business: str,
     ) -> dict:
@@ -221,9 +221,61 @@ class Client(BaseClient):
         """
         return await self._make_request("GET", "/api/v2/account/all-account-balance")
 
-    # ========== PUBLIC SPOT ENDPOINTS ==========
+    # topic: tax
+    # Where is more tax endpoints:
+    # https://www.bitget.com/api-doc/common/tax/Get-Spot-Account-Record
+    # https://www.bitget.com/api-doc/common/tax/Get-Future-Account-Record
+    # https://www.bitget.com/api-doc/common/tax/Get-Margin-Account-Record
+    # https://www.bitget.com/api-doc/common/tax/Get-P2P-Account-Record
 
-    async def get_coin_list(
+    # topic: p2p
+    # Where is more p2p endpoints:
+    # https://www.bitget.com/api-doc/common/p2p/Get-P2P-Merchant-List
+    # https://www.bitget.com/api-doc/common/p2p/Get-Merchant-Information
+    # https://www.bitget.com/api-doc/common/p2p/Get-P2P-Order-List
+    # https://www.bitget.com/api-doc/common/p2p/Get-P2P-Adv-List
+
+    # topic: trading insights
+    # https://www.bitget.com/api-doc/common/apidata/Whale-Net-Flow
+    # https://www.bitget.com/api-doc/common/apidata/Taker-Buy-Sell
+    # https://www.bitget.com/api-doc/common/apidata/Position-Long-Short
+    # https://www.bitget.com/api-doc/common/apidata/Margin-Ls-Ratio
+    # https://www.bitget.com/api-doc/common/apidata/Margin-Loan-Growth
+    # https://www.bitget.com/api-doc/common/apidata/Margin-Iso-Borrow-Ratio
+    # https://www.bitget.com/api-doc/common/apidata/Long-Short
+    # https://www.bitget.com/api-doc/common/apidata/Get-Spot-Fund-Flow
+    # https://www.bitget.com/api-doc/common/apidata/Get-Big-Data-Symbol
+    # https://www.bitget.com/api-doc/common/apidata/Fund-Net-Flow
+    # https://www.bitget.com/api-doc/common/apidata/Account-Long-Short
+
+    # topic: virtual subaccount
+    # https://www.bitget.com/api-doc/common/vsubaccount/Create-Virtual-Subaccount
+    # https://www.bitget.com/api-doc/common/vsubaccount/Modify-Virtual-Subaccount
+    # https://www.bitget.com/api-doc/common/vsubaccount/Batch-Create-Virtual-Subaccount-And-Apikey
+    # https://www.bitget.com/api-doc/common/vsubaccount/Get-Virtual-Subaccount-List
+    # https://www.bitget.com/api-doc/common/vsubaccount/Create-Virtual-Subaccount-ApiKey
+    # https://www.bitget.com/api-doc/common/vsubaccount/Modify-Virtual-Subaccount-ApiKey
+    # https://www.bitget.com/api-doc/common/vsubaccount/Get-Virtual-Subaccount-ApiKey-List
+
+    # topic: assets
+    # https://www.bitget.com/api-doc/common/account/Funding-Assets
+    # https://www.bitget.com/api-doc/common/account/Bot-Assets
+    # https://www.bitget.com/api-doc/common/account/All-Account-Balance
+
+    # topic: convert
+    # https://www.bitget.com/api-doc/common/convert/Get-Convert-Currencies
+    # https://www.bitget.com/api-doc/common/convert/Get-Quoted-Price
+    # https://www.bitget.com/api-doc/common/convert/Trade
+    # https://www.bitget.com/api-doc/common/convert/Get-Convert-Record
+
+    # topic: bgb-convert
+    # https://www.bitget.com/api-doc/common/bgb-convert/Get-BGB-Convert-Coins
+    # https://www.bitget.com/api-doc/common/bgb-convert/
+    # https://www.bitget.com/api-doc/common/bgb-convert/Get-BGB-Convert-Record
+
+    # topic: market
+
+    async def get_coin_info(
         self,
         coin: str | None = None,
     ) -> dict:
@@ -235,7 +287,7 @@ class Client(BaseClient):
 
         return await self._make_request("GET", "/api/v2/spot/public/coins", params=params)
 
-    async def get_symbols(
+    async def get_symbol_info(
         self,
         symbol: str | None = None,
     ) -> dict:
@@ -254,7 +306,7 @@ class Client(BaseClient):
         """
         return await self._make_request("GET", "/api/v2/spot/market/vip-fee-rate")
 
-    async def get_tickers(
+    async def get_ticker_information(
         self,
         symbol: str | None = None,
     ) -> dict:
@@ -266,7 +318,7 @@ class Client(BaseClient):
 
         return await self._make_request("GET", "/api/v2/spot/market/tickers", params=params)
 
-    async def merge_orderbook(
+    async def get_merge_depth(
         self,
         symbol: str,
         precision: str | None = None,
@@ -284,7 +336,7 @@ class Client(BaseClient):
 
         return await self._make_request("GET", "/api/v2/spot/market/merge-depth", params=params)
 
-    async def get_orderbook(
+    async def get_orderbook_depth(
         self,
         symbol: str,
         type: str | None = None,
@@ -298,14 +350,13 @@ class Client(BaseClient):
 
         return await self._make_request("GET", "/api/v2/spot/market/orderbook", params=params)
 
-    async def get_candle_data(
+    async def get_candlestick_data(
         self,
         symbol: str,
         granularity: str,
         start_time: int | None = None,
         end_time: int | None = None,
         limit: int | None = None,
-        kline_type: str | None = None,
     ) -> list[list]:
         """Получение данных свечей (klines).
 
@@ -317,12 +368,11 @@ class Client(BaseClient):
             "startTime": start_time,
             "endTime": end_time,
             "limit": limit,
-            "kLineType": kline_type,
         }
 
         return await self._make_request("GET", "/api/v2/spot/market/candles", params=params)
 
-    async def get_auction(
+    async def get_call_auction_information(
         self,
         symbol: str,
     ) -> dict:
@@ -334,7 +384,7 @@ class Client(BaseClient):
 
         return await self._make_request("GET", "/api/v2/spot/market/auction", params=params)
 
-    async def get_history_candle_data(
+    async def get_history_candlestick_data(
         self,
         symbol: str,
         granularity: str,
@@ -391,7 +441,7 @@ class Client(BaseClient):
 
         return await self._make_request("GET", "/api/v2/spot/market/fills-history", params=params)
 
-    # ========== PRIVATE SPOT ENDPOINTS ==========
+    # topic: trade
 
     async def place_order(
         self,
@@ -441,7 +491,7 @@ class Client(BaseClient):
             "POST", "/api/v2/spot/trade/place-order", data=data, signed=True
         )
 
-    async def cancel_replace_order(
+    async def cancel_an_existing_order_and_send_a_new_order(
         self,
         symbol: str,
         price: str,
@@ -475,7 +525,7 @@ class Client(BaseClient):
             "POST", "/api/v2/spot/trade/cancel-replace-order", data=data, signed=True
         )
 
-    async def batch_cancel_replace_order(
+    async def batch_cancel_existing_order_and_send_new_orders(
         self,
         order_list: list[dict],
     ) -> dict:
@@ -547,7 +597,7 @@ class Client(BaseClient):
             "POST", "/api/v2/spot/trade/batch-cancel-order", data=data, signed=True
         )
 
-    async def cancel_symbol_orders(
+    async def cancel_order_by_symbol(
         self,
         symbol: str,
     ) -> dict:
@@ -585,7 +635,7 @@ class Client(BaseClient):
             "GET", "/api/v2/spot/trade/orderInfo", params=params, signed=True
         )
 
-    async def get_unfilled_orders(
+    async def get_current_orders(
         self,
         symbol: str | None = None,
         start_time: int | None = None,
@@ -675,13 +725,15 @@ class Client(BaseClient):
             "GET", "/api/v2/spot/trade/fills", params=params, signed=True
         )
 
+    # topic: trigger
+
     async def place_plan_order(
         self,
         symbol: str,
         side: str,
         trigger_price: str,
         order_type: str,
-        size: str,
+        size: str | float,
         trigger_type: str,
         execute_price: str | None = None,
         plan_type: str | None = None,
@@ -712,7 +764,7 @@ class Client(BaseClient):
     async def modify_plan_order(
         self,
         trigger_price: str,
-        size: str,
+        size: str | float,
         order_type: str,
         order_id: str | None = None,
         client_oid: str | None = None,
@@ -814,7 +866,10 @@ class Client(BaseClient):
             "GET", "/api/v2/spot/trade/history-plan-order", params=params, signed=True
         )
 
-    async def batch_cancel_plan_order(self, symbol_list: list[str]) -> dict:
+    async def cancel_plan_orders_in_batch(
+        self,
+        symbol_list: list[str],
+    ) -> dict:
         """Пакетная отмена плановых ордеров по списку символов.
 
         https://www.bitget.com/api-doc/spot/plan/Batch-Cancel-Plan-Order
@@ -825,7 +880,9 @@ class Client(BaseClient):
             "POST", "/api/v2/spot/trade/batch-cancel-plan-order", data=data, signed=True
         )
 
-    async def get_account_info(self) -> dict:
+    # topic: account
+
+    async def get_account_information(self) -> dict:
         """Получение информации об аккаунте.
 
         https://www.bitget.com/api-doc/spot/account/Get-Account-Info
@@ -833,7 +890,9 @@ class Client(BaseClient):
         return await self._make_request("GET", "/api/v2/spot/account/info", signed=True)
 
     async def get_account_assets(
-        self, coin: str | None = None, asset_type: str | None = None
+        self,
+        coin: str | None = None,
+        asset_type: str | None = None,
     ) -> dict:
         """Получение списка активов на спотовом аккаунте.
 
@@ -845,7 +904,183 @@ class Client(BaseClient):
             "GET", "/api/v2/spot/account/assets", signed=True, params=params
         )
 
-    # ========== PUBLIC FUTURES ENDPOINTS ==========
+    async def get_sub_account_assets(
+        self,
+        id_less_than: str | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Получение списка активов на спотовом аккаунте.
+
+        https://www.bitget.com/api-doc/spot/account/Get-Account-Assets
+        """
+        params = {"idLessThan": id_less_than, "limit": limit}
+
+        return await self._make_request(
+            "GET", "/api/v2/spot/account/subaccount-assets", signed=True, params=params
+        )
+
+    async def modify_deposit_account(
+        self,
+        account_type: str,
+        coin: str,
+    ) -> dict:
+        """Изменение типа авто-трансфера депозита на спотовом аккаунте.
+
+        https://www.bitget.com/api-doc/spot/account/Modify-Deposit-Account
+        """
+        params = {"accountType": account_type, "coin": coin}
+
+        return await self._make_request(
+            "POST", "/api/v2/spot/wallet/modify-deposit-account", signed=True, params=params
+        )
+
+    async def get_account_billd(
+        self,
+        coin: str | None = None,
+        group_type: str | None = None,
+        businessType: str | None = None,
+        start_time: str | None = None,
+        end_time: str | None = None,
+        limit: int | None = None,
+        id_less_than: str | None = None,
+    ) -> dict:
+        """Возвращает счета аккаунта.
+
+        https://www.bitget.com/api-doc/spot/account/Get-Account-Bills
+        """
+        params = {
+            "coin": coin,
+            "groupType": group_type,
+            "businessType": businessType,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+            "idLessThan": id_less_than,
+        }
+        return await self._make_request(
+            "GET", "/api/v2/spot/account/bills", signed=True, params=params
+        )
+
+    async def transfer(
+        self,
+        from_type: str,
+        to_type: str,
+        amount: str | float,
+        coin: str,
+        symbol: str,
+        client_oid: str | None = None,
+    ) -> dict:
+        """Совершает перевод между типами аккаунтов внутри биржи.
+
+        https://www.bitget.com/api-doc/spot/account/Wallet-Transfer
+        """
+        params = {
+            "fromType": from_type,
+            "toType": to_type,
+            "amount": amount,
+            "coin": coin,
+            "symbol": symbol,
+            "clientOid": client_oid,
+        }
+        return await self._make_request(
+            "POST", "/api/v2/spot/wallet/transfer", signed=True, params=params
+        )
+
+    async def get_transferable_coin_list(self, from_type: str, to_type: str) -> dict:
+        """Получить список монет, которые можно переводить между аккаунтами.
+
+        https://www.bitget.com/api-doc/spot/account/Get-Transfer-Coins
+        """
+        params = {
+            "fromType": from_type,
+            "toType": to_type,
+        }
+        return await self._make_request(
+            "GET", "/api/v2/spot/wallet/transfer-coin-info", signed=True, params=params
+        )
+
+    async def sub_transfer(
+        self,
+        from_type: str,
+        to_type: str,
+        amount: float,
+        coin: str,
+        symbol: str | None = None,
+        client_oid: str | None = None,
+        from_user_id: str | None = None,
+        to_user_id: str | None = None,
+    ) -> None:
+        """Перевод между саб-аккаунтами.
+
+        https://www.bitget.com/api-doc/spot/account/Sub-Transfer
+        """
+        params = {
+            "fromType": from_type,
+            "toType": to_type,
+            "amount": amount,
+            "coin": coin,
+            "symbol": symbol,
+            "clientOid": client_oid,
+            "fromUserId": from_user_id,
+            "toUserId": to_user_id,
+        }
+        return await self._make_request(
+            "POST", "/api/v2/spot/wallet/subaccount-transfer", signed=True, params=params
+        )
+
+    async def withdraw(
+        self,
+        coin: str,
+        transfer_type: str,
+        address: str,
+        chain: str | None = None,
+        inner_to_type: str | None = None,
+        area_code: str | None = None,
+        tag: str | None = None,
+        size: str | float | None = None,
+        remark: str | None = None,
+        client_oid: str | None = None,
+        member_code: str | None = None,
+        identity_type: str | None = None,
+        company_name: str | None = None,
+        first_name: str | None = None,
+        last_name: str | None = None,
+    ) -> dict:
+        """Вывод средств с аккаунта.
+
+        https://www.bitget.com/api-doc/spot/account/Wallet-Withdrawal
+        """
+        params = {
+            "coin": coin,
+            "transferType": transfer_type,
+            "address": address,
+            "chain": chain,
+            "innerToType": inner_to_type,
+            "areaCode": area_code,
+            "tag": tag,
+            "size": size,
+            "remark": remark,
+            "clientOid": client_oid,
+            "memberCode": member_code,
+            "identityType": identity_type,
+            "companyName": company_name,
+            "firstName": first_name,
+            "lastName": last_name,
+        }
+        return await self._make_request("POST", "/api/v2/spot/wallet/withdrawal", params=params)
+
+    # https://www.bitget.com/api-doc/spot/account/Get-SubAccount-TransferRecords
+    # https://www.bitget.com/api-doc/spot/account/Get-Account-TransferRecords
+    # https://www.bitget.com/api-doc/spot/account/Switch-Deduct
+    # https://www.bitget.com/api-doc/spot/account/Get-Deposit-Address
+    # https://www.bitget.com/api-doc/spot/account/Get-SubAccount-Deposit-Address
+    # https://www.bitget.com/api-doc/spot/account/Get-Deduct-Info
+    # https://www.bitget.com/api-doc/spot/account/Cancel-Withdrawal
+    # https://www.bitget.com/api-doc/spot/account/Get-SubAccount-Deposit-Record
+    # https://www.bitget.com/api-doc/spot/account/Get-Withdraw-Record
+    # https://www.bitget.com/api-doc/spot/account/Get-Deposit-Record
+    # https://www.bitget.com/api-doc/spot/account/Upgrade_Account
+    # https://www.bitget.com/api-doc/spot/account/Get_Upgrade_Status
 
     async def futures_vip_fee_rate(self) -> dict:
         """Получение VIP ставок комиссии на фьючерсном рынке.
