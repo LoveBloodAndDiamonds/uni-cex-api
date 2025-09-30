@@ -10,7 +10,7 @@ from unicex._base import BaseClient, Websocket
 from unicex.enums import Timeframe
 from unicex.types import LoggerLike
 
-from .uni_client import IUniClient
+from .client import IUniClient
 
 type CallbackType = Callable[[Any], Awaitable[None]]
 
