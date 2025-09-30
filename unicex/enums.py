@@ -27,6 +27,7 @@ class Exchange(StrEnum):
     BINANCE = "BINANCE"
     BYBIT = "BYBIT"
     BITGET = "BITGET"
+    # GATEOI <-- Назови Gate именно так, чтобы было меньше проблем
 
     def __add__(self, market_type: "MarketType") -> tuple["Exchange", "MarketType"]:
         """Возвращает кортеж из биржи и типа рынка."""
