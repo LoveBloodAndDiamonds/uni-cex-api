@@ -8,6 +8,8 @@ __all__ = [
     "RequestMethod",
     "LoggerLike",
     "AccountType",
+    "OpenInterestDict",
+    "OpenInterestItem",
 ]
 
 from logging import Logger as LoggingLogger
@@ -92,6 +94,20 @@ class AggTradeDict(TradeDict):
     """Модель агрегированной сделки."""
 
     pass
+
+
+class OpenInterestItem(TypedDict):
+    """Модель одного элемента открытого интереса."""
+
+    t: int
+    """Время. В миллисекундах."""
+
+    v: float
+    """Открытый интерес. В монетах."""
+
+
+type OpenInterestDict = dict[str, OpenInterestItem]
+"""Модель открытого интереса."""
 
 
 type AccountType = Literal["SPOT", "FUTURES"]

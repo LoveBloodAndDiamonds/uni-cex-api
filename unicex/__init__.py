@@ -19,7 +19,6 @@ __all__ = [
     # Interfaces
     "IUniClient",
     "IUniWebsocketManager",
-    "IAdapter",
     # Base clients and websockets
     "Websocket",
     "BaseClient",
@@ -37,7 +36,7 @@ __all__ = [
     "BitgetUserWebsocket",
 ]
 
-from ._abc import IAdapter, IUniClient, IUniWebsocketManager
+from ._abc import IUniClient, IUniWebsocketManager
 from ._base import BaseClient, Websocket
 from .binance import Client as BinanceClient
 from .binance import UniClient as BinanceUniClient

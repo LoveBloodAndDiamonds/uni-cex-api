@@ -1,17 +1,14 @@
 __all__ = ["IUniClient"]
 
 from abc import ABC, abstractmethod
-from functools import cached_property
 from typing import Generic, Self, TypeVar, overload
 
 import aiohttp
 
 from unicex._base import BaseClient
 from unicex.enums import Timeframe
-from unicex.types import KlineDict, LoggerLike, TickerDailyDict
+from unicex.types import KlineDict, LoggerLike, OpenInterestDict, OpenInterestItem, TickerDailyDict
 from unicex.utils import batched_list
-
-from .adapter import IAdapter
 
 TClient = TypeVar("TClient", bound="BaseClient")
 
@@ -151,16 +148,6 @@ class IUniClient(ABC, Generic[TClient]):
         """
         pass
 
-    @cached_property
-    @abstractmethod
-    def adapter(self) -> IAdapter:
-        """Возвращает реализацию адаптера под конкретную биржу.
-
-        Возвращает:
-            `IAdapter`: Реализация адаптера.
-        """
-        pass
-
     @abstractmethod
     async def tickers(self, only_usdt: bool = True) -> list[str]:
         """Возвращает список тикеров.
@@ -234,7 +221,7 @@ class IUniClient(ABC, Generic[TClient]):
         pass
 
     @abstractmethod
-    async def ticker_24h(self) -> dict[str, TickerDailyDict]:
+    async def ticker_24hr(self) -> dict[str, TickerDailyDict]:
         """Возвращает статистику за последние 24 часа для каждого тикера.
 
         Возвращает:
@@ -243,7 +230,7 @@ class IUniClient(ABC, Generic[TClient]):
         pass
 
     @abstractmethod
-    async def futures_ticker_24h(self) -> dict[str, TickerDailyDict]:
+    async def futures_ticker_24hr(self) -> dict[str, TickerDailyDict]:
         """Возвращает статистику за последние 24 часа для каждого тикера.
 
         Возвращает:
@@ -307,20 +294,22 @@ class IUniClient(ABC, Generic[TClient]):
         pass
 
     @overload
-    async def open_interest(self, symbol: str) -> float: ...
+    async def open_interest(self, symbol: str) -> OpenInterestItem: ...
 
     @overload
-    async def open_interest(self, symbol: None) -> dict[str, float]: ...
+    async def open_interest(self, symbol: None) -> OpenInterestDict: ...
 
     @abstractmethod
-    async def open_interest(self, symbol: str | None) -> float | dict[str, float]:
+    async def open_interest(self, symbol: str | None = None) -> OpenInterestItem | OpenInterestDict:
         """Возвращает объем открытого интереса для тикера или всех тикеров,
         если тикер не указан.
 
         Параметры:
-            symbol (`str | None`): Название тикера (Опционально).
+            symbol (`str | None`): Название тикера (Опционаьно, но обязателен для следующих бирж: BINANCE).
 
         Возвращает:
-            `float`: Объем открытых позиций в монетах.
+            `OpenInterestItem | OpenInterestDict`: Если тикер передан - словарь со временем и объемом
+                открытого интереса в монетах. Если нет передан - то словарь, в котором ключ - тикер,
+                а значение - словарь с временем и объемом открытого интереса в монетах.
         """
         pass

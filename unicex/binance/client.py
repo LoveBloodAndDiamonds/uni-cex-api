@@ -1455,7 +1455,7 @@ class Client(BaseClient):
 
         return await self._make_request("DELETE", url, signed=True, data=data)
 
-    # ========== WALLET ENDPOINTS ==========
+    # topic: wallet
 
     async def asset_transfer(
         self,
