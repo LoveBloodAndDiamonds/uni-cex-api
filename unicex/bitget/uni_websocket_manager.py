@@ -153,7 +153,9 @@ class UniWebsocketManager(IUniWebsocketManager):
             `Websocket`: Экземпляр вебсокета.
         """
         wrapper = self._make_wrapper(self._adapter.trades_message, callback)
-        return self._websocket_manager.trade(callback=wrapper, symbol=symbol, symbols=symbols)
+        return self._websocket_manager.trade(
+            callback=wrapper, symbol=symbol, symbols=symbols, market_type="SPOT"
+        )
 
     @overload
     def aggtrades(
@@ -229,7 +231,10 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        wrapper = self._make_wrapper(self._adapter.trades_message, callback)
+        return self._websocket_manager.trade(
+            callback=wrapper, symbol=symbol, symbols=symbols, market_type="USDT-FUTURES"
+        )
 
     @overload
     def futures_aggtrades(

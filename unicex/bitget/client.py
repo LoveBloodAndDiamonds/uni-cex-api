@@ -2,7 +2,7 @@ __all__ = ["Client"]
 
 import json
 import time
-from typing import Any
+from typing import Any, Literal
 
 from unicex._base import BaseClient
 from unicex.types import RequestMethod
@@ -1117,7 +1117,7 @@ class Client(BaseClient):
     async def futures_get_merge_depth(
         self,
         symbol: str,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         precision: str | None = None,
         limit: str | None = None,
     ) -> dict:
@@ -1136,7 +1136,7 @@ class Client(BaseClient):
     async def futures_get_ticker(
         self,
         symbol: str,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
     ) -> dict:
         """Получить данные тикера по инструменту.
 
@@ -1150,7 +1150,7 @@ class Client(BaseClient):
 
     async def futures_get_all_tickers(
         self,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
     ) -> dict:
         """Получить данные всех тикеров по типу продукта.
 
@@ -1164,7 +1164,7 @@ class Client(BaseClient):
     async def futures_get_recent_fills(
         self,
         symbol: str,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         limit: int | None = 100,
     ) -> dict:
         """Получить последние сделки по тикеру.
@@ -1181,7 +1181,7 @@ class Client(BaseClient):
     async def futures_get_fills_history(
         self,
         symbol: str,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         limit: int | None = 500,
         id_less_than: str | None = None,
         start_time: int | None = None,
@@ -1201,11 +1201,11 @@ class Client(BaseClient):
         }
         return await self._make_request("GET", "/api/v2/mix/market/fills-history", params=params)
 
-    async def futures_get_candles(
+    async def futures_get_candlestick_data(
         self,
         symbol: str,
-        product_type: str,
         granularity: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         start_time: int | None = None,
         end_time: int | None = None,
         kline_type: str | None = "MARKET",
@@ -1226,11 +1226,11 @@ class Client(BaseClient):
         }
         return await self._make_request("GET", "/api/v2/mix/market/candles", params=params)
 
-    async def futures_get_history_candles(
+    async def futures_get_history_candlestick_data(
         self,
         symbol: str,
-        product_type: str,
         granularity: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         start_time: int | None = None,
         end_time: int | None = None,
         limit: int | None = 100,
@@ -1249,11 +1249,11 @@ class Client(BaseClient):
         }
         return await self._make_request("GET", "/api/v2/mix/market/history-candles", params=params)
 
-    async def futures_get_history_index_candles(
+    async def futures_get_history_index_candlestick_data(
         self,
         symbol: str,
-        product_type: str,
         granularity: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         start_time: int | None = None,
         end_time: int | None = None,
         limit: int | None = 100,
@@ -1274,11 +1274,11 @@ class Client(BaseClient):
             "GET", "/api/v2/mix/market/history-index-candles", params=params
         )
 
-    async def futures_get_history_mark_candles(
+    async def futures_get_history_mark_candlestick_data(
         self,
         symbol: str,
-        product_type: str,
         granularity: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         start_time: int | None = None,
         end_time: int | None = None,
         limit: int | None = 100,
@@ -1302,7 +1302,7 @@ class Client(BaseClient):
     async def futures_get_open_interest(
         self,
         symbol: str,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
     ) -> dict:
         """Получить общий объем открытых позиций по паре.
 
@@ -1317,7 +1317,7 @@ class Client(BaseClient):
     async def futures_get_next_funding_time(
         self,
         symbol: str,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
     ) -> dict:
         """Получить время следующего расчета контракта.
 
@@ -1332,7 +1332,7 @@ class Client(BaseClient):
     async def futures_get_symbol_price(
         self,
         symbol: str,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
     ) -> dict:
         """Получить цены контракта (рыночную, индексную, марк).
 
@@ -1347,7 +1347,7 @@ class Client(BaseClient):
     async def futures_get_history_funding_rate(
         self,
         symbol: str,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         page_size: int | None = None,
         page_no: int | None = None,
     ) -> dict:
@@ -1370,7 +1370,7 @@ class Client(BaseClient):
 
     async def futures_get_current_funding_rate(
         self,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         symbol: str | None = None,
     ) -> dict:
         """Получить текущую ставку финансирования контракта.
@@ -1387,7 +1387,7 @@ class Client(BaseClient):
 
     async def futures_get_contract_oi_limit(
         self,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         symbol: str | None = None,
     ) -> dict:
         """Получить лимит открытого интереса контракта.
@@ -1402,7 +1402,7 @@ class Client(BaseClient):
 
     async def futures_get_contracts(
         self,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         symbol: str | None = None,
     ) -> dict:
         """Получить детали контрактов.
@@ -1420,8 +1420,8 @@ class Client(BaseClient):
     async def futures_get_single_account(
         self,
         symbol: str,
-        product_type: str,
         margin_coin: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
     ) -> dict:
         """Получить данные по одному аккаунту фьючерсов.
 
@@ -1439,7 +1439,7 @@ class Client(BaseClient):
 
     async def futures_get_account_list(
         self,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
     ) -> dict:
         """Получить список всех аккаунтов по типу продукта.
 
@@ -1453,7 +1453,7 @@ class Client(BaseClient):
 
     async def futures_get_subaccount_assets(
         self,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
     ) -> dict:
         """Получить информацию о контрактах всех суб-аккаунтов.
 
@@ -1467,7 +1467,7 @@ class Client(BaseClient):
 
     async def futures_get_interest_history(
         self,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         coin: str | None = None,
         id_less_than: str | None = None,
         start_time: int | None = None,
@@ -1493,11 +1493,11 @@ class Client(BaseClient):
 
     async def futures_get_est_open_count(
         self,
-        product_type: str,
         symbol: str,
         margin_coin: str,
         open_amount: float,
         open_price: float,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         leverage: int | None = 20,
     ) -> dict:
         """Получить расчетное количество открытых контрактов для пользователя.
@@ -1542,8 +1542,8 @@ class Client(BaseClient):
     async def futures_set_leverage(
         self,
         symbol: str,
-        product_type: str,
         margin_coin: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         leverage: str | None = None,
         long_leverage: str | None = None,
         short_leverage: str | None = None,
@@ -1569,8 +1569,8 @@ class Client(BaseClient):
 
     async def futures_set_all_leverage(
         self,
-        product_type: str,
         leverage: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
     ) -> dict:
         """Изменить плечо для всех позиций указанного продукта.
 
@@ -1588,10 +1588,10 @@ class Client(BaseClient):
     async def futures_adjust_margin(
         self,
         symbol: str,
-        product_type: str,
         margin_coin: str,
         hold_side: str,
         amount: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
     ) -> dict:
         """Добавить или уменьшить маржу для позиции (только для изолированной маржи).
 
@@ -1611,8 +1611,8 @@ class Client(BaseClient):
 
     async def futures_set_asset_mode(
         self,
-        product_type: str,
         asset_mode: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
     ) -> dict:
         """Установить режим управления активами для USDT-M фьючерсов.
 
@@ -1630,9 +1630,9 @@ class Client(BaseClient):
     async def futures_set_margin_mode(
         self,
         symbol: str,
-        product_type: str,
         margin_coin: str,
         margin_mode: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
     ) -> dict:
         """Изменить режим маржи для позиции (изолированная/кросс).
 
@@ -1666,8 +1666,8 @@ class Client(BaseClient):
 
     async def futures_change_position_mode(
         self,
-        product_type: str,
         pos_mode: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
     ) -> dict:
         """Изменить режим позиций: одинарный или хедж.
 
@@ -1684,7 +1684,7 @@ class Client(BaseClient):
 
     async def futures_get_account_bill(
         self,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         coin: str | None = None,
         business_type: str | None = None,
         only_funding: str | None = None,
@@ -1741,7 +1741,7 @@ class Client(BaseClient):
     async def futures_get_position_tier(
         self,
         symbol: str,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
     ) -> dict:
         """Получить конфигурацию уровней позиций для определённой торговой пары.
 
@@ -1759,8 +1759,8 @@ class Client(BaseClient):
     async def futures_get_single_position(
         self,
         symbol: str,
-        product_type: str,
         margin_coin: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
     ) -> dict:
         """Получить информацию о позиции по одной торговой паре, включая предполагаемую цену ликвидации.
 
@@ -1778,7 +1778,7 @@ class Client(BaseClient):
 
     async def futures_get_all_positions(
         self,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         margin_coin: str | None = None,
     ) -> dict:
         """Получить информацию обо всех текущих позициях по типу продукта.
@@ -1796,7 +1796,7 @@ class Client(BaseClient):
 
     async def futures_get_adl_rank(
         self,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
     ) -> dict:
         """Получить ADL ранг по позиции аккаунта.
 
@@ -1839,12 +1839,12 @@ class Client(BaseClient):
     async def futures_place_order(
         self,
         symbol: str,
-        product_type: str,
         margin_mode: str,
         margin_coin: str,
         size: str,
         side: str,
         order_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         price: str | None = None,
         trade_side: str | None = None,
         force: str | None = "gtc",
@@ -1888,8 +1888,8 @@ class Client(BaseClient):
         self,
         symbol: str,
         margin_coin: str,
-        product_type: str,
         side: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         size: str | None = None,
         trade_side: str | None = None,
         client_oid: str | None = None,
@@ -1915,10 +1915,10 @@ class Client(BaseClient):
     async def futures_batch_place_order(
         self,
         symbol: str,
-        product_type: str,
         margin_mode: str,
         margin_coin: str,
         order_list: list[dict],
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
     ) -> dict:
         """Разместить пакет ордеров с поддержкой TP/SL.
 
@@ -1939,9 +1939,9 @@ class Client(BaseClient):
     async def futures_modify_order(
         self,
         symbol: str,
-        product_type: str,
         margin_coin: str,
         new_client_oid: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         order_id: str | None = None,
         client_oid: str | None = None,
         new_size: str | None = None,
@@ -1973,7 +1973,7 @@ class Client(BaseClient):
     async def futures_cancel_order(
         self,
         symbol: str,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         margin_coin: str | None = None,
         order_id: str | None = None,
         client_oid: str | None = None,
@@ -1996,7 +1996,7 @@ class Client(BaseClient):
 
     async def futures_batch_cancel_orders(
         self,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         order_id_list: list[dict] | None = None,
         symbol: str | None = None,
         margin_coin: str | None = None,
@@ -2018,7 +2018,7 @@ class Client(BaseClient):
 
     async def futures_flash_close_position(
         self,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         symbol: str | None = None,
         hold_side: str | None = None,
     ) -> dict:
@@ -2038,8 +2038,8 @@ class Client(BaseClient):
 
     async def futures_get_order_detail(
         self,
-        product_type: str,
         symbol: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         order_id: str | None = None,
         client_oid: str | None = None,
     ) -> dict:
@@ -2058,7 +2058,7 @@ class Client(BaseClient):
 
     async def futures_get_order_fills(
         self,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         order_id: str | None = None,
         symbol: str | None = None,
         id_less_than: str | None = None,
@@ -2086,7 +2086,7 @@ class Client(BaseClient):
 
     async def futures_get_fill_history(
         self,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         order_id: str | None = None,
         client_oid: str | None = None,
         symbol: str | None = None,
@@ -2116,7 +2116,7 @@ class Client(BaseClient):
 
     async def futures_get_orders_pending(
         self,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         order_id: str | None = None,
         client_oid: str | None = None,
         symbol: str | None = None,
@@ -2148,7 +2148,7 @@ class Client(BaseClient):
 
     async def futures_get_orders_history(
         self,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         order_id: str | None = None,
         client_oid: str | None = None,
         symbol: str | None = None,
@@ -2180,7 +2180,7 @@ class Client(BaseClient):
 
     async def futures_cancel_all_orders(
         self,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         margin_coin: str | None = None,
         request_time: int | None = None,
         receive_window: int | None = None,
@@ -2205,8 +2205,8 @@ class Client(BaseClient):
     async def futures_get_plan_sub_orders(
         self,
         plan_order_id: str,
-        product_type: str,
         plan_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
     ) -> dict:
         """Получить исполненные ордера триггерного плана.
 
@@ -2225,12 +2225,12 @@ class Client(BaseClient):
     async def futures_place_tpsl_order(
         self,
         margin_coin: str,
-        product_type: str,
         symbol: str,
         plan_type: str,
         trigger_price: str,
         hold_side: str,
         size: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         trigger_type: str | None = None,
         execute_price: str | None = None,
         range_rate: str | None = None,
@@ -2263,9 +2263,9 @@ class Client(BaseClient):
     async def futures_place_pos_tpsl_order(
         self,
         margin_coin: str,
-        product_type: str,
         symbol: str,
         hold_side: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         stop_surplus_trigger_price: str | None = None,
         stop_surplus_size: str | None = None,
         stop_surplus_trigger_type: str | None = None,
@@ -2308,7 +2308,6 @@ class Client(BaseClient):
         self,
         plan_type: str,
         symbol: str,
-        product_type: str,
         margin_mode: str,
         margin_coin: str,
         size: str,
@@ -2316,6 +2315,7 @@ class Client(BaseClient):
         order_type: str,
         trigger_price: str,
         trigger_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         trade_side: str | None = None,
         price: str | None = None,
         callback_ratio: str | None = None,
@@ -2365,10 +2365,10 @@ class Client(BaseClient):
     async def futures_modify_tpsl_order(
         self,
         margin_coin: str,
-        product_type: str,
         symbol: str,
         trigger_price: str,
         size: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         order_id: str | None = None,
         client_oid: str | None = None,
         trigger_type: str | None = None,
@@ -2398,7 +2398,7 @@ class Client(BaseClient):
 
     async def futures_modify_plan_order(
         self,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         order_id: str | None = None,
         client_oid: str | None = None,
         new_size: str | None = None,
@@ -2441,7 +2441,7 @@ class Client(BaseClient):
     async def futures_get_pending_plan_orders(
         self,
         plan_type: str,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         order_id: str | None = None,
         client_oid: str | None = None,
         symbol: str | None = None,
@@ -2472,7 +2472,7 @@ class Client(BaseClient):
 
     async def futures_cancel_plan_orders(
         self,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         order_id_list: list[dict[str, str]] | None = None,
         symbol: str | None = None,
         margin_coin: str | None = None,
@@ -2497,7 +2497,7 @@ class Client(BaseClient):
     async def futures_get_plan_orders_history(
         self,
         plan_type: str,
-        product_type: str,
+        product_type: Literal["USDT-FUTURES", "USDC-FUTURES", "COIN-FUTURES"] = "USDT-FUTURES",
         order_id: str | None = None,
         client_oid: str | None = None,
         plan_status: str | None = None,

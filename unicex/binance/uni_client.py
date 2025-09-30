@@ -63,20 +63,20 @@ class UniClient(IUniClient[Client]):
         raw_data = await self._client.futures_ticker_price()
         return Adapter.futures_last_price(raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not ommited
 
-    async def ticker_24hr(self) -> dict[str, TickerDailyDict]:
+    async def ticker_24hr(self) -> TickerDailyDict:
         """Возвращает статистику за последние 24 часа для каждого тикера.
 
         Возвращает:
-            dict[str, TickerDailyDict]: Словарь с статистикой за последние 24 часа для каждого тикера.
+            TickerDailyDict: Словарь с статистикой за последние 24 часа для каждого тикера.
         """
         raw_data = await self._client.ticker_24hr()
         return Adapter.ticker_24hr(raw_data=raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not ommited
 
-    async def futures_ticker_24hr(self) -> dict[str, TickerDailyDict]:
+    async def futures_ticker_24hr(self) -> TickerDailyDict:
         """Возвращает статистику за последние 24 часа для каждого тикера.
 
         Возвращает:
-            dict[str, TickerDailyDict]: Словарь с статистикой за последние 24 часа для каждого тикера.
+            TickerDailyDict: Словарь с статистикой за последние 24 часа для каждого тикера.
         """
         raw_data = await self._client.futures_ticker_24hr()
         return Adapter.futures_ticker_24hr(raw_data=raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not ommited
@@ -149,8 +149,7 @@ class UniClient(IUniClient[Client]):
         return Adapter.funding_rate(raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not ommited
 
     async def open_interest(self, symbol: str) -> OpenInterestItem:
-        """Возвращает объем открытого интереса для тикера или всех тикеров,
-        если тикер не указан.
+        """Возвращает объем открытого интереса для тикера.
 
         Параметры:
             symbol (`str`): Название тикера.

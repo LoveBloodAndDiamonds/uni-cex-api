@@ -4,4 +4,4 @@ __all__ = [
 ]
 
 from .uni_client import IUniClient
-from .websocket_manager import IUniWebsocketManager
+from .uni_websocket_manager import IUniWebsocketManager

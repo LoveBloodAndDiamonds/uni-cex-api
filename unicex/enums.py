@@ -65,7 +65,7 @@ class Timeframe(StrEnum):
     MONTH_1 = "1M"
 
     @property
-    def mapping(self) -> dict[Exchange, dict["Timeframe", str]]:
+    def mapping(self) -> dict[Exchange | tuple[Exchange, MarketType], dict["Timeframe", str]]:
         """Возвращает словарь с маппингом таймфреймов для каждой биржи."""
         return {
             Exchange.BINANCE: {
@@ -101,26 +101,54 @@ class Timeframe(StrEnum):
                 Timeframe.MONTH_1: "M",
             },
             Exchange.BITGET: {
-                Timeframe.MIN_1: "1m",
-                Timeframe.MIN_5: "5m",
-                Timeframe.MIN_15: "15m",
-                Timeframe.MIN_30: "30m",
+                Timeframe.MIN_1: "1min",
+                Timeframe.MIN_5: "5min",
+                Timeframe.MIN_15: "15min",
+                Timeframe.MIN_30: "30min",
                 Timeframe.HOUR_1: "1h",
                 Timeframe.HOUR_4: "4h",
                 Timeframe.HOUR_6: "6h",
                 Timeframe.HOUR_12: "12h",
-                Timeframe.DAY_1: "1d",
-                Timeframe.DAY_3: "3d",
-                Timeframe.WEEK_1: "1w",
+                Timeframe.DAY_1: "1day",
+                Timeframe.DAY_3: "3day",
+                Timeframe.WEEK_1: "1week",
+                Timeframe.MONTH_1: "1M",
+            },
+            (Exchange.BITGET, MarketType.FUTURES): {
+                Timeframe.MIN_1: "1m",
+                Timeframe.MIN_5: "5m",
+                Timeframe.MIN_15: "15m",
+                Timeframe.MIN_30: "30m",
+                Timeframe.HOUR_1: "1H",
+                Timeframe.HOUR_4: "4H",
+                Timeframe.HOUR_6: "6H",
+                Timeframe.HOUR_12: "12H",
+                Timeframe.DAY_1: "1D",
+                Timeframe.DAY_3: "3D",
+                Timeframe.WEEK_1: "1W",
                 Timeframe.MONTH_1: "1M",
             },
         }
 
-    def to_exchange_format(self, exchange: Exchange) -> str:
-        """Конвертирует таймфрейм в формат, подходящий для указанной биржи."""
+    def to_exchange_format(self, exchange: Exchange, market_type: MarketType | None = None) -> str:
+        """Конвертирует таймфрейм в формат, подходящий для указанной биржи.
+
+        Параметры:
+            exchange (Exchange): Биржа, для которой нужно получить формат таймфрейма.
+            market_type (MarketType | None): Тип рынка (опционально, на некоторых биржах на фьючерсах и спотовом рынке значения могут отличаться).
+
+        Возвращает:
+            str: Формат таймфрейма для указанной биржи.
+        """
         try:
+            if exchange in [Exchange.BITGET] and market_type:
+                return self.mapping[exchange + market_type][self]  # type: ignore
             return self.mapping[exchange][self]  # noqa
         except KeyError as e:
+            if market_type:
+                raise ValueError(
+                    f"Timeframe {self.value} is not supported for exchange {exchange.value} and market type {market_type.value}"
+                ) from e
             raise ValueError(
                 f"Timeframe {self.value} is not supported for exchange {exchange.value}"
             ) from e

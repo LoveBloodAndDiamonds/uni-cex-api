@@ -2,6 +2,7 @@
 
 __all__ = [
     "TickerDailyDict",
+    "TickerDailyItem",
     "KlineDict",
     "TradeDict",
     "AggTradeDict",
@@ -24,8 +25,8 @@ type RequestMethod = Literal["GET", "POST", "PUT", "DELETE"]
 """Типы методов HTTP запросов."""
 
 
-class TickerDailyDict(TypedDict):
-    """Статистика тикера за последние 24 часа."""
+class TickerDailyItem(TypedDict):
+    """Статистика одного тикера за последние 24 часа."""
 
     p: float
     """Изменение цены за 24 ч."""
@@ -35,6 +36,10 @@ class TickerDailyDict(TypedDict):
 
     q: float
     """Объем торгов за 24 ч. в долларах."""
+
+
+type TickerDailyDict = dict[str, TickerDailyItem]
+"""Статистика тикеров за последние 24 часа."""
 
 
 class KlineDict(TypedDict):
