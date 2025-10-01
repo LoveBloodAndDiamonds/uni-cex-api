@@ -572,3 +572,428 @@ class Client(BaseClient):
         }
 
         return await self._make_request("GET", url, params=params)
+
+    # topic: trade
+
+    async def create_order(
+        self,
+        category: Literal["linear", "inverse", "spot", "option"],
+        symbol: str,
+        side: str,
+        order_type: str,
+        qty: str,
+        is_leverage: int | None = None,
+        market_unit: str | None = None,
+        slippage_tolerance_type: str | None = None,
+        slippage_tolerance: str | None = None,
+        price: str | None = None,
+        trigger_direction: int | None = None,
+        order_filter: str | None = None,
+        trigger_price: str | None = None,
+        trigger_by: str | None = None,
+        order_iv: str | None = None,
+        time_in_force: str | None = None,
+        position_idx: int | None = None,
+        order_link_id: str | None = None,
+        take_profit: str | None = None,
+        stop_loss: str | None = None,
+        tp_trigger_by: str | None = None,
+        sl_trigger_by: str | None = None,
+        reduce_only: bool | None = None,
+        close_on_trigger: bool | None = None,
+        smp_type: str | None = None,
+        mmp: bool | None = None,
+        tpsl_mode: str | None = None,
+        tp_limit_price: str | None = None,
+        sl_limit_price: str | None = None,
+        tp_order_type: str | None = None,
+        sl_order_type: str | None = None,
+    ) -> dict:
+        """Создание ордера.
+
+        https://bybit-exchange.github.io/docs/v5/order/create-order
+        """
+        url = self._BASE_URL + "/v5/order/create"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "isLeverage": is_leverage,
+            "side": side,
+            "orderType": order_type,
+            "qty": qty,
+            "marketUnit": market_unit,
+            "slippageToleranceType": slippage_tolerance_type,
+            "slippageTolerance": slippage_tolerance,
+            "price": price,
+            "triggerDirection": trigger_direction,
+            "orderFilter": order_filter,
+            "triggerPrice": trigger_price,
+            "triggerBy": trigger_by,
+            "orderIv": order_iv,
+            "timeInForce": time_in_force,
+            "positionIdx": position_idx,
+            "orderLinkId": order_link_id,
+            "takeProfit": take_profit,
+            "stopLoss": stop_loss,
+            "tpTriggerBy": tp_trigger_by,
+            "slTriggerBy": sl_trigger_by,
+            "reduceOnly": reduce_only,
+            "closeOnTrigger": close_on_trigger,
+            "smpType": smp_type,
+            "mmp": mmp,
+            "tpslMode": tpsl_mode,
+            "tpLimitPrice": tp_limit_price,
+            "slLimitPrice": sl_limit_price,
+            "tpOrderType": tp_order_type,
+            "slOrderType": sl_order_type,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
+
+    async def amend_order(
+        self,
+        category: Literal["linear", "inverse", "spot", "option"],
+        symbol: str,
+        order_id: str | None = None,
+        order_link_id: str | None = None,
+        order_iv: str | None = None,
+        trigger_price: str | None = None,
+        qty: str | None = None,
+        price: str | None = None,
+        tpsl_mode: str | None = None,
+        take_profit: str | None = None,
+        stop_loss: str | None = None,
+        tp_trigger_by: str | None = None,
+        sl_trigger_by: str | None = None,
+        trigger_by: str | None = None,
+        tp_limit_price: str | None = None,
+        sl_limit_price: str | None = None,
+    ) -> dict:
+        """Изменение параметров ордера.
+
+        https://bybit-exchange.github.io/docs/v5/order/amend-order
+        """
+        url = self._BASE_URL + "/v5/order/amend"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "orderId": order_id,
+            "orderLinkId": order_link_id,
+            "orderIv": order_iv,
+            "triggerPrice": trigger_price,
+            "qty": qty,
+            "price": price,
+            "tpslMode": tpsl_mode,
+            "takeProfit": take_profit,
+            "stopLoss": stop_loss,
+            "tpTriggerBy": tp_trigger_by,
+            "slTriggerBy": sl_trigger_by,
+            "triggerBy": trigger_by,
+            "tpLimitPrice": tp_limit_price,
+            "slLimitPrice": sl_limit_price,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
+
+    async def cancel_order(
+        self,
+        category: Literal["linear", "inverse", "spot", "option"],
+        symbol: str,
+        order_id: str | None = None,
+        order_link_id: str | None = None,
+        order_filter: str | None = None,
+    ) -> dict:
+        """Отмена ордера.
+
+        https://bybit-exchange.github.io/docs/v5/order/cancel-order
+        """
+        url = self._BASE_URL + "/v5/order/cancel"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "orderId": order_id,
+            "orderLinkId": order_link_id,
+            "orderFilter": order_filter,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
+
+    async def open_orders(
+        self,
+        category: Literal["linear", "inverse", "spot", "option"],
+        symbol: str | None = None,
+        base_coin: str | None = None,
+        settle_coin: str | None = None,
+        order_id: str | None = None,
+        order_link_id: str | None = None,
+        open_only: int | None = None,
+        order_filter: str | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """Открытые и закрытые ордера (реaltime).
+
+        https://bybit-exchange.github.io/docs/v5/order/open-order
+        """
+        url = self._BASE_URL + "/v5/order/realtime"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "baseCoin": base_coin,
+            "settleCoin": settle_coin,
+            "orderId": order_id,
+            "orderLinkId": order_link_id,
+            "openOnly": open_only,
+            "orderFilter": order_filter,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return await self._make_request("GET", url, params=params, signed=True)
+
+    async def cancel_all_orders(
+        self,
+        category: Literal["linear", "inverse", "spot", "option"],
+        symbol: str | None = None,
+        base_coin: str | None = None,
+        settle_coin: str | None = None,
+        order_filter: str | None = None,
+        stop_order_type: str | None = None,
+    ) -> dict:
+        """Отмена всех открытых ордеров.
+
+        https://bybit-exchange.github.io/docs/v5/order/cancel-all
+        """
+        url = self._BASE_URL + "/v5/order/cancel-all"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "baseCoin": base_coin,
+            "settleCoin": settle_coin,
+            "orderFilter": order_filter,
+            "stopOrderType": stop_order_type,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
+
+    async def order_history(
+        self,
+        category: Literal["linear", "inverse", "spot", "option"],
+        symbol: str | None = None,
+        base_coin: str | None = None,
+        settle_coin: str | None = None,
+        order_id: str | None = None,
+        order_link_id: str | None = None,
+        order_filter: str | None = None,
+        order_status: str | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """История ордеров.
+
+        https://bybit-exchange.github.io/docs/v5/order/order-list
+        """
+        url = self._BASE_URL + "/v5/order/history"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "baseCoin": base_coin,
+            "settleCoin": settle_coin,
+            "orderId": order_id,
+            "orderLinkId": order_link_id,
+            "orderFilter": order_filter,
+            "orderStatus": order_status,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return await self._make_request("GET", url, params=params, signed=True)
+
+    async def trade_history(
+        self,
+        category: Literal["linear", "inverse", "spot", "option"],
+        symbol: str | None = None,
+        order_id: str | None = None,
+        order_link_id: str | None = None,
+        base_coin: str | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        exec_type: str | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """История сделок (execution list).
+
+        https://bybit-exchange.github.io/docs/v5/order/execution
+        """
+        url = self._BASE_URL + "/v5/execution/list"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "orderId": order_id,
+            "orderLinkId": order_link_id,
+            "baseCoin": base_coin,
+            "startTime": start_time,
+            "endTime": end_time,
+            "execType": exec_type,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return await self._make_request("GET", url, params=params, signed=True)
+
+    async def create_orders_batch(
+        self,
+        category: Literal["linear", "option", "spot", "inverse"],
+        request: list[dict[str, Any]],
+    ) -> dict:
+        """Массовое создание ордеров.
+
+        https://bybit-exchange.github.io/docs/v5/order/batch-place
+        """
+        url = self._BASE_URL + "/v5/order/create-batch"
+        params = {
+            "category": category,
+            "request": request,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
+
+    async def amend_orders_batch(
+        self,
+        category: Literal["linear", "option", "spot", "inverse"],
+        request: list[dict[str, Any]],
+    ) -> dict:
+        """Массовое изменение ордеров.
+
+        https://bybit-exchange.github.io/docs/v5/order/batch-amend
+        """
+        url = self._BASE_URL + "/v5/order/amend-batch"
+        params = {
+            "category": category,
+            "request": request,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
+
+    async def cancel_orders_batch(
+        self,
+        category: Literal["linear", "option", "spot", "inverse"],
+        request: list[dict[str, Any]],
+    ) -> dict:
+        """Массовая отмена ордеров.
+
+        https://bybit-exchange.github.io/docs/v5/order/batch-cancel
+        """
+        url = self._BASE_URL + "/v5/order/cancel-batch"
+        params = {
+            "category": category,
+            "request": request,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
+
+    async def spot_borrow_quota(
+        self,
+        category: Literal["spot"],
+        symbol: str,
+        side: str,
+    ) -> dict:
+        """Доступная квота заимствования (Spot).
+
+        https://bybit-exchange.github.io/docs/v5/order/spot-borrow-quota
+        """
+        url = self._BASE_URL + "/v5/order/spot-borrow-check"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "side": side,
+        }
+
+        return await self._make_request("GET", url, params=params, signed=True)
+
+    async def set_disconnect_cancel_all(
+        self,
+        time_window: int,
+        product: Literal["OPTIONS", "DERIVATIVES", "SPOT"] | None = None,
+    ) -> dict:
+        """Настройка DCP (отмена ордеров при разрыве соединения).
+
+        https://bybit-exchange.github.io/docs/v5/order/dcp
+        """
+        url = self._BASE_URL + "/v5/order/disconnected-cancel-all"
+        params = {
+            "product": product,
+            "timeWindow": time_window,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
+
+    async def pre_check_order(
+        self,
+        category: Literal["linear", "inverse", "option"],
+        symbol: str,
+        side: str,
+        order_type: str,
+        qty: str,
+        price: str | None = None,
+        trigger_direction: int | None = None,
+        trigger_price: str | None = None,
+        trigger_by: str | None = None,
+        order_iv: str | None = None,
+        time_in_force: str | None = None,
+        position_idx: int | None = None,
+        order_link_id: str | None = None,
+        take_profit: str | None = None,
+        stop_loss: str | None = None,
+        tp_trigger_by: str | None = None,
+        sl_trigger_by: str | None = None,
+        reduce_only: bool | None = None,
+        close_on_trigger: bool | None = None,
+        smp_type: str | None = None,
+        mmp: bool | None = None,
+        tpsl_mode: str | None = None,
+        tp_limit_price: str | None = None,
+        sl_limit_price: str | None = None,
+        tp_order_type: str | None = None,
+        sl_order_type: str | None = None,
+    ) -> dict:
+        """Предварительная проверка ордера (IMR/MMR).
+
+        https://bybit-exchange.github.io/docs/v5/order/pre-check-order
+        """
+        url = self._BASE_URL + "/v5/order/pre-check"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "side": side,
+            "orderType": order_type,
+            "qty": qty,
+            "price": price,
+            "triggerDirection": trigger_direction,
+            "triggerPrice": trigger_price,
+            "triggerBy": trigger_by,
+            "orderIv": order_iv,
+            "timeInForce": time_in_force,
+            "positionIdx": position_idx,
+            "orderLinkId": order_link_id,
+            "takeProfit": take_profit,
+            "stopLoss": stop_loss,
+            "tpTriggerBy": tp_trigger_by,
+            "slTriggerBy": sl_trigger_by,
+            "reduceOnly": reduce_only,
+            "closeOnTrigger": close_on_trigger,
+            "smpType": smp_type,
+            "mmp": mmp,
+            "tpslMode": tpsl_mode,
+            "tpLimitPrice": tp_limit_price,
+            "slLimitPrice": sl_limit_price,
+            "tpOrderType": tp_order_type,
+            "slOrderType": sl_order_type,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
