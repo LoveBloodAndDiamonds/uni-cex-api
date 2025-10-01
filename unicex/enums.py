@@ -27,6 +27,7 @@ class Exchange(StrEnum):
     BINANCE = "BINANCE"
     BYBIT = "BYBIT"
     BITGET = "BITGET"
+    MEXC = "MEXC"
     # GATEOI <-- Назови Gate именно так, чтобы было меньше проблем
 
     def __add__(self, market_type: "MarketType") -> tuple["Exchange", "MarketType"]:
@@ -128,29 +129,33 @@ class Timeframe(StrEnum):
                 Timeframe.WEEK_1: "1W",
                 Timeframe.MONTH_1: "1M",
             },
+            Exchange.MEXC: {
+                Timeframe.MIN_1: "Min1",
+                Timeframe.MIN_5: "Min5",
+                Timeframe.MIN_15: "Min15",
+                Timeframe.MIN_30: "Min30",
+                Timeframe.HOUR_1: "Min60",
+                Timeframe.HOUR_4: "Hour4",
+                Timeframe.HOUR_8: "Hour8",
+                Timeframe.DAY_1: "Day1",
+                Timeframe.WEEK_1: "Week1",
+                Timeframe.MONTH_1: "Month1",
+            },
         }
 
     def to_exchange_format(self, exchange: Exchange, market_type: MarketType | None = None) -> str:
-        """Конвертирует таймфрейм в формат, подходящий для указанной биржи.
-
-        Параметры:
-            exchange (Exchange): Биржа, для которой нужно получить формат таймфрейма.
-            market_type (MarketType | None): Тип рынка (опционально, на некоторых биржах на фьючерсах и спотовом рынке значения могут отличаться).
-
-        Возвращает:
-            str: Формат таймфрейма для указанной биржи.
-        """
+        """Конвертирует таймфрейм в формат, подходящий для указанной биржи."""
+        key = (
+            exchange
+            if not (exchange is Exchange.BITGET and market_type)
+            else exchange + market_type
+        )
         try:
-            if exchange in [Exchange.BITGET] and market_type:
-                return self.mapping[exchange + market_type][self]  # type: ignore
-            return self.mapping[exchange][self]  # noqa
+            return self.mapping[key][self]  # type: ignore
         except KeyError as e:
-            if market_type:
-                raise ValueError(
-                    f"Timeframe {self.value} is not supported for exchange {exchange.value} and market type {market_type.value}"
-                ) from e
+            details = f" and market type {market_type.value}" if market_type else ""
             raise ValueError(
-                f"Timeframe {self.value} is not supported for exchange {exchange.value}"
+                f"Timeframe {self.value} is not supported for exchange {exchange.value}{details}"
             ) from e
 
     @property

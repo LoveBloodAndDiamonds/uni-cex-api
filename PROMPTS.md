@@ -44,72 +44,61 @@
 - Публичный GET без параметров:
   ```python
   async def ping(self) -> dict:
-      """Проверка подключения к REST API.
+      """Проверка соединения с сервером.
 
-      https://bybit-exchange.github.io/docs/v5/market/time
+      https://www.mexc.com/api-docs/spot-v3/market-data-endpoints#test-connectivity
       """
-      url = self._BASE_URL + "/v5/market/time"
-      return await self._make_request("GET", url)
+      return await self._make_request("GET", "/api/v3/ping")
   ```
 
 - Публичный GET с параметрами:
   ```python
-  async def klines(
+  async def exchange_info(
       self,
-      symbol: str,
-      interval: str,
-      category: Literal["spot", "linear", "inverse"],
-      start: int | None = None,
-      end: int | None = None,
-      limit: int | None = None,
+      symbol: str | None = None,
+      symbols: list[str] | None = None,
   ) -> dict:
-      """Исторические свечи.
+      """Получение информации о торговых парах.
 
-      https://bybit-exchange.github.io/docs/v5/market/kline
+      https://www.mexc.com/api-docs/spot-v3/market-data-endpoints#exchange-information
       """
-      url = self._BASE_URL + "/v5/market/kline"
       params = {
-          "category": category,
           "symbol": symbol,
-          "interval": interval,
-          "start": start,
-          "end": end,
-          "limit": limit,
+          "symbols": symbols,
       }
-
-      return await self._make_request("GET", url, params=params)
+      return await self._make_request("GET", "/api/v3/exchangeInfo", params=params)
   ```
 
 - Приватный POST (пример структуры; путь/поля заменить по докам):
   ```python
   async def create_order(
       self,
-      category: Literal["linear", "inverse", "spot"],
       symbol: str,
-      side: str,
-      order_type: str,
-      qty: str,
-      price: str | None = None,
-      time_in_force: str | None = None,
-      order_link_id: str | None = None,
+      side: Literal["BUY", "SELL"],
+      type: Literal["LIMIT", "MARKET"],
+      quantity: float | None = None,
+      quote_order_quantity: float | None = None,
+      price: float | None = None,
+      new_client_order_id: str | None = None,
+      stp_mode: str | None = None,
+      client_order_id: str | None = None,
   ) -> dict:
-      """Создание ордера.
+      """Создание нового ордера.
 
-      https://bybit-exchange.github.io/docs/v5/order/create-order
+      https://www.mexc.com/api-docs/spot-v3/spot-account-trade#new-order
       """
-      url = self._BASE_URL + "/v5/order/create"
       params = {
-          "category": category,
           "symbol": symbol,
           "side": side,
-          "orderType": order_type,
-          "qty": qty,
+          "type": type,
+          "quantity": quantity,
+          "quoteOrderQty": quote_order_quantity,
           "price": price,
-          "timeInForce": time_in_force,
-          "orderLinkId": order_link_id,
+          "newClientOrderId": new_client_order_id,
+          "stpMode": stp_mode,
+          "newOrderRespType": client_order_id,
       }
-
-      return await self._make_request("POST", url, params=params, signed=True)
+      return await self._make_request("POST", "/api/v3/order", params=params, signed=True)
   ```
 
 Формат ожидаемого ответа от модели:
