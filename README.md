@@ -4,14 +4,19 @@
 
 ## ✅ Статус реализации
 
-| Exchange | Client | UniClient | Adapter | WebsocketManager | UniWebsocketManager | UserWebsocket |
-|----------|--------|-----------|---------|------------------|---------------------|---------------|
-| Binance  | [x]    | [x]       | [x]     | [x]              | [x]                 | [x]           |
-| Bybit    | [ ]    | [ ]       | [ ]     | [ ]              | [ ]                 | [ ]           |
-| Bitget   | [ ]    | [ ]       | [ ]     | [ ]              | [ ]                 | [ ]           |
-| Okx      | [ ]    | [ ]       | [ ]     | [ ]              | [ ]                 | [ ]           |
-| Mexc     | [ ]    | [ ]       | [ ]     | [ ]              | [ ]                 | [ ]           |
-| Gate     | [ ]    | [ ]       | [ ]     | [ ]              | [ ]                 | [ ]           |
+| Exchange    | Client | UniClient | Adapter | WebsocketManager | UniWebsocketManager | UserWebsocket |
+|-------------|--------|-----------|---------|------------------|---------------------|---------------|
+| Binance     | [x]    | [x]       | [x]     | [x]              | [x]                 | [x]           |
+| Bybit       | [x]    | [ ]       | [ ]     | [ ]              | [ ]                 | [ ]           |
+| Bitget      | [x]    | [x]       | [ ]     | [ ]              | [ ]                 | [ ]           |
+| Okx         | [ ]    | [ ]       | [ ]     | [ ]              | [ ]                 | [ ]           |
+| Mexc        | [ ]    | [ ]       | [ ]     | [ ]              | [ ]                 | [ ]           |
+| Gate        | [ ]    | [ ]       | [ ]     | [ ]              | [ ]                 | [ ]           |
+| Bitunix     | [ ]    | [ ]       | [ ]     | [ ]              | [ ]                 | [ ]           |
+| Kcex        | [ ]    | [ ]       | [ ]     | [ ]              | [ ]                 | [ ]           |
+| Xt          | [ ]    | [ ]       | [ ]     | [ ]              | [ ]                 | [ ]           |
+| Weex        | [ ]    | [ ]       | [ ]     | [ ]              | [ ]                 | [ ]           |
+| Hyperliquid | [ ]    | [ ]       | [ ]     | [ ]              | [ ]                 | [ ]           |
 
 ---
 
@@ -21,7 +26,7 @@
 - Библиотека полностью асинхронная. Примеры импорта:
   - Сырые клиенты: `from unicex.binance import Client`
   - Унифицированные клиенты: `from unicex.binance import UniClient`
-  - Менеджеры WS: `from unicex.binance import WebsocketManager, UniWebsocketManager`
+  - Вебсокет менеджеры: `from unicex.binance import WebsocketManager, UniWebsocketManager`
 
 Пример: получить последние цены через унифицированный клиент Binance
 
