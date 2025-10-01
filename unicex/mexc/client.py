@@ -367,8 +367,7 @@ class Client(BaseClient):
 
         https://www.mexc.com/api-docs/spot-v3/spot-account-trade#cancel-all-open-orders-on-a-symbol
         """
-        symbol_value = ",".join(symbol) if isinstance(symbol, list) else symbol
-        params = {"symbol": symbol_value}
+        params = {"symbol": symbol}
 
         return await self._make_request("DELETE", "/api/v3/openOrders", params=params, signed=True)
 
@@ -532,4 +531,40 @@ class Client(BaseClient):
 
         return await self._make_request(
             "DELETE", "/api/v3/strategy/group/uid", params=params, signed=True
+        )
+
+    # topic: Websocket User Data Streams
+
+    async def create_listen_key(self) -> dict:
+        """Создание listen key для пользовательского вебсокета.
+
+        https://www.mexc.com/api-docs/spot-v3/websocket-user-data-streams#generate-listen-key
+        """
+        return await self._make_request("POST", "/api/v3/userDataStream", signed=True)
+
+    async def listen_keys(self) -> dict:
+        """Получение списка актуальных listen key.
+
+        https://www.mexc.com/api-docs/spot-v3/websocket-user-data-streams#get-valid-listen-keys
+        """
+        return await self._make_request("GET", "/api/v3/userDataStream", signed=True)
+
+    async def renew_listen_key(self, listen_key: str) -> dict:
+        """Продление срока действия listen key.
+
+        https://www.mexc.com/api-docs/spot-v3/websocket-user-data-streams#extend-listen-key-validity
+        """
+        params = {"listenKey": listen_key}
+
+        return await self._make_request("PUT", "/api/v3/userDataStream", params=params, signed=True)
+
+    async def close_listen_key(self, listen_key: str) -> dict:
+        """Закрытие listen key для пользовательского вебсокета.
+
+        https://www.mexc.com/api-docs/spot-v3/websocket-user-data-streams#close-listen-key
+        """
+        params = {"listenKey": listen_key}
+
+        return await self._make_request(
+            "DELETE", "/api/v3/userDataStream", params=params, signed=True
         )

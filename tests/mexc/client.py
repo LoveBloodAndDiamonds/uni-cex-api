@@ -19,6 +19,8 @@ async def main() -> None:
     #
     r = await client.exchange_info(symbols=["MXUSDT", "BTCUSDT"])
 
+    # r = await client.create_listen_key()
+
     from pprint import pp
 
     pp(r)
