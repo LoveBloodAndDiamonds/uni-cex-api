@@ -25,12 +25,16 @@ class Exchange(StrEnum):
     """Перечисление бирж."""
 
     BINANCE = "BINANCE"
-    BYBIT = "BYBIT"
     BITGET = "BITGET"
+    BITUNIX = "BITUNIX"
+    BYBIT = "BYBIT"
+    GATEIO = "GATEIO"
+    HYPERLIQUID = "HYPERLIQUID"
+    KCEX = "KCEX"
     MEXC = "MEXC"
     OKX = "OKX"
-    HYPERLIQUID = "HYPERLIQUID"
-    GATEIO = "GATEIO"
+    WEEX = "WEEX"
+    XT = "XT"
 
     def __add__(self, market_type: "MarketType") -> tuple["Exchange", "MarketType"]:
         """Возвращает кортеж из биржи и типа рынка."""

@@ -11,6 +11,8 @@ from .binance import UniClient as BinanceUniClient
 from .binance import UniWebsocketManager as BinanceUniWebsocketManager
 from .bitget import UniClient as BitgetUniClient
 from .bitget import UniWebsocketManager as BitgetUniWebsocketManager
+from .bitunix import UniClient as BitunixUniClient
+from .bitunix import UniWebsocketManager as BitunixUniWebsocketManager
 from .bybit import UniClient as BybitUniClient
 from .bybit import UniWebsocketManager as BybitUniWebsocketManager
 from .enums import Exchange
@@ -19,30 +21,44 @@ from .gateio import UniClient as GateioUniClient
 from .gateio import UniWebsocketManager as GateioUniWebsocketManager
 from .hyperliquid import UniClient as HyperliquidUniClient
 from .hyperliquid import UniWebsocketManager as HyperliquidUniWebsocketManager
+from .kcex import UniClient as KcexUniClient
+from .kcex import UniWebsocketManager as KcexUniWebsocketManager
 from .mexc import UniClient as MexcUniClient
 from .mexc import UniWebsocketManager as MexcUniWebsocketManager
 from .okx import UniClient as OkxUniClient
 from .okx import UniWebsocketManager as OkxUniWebsocketManager
+from .weex import UniClient as WeexUniClient
+from .weex import UniWebsocketManager as WeexUniWebsocketManager
+from .xt import UniClient as XtUniClient
+from .xt import UniWebsocketManager as XtUniWebsocketManager
 
 _UNI_CLIENT_MAPPER: dict[Exchange, type[IUniClient]] = {
     Exchange.BINANCE: BinanceUniClient,
     Exchange.BITGET: BitgetUniClient,
+    Exchange.BITUNIX: BitunixUniClient,
     Exchange.BYBIT: BybitUniClient,
+    Exchange.GATEIO: GateioUniClient,
+    Exchange.HYPERLIQUID: HyperliquidUniClient,
+    Exchange.KCEX: KcexUniClient,
     Exchange.MEXC: MexcUniClient,
     Exchange.OKX: OkxUniClient,
-    Exchange.HYPERLIQUID: HyperliquidUniClient,
-    Exchange.GATEIO: GateioUniClient,
+    Exchange.WEEX: WeexUniClient,
+    Exchange.XT: XtUniClient,
 }
 """Маппер, который связывает биржу и реализацию унифицированного клиента."""
 
 _UNI_WS_MANAGER_MAPPER: dict[Exchange, type[IUniWebsocketManager]] = {
     Exchange.BINANCE: BinanceUniWebsocketManager,
     Exchange.BITGET: BitgetUniWebsocketManager,
-    Exchange.MEXC: MexcUniWebsocketManager,
+    Exchange.BITUNIX: BitunixUniWebsocketManager,
     Exchange.BYBIT: BybitUniWebsocketManager,
-    Exchange.OKX: OkxUniWebsocketManager,
-    Exchange.HYPERLIQUID: HyperliquidUniWebsocketManager,
     Exchange.GATEIO: GateioUniWebsocketManager,
+    Exchange.HYPERLIQUID: HyperliquidUniWebsocketManager,
+    Exchange.KCEX: KcexUniWebsocketManager,
+    Exchange.MEXC: MexcUniWebsocketManager,
+    Exchange.OKX: OkxUniWebsocketManager,
+    Exchange.WEEX: WeexUniWebsocketManager,
+    Exchange.XT: XtUniWebsocketManager,
 }
 """Маппер, который связывает биржу и реализацию унифицированного вебсокет-менеджера."""
 

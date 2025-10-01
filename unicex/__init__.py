@@ -64,6 +64,30 @@ __all__ = [
     "GateioUniWebsocketManager",
     "GateioWebsocketManager",
     "GateioUserWebsocket",
+    # Bitunix
+    "BitunixClient",
+    "BitunixUniClient",
+    "BitunixUniWebsocketManager",
+    "BitunixWebsocketManager",
+    "BitunixUserWebsocket",
+    # Kcex
+    "KcexClient",
+    "KcexUniClient",
+    "KcexUniWebsocketManager",
+    "KcexWebsocketManager",
+    "KcexUserWebsocket",
+    # Weex
+    "WeexClient",
+    "WeexUniClient",
+    "WeexUniWebsocketManager",
+    "WeexWebsocketManager",
+    "WeexUserWebsocket",
+    # Xt
+    "XtClient",
+    "XtUniClient",
+    "XtUniWebsocketManager",
+    "XtWebsocketManager",
+    "XtUserWebsocket",
 ]
 
 # ruff: noqa
@@ -102,12 +126,44 @@ from .bitget import (
     WebsocketManager as BitgetWebsocketManager,
 )
 
+from .bitunix import (
+    Client as BitunixClient,
+    UniClient as BitunixUniClient,
+    UniWebsocketManager as BitunixUniWebsocketManager,
+    UserWebsocket as BitunixUserWebsocket,
+    WebsocketManager as BitunixWebsocketManager,
+)
+
 from .bybit import (
     Client as BybitClient,
     UniClient as BybitUniClient,
     UniWebsocketManager as BybitUniWebsocketManager,
     UserWebsocket as BybitUserWebsocket,
     WebsocketManager as BybitWebsocketManager,
+)
+
+from .gateio import (
+    Client as GateioClient,
+    UniClient as GateioUniClient,
+    UniWebsocketManager as GateioUniWebsocketManager,
+    UserWebsocket as GateioUserWebsocket,
+    WebsocketManager as GateioWebsocketManager,
+)
+
+from .hyperliquid import (
+    Client as HyperliquidClient,
+    UniClient as HyperliquidUniClient,
+    UniWebsocketManager as HyperliquidUniWebsocketManager,
+    UserWebsocket as HyperliquidUserWebsocket,
+    WebsocketManager as HyperliquidWebsocketManager,
+)
+
+from .kcex import (
+    Client as KcexClient,
+    UniClient as KcexUniClient,
+    UniWebsocketManager as KcexUniWebsocketManager,
+    UserWebsocket as KcexUserWebsocket,
+    WebsocketManager as KcexWebsocketManager,
 )
 
 from .mexc import (
@@ -126,18 +182,18 @@ from .okx import (
     WebsocketManager as OkxWebsocketManager,
 )
 
-from .hyperliquid import (
-    Client as HyperliquidClient,
-    UniClient as HyperliquidUniClient,
-    UniWebsocketManager as HyperliquidUniWebsocketManager,
-    UserWebsocket as HyperliquidUserWebsocket,
-    WebsocketManager as HyperliquidWebsocketManager,
+from .weex import (
+    Client as WeexClient,
+    UniClient as WeexUniClient,
+    UniWebsocketManager as WeexUniWebsocketManager,
+    UserWebsocket as WeexUserWebsocket,
+    WebsocketManager as WeexWebsocketManager,
 )
 
-from .gateio import (
-    Client as GateioClient,
-    UniClient as GateioUniClient,
-    UniWebsocketManager as GateioUniWebsocketManager,
-    UserWebsocket as GateioUserWebsocket,
-    WebsocketManager as GateioWebsocketManager,
+from .xt import (
+    Client as XtClient,
+    UniClient as XtUniClient,
+    UniWebsocketManager as XtUniWebsocketManager,
+    UserWebsocket as XtUserWebsocket,
+    WebsocketManager as XtWebsocketManager,
 )
