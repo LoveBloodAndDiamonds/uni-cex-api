@@ -2,23 +2,23 @@ __all__ = ["UniClient"]
 
 
 from typing import overload
+
 from unicex._abc import IUniClient
-from unicex.enums import Exchange, Timeframe
+from unicex.enums import Timeframe
 from unicex.types import KlineDict, OpenInterestDict, OpenInterestItem, TickerDailyDict
 
-from .adapter import Adapter
 from .client import Client
 
 
 class UniClient(IUniClient[Client]):
-    """Унифицированный клиент для работы с <Exchange> API."""
+    """Унифицированный клиент для работы с Bybit API."""
 
     @property
     def _client_cls(self) -> type[Client]:
-        """Возвращает класс клиента для <Exchange>.
+        """Возвращает класс клиента для Bybit.
 
         Возвращает:
-            type[Client]: Класс клиента для <Exchange>.
+            type[Client]: Класс клиента для Bybit.
         """
         return Client
 
