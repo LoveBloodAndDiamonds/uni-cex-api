@@ -34,6 +34,12 @@ __all__ = [
     "BitgetUniWebsocketManager",
     "BitgetWebsocketManager",
     "BitgetUserWebsocket",
+    # Bitrue
+    "BitrueClient",
+    "BitrueUniClient",
+    "BitrueUniWebsocketManager",
+    "BitrueWebsocketManager",
+    "BitrueUserWebsocket",
     # Mexc
     "MexcClient",
     "MexcUniClient",
@@ -70,12 +76,30 @@ __all__ = [
     "BitunixUniWebsocketManager",
     "BitunixWebsocketManager",
     "BitunixUserWebsocket",
+    # Btse
+    "BtseClient",
+    "BtseUniClient",
+    "BtseUniWebsocketManager",
+    "BtseWebsocketManager",
+    "BtseUserWebsocket",
     # Kcex
     "KcexClient",
     "KcexUniClient",
     "KcexUniWebsocketManager",
     "KcexWebsocketManager",
     "KcexUserWebsocket",
+    # Kraken
+    "KrakenClient",
+    "KrakenUniClient",
+    "KrakenUniWebsocketManager",
+    "KrakenWebsocketManager",
+    "KrakenUserWebsocket",
+    # Kucoin
+    "KucoinClient",
+    "KucoinUniClient",
+    "KucoinUniWebsocketManager",
+    "KucoinWebsocketManager",
+    "KucoinUserWebsocket",
     # Weex
     "WeexClient",
     "WeexUniClient",
@@ -126,12 +150,28 @@ from .bitget import (
     WebsocketManager as BitgetWebsocketManager,
 )
 
+from .bitrue import (
+    Client as BitrueClient,
+    UniClient as BitrueUniClient,
+    UniWebsocketManager as BitrueUniWebsocketManager,
+    UserWebsocket as BitrueUserWebsocket,
+    WebsocketManager as BitrueWebsocketManager,
+)
+
 from .bitunix import (
     Client as BitunixClient,
     UniClient as BitunixUniClient,
     UniWebsocketManager as BitunixUniWebsocketManager,
     UserWebsocket as BitunixUserWebsocket,
     WebsocketManager as BitunixWebsocketManager,
+)
+
+from .btse import (
+    Client as BtseClient,
+    UniClient as BtseUniClient,
+    UniWebsocketManager as BtseUniWebsocketManager,
+    UserWebsocket as BtseUserWebsocket,
+    WebsocketManager as BtseWebsocketManager,
 )
 
 from .bybit import (
@@ -164,6 +204,22 @@ from .kcex import (
     UniWebsocketManager as KcexUniWebsocketManager,
     UserWebsocket as KcexUserWebsocket,
     WebsocketManager as KcexWebsocketManager,
+)
+
+from .kraken import (
+    Client as KrakenClient,
+    UniClient as KrakenUniClient,
+    UniWebsocketManager as KrakenUniWebsocketManager,
+    UserWebsocket as KrakenUserWebsocket,
+    WebsocketManager as KrakenWebsocketManager,
+)
+
+from .kucoin import (
+    Client as KucoinClient,
+    UniClient as KucoinUniClient,
+    UniWebsocketManager as KucoinUniWebsocketManager,
+    UserWebsocket as KucoinUserWebsocket,
+    WebsocketManager as KucoinWebsocketManager,
 )
 
 from .mexc import (

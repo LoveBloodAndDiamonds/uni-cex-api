@@ -11,8 +11,12 @@ from .binance import UniClient as BinanceUniClient
 from .binance import UniWebsocketManager as BinanceUniWebsocketManager
 from .bitget import UniClient as BitgetUniClient
 from .bitget import UniWebsocketManager as BitgetUniWebsocketManager
+from .bitrue import UniClient as BitrueUniClient
+from .bitrue import UniWebsocketManager as BitrueUniWebsocketManager
 from .bitunix import UniClient as BitunixUniClient
 from .bitunix import UniWebsocketManager as BitunixUniWebsocketManager
+from .btse import UniClient as BtseUniClient
+from .btse import UniWebsocketManager as BtseUniWebsocketManager
 from .bybit import UniClient as BybitUniClient
 from .bybit import UniWebsocketManager as BybitUniWebsocketManager
 from .enums import Exchange
@@ -23,6 +27,10 @@ from .hyperliquid import UniClient as HyperliquidUniClient
 from .hyperliquid import UniWebsocketManager as HyperliquidUniWebsocketManager
 from .kcex import UniClient as KcexUniClient
 from .kcex import UniWebsocketManager as KcexUniWebsocketManager
+from .kraken import UniClient as KrakenUniClient
+from .kraken import UniWebsocketManager as KrakenUniWebsocketManager
+from .kucoin import UniClient as KucoinUniClient
+from .kucoin import UniWebsocketManager as KucoinUniWebsocketManager
 from .mexc import UniClient as MexcUniClient
 from .mexc import UniWebsocketManager as MexcUniWebsocketManager
 from .okx import UniClient as OkxUniClient
@@ -35,11 +43,15 @@ from .xt import UniWebsocketManager as XtUniWebsocketManager
 _UNI_CLIENT_MAPPER: dict[Exchange, type[IUniClient]] = {
     Exchange.BINANCE: BinanceUniClient,
     Exchange.BITGET: BitgetUniClient,
+    Exchange.BITRUE: BitrueUniClient,
     Exchange.BITUNIX: BitunixUniClient,
+    Exchange.BTSE: BtseUniClient,
     Exchange.BYBIT: BybitUniClient,
     Exchange.GATEIO: GateioUniClient,
     Exchange.HYPERLIQUID: HyperliquidUniClient,
     Exchange.KCEX: KcexUniClient,
+    Exchange.KRAKEN: KrakenUniClient,
+    Exchange.KUCOIN: KucoinUniClient,
     Exchange.MEXC: MexcUniClient,
     Exchange.OKX: OkxUniClient,
     Exchange.WEEX: WeexUniClient,
@@ -50,11 +62,15 @@ _UNI_CLIENT_MAPPER: dict[Exchange, type[IUniClient]] = {
 _UNI_WS_MANAGER_MAPPER: dict[Exchange, type[IUniWebsocketManager]] = {
     Exchange.BINANCE: BinanceUniWebsocketManager,
     Exchange.BITGET: BitgetUniWebsocketManager,
+    Exchange.BITRUE: BitrueUniWebsocketManager,
     Exchange.BITUNIX: BitunixUniWebsocketManager,
+    Exchange.BTSE: BtseUniWebsocketManager,
     Exchange.BYBIT: BybitUniWebsocketManager,
     Exchange.GATEIO: GateioUniWebsocketManager,
     Exchange.HYPERLIQUID: HyperliquidUniWebsocketManager,
     Exchange.KCEX: KcexUniWebsocketManager,
+    Exchange.KRAKEN: KrakenUniWebsocketManager,
+    Exchange.KUCOIN: KucoinUniWebsocketManager,
     Exchange.MEXC: MexcUniWebsocketManager,
     Exchange.OKX: OkxUniWebsocketManager,
     Exchange.WEEX: WeexUniWebsocketManager,
