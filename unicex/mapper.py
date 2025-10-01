@@ -11,23 +11,35 @@ from .binance import UniClient as BinanceUniClient
 from .binance import UniWebsocketManager as BinanceUniWebsocketManager
 from .bitget import UniClient as BitgetUniClient
 from .bitget import UniWebsocketManager as BitgetUniWebsocketManager
+from .bybit import UniClient as BybitUniClient
+from .bybit import UniWebsocketManager as BybitUniWebsocketManager
 from .enums import Exchange
 from .exceptions import NotSupported
+from .mexc import UniClient as MexcUniClient
+from .mexc import UniWebsocketManager as MexcUniWebsocketManager
+from .okx import UniClient as OkxUniClient
+from .okx import UniWebsocketManager as OkxUniWebsocketManager
 
 _UNI_CLIENT_MAPPER: dict[Exchange, type[IUniClient]] = {
     Exchange.BINANCE: BinanceUniClient,
     Exchange.BITGET: BitgetUniClient,
+    Exchange.BYBIT: BybitUniClient,
+    Exchange.MEXC: MexcUniClient,
+    Exchange.OKX: OkxUniClient,
 }
 """Маппер, который связывает биржу и реализацию унифицированного клиента."""
 
 _UNI_WS_MANAGER_MAPPER: dict[Exchange, type[IUniWebsocketManager]] = {
     Exchange.BINANCE: BinanceUniWebsocketManager,
     Exchange.BITGET: BitgetUniWebsocketManager,
+    Exchange.MEXC: MexcUniWebsocketManager,
+    Exchange.BYBIT: BybitUniWebsocketManager,
+    Exchange.OKX: OkxUniWebsocketManager,
 }
 """Маппер, который связывает биржу и реализацию унифицированного вебсокет-менеджера."""
 
 
-def get_uni_client(exchange: Exchange, is_async: bool = False) -> type[IUniClient]:
+def get_uni_client(exchange: Exchange) -> type[IUniClient]:
     """Возвращает унифицированный клиент для указанной биржи.
 
     Параметры:

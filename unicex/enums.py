@@ -28,6 +28,7 @@ class Exchange(StrEnum):
     BYBIT = "BYBIT"
     BITGET = "BITGET"
     MEXC = "MEXC"
+    OKX = "OKX"
     # GATEOI <-- Назови Gate именно так, чтобы было меньше проблем
 
     def __add__(self, market_type: "MarketType") -> tuple["Exchange", "MarketType"]:
@@ -140,6 +141,22 @@ class Timeframe(StrEnum):
                 Timeframe.DAY_1: "Day1",
                 Timeframe.WEEK_1: "Week1",
                 Timeframe.MONTH_1: "Month1",
+            },
+            Exchange.OKX: {
+                Timeframe.MIN_1: "1m",
+                Timeframe.MIN_3: "3m",
+                Timeframe.MIN_5: "5m",
+                Timeframe.MIN_15: "15m",
+                Timeframe.MIN_30: "30m",
+                Timeframe.HOUR_1: "1H",
+                Timeframe.HOUR_2: "2H",
+                Timeframe.HOUR_4: "4H",
+                Timeframe.HOUR_6: "6H",
+                Timeframe.HOUR_12: "12H",
+                Timeframe.DAY_1: "1D",
+                Timeframe.DAY_3: "3D",
+                Timeframe.WEEK_1: "1W",
+                Timeframe.MONTH_1: "1M",
             },
         }
 
