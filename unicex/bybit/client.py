@@ -52,7 +52,7 @@ class Client(BaseClient):
     async def _make_request(
         self,
         method: RequestMethod,
-        url: str,
+        endpoint: str,
         *,
         params: dict[str, Any] | None = None,
         signed: bool = False,
@@ -65,13 +65,16 @@ class Client(BaseClient):
 
         Параметры:
             method (str): HTTP метод запроса ("GET", "POST", "DELETE" и т.д.).
-            url (str): Полный URL эндпоинта Bybit API.
+            endpoint (str): URL эндпоинта Bybit API.
             params (dict | None): Параметры запроса. Передаются в body, если запрос типа "POST", иначе в query_params
             signed (bool): Нужно ли подписывать запрос.
 
         Возвращает:
             dict: Ответ в формате JSON.
         """
+        # Составляем URL для запроса
+        url = self._BASE_URL + endpoint
+
         # Фильтруем параметры от None значений
         params = filter_params(params) if params else {}
 
@@ -112,6 +115,24 @@ class Client(BaseClient):
                 headers=headers,
             )
 
+    async def request(
+        self, method: RequestMethod, endpoint: str, params: dict, signed: bool
+    ) -> dict:
+        """Специальный метод для выполнения запросов на эндпоинты, которые не обернуты в клиенте.
+
+        Параметры:
+            method (RequestMethod): Метод запроса (GET, POST, PUT, DELETE).
+            endpoint (str): URL эндпоинта.
+            params (dict): Параметры запроса.
+            signed (bool): Флаг, указывающий, требуется ли подпись запроса.
+
+        Возвращает:
+            `dict`: Ответ в формате JSON.
+        """
+        return await self._make_request(
+            method=method, endpoint=endpoint, params=params, signed=signed
+        )
+
     # topic: market
 
     async def ping(self) -> dict:
@@ -119,8 +140,7 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/market/time
         """
-        url = self._BASE_URL + "/v5/market/time"
-        return await self._make_request("GET", url)
+        return await self._make_request("GET", "/v5/market/time")
 
     async def klines(
         self,
@@ -135,7 +155,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/market/kline
         """
-        url = self._BASE_URL + "/v5/market/kline"
         params = {
             "category": category,
             "symbol": symbol,
@@ -145,7 +164,7 @@ class Client(BaseClient):
             "limit": limit,
         }
 
-        return await self._make_request("GET", url, params=params)
+        return await self._make_request("GET", "/v5/market/kline", params=params)
 
     async def mark_price_klines(
         self,
@@ -160,7 +179,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/market/mark-kline
         """
-        url = self._BASE_URL + "/v5/market/mark-price-kline"
         params = {
             "category": category,
             "symbol": symbol,
@@ -170,7 +188,7 @@ class Client(BaseClient):
             "limit": limit,
         }
 
-        return await self._make_request("GET", url, params=params)
+        return await self._make_request("GET", "/v5/market/mark-price-kline", params=params)
 
     async def index_price_klines(
         self,
@@ -185,7 +203,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/market/index-kline
         """
-        url = self._BASE_URL + "/v5/market/index-price-kline"
         params = {
             "category": category,
             "symbol": symbol,
@@ -195,7 +212,7 @@ class Client(BaseClient):
             "limit": limit,
         }
 
-        return await self._make_request("GET", url, params=params)
+        return await self._make_request("GET", "/v5/market/index-price-kline", params=params)
 
     async def premium_index_price_klines(
         self,
@@ -210,7 +227,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/market/premium-index-kline
         """
-        url = self._BASE_URL + "/v5/market/premium-index-price-kline"
         params = {
             "category": category,
             "symbol": symbol,
@@ -220,7 +236,9 @@ class Client(BaseClient):
             "limit": limit,
         }
 
-        return await self._make_request("GET", url, params=params)
+        return await self._make_request(
+            "GET", "/v5/market/premium-index-price-kline", params=params
+        )
 
     async def instruments_info(
         self,
@@ -235,7 +253,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/market/instrument
         """
-        url = self._BASE_URL + "/v5/market/instruments-info"
         params = {
             "category": category,
             "symbol": symbol,
@@ -245,7 +262,7 @@ class Client(BaseClient):
             "cursor": cursor,
         }
 
-        return await self._make_request("GET", url, params=params)
+        return await self._make_request("GET", "/v5/market/instruments-info", params=params)
 
     async def orderbook(
         self,
@@ -257,14 +274,13 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/market/orderbook
         """
-        url = self._BASE_URL + "/v5/market/orderbook"
         params = {
             "category": category,
             "symbol": symbol,
             "limit": limit,
         }
 
-        return await self._make_request("GET", url, params=params)
+        return await self._make_request("GET", "/v5/market/orderbook", params=params)
 
     async def rpi_orderbook(
         self,
@@ -276,14 +292,13 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/market/rpi-orderbook
         """
-        url = self._BASE_URL + "/v5/market/rpi_orderbook"
         params = {
             "category": category,
             "symbol": symbol,
             "limit": limit,
         }
 
-        return await self._make_request("GET", url, params=params)
+        return await self._make_request("GET", "/v5/market/rpi_orderbook", params=params)
 
     async def tickers(
         self,
@@ -296,7 +311,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/market/tickers
         """
-        url = self._BASE_URL + "/v5/market/tickers"
         params = {
             "category": category,
             "symbol": symbol,
@@ -304,7 +318,7 @@ class Client(BaseClient):
             "expDate": exp_date,
         }
 
-        return await self._make_request("GET", url, params=params)
+        return await self._make_request("GET", "/v5/market/tickers", params=params)
 
     async def funding_rate_history(
         self,
@@ -318,7 +332,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/market/history-fund-rate
         """
-        url = self._BASE_URL + "/v5/market/funding/history"
         params = {
             "category": category,
             "symbol": symbol,
@@ -327,7 +340,7 @@ class Client(BaseClient):
             "limit": limit,
         }
 
-        return await self._make_request("GET", url, params=params)
+        return await self._make_request("GET", "/v5/market/funding/history", params=params)
 
     async def recent_trades(
         self,
@@ -341,7 +354,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/market/recent-trade
         """
-        url = self._BASE_URL + "/v5/market/recent-trade"
         params = {
             "category": category,
             "symbol": symbol,
@@ -350,7 +362,7 @@ class Client(BaseClient):
             "limit": limit,
         }
 
-        return await self._make_request("GET", url, params=params)
+        return await self._make_request("GET", "/v5/market/recent-trade", params=params)
 
     async def open_interest(
         self,
@@ -366,7 +378,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/market/open-interest
         """
-        url = self._BASE_URL + "/v5/market/open-interest"
         params = {
             "category": category,
             "symbol": symbol,
@@ -377,7 +388,7 @@ class Client(BaseClient):
             "cursor": cursor,
         }
 
-        return await self._make_request("GET", url, params=params)
+        return await self._make_request("GET", "/v5/market/open-interest", params=params)
 
     async def historical_volatility(
         self,
@@ -392,7 +403,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/market/iv
         """
-        url = self._BASE_URL + "/v5/market/historical-volatility"
         params = {
             "category": category,
             "baseCoin": base_coin,
@@ -402,7 +412,7 @@ class Client(BaseClient):
             "endTime": end_time,
         }
 
-        return await self._make_request("GET", url, params=params)
+        return await self._make_request("GET", "/v5/market/historical-volatility", params=params)
 
     async def insurance_pool(
         self,
@@ -412,12 +422,11 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/market/insurance
         """
-        url = self._BASE_URL + "/v5/market/insurance"
         params = {
             "coin": coin,
         }
 
-        return await self._make_request("GET", url, params=params)
+        return await self._make_request("GET", "/v5/market/insurance", params=params)
 
     async def risk_limit(
         self,
@@ -429,14 +438,13 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/market/risk-limit
         """
-        url = self._BASE_URL + "/v5/market/risk-limit"
         params = {
             "category": category,
             "symbol": symbol,
             "cursor": cursor,
         }
 
-        return await self._make_request("GET", url, params=params)
+        return await self._make_request("GET", "/v5/market/risk-limit", params=params)
 
     async def delivery_price(
         self,
@@ -451,7 +459,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/market/delivery-price
         """
-        url = self._BASE_URL + "/v5/market/delivery-price"
         params = {
             "category": category,
             "symbol": symbol,
@@ -461,7 +468,7 @@ class Client(BaseClient):
             "cursor": cursor,
         }
 
-        return await self._make_request("GET", url, params=params)
+        return await self._make_request("GET", "/v5/market/delivery-price", params=params)
 
     async def new_delivery_price(
         self,
@@ -473,14 +480,13 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/market/new-delivery-price
         """
-        url = self._BASE_URL + "/v5/market/new-delivery-price"
         params = {
             "category": category,
             "baseCoin": base_coin,
             "settleCoin": settle_coin,
         }
 
-        return await self._make_request("GET", url, params=params)
+        return await self._make_request("GET", "/v5/market/new-delivery-price", params=params)
 
     async def long_short_ratio(
         self,
@@ -496,7 +502,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/market/long-short-ratio
         """
-        url = self._BASE_URL + "/v5/market/account-ratio"
         params = {
             "category": category,
             "symbol": symbol,
@@ -507,7 +512,7 @@ class Client(BaseClient):
             "cursor": cursor,
         }
 
-        return await self._make_request("GET", url, params=params)
+        return await self._make_request("GET", "/v5/market/account-ratio", params=params)
 
     async def index_price_components(
         self,
@@ -517,12 +522,11 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/market/index-components
         """
-        url = self._BASE_URL + "/v5/market/index-price-components"
         params = {
             "indexName": index_name,
         }
 
-        return await self._make_request("GET", url, params=params)
+        return await self._make_request("GET", "/v5/market/index-price-components", params=params)
 
     async def order_price_limit(
         self,
@@ -533,13 +537,12 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/market/order-price-limit
         """
-        url = self._BASE_URL + "/v5/market/price-limit"
         params = {
             "category": category,
             "symbol": symbol,
         }
 
-        return await self._make_request("GET", url, params=params)
+        return await self._make_request("GET", "/v5/market/price-limit", params=params)
 
     async def adl_alert(
         self,
@@ -549,12 +552,11 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/market/adl-alert
         """
-        url = self._BASE_URL + "/v5/market/adlAlert"
         params = {
             "symbol": symbol,
         }
 
-        return await self._make_request("GET", url, params=params)
+        return await self._make_request("GET", "/v5/market/adlAlert", params=params)
 
     async def fee_group_info(
         self,
@@ -565,13 +567,12 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/market/fee-group-info
         """
-        url = self._BASE_URL + "/v5/market/fee-group-info"
         params = {
             "productType": product_type,
             "groupId": group_id,
         }
 
-        return await self._make_request("GET", url, params=params)
+        return await self._make_request("GET", "/v5/market/fee-group-info", params=params)
 
     # topic: trade
 
@@ -613,7 +614,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/order/create-order
         """
-        url = self._BASE_URL + "/v5/order/create"
         params = {
             "category": category,
             "symbol": symbol,
@@ -648,7 +648,7 @@ class Client(BaseClient):
             "slOrderType": sl_order_type,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request("POST", "/v5/order/create", params=params, signed=True)
 
     async def amend_order(
         self,
@@ -673,7 +673,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/order/amend-order
         """
-        url = self._BASE_URL + "/v5/order/amend"
         params = {
             "category": category,
             "symbol": symbol,
@@ -693,7 +692,7 @@ class Client(BaseClient):
             "slLimitPrice": sl_limit_price,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request("POST", "/v5/order/amend", params=params, signed=True)
 
     async def cancel_order(
         self,
@@ -707,7 +706,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/order/cancel-order
         """
-        url = self._BASE_URL + "/v5/order/cancel"
         params = {
             "category": category,
             "symbol": symbol,
@@ -716,7 +714,7 @@ class Client(BaseClient):
             "orderFilter": order_filter,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request("POST", "/v5/order/cancel", params=params, signed=True)
 
     async def open_orders(
         self,
@@ -735,7 +733,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/order/open-order
         """
-        url = self._BASE_URL + "/v5/order/realtime"
         params = {
             "category": category,
             "symbol": symbol,
@@ -749,7 +746,7 @@ class Client(BaseClient):
             "cursor": cursor,
         }
 
-        return await self._make_request("GET", url, params=params, signed=True)
+        return await self._make_request("GET", "/v5/order/realtime", params=params, signed=True)
 
     async def cancel_all_orders(
         self,
@@ -764,7 +761,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/order/cancel-all
         """
-        url = self._BASE_URL + "/v5/order/cancel-all"
         params = {
             "category": category,
             "symbol": symbol,
@@ -774,7 +770,7 @@ class Client(BaseClient):
             "stopOrderType": stop_order_type,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request("POST", "/v5/order/cancel-all", params=params, signed=True)
 
     async def order_history(
         self,
@@ -795,7 +791,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/order/order-list
         """
-        url = self._BASE_URL + "/v5/order/history"
         params = {
             "category": category,
             "symbol": symbol,
@@ -811,7 +806,7 @@ class Client(BaseClient):
             "cursor": cursor,
         }
 
-        return await self._make_request("GET", url, params=params, signed=True)
+        return await self._make_request("GET", "/v5/order/history", params=params, signed=True)
 
     async def trade_history(
         self,
@@ -830,7 +825,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/order/execution
         """
-        url = self._BASE_URL + "/v5/execution/list"
         params = {
             "category": category,
             "symbol": symbol,
@@ -844,7 +838,7 @@ class Client(BaseClient):
             "cursor": cursor,
         }
 
-        return await self._make_request("GET", url, params=params, signed=True)
+        return await self._make_request("GET", "/v5/execution/list", params=params, signed=True)
 
     async def create_orders_batch(
         self,
@@ -855,13 +849,14 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/order/batch-place
         """
-        url = self._BASE_URL + "/v5/order/create-batch"
         params = {
             "category": category,
             "request": request,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request(
+            "POST", "/v5/order/create-batch", params=params, signed=True
+        )
 
     async def amend_orders_batch(
         self,
@@ -872,13 +867,12 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/order/batch-amend
         """
-        url = self._BASE_URL + "/v5/order/amend-batch"
         params = {
             "category": category,
             "request": request,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request("POST", "/v5/order/amend-batch", params=params, signed=True)
 
     async def cancel_orders_batch(
         self,
@@ -889,13 +883,14 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/order/batch-cancel
         """
-        url = self._BASE_URL + "/v5/order/cancel-batch"
         params = {
             "category": category,
             "request": request,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request(
+            "POST", "/v5/order/cancel-batch", params=params, signed=True
+        )
 
     async def spot_borrow_quota(
         self,
@@ -907,14 +902,15 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/order/spot-borrow-quota
         """
-        url = self._BASE_URL + "/v5/order/spot-borrow-check"
         params = {
             "category": category,
             "symbol": symbol,
             "side": side,
         }
 
-        return await self._make_request("GET", url, params=params, signed=True)
+        return await self._make_request(
+            "GET", "/v5/order/spot-borrow-check", params=params, signed=True
+        )
 
     async def set_disconnect_cancel_all(
         self,
@@ -925,13 +921,14 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/order/dcp
         """
-        url = self._BASE_URL + "/v5/order/disconnected-cancel-all"
         params = {
             "product": product,
             "timeWindow": time_window,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request(
+            "POST", "/v5/order/disconnected-cancel-all", params=params, signed=True
+        )
 
     async def pre_check_order(
         self,
@@ -966,7 +963,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/order/pre-check-order
         """
-        url = self._BASE_URL + "/v5/order/pre-check"
         params = {
             "category": category,
             "symbol": symbol,
@@ -996,7 +992,7 @@ class Client(BaseClient):
             "slOrderType": sl_order_type,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request("POST", "/v5/order/pre-check", params=params, signed=True)
 
     # topic: position
 
@@ -1013,7 +1009,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/position
         """
-        url = self._BASE_URL + "/v5/position/list"
         params = {
             "category": category,
             "symbol": symbol,
@@ -1023,7 +1018,7 @@ class Client(BaseClient):
             "cursor": cursor,
         }
 
-        return await self._make_request("GET", url, params=params, signed=True)
+        return await self._make_request("GET", "/v5/position/list", params=params, signed=True)
 
     async def set_leverage(
         self,
@@ -1036,7 +1031,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/position/leverage
         """
-        url = self._BASE_URL + "/v5/position/set-leverage"
         params = {
             "category": category,
             "symbol": symbol,
@@ -1044,7 +1038,9 @@ class Client(BaseClient):
             "sellLeverage": sell_leverage,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request(
+            "POST", "/v5/position/set-leverage", params=params, signed=True
+        )
 
     async def switch_isolated_margin(
         self,
@@ -1058,7 +1054,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/position/cross-isolate
         """
-        url = self._BASE_URL + "/v5/position/switch-isolated"
         params = {
             "category": category,
             "symbol": symbol,
@@ -1067,7 +1062,9 @@ class Client(BaseClient):
             "sellLeverage": sell_leverage,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request(
+            "POST", "/v5/position/switch-isolated", params=params, signed=True
+        )
 
     async def switch_position_mode(
         self,
@@ -1080,7 +1077,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/position/position-mode
         """
-        url = self._BASE_URL + "/v5/position/switch-mode"
         params = {
             "category": category,
             "symbol": symbol,
@@ -1088,7 +1084,9 @@ class Client(BaseClient):
             "mode": mode,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request(
+            "POST", "/v5/position/switch-mode", params=params, signed=True
+        )
 
     async def set_trading_stop(
         self,
@@ -1113,7 +1111,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/position/trading-stop
         """
-        url = self._BASE_URL + "/v5/position/trading-stop"
         params = {
             "category": category,
             "symbol": symbol,
@@ -1133,7 +1130,9 @@ class Client(BaseClient):
             "slOrderType": sl_order_type,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request(
+            "POST", "/v5/position/trading-stop", params=params, signed=True
+        )
 
     async def set_auto_add_margin(
         self,
@@ -1146,7 +1145,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/position/auto-add-margin
         """
-        url = self._BASE_URL + "/v5/position/set-auto-add-margin"
         params = {
             "category": category,
             "symbol": symbol,
@@ -1154,7 +1152,9 @@ class Client(BaseClient):
             "positionIdx": position_idx,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request(
+            "POST", "/v5/position/set-auto-add-margin", params=params, signed=True
+        )
 
     async def add_margin(
         self,
@@ -1167,7 +1167,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/position/manual-add-margin
         """
-        url = self._BASE_URL + "/v5/position/add-margin"
         params = {
             "category": category,
             "symbol": symbol,
@@ -1175,7 +1174,9 @@ class Client(BaseClient):
             "positionIdx": position_idx,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request(
+            "POST", "/v5/position/add-margin", params=params, signed=True
+        )
 
     async def closed_pnl(
         self,
@@ -1190,7 +1191,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/position/close-pnl
         """
-        url = self._BASE_URL + "/v5/position/closed-pnl"
         params = {
             "category": category,
             "symbol": symbol,
@@ -1200,7 +1200,9 @@ class Client(BaseClient):
             "cursor": cursor,
         }
 
-        return await self._make_request("GET", url, params=params, signed=True)
+        return await self._make_request(
+            "GET", "/v5/position/closed-pnl", params=params, signed=True
+        )
 
     async def closed_option_positions(
         self,
@@ -1215,7 +1217,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/position/close-position
         """
-        url = self._BASE_URL + "/v5/position/get-closed-positions"
         params = {
             "category": category,
             "symbol": symbol,
@@ -1225,7 +1226,9 @@ class Client(BaseClient):
             "cursor": cursor,
         }
 
-        return await self._make_request("GET", url, params=params, signed=True)
+        return await self._make_request(
+            "GET", "/v5/position/get-closed-positions", params=params, signed=True
+        )
 
     async def move_positions(
         self,
@@ -1237,14 +1240,15 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/position/move-position
         """
-        url = self._BASE_URL + "/v5/position/move-positions"
         params = {
             "fromUid": from_uid,
             "toUid": to_uid,
             "list": legs,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request(
+            "POST", "/v5/position/move-positions", params=params, signed=True
+        )
 
     async def move_position_history(
         self,
@@ -1261,7 +1265,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/position/move-position-history
         """
-        url = self._BASE_URL + "/v5/position/move-history"
         params = {
             "category": category,
             "symbol": symbol,
@@ -1273,7 +1276,9 @@ class Client(BaseClient):
             "cursor": cursor,
         }
 
-        return await self._make_request("GET", url, params=params, signed=True)
+        return await self._make_request(
+            "GET", "/v5/position/move-history", params=params, signed=True
+        )
 
     async def confirm_pending_mmr(
         self,
@@ -1284,13 +1289,14 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/position/confirm-mmr
         """
-        url = self._BASE_URL + "/v5/position/confirm-pending-mmr"
         params = {
             "category": category,
             "symbol": symbol,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request(
+            "POST", "/v5/position/confirm-pending-mmr", params=params, signed=True
+        )
 
     async def set_tpsl_mode(
         self,
@@ -1302,14 +1308,15 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/position/tpsl-mode
         """
-        url = self._BASE_URL + "/v5/position/set-tpsl-mode"
         params = {
             "category": category,
             "symbol": symbol,
             "tpSlMode": tp_sl_mode,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request(
+            "POST", "/v5/position/set-tpsl-mode", params=params, signed=True
+        )
 
     async def set_risk_limit(
         self,
@@ -1322,7 +1329,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/position/set-risk-limit
         """
-        url = self._BASE_URL + "/v5/position/set-risk-limit"
         params = {
             "category": category,
             "symbol": symbol,
@@ -1330,7 +1336,9 @@ class Client(BaseClient):
             "positionIdx": position_idx,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request(
+            "POST", "/v5/position/set-risk-limit", params=params, signed=True
+        )
 
     # topic: pre-upgrade
 
@@ -1352,7 +1360,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/pre-upgrade/order-list
         """
-        url = self._BASE_URL + "/v5/pre-upgrade/order/history"
         params = {
             "category": category,
             "symbol": symbol,
@@ -1367,7 +1374,9 @@ class Client(BaseClient):
             "cursor": cursor,
         }
 
-        return await self._make_request("GET", url, params=params, signed=True)
+        return await self._make_request(
+            "GET", "/v5/pre-upgrade/order/history", params=params, signed=True
+        )
 
     async def pre_upgrade_trade_history(
         self,
@@ -1386,7 +1395,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/pre-upgrade/execution
         """
-        url = self._BASE_URL + "/v5/pre-upgrade/execution/list"
         params = {
             "category": category,
             "symbol": symbol,
@@ -1400,7 +1408,9 @@ class Client(BaseClient):
             "cursor": cursor,
         }
 
-        return await self._make_request("GET", url, params=params, signed=True)
+        return await self._make_request(
+            "GET", "/v5/pre-upgrade/execution/list", params=params, signed=True
+        )
 
     async def pre_upgrade_closed_pnl(
         self,
@@ -1415,7 +1425,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/pre-upgrade/close-pnl
         """
-        url = self._BASE_URL + "/v5/pre-upgrade/position/closed-pnl"
         params = {
             "category": category,
             "symbol": symbol,
@@ -1425,7 +1434,9 @@ class Client(BaseClient):
             "cursor": cursor,
         }
 
-        return await self._make_request("GET", url, params=params, signed=True)
+        return await self._make_request(
+            "GET", "/v5/pre-upgrade/position/closed-pnl", params=params, signed=True
+        )
 
     async def pre_upgrade_transaction_log(
         self,
@@ -1441,7 +1452,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/pre-upgrade/transaction-log
         """
-        url = self._BASE_URL + "/v5/pre-upgrade/account/transaction-log"
         params = {
             "category": category,
             "baseCoin": base_coin,
@@ -1452,7 +1462,9 @@ class Client(BaseClient):
             "cursor": cursor,
         }
 
-        return await self._make_request("GET", url, params=params, signed=True)
+        return await self._make_request(
+            "GET", "/v5/pre-upgrade/account/transaction-log", params=params, signed=True
+        )
 
     async def pre_upgrade_delivery_record(
         self,
@@ -1466,7 +1478,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/pre-upgrade/delivery
         """
-        url = self._BASE_URL + "/v5/pre-upgrade/asset/delivery-record"
         params = {
             "category": category,
             "symbol": symbol,
@@ -1475,7 +1486,9 @@ class Client(BaseClient):
             "cursor": cursor,
         }
 
-        return await self._make_request("GET", url, params=params, signed=True)
+        return await self._make_request(
+            "GET", "/v5/pre-upgrade/asset/delivery-record", params=params, signed=True
+        )
 
     async def pre_upgrade_settlement_record(
         self,
@@ -1488,7 +1501,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/pre-upgrade/settlement
         """
-        url = self._BASE_URL + "/v5/pre-upgrade/asset/settlement-record"
         params = {
             "category": category,
             "symbol": symbol,
@@ -1496,7 +1508,9 @@ class Client(BaseClient):
             "cursor": cursor,
         }
 
-        return await self._make_request("GET", url, params=params, signed=True)
+        return await self._make_request(
+            "GET", "/v5/pre-upgrade/asset/settlement-record", params=params, signed=True
+        )
 
     # topic: account
 
@@ -1509,13 +1523,14 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/account/wallet-balance
         """
-        url = self._BASE_URL + "/v5/account/wallet-balance"
         params = {
             "accountType": account_type,
             "coin": coin,
         }
 
-        return await self._make_request("GET", url, params=params, signed=True)
+        return await self._make_request(
+            "GET", "/v5/account/wallet-balance", params=params, signed=True
+        )
 
     async def transferable_amount(
         self,
@@ -1525,20 +1540,20 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/account/unified-trans-amnt
         """
-        url = self._BASE_URL + "/v5/account/withdrawal"
         params = {
             "coinName": coin_name,
         }
 
-        return await self._make_request("GET", url, params=params, signed=True)
+        return await self._make_request("GET", "/v5/account/withdrawal", params=params, signed=True)
 
     async def upgrade_to_unified_account(self) -> dict:
         """Апгрейд до Unified аккаунта.
 
         https://bybit-exchange.github.io/docs/v5/account/upgrade-unified-account
         """
-        url = self._BASE_URL + "/v5/account/upgrade-to-uta"
-        return await self._make_request("POST", url, params={}, signed=True)
+        return await self._make_request(
+            "POST", "/v5/account/upgrade-to-uta", params={}, signed=True
+        )
 
     async def borrow_history(
         self,
@@ -1552,7 +1567,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/account/borrow-history
         """
-        url = self._BASE_URL + "/v5/account/borrow-history"
         params = {
             "currency": currency,
             "startTime": start_time,
@@ -1561,7 +1575,9 @@ class Client(BaseClient):
             "cursor": cursor,
         }
 
-        return await self._make_request("GET", url, params=params, signed=True)
+        return await self._make_request(
+            "GET", "/v5/account/borrow-history", params=params, signed=True
+        )
 
     async def quick_repayment(
         self,
@@ -1571,12 +1587,13 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/account/repay-liability
         """
-        url = self._BASE_URL + "/v5/account/quick-repayment"
         params = {
             "coin": coin,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request(
+            "POST", "/v5/account/quick-repayment", params=params, signed=True
+        )
 
     async def set_collateral_coin(
         self,
@@ -1587,13 +1604,14 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/account/set-collateral
         """
-        url = self._BASE_URL + "/v5/account/set-collateral-switch"
         params = {
             "coin": coin,
             "collateralSwitch": collateral_switch,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request(
+            "POST", "/v5/account/set-collateral-switch", params=params, signed=True
+        )
 
     async def set_collateral_coin_batch(
         self,
@@ -1603,12 +1621,13 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/account/batch-set-collateral
         """
-        url = self._BASE_URL + "/v5/account/set-collateral-switch-batch"
         params = {
             "request": request,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request(
+            "POST", "/v5/account/set-collateral-switch-batch", params=params, signed=True
+        )
 
     async def collateral_info(
         self,
@@ -1618,12 +1637,13 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/account/collateral-info
         """
-        url = self._BASE_URL + "/v5/account/collateral-info"
         params = {
             "currency": currency,
         }
 
-        return await self._make_request("GET", url, params=params, signed=True)
+        return await self._make_request(
+            "GET", "/v5/account/collateral-info", params=params, signed=True
+        )
 
     async def coin_greeks(
         self,
@@ -1633,12 +1653,11 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/account/coin-greeks
         """
-        url = self._BASE_URL + "/v5/asset/coin-greeks"
         params = {
             "baseCoin": base_coin,
         }
 
-        return await self._make_request("GET", url, params=params, signed=True)
+        return await self._make_request("GET", "/v5/asset/coin-greeks", params=params, signed=True)
 
     async def fee_rate(
         self,
@@ -1650,30 +1669,27 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/account/fee-rate
         """
-        url = self._BASE_URL + "/v5/account/fee-rate"
         params = {
             "category": category,
             "symbol": symbol,
             "baseCoin": base_coin,
         }
 
-        return await self._make_request("GET", url, params=params, signed=True)
+        return await self._make_request("GET", "/v5/account/fee-rate", params=params, signed=True)
 
     async def account_info(self) -> dict:
         """Информация об аккаунте (режимы маржи и т.п.).
 
         https://bybit-exchange.github.io/docs/v5/account/account-info
         """
-        url = self._BASE_URL + "/v5/account/info"
-        return await self._make_request("GET", url, params={}, signed=True)
+        return await self._make_request("GET", "/v5/account/info", params={}, signed=True)
 
     async def dcp_info(self) -> dict:
         """Конфигурация DCP аккаунта.
 
         https://bybit-exchange.github.io/docs/v5/account/dcp-info
         """
-        url = self._BASE_URL + "/v5/account/query-dcp-info"
-        return await self._make_request("GET", url, params={}, signed=True)
+        return await self._make_request("GET", "/v5/account/query-dcp-info", params={}, signed=True)
 
     async def transaction_log(
         self,
@@ -1691,7 +1707,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/account/transaction-log
         """
-        url = self._BASE_URL + "/v5/account/transaction-log"
         params = {
             "accountType": account_type,
             "category": category,
@@ -1704,7 +1719,9 @@ class Client(BaseClient):
             "cursor": cursor,
         }
 
-        return await self._make_request("GET", url, params=params, signed=True)
+        return await self._make_request(
+            "GET", "/v5/account/transaction-log", params=params, signed=True
+        )
 
     async def contract_transaction_log(
         self,
@@ -1720,7 +1737,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/account/contract-transaction-log
         """
-        url = self._BASE_URL + "/v5/account/contract-transaction-log"
         params = {
             "currency": currency,
             "baseCoin": base_coin,
@@ -1731,15 +1747,16 @@ class Client(BaseClient):
             "cursor": cursor,
         }
 
-        return await self._make_request("GET", url, params=params, signed=True)
+        return await self._make_request(
+            "GET", "/v5/account/contract-transaction-log", params=params, signed=True
+        )
 
     async def smp_group(self) -> dict:
         """Получить SMP group ID.
 
         https://bybit-exchange.github.io/docs/v5/account/smp-group
         """
-        url = self._BASE_URL + "/v5/account/smp-group"
-        return await self._make_request("GET", url, params={}, signed=True)
+        return await self._make_request("GET", "/v5/account/smp-group", params={}, signed=True)
 
     async def set_margin_mode(
         self,
@@ -1749,12 +1766,13 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/account/set-margin-mode
         """
-        url = self._BASE_URL + "/v5/account/set-margin-mode"
         params = {
             "setMarginMode": set_margin_mode,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request(
+            "POST", "/v5/account/set-margin-mode", params=params, signed=True
+        )
 
     async def set_spot_hedging(
         self,
@@ -1764,12 +1782,13 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/account/set-spot-hedge
         """
-        url = self._BASE_URL + "/v5/account/set-hedging-mode"
         params = {
             "setHedgingMode": set_hedging_mode,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request(
+            "POST", "/v5/account/set-hedging-mode", params=params, signed=True
+        )
 
     async def set_limit_price_action(
         self,
@@ -1780,21 +1799,23 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/account/set-price-limit
         """
-        url = self._BASE_URL + "/v5/account/set-limit-px-action"
         params = {
             "category": category,
             "modifyEnable": modify_enable,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request(
+            "POST", "/v5/account/set-limit-px-action", params=params, signed=True
+        )
 
     async def user_setting_config(self) -> dict:
         """Получить конфигурацию поведения для лимитных цен.
 
         https://bybit-exchange.github.io/docs/v5/account/get-user-setting-config
         """
-        url = self._BASE_URL + "/v5/account/user-setting-config"
-        return await self._make_request("GET", url, params={}, signed=True)
+        return await self._make_request(
+            "GET", "/v5/account/user-setting-config", params={}, signed=True
+        )
 
     async def set_mmp(
         self,
@@ -1808,7 +1829,6 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/account/set-mmp
         """
-        url = self._BASE_URL + "/v5/account/mmp-modify"
         params = {
             "baseCoin": base_coin,
             "window": window,
@@ -1817,7 +1837,9 @@ class Client(BaseClient):
             "deltaLimit": delta_limit,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request(
+            "POST", "/v5/account/mmp-modify", params=params, signed=True
+        )
 
     async def reset_mmp(
         self,
@@ -1827,12 +1849,11 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/account/reset-mmp
         """
-        url = self._BASE_URL + "/v5/account/mmp-reset"
         params = {
             "baseCoin": base_coin,
         }
 
-        return await self._make_request("POST", url, params=params, signed=True)
+        return await self._make_request("POST", "/v5/account/mmp-reset", params=params, signed=True)
 
     async def mmp_state(
         self,
@@ -1842,9 +1863,8 @@ class Client(BaseClient):
 
         https://bybit-exchange.github.io/docs/v5/account/get-mmp-state
         """
-        url = self._BASE_URL + "/v5/account/mmp-state"
         params = {
             "baseCoin": base_coin,
         }
 
-        return await self._make_request("GET", url, params=params, signed=True)
+        return await self._make_request("GET", "/v5/account/mmp-state", params=params, signed=True)

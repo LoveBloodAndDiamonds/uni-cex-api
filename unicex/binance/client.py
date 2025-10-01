@@ -119,6 +119,23 @@ class Client(BaseClient):
             )
         return await super()._make_request(method=method, url=url, params=payload, headers=headers)
 
+    async def request(
+        self, method: RequestMethod, url: str, params: dict, data: dict, signed: bool
+    ) -> dict:
+        """Специальный метод для выполнения запросов на эндпоинты, которые не обернуты в клиенте.
+
+        Параметры:
+            method (`str`): HTTP метод ("GET", "POST", "DELETE" и т.д.).
+            url (`str`): Полный URL эндпоинта Binance API.
+            signed (`bool`): Нужно ли подписывать запрос.
+            params (`dict | None`): Query-параметры.
+            data (`dict | None`): Тело запроса.
+
+        Возвращает:
+            `dict`: Ответ в формате JSON.
+        """
+        return await self._make_request(method=method, url=url, params=params, signed=signed)
+
     # topic: general endpoints
 
     async def ping(self) -> dict:
@@ -1454,100 +1471,6 @@ class Client(BaseClient):
             )
 
         return await self._make_request("DELETE", url, signed=True, data=data)
-
-    # topic: wallet
-
-    async def asset_transfer(
-        self,
-        type: str,
-        asset: str,
-        amount: float,
-        from_symbol: str | None = None,
-        to_symbol: str | None = None,
-    ) -> dict:
-        """Выполнение универсального перевода.
-
-        https://developers.binance.com/docs/wallet/asset/universal-transfer
-        """
-        url = self._BASE_SPOT_URL + "/sapi/v1/asset/transfer"
-        data = {
-            "type": type,
-            "asset": asset,
-            "amount": amount,
-            "fromSymbol": from_symbol,
-            "toSymbol": to_symbol,
-        }
-
-        return await self._make_request("POST", url, True, data=data)
-
-    async def asset_transfer_history(
-        self,
-        type: str,
-        start_time: int | None = None,
-        end_time: int | None = None,
-        current: int | None = None,
-        size: int | None = None,
-        from_symbol: str | None = None,
-        to_symbol: str | None = None,
-    ) -> dict:
-        """Получение истории универсальных переводов.
-
-        https://developers.binance.com/docs/wallet/asset/query-universal-transfer-history
-        """
-        url = self._BASE_SPOT_URL + "/sapi/v1/asset/transfer"
-        params = {
-            "type": type,
-            "startTime": start_time,
-            "endTime": end_time,
-            "current": current,
-            "size": size,
-            "fromSymbol": from_symbol,
-            "toSymbol": to_symbol,
-        }
-
-        return await self._make_request("GET", url, True, params=params)
-
-    async def futures_transfer(
-        self,
-        asset: str,
-        amount: float,
-        type: str,
-    ) -> dict:
-        """Перевод между спотом и фьючерсами.
-
-        https://developers.binance.com/docs/wallet/asset/futures-transfer
-        """
-        url = self._BASE_SPOT_URL + "/sapi/v1/futures/transfer"
-        data = {
-            "asset": asset,
-            "amount": amount,
-            "type": type,
-        }
-
-        return await self._make_request("POST", url, True, data=data)
-
-    async def futures_transfer_history(
-        self,
-        asset: str,
-        start_time: int,
-        end_time: int | None = None,
-        current: int | None = None,
-        size: int | None = None,
-    ) -> dict:
-        """История переводов между спотом и фьючерсами.
-
-        https://developers.binance.com/docs/wallet/asset/get-futures-transfer-history
-        """
-        url = self._BASE_SPOT_URL + "/sapi/v1/futures/transfer"
-        params = {
-            "asset": asset,
-            "startTime": start_time,
-            "endTime": end_time,
-            "current": current,
-            "size": size,
-        }
-
-        return await self._make_request("GET", url, True, params=params)
 
     # topic: user data streams
 

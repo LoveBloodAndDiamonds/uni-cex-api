@@ -168,6 +168,26 @@ class Client(BaseClient):
             headers=headers,
         )
 
+    async def request(
+        self, method: RequestMethod, endpoint: str, params: dict, data: dict, signed: bool
+    ) -> dict:
+        """Специальный метод для выполнения запросов на эндпоинты, которые не обернуты в клиенте.
+
+        Параметры:
+            method (`RequestMethod`): HTTP-метод (`"GET"`, `"POST"`, и т. п.).
+            endpoint (`str`): Относительный путь эндпоинта (например, `"/api/spot/v1/market/tickers"`).
+            signed (`bool`): Приватный запрос (с подписью) или публичный. По умолчанию `False`.
+            params (`dict[str, Any] | None`): Query-параметры запроса.
+            data (`dict[str, Any] | None`): Тело запроса для `POST/PUT`.
+
+
+        Возвращает:
+            `dict`: Ответ в формате JSON.
+        """
+        return await self._make_request(
+            method=method, endpoint=endpoint, params=params, data=data, signed=signed
+        )
+
     # topic: common
 
     async def get_server_time(self) -> dict:
@@ -220,58 +240,6 @@ class Client(BaseClient):
         https://www.bitget.com/api-doc/common/account/All-Account-Balance
         """
         return await self._make_request("GET", "/api/v2/account/all-account-balance")
-
-    # topic: tax
-    # Where is more tax endpoints:
-    # https://www.bitget.com/api-doc/common/tax/Get-Spot-Account-Record
-    # https://www.bitget.com/api-doc/common/tax/Get-Future-Account-Record
-    # https://www.bitget.com/api-doc/common/tax/Get-Margin-Account-Record
-    # https://www.bitget.com/api-doc/common/tax/Get-P2P-Account-Record
-
-    # topic: p2p
-    # Where is more p2p endpoints:
-    # https://www.bitget.com/api-doc/common/p2p/Get-P2P-Merchant-List
-    # https://www.bitget.com/api-doc/common/p2p/Get-Merchant-Information
-    # https://www.bitget.com/api-doc/common/p2p/Get-P2P-Order-List
-    # https://www.bitget.com/api-doc/common/p2p/Get-P2P-Adv-List
-
-    # topic: trading insights
-    # https://www.bitget.com/api-doc/common/apidata/Whale-Net-Flow
-    # https://www.bitget.com/api-doc/common/apidata/Taker-Buy-Sell
-    # https://www.bitget.com/api-doc/common/apidata/Position-Long-Short
-    # https://www.bitget.com/api-doc/common/apidata/Margin-Ls-Ratio
-    # https://www.bitget.com/api-doc/common/apidata/Margin-Loan-Growth
-    # https://www.bitget.com/api-doc/common/apidata/Margin-Iso-Borrow-Ratio
-    # https://www.bitget.com/api-doc/common/apidata/Long-Short
-    # https://www.bitget.com/api-doc/common/apidata/Get-Spot-Fund-Flow
-    # https://www.bitget.com/api-doc/common/apidata/Get-Big-Data-Symbol
-    # https://www.bitget.com/api-doc/common/apidata/Fund-Net-Flow
-    # https://www.bitget.com/api-doc/common/apidata/Account-Long-Short
-
-    # topic: virtual subaccount
-    # https://www.bitget.com/api-doc/common/vsubaccount/Create-Virtual-Subaccount
-    # https://www.bitget.com/api-doc/common/vsubaccount/Modify-Virtual-Subaccount
-    # https://www.bitget.com/api-doc/common/vsubaccount/Batch-Create-Virtual-Subaccount-And-Apikey
-    # https://www.bitget.com/api-doc/common/vsubaccount/Get-Virtual-Subaccount-List
-    # https://www.bitget.com/api-doc/common/vsubaccount/Create-Virtual-Subaccount-ApiKey
-    # https://www.bitget.com/api-doc/common/vsubaccount/Modify-Virtual-Subaccount-ApiKey
-    # https://www.bitget.com/api-doc/common/vsubaccount/Get-Virtual-Subaccount-ApiKey-List
-
-    # topic: assets
-    # https://www.bitget.com/api-doc/common/account/Funding-Assets
-    # https://www.bitget.com/api-doc/common/account/Bot-Assets
-    # https://www.bitget.com/api-doc/common/account/All-Account-Balance
-
-    # topic: convert
-    # https://www.bitget.com/api-doc/common/convert/Get-Convert-Currencies
-    # https://www.bitget.com/api-doc/common/convert/Get-Quoted-Price
-    # https://www.bitget.com/api-doc/common/convert/Trade
-    # https://www.bitget.com/api-doc/common/convert/Get-Convert-Record
-
-    # topic: bgb-convert
-    # https://www.bitget.com/api-doc/common/bgb-convert/Get-BGB-Convert-Coins
-    # https://www.bitget.com/api-doc/common/bgb-convert/
-    # https://www.bitget.com/api-doc/common/bgb-convert/Get-BGB-Convert-Record
 
     # topic: market
 
