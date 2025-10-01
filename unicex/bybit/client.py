@@ -997,3 +997,337 @@ class Client(BaseClient):
         }
 
         return await self._make_request("POST", url, params=params, signed=True)
+
+    # topic: position
+
+    async def position_info(
+        self,
+        category: Literal["linear", "inverse", "option"],
+        symbol: str | None = None,
+        base_coin: str | None = None,
+        settle_coin: str | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """Информация по позициям в реальном времени.
+
+        https://bybit-exchange.github.io/docs/v5/position
+        """
+        url = self._BASE_URL + "/v5/position/list"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "baseCoin": base_coin,
+            "settleCoin": settle_coin,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return await self._make_request("GET", url, params=params, signed=True)
+
+    async def set_leverage(
+        self,
+        category: Literal["linear", "inverse"],
+        symbol: str,
+        buy_leverage: str,
+        sell_leverage: str,
+    ) -> dict:
+        """Установка плеча для символа.
+
+        https://bybit-exchange.github.io/docs/v5/position/leverage
+        """
+        url = self._BASE_URL + "/v5/position/set-leverage"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "buyLeverage": buy_leverage,
+            "sellLeverage": sell_leverage,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
+
+    async def switch_isolated_margin(
+        self,
+        category: Literal["linear", "inverse"],
+        symbol: str,
+        trade_mode: int,
+        buy_leverage: str,
+        sell_leverage: str,
+    ) -> dict:
+        """Переключение кросс/изолированной маржи для символа.
+
+        https://bybit-exchange.github.io/docs/v5/position/cross-isolate
+        """
+        url = self._BASE_URL + "/v5/position/switch-isolated"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "tradeMode": trade_mode,
+            "buyLeverage": buy_leverage,
+            "sellLeverage": sell_leverage,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
+
+    async def switch_position_mode(
+        self,
+        category: Literal["linear", "inverse"],
+        mode: int,
+        symbol: str | None = None,
+        coin: str | None = None,
+    ) -> dict:
+        """Переключение режима позиций (one-way/hedge).
+
+        https://bybit-exchange.github.io/docs/v5/position/position-mode
+        """
+        url = self._BASE_URL + "/v5/position/switch-mode"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "coin": coin,
+            "mode": mode,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
+
+    async def set_trading_stop(
+        self,
+        category: Literal["linear", "inverse"],
+        symbol: str,
+        tpsl_mode: str,
+        position_idx: int,
+        take_profit: str | None = None,
+        stop_loss: str | None = None,
+        trailing_stop: str | None = None,
+        tp_trigger_by: str | None = None,
+        sl_trigger_by: str | None = None,
+        active_price: str | None = None,
+        tp_size: str | None = None,
+        sl_size: str | None = None,
+        tp_limit_price: str | None = None,
+        sl_limit_price: str | None = None,
+        tp_order_type: str | None = None,
+        sl_order_type: str | None = None,
+    ) -> dict:
+        """Установка TP/SL/Trailing Stop для позиции.
+
+        https://bybit-exchange.github.io/docs/v5/position/trading-stop
+        """
+        url = self._BASE_URL + "/v5/position/trading-stop"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "tpslMode": tpsl_mode,
+            "positionIdx": position_idx,
+            "takeProfit": take_profit,
+            "stopLoss": stop_loss,
+            "trailingStop": trailing_stop,
+            "tpTriggerBy": tp_trigger_by,
+            "slTriggerBy": sl_trigger_by,
+            "activePrice": active_price,
+            "tpSize": tp_size,
+            "slSize": sl_size,
+            "tpLimitPrice": tp_limit_price,
+            "slLimitPrice": sl_limit_price,
+            "tpOrderType": tp_order_type,
+            "slOrderType": sl_order_type,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
+
+    async def set_auto_add_margin(
+        self,
+        category: Literal["linear"],
+        symbol: str,
+        auto_add_margin: int,
+        position_idx: int | None = None,
+    ) -> dict:
+        """Включить/выключить авто-добавление маржи (изолированная позиция).
+
+        https://bybit-exchange.github.io/docs/v5/position/auto-add-margin
+        """
+        url = self._BASE_URL + "/v5/position/set-auto-add-margin"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "autoAddMargin": auto_add_margin,
+            "positionIdx": position_idx,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
+
+    async def add_margin(
+        self,
+        category: Literal["linear", "inverse"],
+        symbol: str,
+        margin: str,
+        position_idx: int | None = None,
+    ) -> dict:
+        """Ручное добавление/уменьшение маржи (изолированная позиция).
+
+        https://bybit-exchange.github.io/docs/v5/position/manual-add-margin
+        """
+        url = self._BASE_URL + "/v5/position/add-margin"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "margin": margin,
+            "positionIdx": position_idx,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
+
+    async def closed_pnl(
+        self,
+        category: Literal["linear", "inverse", "option"],
+        symbol: str | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """История закрытой прибыли/убытка (PnL).
+
+        https://bybit-exchange.github.io/docs/v5/position/close-pnl
+        """
+        url = self._BASE_URL + "/v5/position/closed-pnl"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return await self._make_request("GET", url, params=params, signed=True)
+
+    async def closed_option_positions(
+        self,
+        category: Literal["option"],
+        symbol: str | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """Закрытые опционные позиции.
+
+        https://bybit-exchange.github.io/docs/v5/position/close-position
+        """
+        url = self._BASE_URL + "/v5/position/get-closed-positions"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return await self._make_request("GET", url, params=params, signed=True)
+
+    async def move_positions(
+        self,
+        from_uid: str,
+        to_uid: str,
+        legs: list[dict[str, Any]],
+    ) -> dict:
+        """Перемещение позиций между учетными записями.
+
+        https://bybit-exchange.github.io/docs/v5/position/move-position
+        """
+        url = self._BASE_URL + "/v5/position/move-positions"
+        params = {
+            "fromUid": from_uid,
+            "toUid": to_uid,
+            "list": legs,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
+
+    async def move_position_history(
+        self,
+        category: Literal["linear", "spot", "option"] | None = None,
+        symbol: str | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        status: str | None = None,
+        block_trade_id: str | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """История перемещения позиций.
+
+        https://bybit-exchange.github.io/docs/v5/position/move-position-history
+        """
+        url = self._BASE_URL + "/v5/position/move-history"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "startTime": start_time,
+            "endTime": end_time,
+            "status": status,
+            "blockTradeId": block_trade_id,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return await self._make_request("GET", url, params=params, signed=True)
+
+    async def confirm_pending_mmr(
+        self,
+        category: Literal["linear", "inverse"],
+        symbol: str,
+    ) -> dict:
+        """Подтверждение нового уровня риска (MMR) для снятия reduceOnly.
+
+        https://bybit-exchange.github.io/docs/v5/position/confirm-mmr
+        """
+        url = self._BASE_URL + "/v5/position/confirm-pending-mmr"
+        params = {
+            "category": category,
+            "symbol": symbol,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
+
+    async def set_tpsl_mode(
+        self,
+        category: Literal["linear", "inverse"],
+        symbol: str,
+        tp_sl_mode: str,
+    ) -> dict:
+        """Установка режима TP/SL по умолчанию для символа.
+
+        https://bybit-exchange.github.io/docs/v5/position/tpsl-mode
+        """
+        url = self._BASE_URL + "/v5/position/set-tpsl-mode"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "tpSlMode": tp_sl_mode,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
+
+    async def set_risk_limit(
+        self,
+        category: Literal["linear", "inverse"],
+        symbol: str,
+        risk_id: int,
+        position_idx: int | None = None,
+    ) -> dict:
+        """Установка лимита риска позиции.
+
+        https://bybit-exchange.github.io/docs/v5/position/set-risk-limit
+        """
+        url = self._BASE_URL + "/v5/position/set-risk-limit"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "riskId": risk_id,
+            "positionIdx": position_idx,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
