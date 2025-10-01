@@ -13,7 +13,7 @@ from unicex.utils import catch_adapter_errors
 
 
 class Adapter:
-    """Преобразовываeт ответы с бирж в унифицированный формат."""
+    """Адаптер для унификации данных с Bitget API."""
 
     @staticmethod
     @catch_adapter_errors

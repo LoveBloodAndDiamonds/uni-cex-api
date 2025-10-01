@@ -11,7 +11,7 @@ from .client import Client
 
 
 class UniClient(IUniClient[Client]):
-    """Унифицированный клиент для работы с Binance API."""
+    """Унифицированный клиент для работы с Bitget API."""
 
     @property
     def _client_cls(self) -> type[Client]:

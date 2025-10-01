@@ -13,13 +13,13 @@ type CallbackType = Callable[[Any], Awaitable[None]]
 
 
 class WebsocketManager:
-    """Менеджер асинхронных вебсокетов для Binance."""
+    """Менеджер асинхронных вебсокетов для Bitget."""
 
     _BASE_URL: str = "wss://ws.bitget.com/v2/ws/public"
     """Базовый URL для вебсокета."""
 
     def __init__(self, client: Client | None = None, **ws_kwargs: Any) -> None:
-        """Инициализирует менеджер вебсокетов для Binance.
+        """Инициализирует менеджер вебсокетов для Bitget.
 
         Параметры:
             client (`Client | None`): Клиент для выполнения запросов. Нужен, чтобы открыть приватные вебсокеты.

@@ -17,7 +17,7 @@ type CallbackType = Callable[[Any], Awaitable[None]]
 
 
 class UniWebsocketManager(IUniWebsocketManager):
-    """Реализация менеджера асинхронных унифицированных вебсокетов для биржи Bitget."""
+    """Реализация менеджера асинхронных унифицированных вебсокетов."""
 
     def __init__(
         self, client: Client | UniClient | None = None, logger: LoggerLike | None = None
@@ -25,7 +25,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         """Инициализирует унифицированный менеджер вебсокетов.
 
         Параметры:
-            client (`Client | UniClient | None`): Клиент Bitget или унифицированный клиент. Нужен для подключения к приватным топикам.
+            client (`Client | UniClient | None`): Клиент <Exchange> или унифицированный клиент. Нужен для подключения к приватным топикам.
             logger (`LoggerLike | None`): Логгер для записи логов.
         """
         super().__init__(client=client, logger=logger)
