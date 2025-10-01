@@ -25,7 +25,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         """Инициализирует унифицированный менеджер вебсокетов.
 
         Параметры:
-            client (`Client | UniClient | None`): Клиент <Exchange> или унифицированный клиент. Нужен для подключения к приватным топикам.
+            client (`Client | UniClient | None`): Клиент Hyperliquid или унифицированный клиент. Нужен для подключения к приватным топикам.
             logger (`LoggerLike | None`): Логгер для записи логов.
         """
         super().__init__(client=client, logger=logger)

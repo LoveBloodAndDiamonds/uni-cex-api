@@ -12,15 +12,15 @@
 | Bitget      | ✅     | ✅          | ✅             |            |         |
 | Bitrue      |        | ✅          | ✅             |            |         |
 | Bitunix     |        |             |                |            |         |
-| Btse        |        |             |                |            |         |
-| Bybit       | ✅     | ✅          |                |            |         |
-| Gateio      |        |             |                |            |         |
+| Btse        |        | ✅          | ✅             |            |         |
+| Bybit       | ✅     | ✅          | ✅             |            |         |
+| Gateio      |        |             | ✅             |            |         |
 | Hyperliquid |        |             |                |            |         |
 | Kcex        |        |             |                |            |         |
-| Kraken      |        |             |                |            |         |
-| Kucoin      |        |             |                |            |         |
-| Mexc        | ✅     | ✅          |                |            |         |
-| Okx         |        |             |                |            |         |
+| Kraken      |        | ✅          | ✅             |            |         |
+| Kucoin      |        | ✅          | ✅             |            |         |
+| Mexc        | ✅     | ✅          | ✅             |            |         |
+| Okx         |        | ✅          | ✅             |            |         |
 | Weex        |        |             |                |            |         |
 | Xt          |        |             |                |            |         |
 
