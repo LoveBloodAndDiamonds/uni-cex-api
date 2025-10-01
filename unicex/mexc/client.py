@@ -116,3 +116,420 @@ class Client(BaseClient):
         )
 
     # topic: Market
+    async def ping(self) -> dict:
+        """Проверка соединения с REST API.
+
+        https://www.mexc.com/api-docs/spot-v3/market-data-endpoints#test-connectivity
+        """
+        return await self._make_request("GET", "/api/v3/ping")
+
+    async def server_time(self) -> dict:
+        """Получение текущего серверного времени.
+
+        https://www.mexc.com/api-docs/spot-v3/market-data-endpoints#check-server-time
+        """
+        return await self._make_request("GET", "/api/v3/time")
+
+    async def default_symbols(self) -> dict:
+        """Получение списка торговых пар по умолчанию.
+
+        https://www.mexc.com/api-docs/spot-v3/market-data-endpoints#api-default-symbol
+        """
+        return await self._make_request("GET", "/api/v3/defaultSymbols")
+
+    async def exchange_info(
+        self,
+        symbol: str | None = None,
+        symbols: list[str] | None = None,
+    ) -> dict:
+        """Получение торговых правил биржи и информации о символах.
+
+        https://www.mexc.com/api-docs/spot-v3/market-data-endpoints#exchange-information
+        """
+        params = {
+            "symbol": symbol,
+            "symbols": symbols,
+        }
+
+        return await self._make_request("GET", "/api/v3/exchangeInfo", params=params)
+
+    async def depth(self, symbol: str, limit: int | None = None) -> dict:
+        """Получение стакана цен по торговой паре.
+
+        https://www.mexc.com/api-docs/spot-v3/market-data-endpoints#order-book
+        """
+        params = {
+            "symbol": symbol,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", "/api/v3/depth", params=params)
+
+    async def trades(self, symbol: str, limit: int | None = None) -> list[dict]:
+        """Получение списка последних сделок.
+
+        https://www.mexc.com/api-docs/spot-v3/market-data-endpoints#recent-trades-list
+        """
+        params = {
+            "symbol": symbol,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", "/api/v3/trades", params=params)
+
+    async def agg_trades(
+        self,
+        symbol: str,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+    ) -> list[dict]:
+        """Получение агрегированных сделок по символу.
+
+        https://www.mexc.com/api-docs/spot-v3/market-data-endpoints#compressedaggregate-trades-list
+        """
+        params = {
+            "symbol": symbol,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", "/api/v3/aggTrades", params=params)
+
+    async def klines(
+        self,
+        symbol: str,
+        interval: str,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+    ) -> list[list]:
+        """Получение свечных данных по торговой паре.
+
+        https://www.mexc.com/api-docs/spot-v3/market-data-endpoints#klinecandlestick-data
+        """
+        params = {
+            "symbol": symbol,
+            "interval": interval,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", "/api/v3/klines", params=params)
+
+    async def avg_price(self, symbol: str) -> dict:
+        """Получение средней цены символа за последние минуты.
+
+        https://www.mexc.com/api-docs/spot-v3/market-data-endpoints#current-average-price
+        """
+        params = {"symbol": symbol}
+
+        return await self._make_request("GET", "/api/v3/avgPrice", params=params)
+
+    async def ticker_24hr(self, symbol: str | None = None) -> dict | list[dict]:
+        """Получение статистики изменения цены за 24 часа.
+
+        https://www.mexc.com/api-docs/spot-v3/market-data-endpoints#24hr-ticker-price-change-statistics
+        """
+        params = {"symbol": symbol}
+
+        return await self._make_request("GET", "/api/v3/ticker/24hr", params=params)
+
+    async def ticker_price(self, symbol: str | None = None) -> dict | list[dict]:
+        """Получение текущей цены символа.
+
+        https://www.mexc.com/api-docs/spot-v3/market-data-endpoints#symbol-price-ticker
+        """
+        params = {"symbol": symbol}
+
+        return await self._make_request("GET", "/api/v3/ticker/price", params=params)
+
+    async def ticker_book_ticker(self, symbol: str | None = None) -> dict | list[dict]:
+        """Получение лучших цен и объемов в стакане.
+
+        https://www.mexc.com/api-docs/spot-v3/market-data-endpoints#symbol-order-book-ticker
+        """
+        params = {"symbol": symbol}
+
+        return await self._make_request("GET", "/api/v3/ticker/bookTicker", params=params)
+
+    # topic: Spot Account/Trade
+    async def kyc_status(self) -> dict:
+        """Получение статуса верификации KYC.
+
+        https://www.mexc.com/api-docs/spot-v3/spot-account-trade#query-kyc-status
+        """
+        return await self._make_request("GET", "/api/v3/kyc/status", signed=True)
+
+    async def uid(self) -> dict:
+        """Получение UID аккаунта.
+
+        https://www.mexc.com/api-docs/spot-v3/spot-account-trade#query-uid
+        """
+        return await self._make_request("GET", "/api/v3/uid", signed=True)
+
+    async def self_symbols(self) -> dict:
+        """Получение списка торговых пар, доступных через API аккаунта.
+
+        https://www.mexc.com/api-docs/spot-v3/spot-account-trade#user-api-default-symbol
+        """
+        return await self._make_request("GET", "/api/v3/selfSymbols", signed=True)
+
+    async def test_order(
+        self,
+        symbol: str,
+        side: str,
+        type: str,
+        quantity: str | None = None,
+        quote_order_quantity: str | None = None,
+        price: str | None = None,
+        new_client_order_id: str | None = None,
+        stp_mode: str | None = None,
+    ) -> dict:
+        """Проверка создания нового ордера без отправки на биржу.
+
+        https://www.mexc.com/api-docs/spot-v3/spot-account-trade#test-new-order
+        """
+        params = {
+            "symbol": symbol,
+            "side": side,
+            "type": type,
+            "quantity": quantity,
+            "quoteOrderQty": quote_order_quantity,
+            "price": price,
+            "newClientOrderId": new_client_order_id,
+            "stpMode": stp_mode,
+        }
+
+        return await self._make_request("POST", "/api/v3/order/test", params=params, signed=True)
+
+    async def create_order(
+        self,
+        symbol: str,
+        side: str,
+        type: str,
+        quantity: str | None = None,
+        quote_order_quantity: str | None = None,
+        price: str | None = None,
+        new_client_order_id: str | None = None,
+        stp_mode: str | None = None,
+    ) -> dict:
+        """Создание нового ордера.
+
+        https://www.mexc.com/api-docs/spot-v3/spot-account-trade#new-order
+        """
+        params = {
+            "symbol": symbol,
+            "side": side,
+            "type": type,
+            "quantity": quantity,
+            "quoteOrderQty": quote_order_quantity,
+            "price": price,
+            "newClientOrderId": new_client_order_id,
+            "stpMode": stp_mode,
+        }
+
+        return await self._make_request("POST", "/api/v3/order", params=params, signed=True)
+
+    async def batch_orders(self, batch_orders: list[dict]) -> dict | list[dict]:
+        """Создание нескольких ордеров одновременно.
+
+        https://www.mexc.com/api-docs/spot-v3/spot-account-trade#batch-orders
+        """
+        params = {"batchOrders": batch_orders}
+
+        return await self._make_request("POST", "/api/v3/batchOrders", params=params, signed=True)
+
+    async def cancel_order(
+        self,
+        symbol: str,
+        order_id: str | None = None,
+        orig_client_order_id: str | None = None,
+        new_client_order_id: str | None = None,
+    ) -> dict:
+        """Отмена активного ордера.
+
+        https://www.mexc.com/api-docs/spot-v3/spot-account-trade#cancel-order
+        """
+        params = {
+            "symbol": symbol,
+            "orderId": order_id,
+            "origClientOrderId": orig_client_order_id,
+            "newClientOrderId": new_client_order_id,
+        }
+
+        return await self._make_request("DELETE", "/api/v3/order", params=params, signed=True)
+
+    async def cancel_open_orders(self, symbol: str | list[str]) -> list[dict]:
+        """Отмена всех открытых ордеров по символу.
+
+        https://www.mexc.com/api-docs/spot-v3/spot-account-trade#cancel-all-open-orders-on-a-symbol
+        """
+        symbol_value = ",".join(symbol) if isinstance(symbol, list) else symbol
+        params = {"symbol": symbol_value}
+
+        return await self._make_request("DELETE", "/api/v3/openOrders", params=params, signed=True)
+
+    async def query_order(
+        self,
+        symbol: str,
+        order_id: str | None = None,
+        orig_client_order_id: str | None = None,
+    ) -> dict:
+        """Получение информации об ордере.
+
+        https://www.mexc.com/api-docs/spot-v3/spot-account-trade#query-order
+        """
+        params = {
+            "symbol": symbol,
+            "orderId": order_id,
+            "origClientOrderId": orig_client_order_id,
+        }
+
+        return await self._make_request("GET", "/api/v3/order", params=params, signed=True)
+
+    async def open_orders(self, symbol: str | None = None) -> list[dict]:
+        """Получение списка открытых ордеров.
+
+        https://www.mexc.com/api-docs/spot-v3/spot-account-trade#current-open-orders
+        """
+        params = {"symbol": symbol}
+
+        return await self._make_request("GET", "/api/v3/openOrders", params=params, signed=True)
+
+    async def all_orders(
+        self,
+        symbol: str,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+    ) -> list[dict]:
+        """Получение списка всех ордеров аккаунта по символу.
+
+        https://www.mexc.com/api-docs/spot-v3/spot-account-trade#all-orders
+        """
+        params = {
+            "symbol": symbol,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", "/api/v3/allOrders", params=params, signed=True)
+
+    async def account(self) -> dict:
+        """Получение информации об аккаунте.
+
+        https://www.mexc.com/api-docs/spot-v3/spot-account-trade#account-information
+        """
+        return await self._make_request("GET", "/api/v3/account", signed=True)
+
+    async def my_trades(
+        self,
+        symbol: str,
+        order_id: str | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+    ) -> list[dict]:
+        """Получение списка сделок аккаунта по символу.
+
+        https://www.mexc.com/api-docs/spot-v3/spot-account-trade#account-trade-list
+        """
+        params = {
+            "symbol": symbol,
+            "orderId": order_id,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", "/api/v3/myTrades", params=params, signed=True)
+
+    async def enable_mx_deduct(self, mx_deduct_enable: bool) -> dict:
+        """Включение или отключение списания комиссий в MX.
+
+        https://www.mexc.com/api-docs/spot-v3/spot-account-trade#enable-mx-deduct
+        """
+        params = {"mxDeductEnable": mx_deduct_enable}
+
+        return await self._make_request(
+            "POST", "/api/v3/mxDeduct/enable", params=params, signed=True
+        )
+
+    async def mx_deduct_status(self) -> dict:
+        """Получение статуса списания комиссий в MX.
+
+        https://www.mexc.com/api-docs/spot-v3/spot-account-trade#query-mx-deduct-status
+        """
+        return await self._make_request("GET", "/api/v3/mxDeduct/enable", signed=True)
+
+    async def trade_fee(self, symbol: str) -> dict:
+        """Получение комиссий по символу.
+
+        https://www.mexc.com/api-docs/spot-v3/spot-account-trade#query-symbol-commission
+        """
+        params = {"symbol": symbol}
+
+        return await self._make_request("GET", "/api/v3/tradeFee", params=params, signed=True)
+
+    async def create_strategy_group(self, trade_group_name: str) -> dict:
+        """Создание стратегии STP.
+
+        https://www.mexc.com/api-docs/spot-v3/spot-account-trade#create-stp-strategy-group
+        """
+        params = {"tradeGroupName": trade_group_name}
+
+        return await self._make_request(
+            "POST", "/api/v3/strategy/group", params=params, signed=True
+        )
+
+    async def strategy_group(self, trade_group_name: str) -> dict:
+        """Получение информации о стратегии STP.
+
+        https://www.mexc.com/api-docs/spot-v3/spot-account-trade#query-stp-strategy-group
+        """
+        params = {"tradeGroupName": trade_group_name}
+
+        return await self._make_request("GET", "/api/v3/strategy/group", params=params, signed=True)
+
+    async def delete_strategy_group(self, trade_group_id: str) -> dict:
+        """Удаление стратегии STP.
+
+        https://www.mexc.com/api-docs/spot-v3/spot-account-trade#delete-stp-strategy-group
+        """
+        params = {"tradeGroupId": trade_group_id}
+
+        return await self._make_request(
+            "DELETE", "/api/v3/strategy/group", params=params, signed=True
+        )
+
+    async def add_strategy_group_uid(self, uid: str | list[str], trade_group_id: str) -> dict:
+        """Добавление UID в стратегию STP.
+
+        https://www.mexc.com/api-docs/spot-v3/spot-account-trade#add-uid-to-stp-strategy-group
+        """
+        params = {
+            "uid": uid,
+            "tradeGroupId": trade_group_id,
+        }
+
+        return await self._make_request(
+            "POST", "/api/v3/strategy/group/uid", params=params, signed=True
+        )
+
+    async def delete_strategy_group_uid(self, uid: str | list[str], trade_group_id: str) -> dict:
+        """Удаление UID из стратегии STP.
+
+        https://www.mexc.com/api-docs/spot-v3/spot-account-trade#delete-uid-to-stp-strategy-group
+        """
+        params = {
+            "uid": uid,
+            "tradeGroupId": trade_group_id,
+        }
+
+        return await self._make_request(
+            "DELETE", "/api/v3/strategy/group/uid", params=params, signed=True
+        )
