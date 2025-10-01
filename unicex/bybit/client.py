@@ -1331,3 +1331,169 @@ class Client(BaseClient):
         }
 
         return await self._make_request("POST", url, params=params, signed=True)
+
+    # topic: pre-upgrade
+
+    async def pre_upgrade_order_history(
+        self,
+        category: Literal["linear", "inverse", "option", "spot"],
+        symbol: str | None = None,
+        base_coin: str | None = None,
+        order_id: str | None = None,
+        order_link_id: str | None = None,
+        order_filter: str | None = None,
+        order_status: str | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """История ордеров до апгрейда аккаунта.
+
+        https://bybit-exchange.github.io/docs/v5/pre-upgrade/order-list
+        """
+        url = self._BASE_URL + "/v5/pre-upgrade/order/history"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "baseCoin": base_coin,
+            "orderId": order_id,
+            "orderLinkId": order_link_id,
+            "orderFilter": order_filter,
+            "orderStatus": order_status,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return await self._make_request("GET", url, params=params, signed=True)
+
+    async def pre_upgrade_trade_history(
+        self,
+        category: Literal["linear", "inverse", "option", "spot"],
+        symbol: str | None = None,
+        order_id: str | None = None,
+        order_link_id: str | None = None,
+        base_coin: str | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        exec_type: str | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """История сделок до апгрейда аккаунта.
+
+        https://bybit-exchange.github.io/docs/v5/pre-upgrade/execution
+        """
+        url = self._BASE_URL + "/v5/pre-upgrade/execution/list"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "orderId": order_id,
+            "orderLinkId": order_link_id,
+            "baseCoin": base_coin,
+            "startTime": start_time,
+            "endTime": end_time,
+            "execType": exec_type,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return await self._make_request("GET", url, params=params, signed=True)
+
+    async def pre_upgrade_closed_pnl(
+        self,
+        category: Literal["linear", "inverse"],
+        symbol: str,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """Закрытый PnL до апгрейда аккаунта.
+
+        https://bybit-exchange.github.io/docs/v5/pre-upgrade/close-pnl
+        """
+        url = self._BASE_URL + "/v5/pre-upgrade/position/closed-pnl"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return await self._make_request("GET", url, params=params, signed=True)
+
+    async def pre_upgrade_transaction_log(
+        self,
+        category: Literal["linear", "option"],
+        base_coin: str | None = None,
+        type: str | None = None,  # noqa: A003 - API param name
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """Транзакционный лог USDC деривативов до апгрейда аккаунта.
+
+        https://bybit-exchange.github.io/docs/v5/pre-upgrade/transaction-log
+        """
+        url = self._BASE_URL + "/v5/pre-upgrade/account/transaction-log"
+        params = {
+            "category": category,
+            "baseCoin": base_coin,
+            "type": type,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return await self._make_request("GET", url, params=params, signed=True)
+
+    async def pre_upgrade_delivery_record(
+        self,
+        category: Literal["option"],
+        symbol: str | None = None,
+        exp_date: str | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """Опционные записи поставок до апгрейда аккаунта.
+
+        https://bybit-exchange.github.io/docs/v5/pre-upgrade/delivery
+        """
+        url = self._BASE_URL + "/v5/pre-upgrade/asset/delivery-record"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "expDate": exp_date,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return await self._make_request("GET", url, params=params, signed=True)
+
+    async def pre_upgrade_settlement_record(
+        self,
+        category: Literal["linear"],
+        symbol: str | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """Сессионные расчёты USDC Perpetual до апгрейда аккаунта.
+
+        https://bybit-exchange.github.io/docs/v5/pre-upgrade/settlement
+        """
+        url = self._BASE_URL + "/v5/pre-upgrade/asset/settlement-record"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return await self._make_request("GET", url, params=params, signed=True)
