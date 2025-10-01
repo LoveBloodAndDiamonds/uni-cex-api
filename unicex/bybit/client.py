@@ -146,3 +146,429 @@ class Client(BaseClient):
         }
 
         return await self._make_request("GET", url, params=params)
+
+    async def mark_price_klines(
+        self,
+        symbol: str,
+        interval: str,
+        category: Literal["linear", "inverse"] | None = None,
+        start: int | None = None,
+        end: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Исторические свечи цены маркировки (mark price).
+
+        https://bybit-exchange.github.io/docs/v5/market/mark-kline
+        """
+        url = self._BASE_URL + "/v5/market/mark-price-kline"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "interval": interval,
+            "start": start,
+            "end": end,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", url, params=params)
+
+    async def index_price_klines(
+        self,
+        symbol: str,
+        interval: str,
+        category: Literal["linear", "inverse"] | None = None,
+        start: int | None = None,
+        end: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Исторические свечи индекса (index price).
+
+        https://bybit-exchange.github.io/docs/v5/market/index-kline
+        """
+        url = self._BASE_URL + "/v5/market/index-price-kline"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "interval": interval,
+            "start": start,
+            "end": end,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", url, params=params)
+
+    async def premium_index_price_klines(
+        self,
+        symbol: str,
+        interval: str,
+        category: Literal["linear"] | None = None,
+        start: int | None = None,
+        end: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Исторические свечи премиального индекса (premium index).
+
+        https://bybit-exchange.github.io/docs/v5/market/premium-index-kline
+        """
+        url = self._BASE_URL + "/v5/market/premium-index-price-kline"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "interval": interval,
+            "start": start,
+            "end": end,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", url, params=params)
+
+    async def instruments_info(
+        self,
+        category: Literal["spot", "linear", "inverse", "option"],
+        symbol: str | None = None,
+        status: str | None = None,
+        base_coin: str | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """Информация об инструментах.
+
+        https://bybit-exchange.github.io/docs/v5/market/instrument
+        """
+        url = self._BASE_URL + "/v5/market/instruments-info"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "status": status,
+            "baseCoin": base_coin,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return await self._make_request("GET", url, params=params)
+
+    async def orderbook(
+        self,
+        category: Literal["spot", "linear", "inverse", "option"],
+        symbol: str,
+        limit: int | None = None,
+    ) -> dict:
+        """Книга ордеров (глубина рынка).
+
+        https://bybit-exchange.github.io/docs/v5/market/orderbook
+        """
+        url = self._BASE_URL + "/v5/market/orderbook"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", url, params=params)
+
+    async def rpi_orderbook(
+        self,
+        symbol: str,
+        limit: int,
+        category: Literal["spot", "linear", "inverse"] | None = None,
+    ) -> dict:
+        """Книга ордеров RPI.
+
+        https://bybit-exchange.github.io/docs/v5/market/rpi-orderbook
+        """
+        url = self._BASE_URL + "/v5/market/rpi_orderbook"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", url, params=params)
+
+    async def tickers(
+        self,
+        category: Literal["spot", "linear", "inverse", "option"],
+        symbol: str | None = None,
+        base_coin: str | None = None,
+        exp_date: str | None = None,
+    ) -> dict:
+        """Тикеры (снимок цен и объёмов).
+
+        https://bybit-exchange.github.io/docs/v5/market/tickers
+        """
+        url = self._BASE_URL + "/v5/market/tickers"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "baseCoin": base_coin,
+            "expDate": exp_date,
+        }
+
+        return await self._make_request("GET", url, params=params)
+
+    async def funding_rate_history(
+        self,
+        category: Literal["linear", "inverse"],
+        symbol: str,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """История ставок финансирования.
+
+        https://bybit-exchange.github.io/docs/v5/market/history-fund-rate
+        """
+        url = self._BASE_URL + "/v5/market/funding/history"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", url, params=params)
+
+    async def recent_trades(
+        self,
+        category: Literal["spot", "linear", "inverse", "option"],
+        symbol: str | None = None,
+        base_coin: str | None = None,
+        option_type: str | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Недавние публичные сделки.
+
+        https://bybit-exchange.github.io/docs/v5/market/recent-trade
+        """
+        url = self._BASE_URL + "/v5/market/recent-trade"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "baseCoin": base_coin,
+            "optionType": option_type,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", url, params=params)
+
+    async def open_interest(
+        self,
+        category: Literal["linear", "inverse"],
+        symbol: str,
+        interval_time: str,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """Открытый интерес по символу.
+
+        https://bybit-exchange.github.io/docs/v5/market/open-interest
+        """
+        url = self._BASE_URL + "/v5/market/open-interest"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "intervalTime": interval_time,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return await self._make_request("GET", url, params=params)
+
+    async def historical_volatility(
+        self,
+        category: Literal["option"],
+        base_coin: str | None = None,
+        quote_coin: str | None = None,
+        period: int | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+    ) -> dict:
+        """Историческая волатильность (опционы).
+
+        https://bybit-exchange.github.io/docs/v5/market/iv
+        """
+        url = self._BASE_URL + "/v5/market/historical-volatility"
+        params = {
+            "category": category,
+            "baseCoin": base_coin,
+            "quoteCoin": quote_coin,
+            "period": period,
+            "startTime": start_time,
+            "endTime": end_time,
+        }
+
+        return await self._make_request("GET", url, params=params)
+
+    async def insurance_pool(
+        self,
+        coin: str | None = None,
+    ) -> dict:
+        """Данные страхового пула.
+
+        https://bybit-exchange.github.io/docs/v5/market/insurance
+        """
+        url = self._BASE_URL + "/v5/market/insurance"
+        params = {
+            "coin": coin,
+        }
+
+        return await self._make_request("GET", url, params=params)
+
+    async def risk_limit(
+        self,
+        category: Literal["linear", "inverse"],
+        symbol: str | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """Параметры лимита риска.
+
+        https://bybit-exchange.github.io/docs/v5/market/risk-limit
+        """
+        url = self._BASE_URL + "/v5/market/risk-limit"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "cursor": cursor,
+        }
+
+        return await self._make_request("GET", url, params=params)
+
+    async def delivery_price(
+        self,
+        category: Literal["linear", "inverse", "option"],
+        symbol: str | None = None,
+        base_coin: str | None = None,
+        settle_coin: str | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """Цена поставки (delivery price).
+
+        https://bybit-exchange.github.io/docs/v5/market/delivery-price
+        """
+        url = self._BASE_URL + "/v5/market/delivery-price"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "baseCoin": base_coin,
+            "settleCoin": settle_coin,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return await self._make_request("GET", url, params=params)
+
+    async def new_delivery_price(
+        self,
+        category: Literal["option"],
+        base_coin: str,
+        settle_coin: str | None = None,
+    ) -> dict:
+        """Исторические цены поставки (опционы).
+
+        https://bybit-exchange.github.io/docs/v5/market/new-delivery-price
+        """
+        url = self._BASE_URL + "/v5/market/new-delivery-price"
+        params = {
+            "category": category,
+            "baseCoin": base_coin,
+            "settleCoin": settle_coin,
+        }
+
+        return await self._make_request("GET", url, params=params)
+
+    async def long_short_ratio(
+        self,
+        category: Literal["linear", "inverse"],
+        symbol: str,
+        period: str,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """Лонг/шорт соотношение.
+
+        https://bybit-exchange.github.io/docs/v5/market/long-short-ratio
+        """
+        url = self._BASE_URL + "/v5/market/account-ratio"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "period": period,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return await self._make_request("GET", url, params=params)
+
+    async def index_price_components(
+        self,
+        index_name: str,
+    ) -> dict:
+        """Компоненты индексной цены.
+
+        https://bybit-exchange.github.io/docs/v5/market/index-components
+        """
+        url = self._BASE_URL + "/v5/market/index-price-components"
+        params = {
+            "indexName": index_name,
+        }
+
+        return await self._make_request("GET", url, params=params)
+
+    async def order_price_limit(
+        self,
+        symbol: str,
+        category: Literal["spot", "linear", "inverse"] | None = None,
+    ) -> dict:
+        """Лимиты цен для ордеров.
+
+        https://bybit-exchange.github.io/docs/v5/market/order-price-limit
+        """
+        url = self._BASE_URL + "/v5/market/price-limit"
+        params = {
+            "category": category,
+            "symbol": symbol,
+        }
+
+        return await self._make_request("GET", url, params=params)
+
+    async def adl_alert(
+        self,
+        symbol: str | None = None,
+    ) -> dict:
+        """Уведомления ADL и информация страхового пула.
+
+        https://bybit-exchange.github.io/docs/v5/market/adl-alert
+        """
+        url = self._BASE_URL + "/v5/market/adlAlert"
+        params = {
+            "symbol": symbol,
+        }
+
+        return await self._make_request("GET", url, params=params)
+
+    async def fee_group_info(
+        self,
+        product_type: Literal["contract"],
+        group_id: str | None = None,
+    ) -> dict:
+        """Структура групп комиссий и ставки.
+
+        https://bybit-exchange.github.io/docs/v5/market/fee-group-info
+        """
+        url = self._BASE_URL + "/v5/market/fee-group-info"
+        params = {
+            "productType": product_type,
+            "groupId": group_id,
+        }
+
+        return await self._make_request("GET", url, params=params)
