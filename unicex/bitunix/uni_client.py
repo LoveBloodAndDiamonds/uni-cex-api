@@ -11,14 +11,14 @@ from .client import Client
 
 
 class UniClient(IUniClient[Client]):
-    """Унифицированный клиент для работы с <Exchange> API."""
+    """Унифицированный клиент для работы с Bitunix API."""
 
     @property
     def _client_cls(self) -> type[Client]:
-        """Возвращает класс клиента для <Exchange>.
+        """Возвращает класс клиента для Bitunix.
 
         Возвращает:
-            type[Client]: Класс клиента для <Exchange>.
+            type[Client]: Класс клиента для Bitunix.
         """
         return Client
 

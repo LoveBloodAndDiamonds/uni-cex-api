@@ -8,4 +8,4 @@ type CallbackType = Callable[[Any], Awaitable[None]]
 
 
 class WebsocketManager:
-    """Менеджер асинхронных вебсокетов для <Exchange>."""
+    """Менеджер асинхронных вебсокетов для Hyperliquid."""
