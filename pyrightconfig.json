@@ -6,7 +6,8 @@
     "**/.venv",
     "**/.git",
     "**/.idea",
-    "**/migrations"
+    "**/migrations",
+    "tests"
   ],
   "venvPath": ".",
   "venv": ".venv",

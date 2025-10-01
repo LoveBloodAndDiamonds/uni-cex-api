@@ -17,7 +17,7 @@ type CallbackType = Callable[[Any], Awaitable[None]]
 
 
 class UniWebsocketManager(IUniWebsocketManager):
-    """Унифицированный менеджер асинхронных вебсокетов Binance."""
+    """Реализация менеджера асинхронных унифицированных вебсокетов для биржи Binance."""
 
     def __init__(
         self, client: Client | UniClient | None = None, logger: LoggerLike | None = None

@@ -9,3 +9,7 @@ pypi-publish:
 
 pypi-build-and-publish:
 	python -m build ; rm -rf unicex.egg-info ; python -m twine upload dist/* ; rm ; rm -rf dist
+
+# usage: make make-exchange-from-template EXCHANGE=exchange_name
+make-exchange-from-template:
+	cp -r tests/_template unicex/$(EXCHANGE)

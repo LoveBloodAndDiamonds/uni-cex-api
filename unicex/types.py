@@ -2,12 +2,15 @@
 
 __all__ = [
     "TickerDailyDict",
+    "TickerDailyItem",
     "KlineDict",
     "TradeDict",
     "AggTradeDict",
     "RequestMethod",
     "LoggerLike",
     "AccountType",
+    "OpenInterestDict",
+    "OpenInterestItem",
 ]
 
 from logging import Logger as LoggingLogger
@@ -22,8 +25,8 @@ type RequestMethod = Literal["GET", "POST", "PUT", "DELETE"]
 """Типы методов HTTP запросов."""
 
 
-class TickerDailyDict(TypedDict):
-    """Статистика тикера за последние 24 часа."""
+class TickerDailyItem(TypedDict):
+    """Статистика одного тикера за последние 24 часа."""
 
     p: float
     """Изменение цены за 24 ч."""
@@ -33,6 +36,10 @@ class TickerDailyDict(TypedDict):
 
     q: float
     """Объем торгов за 24 ч. в долларах."""
+
+
+type TickerDailyDict = dict[str, TickerDailyItem]
+"""Статистика тикеров за последние 24 часа."""
 
 
 class KlineDict(TypedDict):
@@ -92,6 +99,20 @@ class AggTradeDict(TradeDict):
     """Модель агрегированной сделки."""
 
     pass
+
+
+class OpenInterestItem(TypedDict):
+    """Модель одного элемента открытого интереса."""
+
+    t: int
+    """Время. В миллисекундах."""
+
+    v: float
+    """Открытый интерес. В монетах."""
+
+
+type OpenInterestDict = dict[str, OpenInterestItem]
+"""Модель открытого интереса."""
 
 
 type AccountType = Literal["SPOT", "FUTURES"]

@@ -96,7 +96,7 @@ class _BaseBybitClient(BaseClient):
             return super()._make_request(
                 method=method,
                 url=url,
-                json=payload,
+                data=payload,
                 headers=headers,
             )
         else:  # Иначе параметры добавляем к query string

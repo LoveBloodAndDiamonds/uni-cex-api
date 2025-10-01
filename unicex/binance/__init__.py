@@ -1,6 +1,12 @@
 """Пакет, содержащий реализации клиентов и менеджеров для работы с биржей Binance."""
 
-__all__ = ["Client", "UniClient", "UserWebsocket", "WebsocketManager", "UniWebsocketManager"]
+__all__ = [
+    "Client",
+    "UniClient",
+    "UserWebsocket",
+    "WebsocketManager",
+    "UniWebsocketManager",
+]
 
 from .client import Client
 from .uni_client import UniClient

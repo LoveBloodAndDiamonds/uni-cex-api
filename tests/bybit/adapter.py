@@ -35,7 +35,7 @@ class BybitAdapter(IAdapter):
         return BybitAdapter.tickers(raw_data, only_usdt)
 
     @staticmethod
-    def ticker_24h(raw_data: dict, only_usdt: bool = True) -> dict[str, TickerDailyDict]:
+    def ticker_24hr(raw_data: dict, only_usdt: bool = True) -> dict[str, TickerDailyDict]:
         """Преобразует сырой ответ, в котором содержатся данные о тикере за последние 24 часа в унифицированный формат.
 
         Параметры:
@@ -71,7 +71,7 @@ class BybitAdapter(IAdapter):
         return result
 
     @staticmethod
-    def futures_ticker_24h(raw_data: dict, only_usdt: bool = True) -> dict[str, TickerDailyDict]:
+    def futures_ticker_24hr(raw_data: dict, only_usdt: bool = True) -> dict[str, TickerDailyDict]:
         """Преобразует сырой ответ, в котором содержатся данные о тикере за последние 24 часа в унифицированный формат.
 
         Параметры:
@@ -81,7 +81,7 @@ class BybitAdapter(IAdapter):
         Возвращает:
             dict[str, TickerDailyDict]: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
         """
-        return BybitAdapter.ticker_24h(raw_data)
+        return BybitAdapter.ticker_24hr(raw_data)
 
     @staticmethod
     def last_price(raw_data: dict) -> dict[str, float]:

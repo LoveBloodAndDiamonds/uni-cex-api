@@ -25,8 +25,20 @@ class Exchange(StrEnum):
     """Перечисление бирж."""
 
     BINANCE = "BINANCE"
-    BYBIT = "BYBIT"
     BITGET = "BITGET"
+    BITRUE = "BITRUE"
+    BITUNIX = "BITUNIX"
+    BTSE = "BTSE"
+    BYBIT = "BYBIT"
+    GATEIO = "GATEIO"
+    HYPERLIQUID = "HYPERLIQUID"
+    KCEX = "KCEX"
+    KRAKEN = "KRAKEN"
+    KUCOIN = "KUCOIN"
+    MEXC = "MEXC"
+    OKX = "OKX"
+    WEEX = "WEEX"
+    XT = "XT"
 
     def __add__(self, market_type: "MarketType") -> tuple["Exchange", "MarketType"]:
         """Возвращает кортеж из биржи и типа рынка."""
@@ -64,7 +76,7 @@ class Timeframe(StrEnum):
     MONTH_1 = "1M"
 
     @property
-    def mapping(self) -> dict[Exchange, dict["Timeframe", str]]:
+    def mapping(self) -> dict[Exchange | tuple[Exchange, MarketType], dict["Timeframe", str]]:
         """Возвращает словарь с маппингом таймфреймов для каждой биржи."""
         return {
             Exchange.BINANCE: {
@@ -100,28 +112,76 @@ class Timeframe(StrEnum):
                 Timeframe.MONTH_1: "M",
             },
             Exchange.BITGET: {
-                Timeframe.MIN_1: "1m",
-                Timeframe.MIN_5: "5m",
-                Timeframe.MIN_15: "15m",
-                Timeframe.MIN_30: "30m",
+                Timeframe.MIN_1: "1min",
+                Timeframe.MIN_5: "5min",
+                Timeframe.MIN_15: "15min",
+                Timeframe.MIN_30: "30min",
                 Timeframe.HOUR_1: "1h",
                 Timeframe.HOUR_4: "4h",
                 Timeframe.HOUR_6: "6h",
                 Timeframe.HOUR_12: "12h",
-                Timeframe.DAY_1: "1d",
-                Timeframe.DAY_3: "3d",
-                Timeframe.WEEK_1: "1w",
+                Timeframe.DAY_1: "1day",
+                Timeframe.DAY_3: "3day",
+                Timeframe.WEEK_1: "1week",
+                Timeframe.MONTH_1: "1M",
+            },
+            (Exchange.BITGET, MarketType.FUTURES): {
+                Timeframe.MIN_1: "1m",
+                Timeframe.MIN_5: "5m",
+                Timeframe.MIN_15: "15m",
+                Timeframe.MIN_30: "30m",
+                Timeframe.HOUR_1: "1H",
+                Timeframe.HOUR_4: "4H",
+                Timeframe.HOUR_6: "6H",
+                Timeframe.HOUR_12: "12H",
+                Timeframe.DAY_1: "1D",
+                Timeframe.DAY_3: "3D",
+                Timeframe.WEEK_1: "1W",
+                Timeframe.MONTH_1: "1M",
+            },
+            Exchange.MEXC: {
+                Timeframe.MIN_1: "Min1",
+                Timeframe.MIN_5: "Min5",
+                Timeframe.MIN_15: "Min15",
+                Timeframe.MIN_30: "Min30",
+                Timeframe.HOUR_1: "Min60",
+                Timeframe.HOUR_4: "Hour4",
+                Timeframe.HOUR_8: "Hour8",
+                Timeframe.DAY_1: "Day1",
+                Timeframe.WEEK_1: "Week1",
+                Timeframe.MONTH_1: "Month1",
+            },
+            Exchange.OKX: {
+                Timeframe.MIN_1: "1m",
+                Timeframe.MIN_3: "3m",
+                Timeframe.MIN_5: "5m",
+                Timeframe.MIN_15: "15m",
+                Timeframe.MIN_30: "30m",
+                Timeframe.HOUR_1: "1H",
+                Timeframe.HOUR_2: "2H",
+                Timeframe.HOUR_4: "4H",
+                Timeframe.HOUR_6: "6H",
+                Timeframe.HOUR_12: "12H",
+                Timeframe.DAY_1: "1D",
+                Timeframe.DAY_3: "3D",
+                Timeframe.WEEK_1: "1W",
                 Timeframe.MONTH_1: "1M",
             },
         }
 
-    def to_exchange_format(self, exchange: Exchange) -> str:
+    def to_exchange_format(self, exchange: Exchange, market_type: MarketType | None = None) -> str:
         """Конвертирует таймфрейм в формат, подходящий для указанной биржи."""
+        key = (
+            exchange
+            if not (exchange is Exchange.BITGET and market_type)
+            else exchange + market_type
+        )
         try:
-            return self.mapping[exchange][self]  # noqa
+            return self.mapping[key][self]  # type: ignore
         except KeyError as e:
+            details = f" and market type {market_type.value}" if market_type else ""
             raise ValueError(
-                f"Timeframe {self.value} is not supported for exchange {exchange.value}"
+                f"Timeframe {self.value} is not supported for exchange {exchange.value}{details}"
             ) from e
 
     @property

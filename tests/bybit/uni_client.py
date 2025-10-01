@@ -57,23 +57,23 @@ class BybitUniClient(IUniClient[BybitClient]):
         raw_data = self._client.futures_instruments_info(category="linear")
         return self.adapter.futures_tickers(raw_data=raw_data, only_usdt=only_usdt)
 
-    def ticker_24h(self) -> dict[str, TickerDailyDict]:
+    def ticker_24hr(self) -> dict[str, TickerDailyDict]:
         """Возвращает статистику за последние 24 часа для каждого тикера.
 
         Возвращает:
             dict[str, TickerDailyDict]: Словарь с статистикой за последние 24 часа для каждого тикера.
         """
         raw_data = self._client.tickers(category="spot")
-        return self.adapter.ticker_24h(raw_data=raw_data)
+        return self.adapter.ticker_24hr(raw_data=raw_data)
 
-    def futures_ticker_24h(self) -> dict[str, TickerDailyDict]:
+    def futures_ticker_24hr(self) -> dict[str, TickerDailyDict]:
         """Возвращает статистику за последние 24 часа для каждого тикера фьючерсов.
 
         Возвращает:
             dict[str, TickerDailyDict]: Словарь с статистикой за последние 24 часа для каждого тикера.
         """
         raw_data = self._client.futures_tickers(category="linear")
-        return self.adapter.futures_ticker_24h(raw_data=raw_data)
+        return self.adapter.futures_ticker_24hr(raw_data=raw_data)
 
     def last_price(self) -> dict[str, float]:
         """Возвращает последнюю цену для каждого тикера.

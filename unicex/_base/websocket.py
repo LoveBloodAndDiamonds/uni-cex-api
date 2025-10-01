@@ -125,11 +125,15 @@ class Websocket:
 
             # Проверяем размер очереди сообщений и выбрасываем ошибку, если он превышает максимальный размер
             self._check_queue_size()
+        except QueueOverflowError:
+            self._logger.error("Message queue is overflow")
         except orjson.JSONDecodeError as e:
             if message in ["ping", "pong"]:
-                self._logger.debug(f"{self} Received ping message: {message}")
+                self._logger.debug(f"Received ping message: {message}")
             else:
                 self._logger.error(f"Failed to decode JSON message: {message}, error: {e}")
+        except Exception as e:
+            self._logger.error(f"Unexpected error: {e}")
 
     def _check_queue_size(self) -> None:
         """Проверяет размер очереди и выбрасывает ошибку при переполнении."""
@@ -182,13 +186,9 @@ class Websocket:
             except asyncio.exceptions.CancelledError:
                 break
             except Exception as e:
-                self._logger.error(f"{self} Error({type(e)}) while processing message: {e}")
+                self._logger.error(f"Error({type(e)}) while processing message: {e}")
 
-            try:
-                self._queue.task_done()
-            except Exception as e:
-                if self._running:
-                    self._logger.error(f"{self} Error({type(e)}) while marking task done: {e}")
+            self._queue.task_done()
 
     def _generate_ws_kwargs(self) -> dict:
         """Генерирует аргументы для запуска вебсокета."""

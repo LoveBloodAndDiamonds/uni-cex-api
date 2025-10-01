@@ -92,7 +92,7 @@ class IUniWebsocketManager(ABC):
         Возвращает:
             `Websocket`: Экземпляр вебсокета для управления соединением.
         """
-        pass
+        ...
 
     @overload
     def futures_klines(
@@ -135,7 +135,7 @@ class IUniWebsocketManager(ABC):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        pass
+        ...
 
     @overload
     def trades(
@@ -174,7 +174,7 @@ class IUniWebsocketManager(ABC):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        pass
+        ...
 
     @overload
     def aggtrades(
@@ -213,7 +213,7 @@ class IUniWebsocketManager(ABC):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        pass
+        ...
 
     @overload
     def futures_trades(
@@ -252,7 +252,7 @@ class IUniWebsocketManager(ABC):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        pass
+        ...
 
     @overload
     def futures_aggtrades(
@@ -291,4 +291,4 @@ class IUniWebsocketManager(ABC):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        pass
+        ...

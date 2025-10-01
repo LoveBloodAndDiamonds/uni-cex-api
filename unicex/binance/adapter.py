@@ -1,12 +1,18 @@
 __all__ = ["Adapter"]
 
 
-from unicex._abc import IAdapter
-from unicex.types import AggTradeDict, KlineDict, TickerDailyDict, TradeDict
+from unicex.types import (
+    AggTradeDict,
+    KlineDict,
+    OpenInterestItem,
+    TickerDailyDict,
+    TickerDailyItem,
+    TradeDict,
+)
 from unicex.utils import catch_adapter_errors
 
 
-class Adapter(IAdapter):
+class Adapter:
     """Адаптер для унификации данных с Binance API."""
 
     @staticmethod
@@ -41,17 +47,17 @@ class Adapter(IAdapter):
 
     @staticmethod
     @catch_adapter_errors
-    def ticker_24h(raw_data: list[dict]) -> dict[str, TickerDailyDict]:
+    def ticker_24hr(raw_data: list[dict]) -> TickerDailyDict:
         """Преобразует сырой ответ, в котором содержатся данные о тикере за последние 24 часа в унифицированный формат.
 
         Параметры:
             raw_data (Any): Сырой ответ с биржи.
 
         Возвращает:
-            dict[str, TickerDailyDict]: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
+            TickerDailyDict: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
         """
         return {
-            item["symbol"]: TickerDailyDict(
+            item["symbol"]: TickerDailyItem(
                 p=float(item["priceChangePercent"]),
                 q=float(item["quoteVolume"]),  # объём в долларах
                 v=float(item["volume"]),  # объём в монетах
@@ -61,16 +67,16 @@ class Adapter(IAdapter):
 
     @staticmethod
     @catch_adapter_errors
-    def futures_ticker_24h(raw_data: list[dict]) -> dict[str, TickerDailyDict]:
+    def futures_ticker_24hr(raw_data: list[dict]) -> TickerDailyDict:
         """Преобразует сырой ответ, в котором содержатся данные о тикере за последние 24 часа в унифицированный формат.
 
         Параметры:
             raw_data (list[dict]): Сырой ответ с биржи.
 
         Возвращает:
-            dict[str, TickerDailyDict]: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
+            TickerDailyDict: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
         """
-        return Adapter.ticker_24h(raw_data)
+        return Adapter.ticker_24hr(raw_data)
 
     @staticmethod
     @catch_adapter_errors
@@ -270,7 +276,7 @@ class Adapter(IAdapter):
 
     @staticmethod
     @catch_adapter_errors
-    def open_interest(raw_data: dict) -> float:
+    def open_interest(raw_data: dict) -> OpenInterestItem:
         """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
         объеме открытых позиций в унифицированный вид.
 
@@ -278,6 +284,6 @@ class Adapter(IAdapter):
             raw_data (Any): Сырое сообщение с вебсокета.
 
         Возвращает:
-            float: Объем открытых позиций в монетах.
+            OpenInterestItem: Словарь со временем и объемом открытого интереса в монетах.
         """
-        return float(raw_data["openInterest"])
+        return OpenInterestItem(t=raw_data["time"], v=float(raw_data["openInterest"]))
