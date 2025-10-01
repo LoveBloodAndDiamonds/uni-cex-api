@@ -605,3 +605,242 @@ class Client(BaseClient):
         return await self._make_request(
             "DELETE", self._BASE_SPOT_URL + "/api/v3/userDataStream", params=params, signed=True
         )
+
+    # topic: Futures Market endpoints
+
+    async def futures_server_time(self) -> dict:
+        """Получение текущего серверного времени фьючерсного API.
+
+        https://contract.mexc.com/api/v1/contract/ping
+        """
+        return await self._make_request("GET", self._BASE_FUTURES_URL + "/api/v1/contract/ping")
+
+    async def futures_contract_detail(self, symbol: str | None = None) -> dict:
+        """Получение информации о фьючерсных контрактах.
+
+        https://contract.mexc.com/api/v1/contract/detail
+        """
+        params = {"symbol": symbol}
+
+        return await self._make_request(
+            "GET", self._BASE_FUTURES_URL + "/api/v1/contract/detail", params=params
+        )
+
+    async def futures_support_currencies(self) -> dict:
+        """Получение списка поддерживаемых для перевода валют.
+
+        https://contract.mexc.com/api/v1/contract/support_currencies
+        """
+        return await self._make_request(
+            "GET", self._BASE_FUTURES_URL + "/api/v1/contract/support_currencies"
+        )
+
+    async def futures_depth(self, symbol: str, limit: int | None = None) -> dict:
+        """Получение данных рыночного стакана по контракту.
+
+        https://contract.mexc.com/api/v1/contract/depth/{symbol}
+        """
+        params = {"limit": limit}
+
+        return await self._make_request(
+            "GET", self._BASE_FUTURES_URL + f"/api/v1/contract/depth/{symbol}", params=params
+        )
+
+    async def futures_depth_commits(self, symbol: str, limit: int) -> dict:
+        """Получение моментального снимка стакана по контракту.
+
+        https://contract.mexc.com/api/v1/contract/depth_commits/{symbol}/{limit}
+        """
+        return await self._make_request(
+            "GET",
+            self._BASE_FUTURES_URL + f"/api/v1/contract/depth_commits/{symbol}/{limit}",
+        )
+
+    async def futures_index_price(self, symbol: str) -> dict:
+        """Получение индикативной цены контракта.
+
+        https://contract.mexc.com/api/v1/contract/index_price/{symbol}
+        """
+        return await self._make_request(
+            "GET", self._BASE_FUTURES_URL + f"/api/v1/contract/index_price/{symbol}"
+        )
+
+    async def futures_fair_price(self, symbol: str) -> dict:
+        """Получение справедливой цены контракта.
+
+        https://contract.mexc.com/api/v1/contract/fair_price/{symbol}
+        """
+        return await self._make_request(
+            "GET", self._BASE_FUTURES_URL + f"/api/v1/contract/fair_price/{symbol}"
+        )
+
+    async def futures_funding_rate(self, symbol: str) -> dict:
+        """Получение текущей ставки финансирования контракта.
+
+        https://contract.mexc.com/api/v1/contract/funding_rate/{symbol}
+        """
+        return await self._make_request(
+            "GET", self._BASE_FUTURES_URL + f"/api/v1/contract/funding_rate/{symbol}"
+        )
+
+    async def futures_kline(
+        self,
+        symbol: str,
+        interval: str | None = None,
+        start: int | None = None,
+        end: int | None = None,
+    ) -> dict:
+        """Получение свечных данных по контракту.
+
+        https://contract.mexc.com/api/v1/contract/kline/{symbol}
+        """
+        params = {
+            "interval": interval,
+            "start": start,
+            "end": end,
+        }
+
+        return await self._make_request(
+            "GET", self._BASE_FUTURES_URL + f"/api/v1/contract/kline/{symbol}", params=params
+        )
+
+    async def futures_index_price_kline(
+        self,
+        symbol: str,
+        interval: str | None = None,
+        start: int | None = None,
+        end: int | None = None,
+    ) -> dict:
+        """Получение свечей индикативной цены контракта.
+
+        https://contract.mexc.com/api/v1/contract/kline/index_price/{symbol}
+        """
+        params = {
+            "interval": interval,
+            "start": start,
+            "end": end,
+        }
+
+        return await self._make_request(
+            "GET",
+            self._BASE_FUTURES_URL + f"/api/v1/contract/kline/index_price/{symbol}",
+            params=params,
+        )
+
+    async def futures_fair_price_kline(
+        self,
+        symbol: str,
+        interval: str | None = None,
+        start: int | None = None,
+        end: int | None = None,
+    ) -> dict:
+        """Получение свечей справедливой цены контракта.
+
+        https://contract.mexc.com/api/v1/contract/kline/fair_price/{symbol}
+        """
+        params = {
+            "interval": interval,
+            "start": start,
+            "end": end,
+        }
+
+        return await self._make_request(
+            "GET",
+            self._BASE_FUTURES_URL + f"/api/v1/contract/kline/fair_price/{symbol}",
+            params=params,
+        )
+
+    async def futures_deals(self, symbol: str, limit: int | None = None) -> dict:
+        """Получение последних сделок по контракту.
+
+        https://contract.mexc.com/api/v1/contract/deals/{symbol}
+        """
+        params = {"limit": limit}
+
+        return await self._make_request(
+            "GET", self._BASE_FUTURES_URL + f"/api/v1/contract/deals/{symbol}", params=params
+        )
+
+    async def futures_ticker(self, symbol: str | None = None) -> dict:
+        """Получение текущих параметров тренда по контракту.
+
+        https://contract.mexc.com/api/v1/contract/ticker
+        """
+        params = {"symbol": symbol}
+
+        return await self._make_request(
+            "GET", self._BASE_FUTURES_URL + "/api/v1/contract/ticker", params=params
+        )
+
+    async def futures_risk_reverse(self) -> dict:
+        """Получение текущих балансов страхового фонда.
+
+        https://contract.mexc.com/api/v1/contract/risk_reverse
+        """
+        return await self._make_request(
+            "GET", self._BASE_FUTURES_URL + "/api/v1/contract/risk_reverse"
+        )
+
+    async def futures_risk_reverse_history(
+        self,
+        symbol: str,
+        page_num: int,
+        page_size: int,
+    ) -> dict:
+        """Получение истории баланса страхового фонда по контракту.
+
+        https://contract.mexc.com/api/v1/contract/risk_reverse/history
+        """
+        params = {
+            "symbol": symbol,
+            "page_num": page_num,
+            "page_size": page_size,
+        }
+
+        return await self._make_request(
+            "GET", self._BASE_FUTURES_URL + "/api/v1/contract/risk_reverse/history", params=params
+        )
+
+    async def futures_funding_rate_history(
+        self,
+        symbol: str,
+        page_num: int,
+        page_size: int,
+    ) -> dict:
+        """Получение истории ставок финансирования по контракту.
+
+        https://contract.mexc.com/api/v1/contract/funding_rate/history
+        """
+        params = {
+            "symbol": symbol,
+            "page_num": page_num,
+            "page_size": page_size,
+        }
+
+        return await self._make_request(
+            "GET", self._BASE_FUTURES_URL + "/api/v1/contract/funding_rate/history", params=params
+        )
+
+    # topic: Futures Account and trading endpoints
+
+    async def futures_account_assets(self) -> dict:
+        """Получение сведений по всем валютам фьючерсного аккаунта.
+
+        https://contract.mexc.com/api/v1/private/account/assets
+        """
+        return await self._make_request(
+            "GET",
+            self._BASE_FUTURES_URL + "/api/v1/private/account/assets",
+            signed=True,
+        )
+
+    async def futures_account_asset(self, currency: str) -> dict:
+        """Получение баланса по одной валюте фьючерсного аккаунта.
+
+        https://contract.mexc.com/api/v1/private/account/asset/{currency}
+        """
+        return await self._make_request(
+            "GET",
+            self._BASE_FUTURES_URL + f"/api/v1/private/account/asset/{currency}",
+            signed=True,
+        )
