@@ -148,7 +148,7 @@ class UniClient(IUniClient[Client]):
         raw_data = await self._client.futures_mark_price()
         return Adapter.funding_rate(raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not ommited
 
-    async def open_interest(self, symbol: str) -> OpenInterestItem:
+    async def open_interest(self, symbol: str = None) -> OpenInterestItem:  # type: ignore[reportArgumentType] | We should provide out exception message
         """Возвращает объем открытого интереса для тикера.
 
         Параметры:

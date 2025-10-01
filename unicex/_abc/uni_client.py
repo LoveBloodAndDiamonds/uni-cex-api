@@ -299,6 +299,9 @@ class IUniClient(ABC, Generic[TClient]):
     @overload
     async def open_interest(self, symbol: None) -> OpenInterestDict: ...
 
+    @overload
+    async def open_interest(self) -> OpenInterestDict: ...
+
     @abstractmethod
     async def open_interest(self, symbol: str | None = None) -> OpenInterestItem | OpenInterestDict:
         """Возвращает объем открытого интереса для тикера или всех тикеров, если тикер не указан.
