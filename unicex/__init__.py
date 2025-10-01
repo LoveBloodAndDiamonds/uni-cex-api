@@ -52,6 +52,12 @@ __all__ = [
     "OkxUniWebsocketManager",
     "OkxWebsocketManager",
     "OkxUserWebsocket",
+    # Hyperliquid
+    "HyperliquidClient",
+    "HyperliquidUniClient",
+    "HyperliquidUniWebsocketManager",
+    "HyperliquidWebsocketManager",
+    "HyperliquidUserWebsocket",
 ]
 
 # ruff: noqa
@@ -112,4 +118,12 @@ from .okx import (
     UniWebsocketManager as OkxUniWebsocketManager,
     UserWebsocket as OkxUserWebsocket,
     WebsocketManager as OkxWebsocketManager,
+)
+
+from .hyperliquid import (
+    Client as HyperliquidClient,
+    UniClient as HyperliquidUniClient,
+    UniWebsocketManager as HyperliquidUniWebsocketManager,
+    UserWebsocket as HyperliquidUserWebsocket,
+    WebsocketManager as HyperliquidWebsocketManager,
 )
