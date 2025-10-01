@@ -1,6 +1,5 @@
 __all__ = ["Client"]
 
-
 import json
 import time
 from typing import Any, Literal
