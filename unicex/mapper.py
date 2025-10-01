@@ -15,6 +15,8 @@ from .bybit import UniClient as BybitUniClient
 from .bybit import UniWebsocketManager as BybitUniWebsocketManager
 from .enums import Exchange
 from .exceptions import NotSupported
+from .gateio import UniClient as GateioUniClient
+from .gateio import UniWebsocketManager as GateioUniWebsocketManager
 from .hyperliquid import UniClient as HyperliquidUniClient
 from .hyperliquid import UniWebsocketManager as HyperliquidUniWebsocketManager
 from .mexc import UniClient as MexcUniClient
@@ -29,6 +31,7 @@ _UNI_CLIENT_MAPPER: dict[Exchange, type[IUniClient]] = {
     Exchange.MEXC: MexcUniClient,
     Exchange.OKX: OkxUniClient,
     Exchange.HYPERLIQUID: HyperliquidUniClient,
+    Exchange.GATEIO: GateioUniClient,
 }
 """Маппер, который связывает биржу и реализацию унифицированного клиента."""
 
@@ -39,6 +42,7 @@ _UNI_WS_MANAGER_MAPPER: dict[Exchange, type[IUniWebsocketManager]] = {
     Exchange.BYBIT: BybitUniWebsocketManager,
     Exchange.OKX: OkxUniWebsocketManager,
     Exchange.HYPERLIQUID: HyperliquidUniWebsocketManager,
+    Exchange.GATEIO: GateioUniWebsocketManager,
 }
 """Маппер, который связывает биржу и реализацию унифицированного вебсокет-менеджера."""
 

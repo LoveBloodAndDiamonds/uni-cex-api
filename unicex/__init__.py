@@ -58,6 +58,12 @@ __all__ = [
     "HyperliquidUniWebsocketManager",
     "HyperliquidWebsocketManager",
     "HyperliquidUserWebsocket",
+    # Gateio
+    "GateioClient",
+    "GateioUniClient",
+    "GateioUniWebsocketManager",
+    "GateioWebsocketManager",
+    "GateioUserWebsocket",
 ]
 
 # ruff: noqa
@@ -126,4 +132,12 @@ from .hyperliquid import (
     UniWebsocketManager as HyperliquidUniWebsocketManager,
     UserWebsocket as HyperliquidUserWebsocket,
     WebsocketManager as HyperliquidWebsocketManager,
+)
+
+from .gateio import (
+    Client as GateioClient,
+    UniClient as GateioUniClient,
+    UniWebsocketManager as GateioUniWebsocketManager,
+    UserWebsocket as GateioUserWebsocket,
+    WebsocketManager as GateioWebsocketManager,
 )

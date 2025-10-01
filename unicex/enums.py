@@ -30,7 +30,7 @@ class Exchange(StrEnum):
     MEXC = "MEXC"
     OKX = "OKX"
     HYPERLIQUID = "HYPERLIQUID"
-    # GATEOI <-- Назови Gate именно так, чтобы было меньше проблем
+    GATEIO = "GATEIO"
 
     def __add__(self, market_type: "MarketType") -> tuple["Exchange", "MarketType"]:
         """Возвращает кортеж из биржи и типа рынка."""
