@@ -2,11 +2,11 @@ __all__ = ["UniClient"]
 
 
 from typing import overload
+
 from unicex._abc import IUniClient
-from unicex.enums import Exchange, Timeframe
+from unicex.enums import Timeframe
 from unicex.types import KlineDict, OpenInterestDict, OpenInterestItem, TickerDailyDict
 
-from .adapter import Adapter
 from .client import Client
 
 

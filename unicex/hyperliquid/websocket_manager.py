@@ -1,13 +1,8 @@
 __all__ = ["WebsocketManager"]
 
 
-import json
-from collections.abc import Awaitable, Callable, Sequence
-from typing import Any, Literal
-
-from unicex._base import Websocket
-
-from .client import Client
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 type CallbackType = Callable[[Any], Awaitable[None]]
 
