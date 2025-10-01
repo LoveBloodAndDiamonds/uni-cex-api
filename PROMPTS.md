@@ -44,11 +44,11 @@
 - Публичный GET без параметров:
   ```python
   async def ping(self) -> dict:
-      """Проверка соединения с сервером.
+      """Проверка соединения с REST API.
 
       https://www.mexc.com/api-docs/spot-v3/market-data-endpoints#test-connectivity
       """
-      return await self._make_request("GET", "/api/v3/ping")
+      return await self._make_request("GET", self._BASE_SPOT_URL + "/api/v3/ping")
   ```
 
 - Публичный GET с параметрами:
@@ -58,7 +58,7 @@
       symbol: str | None = None,
       symbols: list[str] | None = None,
   ) -> dict:
-      """Получение информации о торговых парах.
+      """Получение торговых правил биржи и информации о символах.
 
       https://www.mexc.com/api-docs/spot-v3/market-data-endpoints#exchange-information
       """
@@ -66,7 +66,10 @@
           "symbol": symbol,
           "symbols": symbols,
       }
-      return await self._make_request("GET", "/api/v3/exchangeInfo", params=params)
+
+      return await self._make_request(
+          "GET", self._BASE_SPOT_URL + "/api/v3/exchangeInfo", params=params
+      )
   ```
 
 - Приватный POST (пример структуры; путь/поля заменить по докам):
@@ -74,14 +77,13 @@
   async def create_order(
       self,
       symbol: str,
-      side: Literal["BUY", "SELL"],
-      type: Literal["LIMIT", "MARKET"],
-      quantity: float | None = None,
-      quote_order_quantity: float | None = None,
-      price: float | None = None,
+      side: str,
+      type: str,
+      quantity: str | None = None,
+      quote_order_quantity: str | None = None,
+      price: str | None = None,
       new_client_order_id: str | None = None,
       stp_mode: str | None = None,
-      client_order_id: str | None = None,
   ) -> dict:
       """Создание нового ордера.
 
@@ -96,9 +98,11 @@
           "price": price,
           "newClientOrderId": new_client_order_id,
           "stpMode": stp_mode,
-          "newOrderRespType": client_order_id,
       }
-      return await self._make_request("POST", "/api/v3/order", params=params, signed=True)
+
+      return await self._make_request(
+          "POST", self._BASE_SPOT_URL + "/api/v3/order", params=params, signed=True
+      )
   ```
 
 Формат ожидаемого ответа от модели:
