@@ -1497,3 +1497,354 @@ class Client(BaseClient):
         }
 
         return await self._make_request("GET", url, params=params, signed=True)
+
+    # topic: account
+
+    async def wallet_balance(
+        self,
+        account_type: Literal["UNIFIED", "CONTRACT", "SPOT"],
+        coin: str | None = None,
+    ) -> dict:
+        """Баланс кошелька и активы по монетам.
+
+        https://bybit-exchange.github.io/docs/v5/account/wallet-balance
+        """
+        url = self._BASE_URL + "/v5/account/wallet-balance"
+        params = {
+            "accountType": account_type,
+            "coin": coin,
+        }
+
+        return await self._make_request("GET", url, params=params, signed=True)
+
+    async def transferable_amount(
+        self,
+        coin_name: str,
+    ) -> dict:
+        """Доступная к переводу сумма (Unified).
+
+        https://bybit-exchange.github.io/docs/v5/account/unified-trans-amnt
+        """
+        url = self._BASE_URL + "/v5/account/withdrawal"
+        params = {
+            "coinName": coin_name,
+        }
+
+        return await self._make_request("GET", url, params=params, signed=True)
+
+    async def upgrade_to_unified_account(self) -> dict:
+        """Апгрейд до Unified аккаунта.
+
+        https://bybit-exchange.github.io/docs/v5/account/upgrade-unified-account
+        """
+        url = self._BASE_URL + "/v5/account/upgrade-to-uta"
+        return await self._make_request("POST", url, params={}, signed=True)
+
+    async def borrow_history(
+        self,
+        currency: str | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """История заимствований (проценты).
+
+        https://bybit-exchange.github.io/docs/v5/account/borrow-history
+        """
+        url = self._BASE_URL + "/v5/account/borrow-history"
+        params = {
+            "currency": currency,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return await self._make_request("GET", url, params=params, signed=True)
+
+    async def quick_repayment(
+        self,
+        coin: str | None = None,
+    ) -> dict:
+        """Погашение обязательств Unified аккаунта.
+
+        https://bybit-exchange.github.io/docs/v5/account/repay-liability
+        """
+        url = self._BASE_URL + "/v5/account/quick-repayment"
+        params = {
+            "coin": coin,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
+
+    async def set_collateral_coin(
+        self,
+        coin: str,
+        collateral_switch: Literal["ON", "OFF"],
+    ) -> dict:
+        """Настройка монеты как залога.
+
+        https://bybit-exchange.github.io/docs/v5/account/set-collateral
+        """
+        url = self._BASE_URL + "/v5/account/set-collateral-switch"
+        params = {
+            "coin": coin,
+            "collateralSwitch": collateral_switch,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
+
+    async def set_collateral_coin_batch(
+        self,
+        request: list[dict[str, Any]],
+    ) -> dict:
+        """Пакетная настройка монет как залога.
+
+        https://bybit-exchange.github.io/docs/v5/account/batch-set-collateral
+        """
+        url = self._BASE_URL + "/v5/account/set-collateral-switch-batch"
+        params = {
+            "request": request,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
+
+    async def collateral_info(
+        self,
+        currency: str | None = None,
+    ) -> dict:
+        """Информация о залоге (процентные ставки, коэффициенты и пр.).
+
+        https://bybit-exchange.github.io/docs/v5/account/collateral-info
+        """
+        url = self._BASE_URL + "/v5/account/collateral-info"
+        params = {
+            "currency": currency,
+        }
+
+        return await self._make_request("GET", url, params=params, signed=True)
+
+    async def coin_greeks(
+        self,
+        base_coin: str | None = None,
+    ) -> dict:
+        """Текущие греческие параметры аккаунта по базовым монетам.
+
+        https://bybit-exchange.github.io/docs/v5/account/coin-greeks
+        """
+        url = self._BASE_URL + "/v5/asset/coin-greeks"
+        params = {
+            "baseCoin": base_coin,
+        }
+
+        return await self._make_request("GET", url, params=params, signed=True)
+
+    async def fee_rate(
+        self,
+        category: Literal["spot", "linear", "inverse", "option"],
+        symbol: str | None = None,
+        base_coin: str | None = None,
+    ) -> dict:
+        """Торговые комиссии аккаунта.
+
+        https://bybit-exchange.github.io/docs/v5/account/fee-rate
+        """
+        url = self._BASE_URL + "/v5/account/fee-rate"
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "baseCoin": base_coin,
+        }
+
+        return await self._make_request("GET", url, params=params, signed=True)
+
+    async def account_info(self) -> dict:
+        """Информация об аккаунте (режимы маржи и т.п.).
+
+        https://bybit-exchange.github.io/docs/v5/account/account-info
+        """
+        url = self._BASE_URL + "/v5/account/info"
+        return await self._make_request("GET", url, params={}, signed=True)
+
+    async def dcp_info(self) -> dict:
+        """Конфигурация DCP аккаунта.
+
+        https://bybit-exchange.github.io/docs/v5/account/dcp-info
+        """
+        url = self._BASE_URL + "/v5/account/query-dcp-info"
+        return await self._make_request("GET", url, params={}, signed=True)
+
+    async def transaction_log(
+        self,
+        account_type: Literal["UNIFIED"] | None = None,
+        category: Literal["spot", "linear", "option", "inverse"] | None = None,
+        currency: str | None = None,
+        base_coin: str | None = None,
+        type: str | None = None,  # noqa: A003 - API param name
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """Транзакционный лог Unified аккаунта.
+
+        https://bybit-exchange.github.io/docs/v5/account/transaction-log
+        """
+        url = self._BASE_URL + "/v5/account/transaction-log"
+        params = {
+            "accountType": account_type,
+            "category": category,
+            "currency": currency,
+            "baseCoin": base_coin,
+            "type": type,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return await self._make_request("GET", url, params=params, signed=True)
+
+    async def contract_transaction_log(
+        self,
+        currency: str | None = None,
+        base_coin: str | None = None,
+        type: str | None = None,  # noqa: A003 - API param name
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """Транзакционный лог деривативного кошелька.
+
+        https://bybit-exchange.github.io/docs/v5/account/contract-transaction-log
+        """
+        url = self._BASE_URL + "/v5/account/contract-transaction-log"
+        params = {
+            "currency": currency,
+            "baseCoin": base_coin,
+            "type": type,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return await self._make_request("GET", url, params=params, signed=True)
+
+    async def smp_group(self) -> dict:
+        """Получить SMP group ID.
+
+        https://bybit-exchange.github.io/docs/v5/account/smp-group
+        """
+        url = self._BASE_URL + "/v5/account/smp-group"
+        return await self._make_request("GET", url, params={}, signed=True)
+
+    async def set_margin_mode(
+        self,
+        set_margin_mode: Literal["ISOLATED_MARGIN", "REGULAR_MARGIN", "PORTFOLIO_MARGIN"],
+    ) -> dict:
+        """Установить режим маржи аккаунта.
+
+        https://bybit-exchange.github.io/docs/v5/account/set-margin-mode
+        """
+        url = self._BASE_URL + "/v5/account/set-margin-mode"
+        params = {
+            "setMarginMode": set_margin_mode,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
+
+    async def set_spot_hedging(
+        self,
+        set_hedging_mode: Literal["ON", "OFF"],
+    ) -> dict:
+        """Включить/выключить спотовый hedging в Portfolio margin.
+
+        https://bybit-exchange.github.io/docs/v5/account/set-spot-hedge
+        """
+        url = self._BASE_URL + "/v5/account/set-hedging-mode"
+        params = {
+            "setHedgingMode": set_hedging_mode,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
+
+    async def set_limit_price_action(
+        self,
+        category: Literal["linear", "inverse", "spot"],
+        modify_enable: bool,
+    ) -> dict:
+        """Настройка поведения при выходе лимитной цены за границы.
+
+        https://bybit-exchange.github.io/docs/v5/account/set-price-limit
+        """
+        url = self._BASE_URL + "/v5/account/set-limit-px-action"
+        params = {
+            "category": category,
+            "modifyEnable": modify_enable,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
+
+    async def user_setting_config(self) -> dict:
+        """Получить конфигурацию поведения для лимитных цен.
+
+        https://bybit-exchange.github.io/docs/v5/account/get-user-setting-config
+        """
+        url = self._BASE_URL + "/v5/account/user-setting-config"
+        return await self._make_request("GET", url, params={}, signed=True)
+
+    async def set_mmp(
+        self,
+        base_coin: str,
+        window: str,
+        frozen_period: str,
+        qty_limit: str,
+        delta_limit: str,
+    ) -> dict:
+        """Настроить Market Maker Protection (MMP).
+
+        https://bybit-exchange.github.io/docs/v5/account/set-mmp
+        """
+        url = self._BASE_URL + "/v5/account/mmp-modify"
+        params = {
+            "baseCoin": base_coin,
+            "window": window,
+            "frozenPeriod": frozen_period,
+            "qtyLimit": qty_limit,
+            "deltaLimit": delta_limit,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
+
+    async def reset_mmp(
+        self,
+        base_coin: str,
+    ) -> dict:
+        """Сбросить состояние MMP (разморозить).
+
+        https://bybit-exchange.github.io/docs/v5/account/reset-mmp
+        """
+        url = self._BASE_URL + "/v5/account/mmp-reset"
+        params = {
+            "baseCoin": base_coin,
+        }
+
+        return await self._make_request("POST", url, params=params, signed=True)
+
+    async def mmp_state(
+        self,
+        base_coin: str,
+    ) -> dict:
+        """Статус MMP.
+
+        https://bybit-exchange.github.io/docs/v5/account/get-mmp-state
+        """
+        url = self._BASE_URL + "/v5/account/mmp-state"
+        params = {
+            "baseCoin": base_coin,
+        }
+
+        return await self._make_request("GET", url, params=params, signed=True)
