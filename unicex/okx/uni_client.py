@@ -120,13 +120,25 @@ class UniClient(IUniClient[Client]):
         """
         raise NotImplementedError()
 
-    async def funding_rate(self) -> dict[str, float]:
-        """Возвращает ставку финансирования для всех тикеров.
+    @overload
+    async def funding_rate(self, symbol: str) -> float: ...
+
+    @overload
+    async def funding_rate(self, symbol: None) -> dict[str, float]: ...
+
+    @overload
+    async def funding_rate(self) -> dict[str, float]: ...
+
+    async def funding_rate(self, symbol: str | None = None) -> dict[str, float] | float:
+        """Возвращает ставку финансирования для тикера или всех тикеров, если тикер не указан.
+
+        Параметры:
+            symbol (`str | None`): Название тикера (Опционально).
 
         Возвращает:
-            dict[str, float]: Ставка финансирования для каждого тикера.
+            `dict[str, float] | float`: Ставка финансирования для тикера или словарь со ставками для всех тикеров.
         """
-        raise NotImplementedError()
+        ...
 
     @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...
