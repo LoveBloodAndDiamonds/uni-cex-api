@@ -55,6 +55,8 @@ class Side(StrEnum):
 class Timeframe(StrEnum):
     """Перечисление таймфреймов."""
 
+    SECOND_1 = "1s"
+
     MIN_1 = "1m"
     MIN_3 = "3m"
     MIN_5 = "5m"
@@ -79,7 +81,25 @@ class Timeframe(StrEnum):
     def mapping(self) -> dict[Exchange | tuple[Exchange, MarketType], dict["Timeframe", str]]:
         """Возвращает словарь с маппингом таймфреймов для каждой биржи."""
         return {
-            Exchange.BINANCE: {
+            (Exchange.BINANCE, MarketType.SPOT): {
+                Timeframe.SECOND_1: "1s",
+                Timeframe.MIN_1: "1m",
+                Timeframe.MIN_3: "3m",
+                Timeframe.MIN_5: "5m",
+                Timeframe.MIN_15: "15m",
+                Timeframe.MIN_30: "30m",
+                Timeframe.HOUR_1: "1h",
+                Timeframe.HOUR_2: "2h",
+                Timeframe.HOUR_4: "4h",
+                Timeframe.HOUR_6: "6h",
+                Timeframe.HOUR_8: "8h",
+                Timeframe.HOUR_12: "12h",
+                Timeframe.DAY_1: "1d",
+                Timeframe.DAY_3: "3d",
+                Timeframe.WEEK_1: "1w",
+                Timeframe.MONTH_1: "1M",
+            },
+            (Exchange.BINANCE, MarketType.FUTURES): {
                 Timeframe.MIN_1: "1m",
                 Timeframe.MIN_3: "3m",
                 Timeframe.MIN_5: "5m",
@@ -180,6 +200,7 @@ class Timeframe(StrEnum):
                 Timeframe.MONTH_1: "1M",
             },
             (Exchange.GATEIO, MarketType.FUTURES): {
+                Timeframe.SECOND_1: "1s",
                 Timeframe.MIN_1: "1m",
                 Timeframe.MIN_5: "5m",
                 Timeframe.MIN_15: "15m",

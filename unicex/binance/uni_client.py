@@ -4,7 +4,7 @@ __all__ = ["UniClient"]
 from typing import overload
 
 from unicex._abc import IUniClient
-from unicex.enums import Exchange, Timeframe
+from unicex.enums import Exchange, MarketType, Timeframe
 from unicex.types import KlineDict, OpenInterestItem, TickerDailyDict
 
 from .adapter import Adapter
@@ -104,7 +104,7 @@ class UniClient(IUniClient[Client]):
             list[KlineDict]: Список свечей для тикера.
         """
         interval = (
-            interval.to_exchange_format(Exchange.BINANCE)
+            interval.to_exchange_format(Exchange.BINANCE, MarketType.SPOT)
             if isinstance(interval, Timeframe)
             else interval
         )
@@ -138,7 +138,7 @@ class UniClient(IUniClient[Client]):
             list[KlineDict]: Список свечей для тикера.
         """
         interval = (
-            interval.to_exchange_format(Exchange.BINANCE)
+            interval.to_exchange_format(Exchange.BINANCE, MarketType.FUTURES)
             if isinstance(interval, Timeframe)
             else interval
         )
