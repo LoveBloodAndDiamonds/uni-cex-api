@@ -242,7 +242,7 @@ class IUniClient(ABC, Generic[TClient]):
     async def klines(
         self,
         symbol: str,
-        interval: Timeframe,
+        interval: Timeframe | str,
         limit: int | None = None,
         start_time: int | None = None,
         end_time: int | None = None,
@@ -265,7 +265,7 @@ class IUniClient(ABC, Generic[TClient]):
     async def futures_klines(
         self,
         symbol: str,
-        interval: Timeframe,
+        interval: Timeframe | str,
         limit: int | None = None,
         start_time: int | None = None,
         end_time: int | None = None,

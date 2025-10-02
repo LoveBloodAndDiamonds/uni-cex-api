@@ -86,7 +86,7 @@ class UniClient(IUniClient[Client]):
     async def klines(
         self,
         symbol: str,
-        interval: Timeframe,
+        interval: Timeframe | str,
         limit: int | None = None,
         start_time: int | None = None,
         end_time: int | None = None,
@@ -96,16 +96,21 @@ class UniClient(IUniClient[Client]):
         Параметры:
             symbol (str): Название тикера.
             limit (int | None): Количество свечей.
-            interval (Timeframe): Таймфрейм свечей.
+            interval (Timeframe | str): Таймфрейм свечей.
             start_time (int | None): Время начала периода в миллисекундах.
             end_time (int | None): Время окончания периода в миллисекундах.
 
         Возвращает:
             list[KlineDict]: Список свечей для тикера.
         """
+        interval = (
+            interval.to_exchange_format(Exchange.BINANCE)
+            if isinstance(interval, Timeframe)
+            else interval
+        )
         raw_data = await self._client.klines(
             symbol=symbol,
-            interval=interval.to_exchange_format(Exchange.BINANCE),
+            interval=interval,
             limit=limit,
             start_time=start_time,
             end_time=end_time,
@@ -115,7 +120,7 @@ class UniClient(IUniClient[Client]):
     async def futures_klines(
         self,
         symbol: str,
-        interval: Timeframe,
+        interval: Timeframe | str,
         limit: int | None = None,
         start_time: int | None = None,
         end_time: int | None = None,
@@ -125,16 +130,21 @@ class UniClient(IUniClient[Client]):
         Параметры:
             symbol (str): Название тикера.
             limit (int | None): Количество свечей.
-            interval (Timeframe): Таймфрейм свечей.
+            interval (Timeframe | str): Таймфрейм свечей.
             start_time (int | None): Время начала периода в миллисекундах.
             end_time (int | None): Время окончания периода в миллисекундах.
 
         Возвращает:
             list[KlineDict]: Список свечей для тикера.
         """
+        interval = (
+            interval.to_exchange_format(Exchange.BINANCE)
+            if isinstance(interval, Timeframe)
+            else interval
+        )
         raw_data = await self._client.futures_klines(
             symbol=symbol,
-            interval=interval.to_exchange_format(Exchange.BINANCE),  # type: ignore
+            interval=interval,
             limit=limit,
             start_time=start_time,
             end_time=end_time,

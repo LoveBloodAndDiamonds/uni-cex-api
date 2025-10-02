@@ -33,9 +33,19 @@ tests_config = {
     "single_funding_rate": True,
 }
 
+# Тестировать ли все таймфреймы?
+test_all_timeframes = True
+
 # Какие биржи тестировать
-exchanges = [Exchange.MEXC, Exchange.BYBIT, Exchange.BINANCE, Exchange.BITGET, Exchange.OKX]
-exchanges = [Exchange.GATEIO]
+exchanges = [
+    Exchange.MEXC,
+    Exchange.BYBIT,
+    Exchange.BINANCE,
+    Exchange.BITGET,
+    Exchange.OKX,
+    Exchange.GATEIO,
+]
+# exchanges = [Exchange.GATEIO]
 
 # Сколько символов показывать в превью вывода
 repr_len = 100
@@ -102,15 +112,17 @@ async def test_exchange(e: Exchange, client: IUniClient) -> None:
         futures_ticker_24hr = await client.futures_ticker_24hr()
         pretty_print(e, "futures_ticker_24hr", futures_ticker_24hr)
 
-    if should_run("klines"):
-        klines = await client.klines(symbol=s_symbol, interval=Timeframe.DAY_1, limit=10)
-        pretty_print(e, "klines", klines)
+    intervals = Timeframe if test_all_timeframes else [Timeframe.DAY_1]
+    for interval in intervals:
+        if should_run("klines"):
+            klines = await client.klines(symbol=s_symbol, interval=interval, limit=10)
+            pretty_print(e, f"{interval} klines", klines)
 
-    if should_run("futures_klines"):
-        futures_klines = await client.futures_klines(
-            symbol=f_symbol, interval=Timeframe.MIN_1, limit=10
-        )
-        pretty_print(e, "futures_klines", futures_klines)
+        if should_run("futures_klines"):
+            futures_klines = await client.futures_klines(
+                symbol=f_symbol, interval=interval, limit=10
+            )
+            pretty_print(e, f"{interval} futures_klines", futures_klines)
 
     if should_run("open_interest") and e not in [Exchange.BINANCE]:
         open_interest = await client.open_interest()

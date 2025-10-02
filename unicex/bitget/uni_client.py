@@ -85,7 +85,7 @@ class UniClient(IUniClient[Client]):
     async def klines(
         self,
         symbol: str,
-        interval: Timeframe,
+        interval: Timeframe | str,
         limit: int | None = None,
         start_time: int | None = None,
         end_time: int | None = None,
@@ -102,9 +102,14 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             `list[KlineDict]`: Список свечей.
         """
+        interval = (
+            interval.to_exchange_format(Exchange.BITGET, MarketType.SPOT)
+            if isinstance(interval, Timeframe)
+            else interval
+        )
         raw_data = await self._client.get_candlestick_data(
             symbol=symbol,
-            granularity=interval.to_exchange_format(Exchange.BITGET),
+            granularity=interval,
             limit=limit,
             start_time=start_time,
             end_time=end_time,
@@ -114,7 +119,7 @@ class UniClient(IUniClient[Client]):
     async def futures_klines(
         self,
         symbol: str,
-        interval: Timeframe,
+        interval: Timeframe | str,
         limit: int | None = None,
         start_time: int | None = None,
         end_time: int | None = None,
@@ -131,10 +136,15 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             `list[KlineDict]`: Список свечей.
         """
+        interval = (
+            interval.to_exchange_format(Exchange.BITGET, MarketType.FUTURES)
+            if isinstance(interval, Timeframe)
+            else interval
+        )
         raw_data = await self._client.futures_get_candlestick_data(
             symbol=symbol,
             product_type="USDT-FUTURES",
-            granularity=interval.to_exchange_format(Exchange.BITGET, MarketType.FUTURES),
+            granularity=interval,
             limit=limit,
             start_time=start_time,
             end_time=end_time,

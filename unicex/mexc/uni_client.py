@@ -87,7 +87,7 @@ class UniClient(IUniClient[Client]):
     async def klines(
         self,
         symbol: str,
-        interval: Timeframe,
+        interval: Timeframe | str,
         limit: int | None = None,
         start_time: int | None = None,
         end_time: int | None = None,
@@ -97,16 +97,21 @@ class UniClient(IUniClient[Client]):
         Параметры:
             symbol (str): Название тикера.
             limit (int | None): Количество свечей.
-            interval (Timeframe): Таймфрейм свечей.
+            interval (Timeframe | str): Таймфрейм свечей.
             start_time (int | None): Время начала периода в миллисекундах.
             end_time (int | None): Время окончания периода в миллисекундах.
 
         Возвращает:
             list[KlineDict]: Список свечей для тикера.
         """
+        interval = (
+            interval.to_exchange_format(Exchange.MEXC, MarketType.SPOT)
+            if isinstance(interval, Timeframe)
+            else interval
+        )
         raw_data = await self._client.klines(
             symbol=symbol,
-            interval=interval.to_exchange_format(Exchange.MEXC, MarketType.SPOT),
+            interval=interval,
             start_time=start_time,
             end_time=end_time,
             limit=limit,
@@ -116,7 +121,7 @@ class UniClient(IUniClient[Client]):
     async def futures_klines(
         self,
         symbol: str,
-        interval: Timeframe,
+        interval: Timeframe | str,
         limit: int | None = None,
         start_time: int | None = None,
         end_time: int | None = None,
@@ -126,7 +131,7 @@ class UniClient(IUniClient[Client]):
         Параметры:
             symbol (str): Название тикера.
             limit (int | None): Количество свечей.
-            interval (Timeframe): Таймфрейм свечей.
+            interval (Timeframe | str): Таймфрейм свечей.
             start_time (int | None): Время начала периода в миллисекундах.
             end_time (int | None): Время окончания периода в миллисекундах.
 
@@ -136,9 +141,14 @@ class UniClient(IUniClient[Client]):
         if limit:  # Перезаписываем start_time и end_time если указан limit, т.к. по умолчанию Mexc Futures не принимают этот параметр
             end_time = int(time.time())
             start_time = end_time - (limit * interval.to_seconds)  # type: ignore[reportOptionalOperand]
+        interval = (
+            interval.to_exchange_format(Exchange.MEXC, MarketType.FUTURES)
+            if isinstance(interval, Timeframe)
+            else interval
+        )
         raw_data = await self._client.futures_kline(
             symbol=symbol,
-            interval=interval.to_exchange_format(Exchange.MEXC, MarketType.FUTURES),
+            interval=interval,
             start=start_time,
             end=end_time,
         )

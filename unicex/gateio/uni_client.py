@@ -86,7 +86,7 @@ class UniClient(IUniClient[Client]):
     async def klines(
         self,
         symbol: str,
-        interval: Timeframe,
+        interval: Timeframe | str,
         limit: int | None = None,
         start_time: int | None = None,
         end_time: int | None = None,
@@ -96,16 +96,21 @@ class UniClient(IUniClient[Client]):
         Параметры:
             symbol (str): Название тикера.
             limit (int | None): Количество свечей.
-            interval (Timeframe): Таймфрейм свечей.
+            interval (Timeframe | str): Таймфрейм свечей.
             start_time (int | None): Время начала периода в миллисекундах.
             end_time (int | None): Время окончания периода в миллисекундах.
 
         Возвращает:
             list[KlineDict]: Список свечей для тикера.
         """
+        interval = (
+            interval.to_exchange_format(Exchange.GATEIO, MarketType.SPOT)
+            if isinstance(interval, Timeframe)
+            else interval
+        )
         raw_data = await self._client.candlesticks(
             currency_pair=symbol,
-            interval=interval.to_exchange_format(Exchange.GATEIO, MarketType.SPOT),
+            interval=interval,
             limit=limit,
             from_time=self._to_seconds(start_time),
             to_time=self._to_seconds(end_time),
@@ -115,7 +120,7 @@ class UniClient(IUniClient[Client]):
     async def futures_klines(
         self,
         symbol: str,
-        interval: Timeframe,
+        interval: Timeframe | str,
         limit: int | None = None,
         start_time: int | None = None,
         end_time: int | None = None,
@@ -125,17 +130,22 @@ class UniClient(IUniClient[Client]):
         Параметры:
             symbol (str): Название тикера.
             limit (int | None): Количество свечей.
-            interval (Timeframe): Таймфрейм свечей.
+            interval (Timeframe | str): Таймфрейм свечей.
             start_time (int | None): Время начала периода в миллисекундах.
             end_time (int | None): Время окончания периода в миллисекундах.
 
         Возвращает:
             list[KlineDict]: Список свечей для тикера.
         """
+        interval = (
+            interval.to_exchange_format(Exchange.GATEIO, MarketType.FUTURES)
+            if isinstance(interval, Timeframe)
+            else interval
+        )
         raw_data = await self._client.futures_candlesticks(
             settle="usdt",
             contract=symbol,
-            interval=interval.to_exchange_format(Exchange.GATEIO, MarketType.FUTURES),
+            interval=interval,
             limit=limit,
             from_time=self._to_seconds(start_time),
             to_time=self._to_seconds(end_time),

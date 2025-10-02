@@ -111,7 +111,7 @@ class Timeframe(StrEnum):
                 Timeframe.WEEK_1: "W",
                 Timeframe.MONTH_1: "M",
             },
-            Exchange.BITGET: {
+            (Exchange.BITGET, MarketType.SPOT): {
                 Timeframe.MIN_1: "1min",
                 Timeframe.MIN_5: "5min",
                 Timeframe.MIN_15: "15min",
