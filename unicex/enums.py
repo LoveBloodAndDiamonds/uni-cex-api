@@ -159,18 +159,6 @@ class Timeframe(StrEnum):
                 Timeframe.WEEK_1: "1W",
                 Timeframe.MONTH_1: "1M",
             },
-            (Exchange.MEXC, MarketType.FUTURES): {
-                Timeframe.MIN_1: "Min1",
-                Timeframe.MIN_5: "Min5",
-                Timeframe.MIN_15: "Min15",
-                Timeframe.MIN_30: "Min30",
-                Timeframe.HOUR_1: "Min60",
-                Timeframe.HOUR_4: "Hour4",
-                Timeframe.HOUR_8: "Hour8",
-                Timeframe.DAY_1: "Day1",
-                Timeframe.WEEK_1: "Week1",
-                Timeframe.MONTH_1: "Month1",
-            },
             (Exchange.MEXC, MarketType.SPOT): {
                 Timeframe.MIN_1: "1m",
                 Timeframe.MIN_5: "5m",
@@ -182,6 +170,18 @@ class Timeframe(StrEnum):
                 Timeframe.DAY_1: "1d",
                 Timeframe.WEEK_1: "1W",
                 Timeframe.MONTH_1: "1M",
+            },
+            (Exchange.MEXC, MarketType.FUTURES): {
+                Timeframe.MIN_1: "Min1",
+                Timeframe.MIN_5: "Min5",
+                Timeframe.MIN_15: "Min15",
+                Timeframe.MIN_30: "Min30",
+                Timeframe.HOUR_1: "Min60",
+                Timeframe.HOUR_4: "Hour4",
+                Timeframe.HOUR_8: "Hour8",
+                Timeframe.DAY_1: "Day1",
+                Timeframe.WEEK_1: "Week1",
+                Timeframe.MONTH_1: "Month1",
             },
             Exchange.OKX: {
                 Timeframe.MIN_1: "1m",
@@ -231,7 +231,15 @@ class Timeframe(StrEnum):
 
     def to_exchange_format(self, exchange: Exchange, market_type: MarketType | None = None) -> str:
         """Конвертирует таймфрейм в формат, подходящий для указанной биржи."""
-        key = exchange if not market_type else exchange + market_type
+        # Обрабатываем ситуацию, при которой биржа имеет одинаковый маппинг как на споте, так и на фьючерсах:
+        if exchange in self.mapping:
+            key = exchange
+        else:
+            if not market_type:
+                raise ValueError(
+                    f"Market type is required for exchange {exchange.value} to map to timeframe {self.value}"
+                )
+            key = exchange + market_type
         try:
             return self.mapping[key][self]  # type: ignore
         except KeyError as e:
