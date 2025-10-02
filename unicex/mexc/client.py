@@ -692,7 +692,7 @@ class Client(BaseClient):
     ) -> dict:
         """Получение свечных данных по контракту.
 
-        https://contract.mexc.com/api/v1/contract/kline/{symbol}
+        https://www.mexc.com/api-docs/futures/market-endpoints#k-line-data
         """
         params = {
             "interval": interval,
@@ -764,7 +764,7 @@ class Client(BaseClient):
     async def futures_ticker(self, symbol: str | None = None) -> dict:
         """Получение текущих параметров тренда по контракту.
 
-        https://contract.mexc.com/api/v1/contract/ticker
+        https://www.mexc.com/api-docs/futures/market-endpoints#get-contract-trend-data
         """
         params = {"symbol": symbol}
 
