@@ -116,6 +116,41 @@ def generate_ex_link(exchange: Exchange, market_type: MarketType, symbol: str):
             return f"https://www.bitget.com/ru/futures/usdt/{symbol}"
         else:
             return f"https://www.bitget.com/ru/spot/{symbol}"
+    elif exchange == Exchange.OKX:
+        if market_type == MarketType.FUTURES:
+            return f"https://www.okx.com/ru/trade-swap/{ticker.lower()}-usdt-swap"
+        else:
+            return f"https://www.okx.com/ru/trade-spot/{ticker.lower()}-usdt"
+    elif exchange == Exchange.MEXC:
+        if market_type == MarketType.FUTURES:
+            return f"https://www.mexc.com/ru-RU/futures/{ticker}_USDT?type=linear_swap"
+        else:
+            return f"https://www.mexc.com/ru-RU/exchange/{ticker}_USDT"
+    elif exchange == Exchange.GATEIO:
+        if market_type == MarketType.FUTURES:
+            return f"https://www.gate.com/ru/futures/USDT/{ticker}_USDT"
+        else:
+            return f"https://www.gate.com/ru/trade/{ticker}_USDT"
+    elif exchange == Exchange.XT:
+        if market_type == MarketType.FUTURES:
+            return f"https://www.xt.com/ru/futures/trade/{ticker.lower()}_usdt"
+        else:
+            return f"https://www.xt.com/ru/trade/{ticker.lower()}_usdt"
+    elif exchange == Exchange.BITUNIX:
+        if market_type == MarketType.FUTURES:
+            return f"https://www.bitunix.com/ru-ru/contract-trade/{ticker.upper()}USDT"
+        else:
+            return f"https://www.bitunix.com/ru-ru/spot-trade/{ticker.upper()}USDT"
+    elif exchange == Exchange.KCEX:
+        if market_type == MarketType.FUTURES:
+            return f"https://www.kcex.com/ru-RU/futures/exchange/{ticker.upper()}_USDT"
+        else:
+            return f"https://www.kcex.com/ru-RU/exchange/{ticker.upper()}_USDT"
+    elif exchange == Exchange.HYPERLIQUID:
+        if market_type == MarketType.FUTURES:
+            return f"https://app.hyperliquid.xyz/trade/{ticker}"
+        else:
+            return f"https://www.kcex.com/ru-RU/exchange/{ticker}/USDC"
     else:
         raise NotSupported(f"Exchange {exchange} is not supported")
 
@@ -133,10 +168,8 @@ def generate_tv_link(exchange: Exchange, market_type: MarketType, symbol: str) -
     """
     if market_type == MarketType.FUTURES:
         return f"https://www.tradingview.com/chart/?symbol={exchange}:{symbol}.P"
-    elif market_type == MarketType.SPOT:
-        return f"https://www.tradingview.com/chart/?symbol={exchange}:{symbol}"
     else:
-        raise NotSupported(f"Unsupported market type: {market_type}")
+        return f"https://www.tradingview.com/chart/?symbol={exchange}:{symbol}"
 
 
 def generate_cg_link(exchange: Exchange, market_type: MarketType, symbol: str) -> str:
@@ -150,19 +183,25 @@ def generate_cg_link(exchange: Exchange, market_type: MarketType, symbol: str) -
     Возвращает:
         `str`: Ссылка для CoinGlass.
     """
+    base_url = "https://www.coinglass.com/tv/ru"
+
     if market_type == MarketType.FUTURES:
-        if exchange == Exchange.BITGET:
-            # https://www.coinglass.com/tv/ru/Bitget_ETHUSDT_UMCBL
-            return f"https://www.coinglass.com/tv/ru/{exchange.capitalize()}_{symbol}_UMCBL"
-        else:
-            # Стандартный вид ссылки (Подходит для BYBIT и BINANCE)
-            return f"https://www.coinglass.com/tv/ru/{exchange.capitalize()}_{symbol}"
-    elif market_type == MarketType.SPOT:
-        if exchange == Exchange.BITGET:
-            # Для спота нет ссылки на койнгласс
-            return f"https://www.coinglass.com/tv/ru/{exchange.capitalize()}_{symbol}_UMCBL"
-        else:
-            # Стандартный вид ссылки (Подходит для BYBIT и BINANCE)
-            return f"https://www.coinglass.com/tv/ru/SPOT_{exchange.capitalize()}_{symbol}"
+        match exchange:
+            case Exchange.OKX:
+                return f"{base_url}/{exchange.upper()}_{symbol.replace('USDT', '-USDT')}-SWAP"
+            case Exchange.MEXC:
+                return f"{base_url}/{exchange.upper()}_{symbol.replace('USDT', '_USDT')}"
+            case Exchange.BITGET:
+                return f"{base_url}/{exchange.capitalize()}_{symbol}_UMCBL"
+            case Exchange.GATEIO:
+                return f"{base_url}/{exchange.capitalize()}_{symbol.replace('USDT', '_USDT')}"
+            case Exchange.BITUNIX:
+                return f"{base_url}/{exchange.capitalize()}_{symbol}"
+            case _:
+                return f"{base_url}/{exchange.capitalize()}_{symbol}"
     else:
-        raise NotSupported(f"Market type {market_type} is not supported")
+        # Для спота корректная ссылка есть только у OKX
+        if exchange == Exchange.OKX:
+            return f"{base_url}/SPOT_{exchange.upper()}_{symbol.replace('USDT', '-USDT')}"
+        # Для остальных бирж ссылки нет → возвращаем заглушку
+        return base_url
