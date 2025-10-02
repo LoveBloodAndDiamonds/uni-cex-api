@@ -21,7 +21,7 @@ import loguru
 type LoggerLike = LoggingLogger | loguru.Logger
 """Объединение логгеров: loguru._logger.Logger или logging.Logger."""
 
-type RequestMethod = Literal["GET", "POST", "PUT", "DELETE"]
+type RequestMethod = Literal["GET", "POST", "PUT", "DELETE", "PATCH"]
 """Типы методов HTTP запросов."""
 
 

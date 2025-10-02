@@ -14,11 +14,11 @@ async def main() -> None:
 
     from pprint import pp
 
-    pp(await bitrue_client.server_time())
-    pp(await btse_client.server_time())
+    # pp(await bitrue_client.server_time())
+    # pp(await btse_client.server_time())
     pp(await gateio_client.server_time())
-    pp(await kraken_client.server_time())
-    pp(await kucoin_client.server_time())
+    # pp(await kraken_client.server_time())
+    # pp(await kucoin_client.server_time())
 
     await bitrue_client.close_connection()
     await btse_client.close_connection()
