@@ -1,11 +1,13 @@
 __all__ = ["UniClient"]
 
 
+import time
 from typing import overload
 
 from unicex._abc import IUniClient
-from unicex.enums import Exchange, Timeframe
+from unicex.enums import Exchange, MarketType, Timeframe
 from unicex.types import KlineDict, OpenInterestDict, OpenInterestItem, TickerDailyDict
+from unicex.utils import symbol_to_exchange_format
 
 from .adapter import Adapter
 from .client import Client
@@ -63,7 +65,7 @@ class UniClient(IUniClient[Client]):
             dict[str, float]: Словарь с последними ценами для каждого тикера.
         """
         raw_data = await self._client.futures_ticker()
-        return Adapter.last_price(raw_data=raw_data)  # type: ignore[reportArgumentType]
+        return Adapter.futures_last_price(raw_data=raw_data)  # type: ignore[reportArgumentType]
 
     async def ticker_24hr(self) -> TickerDailyDict:
         """Возвращает статистику за последние 24 часа для каждого тикера.
@@ -81,7 +83,7 @@ class UniClient(IUniClient[Client]):
             TickerDailyDict: Словарь с статистикой за последние 24 часа для каждого тикера.
         """
         raw_data = await self._client.futures_ticker()
-        return Adapter.ticker_24hr(raw_data=raw_data)  # type: ignore[reportArgumentType]
+        return Adapter.futures_ticker_24hr(raw_data=raw_data)  # type: ignore[reportArgumentType]
 
     async def klines(
         self,
@@ -105,7 +107,7 @@ class UniClient(IUniClient[Client]):
         """
         raw_data = await self._client.klines(
             symbol=symbol,
-            interval=interval.to_exchange_format(Exchange.MEXC),
+            interval=interval.to_exchange_format(Exchange.MEXC, MarketType.SPOT),
             start_time=start_time,
             end_time=end_time,
             limit=limit,
@@ -132,8 +134,11 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             list[KlineDict]: Список свечей для тикера.
         """
+        if limit:  # Перезаписываем start_time и end_time если указан limit, т.к. по умолчанию Mexc Futures не принимают этот параметр
+            end_time = int(time.time())
+            start_time = end_time - (limit * interval.to_seconds)  # type: ignore[reportOptionalOperand]
         raw_data = await self._client.futures_kline(
-            symbol=symbol,
+            symbol=symbol_to_exchange_format(symbol, Exchange.MEXC, MarketType.FUTURES),
             interval=interval.to_exchange_format(Exchange.MEXC),
             start=start_time,
             end=end_time,
@@ -171,4 +176,7 @@ class UniClient(IUniClient[Client]):
         """
         raw_data = await self._client.futures_ticker()
         adapted_data = Adapter.open_interest(raw_data=raw_data)  # type: ignore[reportArgumentType]
-        return adapted_data[symbol] if symbol else adapted_data
+        if symbol:
+            exchange_symbol = symbol_to_exchange_format(symbol, Exchange.MEXC, MarketType.FUTURES)
+            return adapted_data[exchange_symbol]
+        return adapted_data

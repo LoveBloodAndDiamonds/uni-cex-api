@@ -8,6 +8,7 @@ __all__ = [
     "batched_list",
     "catch_adapter_errors",
     "decorate_all_methods",
+    "symbol_to_exchange_format",
 ]
 
 import base64
@@ -19,6 +20,7 @@ from functools import wraps
 from typing import Any, Literal
 from urllib.parse import urlencode
 
+from unicex.enums import Exchange, MarketType
 from unicex.exceptions import AdapterError
 
 
@@ -184,3 +186,20 @@ def decorate_all_methods(decorator: Callable[[Callable[..., Any]], Callable[...,
         return cls
 
     return wrapper
+
+
+def symbol_to_exchange_format(
+    symbol: str, exchange: Exchange, market_type: MarketType | None = None
+) -> str:
+    """Преобразует символ в формат, который используется на бирже.
+
+    Параметры:
+        symbol (str): Символ, обязательно в формате 'BTCUSDT' или 'btcusdt'.
+
+    Возвращает:
+        str: Символ в формате, который используется на бирже, заглавными буквами.
+    """
+    symbol_capitalized = symbol.upper()
+    if exchange == Exchange.MEXC and market_type == MarketType.FUTURES:
+        return symbol_capitalized.replace("USDT", "_USDT")
+    return symbol_capitalized

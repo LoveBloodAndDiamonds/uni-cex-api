@@ -151,6 +151,18 @@ class Timeframe(StrEnum):
                 Timeframe.WEEK_1: "Week1",
                 Timeframe.MONTH_1: "Month1",
             },
+            (Exchange.MEXC, MarketType.SPOT): {
+                Timeframe.MIN_1: "1m",
+                Timeframe.MIN_5: "5m",
+                Timeframe.MIN_15: "15m",
+                Timeframe.MIN_30: "30m",
+                Timeframe.HOUR_1: "60m",
+                Timeframe.HOUR_4: "4h",
+                Timeframe.HOUR_8: "8h",
+                Timeframe.DAY_1: "1d",
+                Timeframe.WEEK_1: "1W",
+                Timeframe.MONTH_1: "1M",
+            },
             Exchange.OKX: {
                 Timeframe.MIN_1: "1m",
                 Timeframe.MIN_3: "3m",
@@ -171,11 +183,7 @@ class Timeframe(StrEnum):
 
     def to_exchange_format(self, exchange: Exchange, market_type: MarketType | None = None) -> str:
         """Конвертирует таймфрейм в формат, подходящий для указанной биржи."""
-        key = (
-            exchange
-            if not (exchange is Exchange.BITGET and market_type)
-            else exchange + market_type
-        )
+        key = exchange if not market_type else exchange + market_type
         try:
             return self.mapping[key][self]  # type: ignore
         except KeyError as e:

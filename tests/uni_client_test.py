@@ -10,8 +10,10 @@ from loguru import logger
 logger.remove()
 logger.add(sys.stderr, level="INFO")
 
-exchanges = [Exchange.BYBIT, Exchange.BINANCE, Exchange.BITGET]
+exchanges = [Exchange.MEXC, Exchange.BYBIT, Exchange.BINANCE, Exchange.BITGET]
 """Exchanges to test."""
+
+repr_len = 100
 
 
 async def main() -> None:
@@ -22,54 +24,58 @@ async def main() -> None:
             client = await get_uni_client(e).create(logger=logger)
 
             tickers = await client.tickers()
-            print(f"[{e}] [tickers] {str(tickers)[:70]=}\n{len(tickers)=}\n")
+            print(f"[{e}] [tickers] {str(tickers)[:repr_len]=}\n{len(tickers)=}\n")
 
             tickers_batched = await client.tickers_batched()
             print(
-                f"[{e}] [tickers_batched] {str(tickers_batched)[:70]=}\n{len(tickers_batched)=}\n"
+                f"[{e}] [tickers_batched] {str(tickers_batched)[:repr_len]=}\n{len(tickers_batched)=}\n"
             )
 
             futures_tickers = await client.futures_tickers()
             print(
-                f"[{e}] [futures_tickers] {str(futures_tickers)[:70]=}\n{len(futures_tickers)=}\n"
+                f"[{e}] [futures_tickers] {str(futures_tickers)[:repr_len]=}\n{len(futures_tickers)=}\n"
             )
 
             futures_tickers_batched = await client.futures_tickers_batched()
             print(
-                f"[{e}] [futures_tickers_batched] {str(futures_tickers_batched)[:70]=}\n{len(futures_tickers_batched)=}\n"
+                f"[{e}] [futures_tickers_batched] {str(futures_tickers_batched)[:repr_len]=}\n{len(futures_tickers_batched)=}\n"
             )
 
             last_price = await client.last_price()
-            print(f"[{e}] [last_price] {str(last_price)[:70]=}\n{len(last_price)=}\n")
+            print(f"[{e}] [last_price] {str(last_price)[:repr_len]=}\n{len(last_price)=}\n")
 
             futures_last_price = await client.futures_last_price()
             print(
-                f"[{e}] [futures_last_price] {str(futures_last_price)[:70]=}\n{len(futures_last_price)=}\n"
+                f"[{e}] [futures_last_price] {str(futures_last_price)[:repr_len]=}\n{len(futures_last_price)=}\n"
             )
 
             ticker_24hr = await client.ticker_24hr()
-            print(f"[{e}] [ticker_24hr] {str(ticker_24hr)[:70]=}\n{len(ticker_24hr)=}\n")
+            print(f"[{e}] [ticker_24hr] {str(ticker_24hr)[:repr_len]=}\n{len(ticker_24hr)=}\n")
 
             futures_ticker_24hr = await client.futures_ticker_24hr()
             print(
-                f"[{e}] [futures_ticker_24hr] {str(futures_ticker_24hr)[:70]=}\n{len(futures_ticker_24hr)=}\n"
+                f"[{e}] [futures_ticker_24hr] {str(futures_ticker_24hr)[:repr_len]=}\n{len(futures_ticker_24hr)=}\n"
             )
 
             klines = await client.klines(symbol="BTCUSDT", interval=Timeframe.DAY_1, limit=10)
-            print(f"[{e}] [klines] {str(klines)[:70]=}\n{len(klines)=}\n")
+            print(f"[{e}] [klines] {str(klines)[:repr_len]=}\n{len(klines)=}\n")
 
             futures_klines = await client.futures_klines(
                 symbol="BTCUSDT", interval=Timeframe.DAY_1, limit=10
             )
-            print(f"[{e}] [futures_klines] {str(futures_klines)[:70]=}\n{len(futures_klines)=}\n")
+            print(
+                f"[{e}] [futures_klines] {str(futures_klines)[:repr_len]=}\n{len(futures_klines)=}\n"
+            )
 
             if e not in [Exchange.BINANCE]:
                 open_interest = await client.open_interest()
-                print(f"[{e}] [open_interest] {str(open_interest)[:70]=}\n{len(open_interest)=}\n")
+                print(
+                    f"[{e}] [open_interest] {str(open_interest)[:repr_len]=}\n{len(open_interest)=}\n"
+                )
 
             single_open_interest = await client.open_interest(symbol="BTCUSDT")
             print(
-                f"[{e}] [single_open_interest] {str(single_open_interest)[:70]=}\n{len(single_open_interest)=}\n"
+                f"[{e}] [single_open_interest] {str(single_open_interest)[:repr_len]=}\n{len(single_open_interest)=}\n"
             )
 
             print("-------------\n")

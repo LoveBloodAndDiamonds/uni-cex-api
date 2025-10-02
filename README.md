@@ -51,7 +51,7 @@
 | Kcex        |           |                      |
 | Kraken      |           |                      |
 | Kucoin      |           |                      |
-| Mexc        |           |                      |
+| Mexc        | ✅        |                      |
 | Okx         |           |                      |
 | Weex        |           |                      |
 | Xt          |           |                      |
