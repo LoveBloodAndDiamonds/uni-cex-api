@@ -9,14 +9,14 @@ from unicex.types import (
     TickerDailyItem,
     TradeDict,
 )
-from unicex.utils import catch_adapter_errors
+from unicex.utils import catch_adapter_errors, decorate_all_methods
 
 
+@decorate_all_methods(catch_adapter_errors)
 class Adapter:
     """Адаптер для унификации данных с Binance API."""
 
     @staticmethod
-    @catch_adapter_errors
     def tickers(raw_data: list[dict], only_usdt: bool = True) -> list[str]:
         """Преобразует сырой ответ, в котором содержатся данные о тикерах в список тикеров.
 
@@ -32,7 +32,6 @@ class Adapter:
         ]
 
     @staticmethod
-    @catch_adapter_errors
     def futures_tickers(raw_data: list[dict], only_usdt: bool = True) -> list[str]:
         """Преобразует сырой ответ, в котором содержатся данные о тикерах в список тикеров.
 
@@ -46,7 +45,6 @@ class Adapter:
         return Adapter.tickers(raw_data, only_usdt)
 
     @staticmethod
-    @catch_adapter_errors
     def ticker_24hr(raw_data: list[dict]) -> TickerDailyDict:
         """Преобразует сырой ответ, в котором содержатся данные о тикере за последние 24 часа в унифицированный формат.
 
@@ -66,7 +64,6 @@ class Adapter:
         }
 
     @staticmethod
-    @catch_adapter_errors
     def futures_ticker_24hr(raw_data: list[dict]) -> TickerDailyDict:
         """Преобразует сырой ответ, в котором содержатся данные о тикере за последние 24 часа в унифицированный формат.
 
@@ -79,7 +76,6 @@ class Adapter:
         return Adapter.ticker_24hr(raw_data)
 
     @staticmethod
-    @catch_adapter_errors
     def last_price(raw_data: list[dict]) -> dict[str, float]:
         """Преобразует сырой ответ, в котором содержатся данные о тикере за последние 24 часа в унифицированный формат.
 
@@ -92,7 +88,6 @@ class Adapter:
         return {item["symbol"]: float(item["price"]) for item in raw_data}
 
     @staticmethod
-    @catch_adapter_errors
     def futures_last_price(raw_data: list[dict]) -> dict[str, float]:
         """Преобразует сырой ответ, в котором содержатся данные о тикере за последние 24 часа в унифицированный формат.
 
@@ -105,7 +100,6 @@ class Adapter:
         return Adapter.last_price(raw_data)
 
     @staticmethod
-    @catch_adapter_errors
     def klines(raw_data: list[list]) -> list[KlineDict]:
         """Преобразует сырой ответ, в котором содержатся данные о котировках тикеров в унифицированный формат.
 
@@ -132,7 +126,6 @@ class Adapter:
         ]
 
     @staticmethod
-    @catch_adapter_errors
     def futures_klines(raw_data: list[list]) -> list[KlineDict]:
         """Преобразует сырой ответ, в котором содержатся данные о котировках тикеров в унифицированный формат.
 
@@ -145,7 +138,6 @@ class Adapter:
         return Adapter.klines(raw_data)
 
     @staticmethod
-    @catch_adapter_errors
     def funding_rate(raw_data: list[dict]) -> dict[str, float]:
         """Преобразует сырой ответ, в котором содержатся данные о ставках финансирования тикеров в унифицированный формат.
 
@@ -158,7 +150,6 @@ class Adapter:
         return {item["symbol"]: float(item["lastFundingRate"]) * 100 for item in raw_data}
 
     @staticmethod
-    @catch_adapter_errors
     def klines_message(raw_msg: dict) -> list[KlineDict]:
         """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
         свече/свечах в унифицированный вид.
@@ -187,7 +178,6 @@ class Adapter:
         ]
 
     @staticmethod
-    @catch_adapter_errors
     def futures_klines_message(raw_msg: dict) -> list[KlineDict]:
         """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
         свече/свечах в унифицированный вид.
@@ -201,7 +191,6 @@ class Adapter:
         return Adapter.klines_message(raw_msg)
 
     @staticmethod
-    @catch_adapter_errors
     def aggtrades_message(raw_msg: dict) -> list[AggTradeDict]:
         """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
         аггрегированных сделке/сделках в унифицированный вид.
@@ -224,7 +213,6 @@ class Adapter:
         ]
 
     @staticmethod
-    @catch_adapter_errors
     def futures_aggtrades_message(raw_msg: dict) -> list[AggTradeDict]:
         """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
         аггрегированных сделке/сделках в унифицированный вид.
@@ -238,7 +226,6 @@ class Adapter:
         return Adapter.aggtrades_message(raw_msg)
 
     @staticmethod
-    @catch_adapter_errors
     def trades_message(raw_msg: dict) -> list[TradeDict]:
         """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
         сделке/сделках в унифицированный вид.
@@ -261,7 +248,6 @@ class Adapter:
         ]
 
     @staticmethod
-    @catch_adapter_errors
     def futures_trades_message(raw_msg: dict) -> list[TradeDict]:
         """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
         сделке/сделках в унифицированный вид.
@@ -275,7 +261,6 @@ class Adapter:
         return Adapter.trades_message(raw_msg)
 
     @staticmethod
-    @catch_adapter_errors
     def open_interest(raw_data: dict) -> OpenInterestItem:
         """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
         объеме открытых позиций в унифицированный вид.

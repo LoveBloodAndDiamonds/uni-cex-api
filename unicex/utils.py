@@ -138,7 +138,7 @@ def catch_adapter_errors(func: Callable):
 
             raise AdapterError(
                 f"({type(e).__name__}): {e}. Can not convert input (args={args_preview}, kwargs={kwargs_preview}) in function `{func.__name__}`."
-            ) from e
+            ) from None
 
     return wrapper
 
