@@ -29,7 +29,7 @@ class Adapter:
         """
         return [
             item["symbol"]
-            for item in raw_data.get("data", [])
+            for item in raw_data["data"]
             if not only_usdt or item["symbol"].endswith("USDT")
         ]
 
@@ -50,7 +50,7 @@ class Adapter:
                 v=float(item["baseVolume"]),  # объём в COIN
                 q=float(item["usdtVolume"]),  # объём в USDT
             )
-            for item in raw_data.get("data", [])
+            for item in raw_data["data"]
         }
 
     @staticmethod
@@ -64,7 +64,7 @@ class Adapter:
         Возвращает:
             dict[str, float]: Словарь, где ключ - тикер, а значение - последняя цена.
         """
-        return {item["symbol"]: float(item["lastPr"]) for item in raw_data.get("data", [])}
+        return {item["symbol"]: float(item["lastPr"]) for item in raw_data["data"]}
 
     @staticmethod
     def klines(raw_data: Any, symbol: str) -> list[KlineDict]:
@@ -108,9 +108,7 @@ class Adapter:
         Возвращает:
             dict[str, float]: Словарь, где ключ - тикер, а значение - ставка финансирования.
         """
-        return {
-            item["symbol"]: float(item["fundingRate"]) * 100 for item in raw_data.get("data", [])
-        }
+        return {item["symbol"]: float(item["fundingRate"]) * 100 for item in raw_data["data"]}
 
     @staticmethod
     def klines_message(raw_msg: Any) -> list[KlineDict]:

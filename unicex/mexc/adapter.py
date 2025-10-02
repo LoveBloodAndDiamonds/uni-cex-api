@@ -163,7 +163,7 @@ class Adapter:
             )
             for kline in sorted(
                 raw_data,
-                key=lambda x: int(x[0]),  # Bitget присылает пачку трейдов в обратном порядке
+                key=lambda x: int(x[0]),
             )
         ]
 
@@ -178,15 +178,15 @@ class Adapter:
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
         """
-        data = raw_data.get("data") or {}
+        data = raw_data["data"]
 
-        times = data.get("time") or []
-        opens = data.get("open") or []
-        highs = data.get("high") or []
-        lows = data.get("low") or []
-        closes = data.get("close") or []
-        volumes = data.get("vol") or []
-        amounts = data.get("amount") or []
+        times = data["time"]
+        opens = data["open"]
+        highs = data["high"]
+        lows = data["low"]
+        closes = data["close"]
+        volumes = data["vol"]
+        amounts = data["amount"]
 
         klines: list[KlineDict] = []
 

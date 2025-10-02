@@ -111,7 +111,7 @@ class UniClient(IUniClient[Client]):
             end=end_time,
             limit=limit,
         )
-        return Adapter.kline(raw_data)
+        return Adapter.klines(raw_data)
 
     async def futures_klines(
         self,
@@ -141,7 +141,7 @@ class UniClient(IUniClient[Client]):
             end=end_time,
             limit=limit,
         )
-        return Adapter.kline(raw_data)
+        return Adapter.klines(raw_data)
 
     @overload
     async def funding_rate(self, symbol: str) -> float: ...

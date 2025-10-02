@@ -98,7 +98,7 @@ class Adapter:
         return {item["symbol"]: float(item["lastPrice"]) for item in raw_data["result"]["list"]}
 
     @staticmethod
-    def kline(raw_data: dict) -> list[KlineDict]:
+    def klines(raw_data: dict) -> list[KlineDict]:
         """Преобразует сырой ответ, в котором содержатся данные о свечах, в унифицированный формат.
 
         Параметры:

@@ -100,7 +100,7 @@ class Adapter:
             )
             for kline in sorted(
                 raw_data,
-                key=lambda x: int(x[0]),  # Bitget присылает пачку трейдов в обратном порядке
+                key=lambda x: int(x[0]),
             )
         ]
 
