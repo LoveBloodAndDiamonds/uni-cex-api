@@ -145,14 +145,31 @@ class UniClient(IUniClient[Client]):
         )
         return Adapter.futures_klines(raw_data=raw_data, symbol=symbol)
 
-    async def funding_rate(self) -> dict[str, float]:
-        """Возвращает ставку финансирования для всех тикеров.
+    @overload
+    async def funding_rate(self, symbol: str) -> float: ...
+
+    @overload
+    async def funding_rate(self, symbol: None) -> dict[str, float]: ...
+
+    @overload
+    async def funding_rate(self) -> dict[str, float]: ...
+
+    async def funding_rate(self, symbol: str | None = None) -> dict[str, float] | float:
+        """Возвращает ставку финансирования для тикера или всех тикеров, если тикер не указан.
+
+        - Параметры:
+        symbol (`str | None`): Название тикера (Опционально).
 
         Возвращает:
-            dict[str, float]: Ставка финансирования для каждого тикера.
+          `dict[str, float] | float`: Ставка финансирования для тикера или словарь со ставками для всех тикеров.
         """
         raw_data = await self._client.futures_ticker()
-        return Adapter.funding_rate(raw_data=raw_data)  # type: ignore[reportArgumentType]
+        adapted_data = Adapter.funding_rate(raw_data=raw_data)  # type: ignore[reportArgumentType]
+        if symbol:
+            return adapted_data[
+                symbol_to_exchange_format(symbol, Exchange.MEXC, MarketType.FUTURES)
+            ]
+        return adapted_data
 
     @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...
@@ -177,6 +194,7 @@ class UniClient(IUniClient[Client]):
         raw_data = await self._client.futures_ticker()
         adapted_data = Adapter.open_interest(raw_data=raw_data)  # type: ignore[reportArgumentType]
         if symbol:
-            exchange_symbol = symbol_to_exchange_format(symbol, Exchange.MEXC, MarketType.FUTURES)
-            return adapted_data[exchange_symbol]
+            return adapted_data[
+                symbol_to_exchange_format(symbol, Exchange.MEXC, MarketType.FUTURES)
+            ]
         return adapted_data

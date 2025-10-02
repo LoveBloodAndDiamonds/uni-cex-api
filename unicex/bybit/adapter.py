@@ -80,7 +80,9 @@ class Adapter:
             dict[str, float]: Словарь, где ключ - тикер, а значение - ставка финансирования.
         """
         return {
-            item["symbol"]: float(item["fundingRate"] * 100) for item in raw_data["result"]["list"]
+            item["symbol"]: float(item["fundingRate"]) * 100
+            for item in raw_data["result"]["list"]
+            if item["fundingRate"]
         }
 
     @staticmethod

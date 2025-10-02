@@ -127,14 +127,14 @@ def catch_adapter_errors(func: Callable):
             return func(*args, **kwargs)
         except Exception as e:
             args_repr = repr(args)
-            if len(args_repr) > 200:
-                args_preview = args_repr[:200] + "... (truncated)"
+            if len(args_repr) > 400:
+                args_preview = args_repr[:400] + "... (truncated)"
             else:
                 args_preview = args_repr
 
             kwargs_repr = repr(kwargs)
-            if len(kwargs_repr) > 200:
-                kwargs_preview = kwargs_repr[:200] + "... (truncated)"
+            if len(kwargs_repr) > 400:
+                kwargs_preview = kwargs_repr[:400] + "... (truncated)"
             else:
                 kwargs_preview = kwargs_repr
 

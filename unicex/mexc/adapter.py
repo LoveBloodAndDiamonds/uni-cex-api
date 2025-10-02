@@ -131,7 +131,11 @@ class Adapter:
         Возвращает:
             dict[str, float]: Словарь, где ключ - тикер, а значение - ставка финансирования.
         """
-        return {item["symbol"]: float(item["fundingRate"]) * 100 for item in raw_data["data"]}
+        return {
+            item["symbol"]: float(item["fundingRate"]) * 100
+            for item in raw_data["data"]
+            if "fundingRate" in item  # В некоторых элементах item нет ключа 'fundingRate'
+        }
 
     @staticmethod
     def klines(raw_data: list[list], symbol: str) -> list[KlineDict]:

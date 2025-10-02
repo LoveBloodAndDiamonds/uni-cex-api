@@ -1,85 +1,134 @@
 import asyncio
-
-from pprint import pp
 import sys
-from unicex import get_uni_client
+import time
+from pprint import pp
 
+from unicex import get_uni_client
+from unicex._abc.uni_client import IUniClient
 from unicex.enums import Exchange, Timeframe
 from loguru import logger
+
+# ---------------- CONFIG ---------------- #
+
+# Глобальный флаг: если True — тестируются все методы
+test_all = False
+
+# Индивидуальные флаги: если test_all=False, берём отсюда
+tests_config = {
+    "tickers": True,
+    "tickers_batched": True,
+    "futures_tickers": True,
+    "futures_tickers_batched": True,
+    "last_price": True,
+    "futures_last_price": True,
+    "ticker_24hr": True,
+    "futures_ticker_24hr": True,
+    "klines": True,
+    "futures_klines": True,
+    "open_interest": True,
+    "single_open_interest": True,
+    "funding_rate": True,
+    "single_funding_rate": True,
+}
+
+# Какие биржи тестировать
+exchanges = [Exchange.MEXC, Exchange.BYBIT, Exchange.BINANCE, Exchange.BITGET]
+
+# Сколько символов показывать в превью вывода
+repr_len = 100
+
+# ---------------------------------------- #
 
 logger.remove()
 logger.add(sys.stderr, level="INFO")
 
-exchanges = [Exchange.MEXC, Exchange.BYBIT, Exchange.BINANCE, Exchange.BITGET]
-"""Exchanges to test."""
 
-repr_len = 100
+def should_run(test_name: str) -> bool:
+    """Определяет, запускать ли тест."""
+    return test_all or tests_config.get(test_name, False)
+
+
+def pretty_print(exchange: Exchange, test_name: str, result):
+    """Красивый вывод результата теста."""
+    cyan = "\033[96m"
+    reset = "\033[0m"
+    print(f"{cyan}[{exchange}] [{test_name}]{reset}")
+    print(f"  preview: {str(result)[:repr_len]}")
+    try:
+        print(f"  length : {len(result)}\n")
+    except Exception:
+        pass
+
+
+async def test_exchange(e: Exchange, client: IUniClient) -> None:
+    """Тестирование одной биржи."""
+    if should_run("tickers"):
+        tickers = await client.tickers()
+        pretty_print(e, "tickers", tickers)
+
+    if should_run("tickers_batched"):
+        tickers_batched = await client.tickers_batched()
+        pretty_print(e, "tickers_batched", tickers_batched)
+
+    if should_run("futures_tickers"):
+        futures_tickers = await client.futures_tickers()
+        pretty_print(e, "futures_tickers", futures_tickers)
+
+    if should_run("futures_tickers_batched"):
+        futures_tickers_batched = await client.futures_tickers_batched()
+        pretty_print(e, "futures_tickers_batched", futures_tickers_batched)
+
+    if should_run("last_price"):
+        last_price = await client.last_price()
+        pretty_print(e, "last_price", last_price)
+
+    if should_run("futures_last_price"):
+        futures_last_price = await client.futures_last_price()
+        pretty_print(e, "futures_last_price", futures_last_price)
+
+    if should_run("ticker_24hr"):
+        ticker_24hr = await client.ticker_24hr()
+        pretty_print(e, "ticker_24hr", ticker_24hr)
+
+    if should_run("futures_ticker_24hr"):
+        futures_ticker_24hr = await client.futures_ticker_24hr()
+        pretty_print(e, "futures_ticker_24hr", futures_ticker_24hr)
+
+    if should_run("klines"):
+        klines = await client.klines(symbol="BTCUSDT", interval=Timeframe.DAY_1, limit=10)
+        pretty_print(e, "klines", klines)
+
+    if should_run("futures_klines"):
+        futures_klines = await client.futures_klines(
+            symbol="BTCUSDT", interval=Timeframe.DAY_1, limit=10
+        )
+        pretty_print(e, "futures_klines", futures_klines)
+
+    if should_run("open_interest") and e not in [Exchange.BINANCE]:
+        open_interest = await client.open_interest()
+        pretty_print(e, "open_interest", open_interest)
+
+    if should_run("single_open_interest"):
+        single_open_interest = await client.open_interest(symbol="BTCUSDT")
+        pretty_print(e, "single_open_interest", single_open_interest)
+
+    if should_run("funding_rate"):
+        funding_rate = await client.funding_rate()
+        pretty_print(e, "funding_rate", funding_rate)
+
+    if should_run("single_funding_rate"):
+        single_funding_rate = await client.funding_rate(symbol="BTCUSDT")
+        pretty_print(e, "single_funding_rate", single_funding_rate)
 
 
 async def main() -> None:
     """Main entry point for the tests."""
 
-    for e in exchanges:
+    for exchange in exchanges:
         try:
-            client = await get_uni_client(e).create(logger=logger)
-
-            tickers = await client.tickers()
-            print(f"[{e}] [tickers] {str(tickers)[:repr_len]=}\n{len(tickers)=}\n")
-
-            tickers_batched = await client.tickers_batched()
-            print(
-                f"[{e}] [tickers_batched] {str(tickers_batched)[:repr_len]=}\n{len(tickers_batched)=}\n"
-            )
-
-            futures_tickers = await client.futures_tickers()
-            print(
-                f"[{e}] [futures_tickers] {str(futures_tickers)[:repr_len]=}\n{len(futures_tickers)=}\n"
-            )
-
-            futures_tickers_batched = await client.futures_tickers_batched()
-            print(
-                f"[{e}] [futures_tickers_batched] {str(futures_tickers_batched)[:repr_len]=}\n{len(futures_tickers_batched)=}\n"
-            )
-
-            last_price = await client.last_price()
-            print(f"[{e}] [last_price] {str(last_price)[:repr_len]=}\n{len(last_price)=}\n")
-
-            futures_last_price = await client.futures_last_price()
-            print(
-                f"[{e}] [futures_last_price] {str(futures_last_price)[:repr_len]=}\n{len(futures_last_price)=}\n"
-            )
-
-            ticker_24hr = await client.ticker_24hr()
-            print(f"[{e}] [ticker_24hr] {str(ticker_24hr)[:repr_len]=}\n{len(ticker_24hr)=}\n")
-
-            futures_ticker_24hr = await client.futures_ticker_24hr()
-            print(
-                f"[{e}] [futures_ticker_24hr] {str(futures_ticker_24hr)[:repr_len]=}\n{len(futures_ticker_24hr)=}\n"
-            )
-
-            klines = await client.klines(symbol="BTCUSDT", interval=Timeframe.DAY_1, limit=10)
-            print(f"[{e}] [klines] {str(klines)[:repr_len]=}\n{len(klines)=}\n")
-
-            futures_klines = await client.futures_klines(
-                symbol="BTCUSDT", interval=Timeframe.DAY_1, limit=10
-            )
-            print(
-                f"[{e}] [futures_klines] {str(futures_klines)[:repr_len]=}\n{len(futures_klines)=}\n"
-            )
-
-            if e not in [Exchange.BINANCE]:
-                open_interest = await client.open_interest()
-                print(
-                    f"[{e}] [open_interest] {str(open_interest)[:repr_len]=}\n{len(open_interest)=}\n"
-                )
-
-            single_open_interest = await client.open_interest(symbol="BTCUSDT")
-            print(
-                f"[{e}] [single_open_interest] {str(single_open_interest)[:repr_len]=}\n{len(single_open_interest)=}\n"
-            )
-
+            client = await get_uni_client(exchange).create(logger=logger)
+            await test_exchange(exchange, client)
             print("-------------\n")
-
         except Exception as exc:
             logger.error(f"[{e}] Error: {exc}")
             sys.exit(1)
@@ -88,7 +137,7 @@ async def main() -> None:
                 await client.close_connection()
             except:
                 pass
-    logger.success(f"[{e}] Success")
+    logger.success(f"[{exchange}] Success")
 
 
 if __name__ == "__main__":

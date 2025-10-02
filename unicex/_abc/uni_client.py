@@ -284,12 +284,24 @@ class IUniClient(ABC, Generic[TClient]):
         """
         ...
 
+    @overload
+    async def funding_rate(self, symbol: str) -> float: ...
+
+    @overload
+    async def funding_rate(self, symbol: None) -> dict[str, float]: ...
+
+    @overload
+    async def funding_rate(self) -> dict[str, float]: ...
+
     @abstractmethod
-    async def funding_rate(self) -> dict[str, float]:
-        """Возвращает ставку финансирования для всех тикеров.
+    async def funding_rate(self, symbol: str | None = None) -> dict[str, float] | float:
+        """Возвращает ставку финансирования для тикера или всех тикеров, если тикер не указан.
+
+        Параметры:
+            symbol (`str | None`): Название тикера (Опционально).
 
         Возвращает:
-            `dict[str, float]`: Ставка финансирования для каждого тикера.
+            `dict[str, float] | float`: Ставка финансирования для тикера или словарь со ставками для всех тикеров.
         """
         ...
 

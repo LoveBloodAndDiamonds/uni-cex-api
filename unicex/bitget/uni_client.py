@@ -141,14 +141,27 @@ class UniClient(IUniClient[Client]):
         )
         return Adapter.klines(raw_data=raw_data, symbol=symbol)
 
-    async def funding_rate(self) -> dict[str, float]:
-        """Возвращает ставку финансирования для всех тикеров.
+    @overload
+    async def funding_rate(self, symbol: str) -> float: ...
+
+    @overload
+    async def funding_rate(self, symbol: None) -> dict[str, float]: ...
+
+    @overload
+    async def funding_rate(self) -> dict[str, float]: ...
+
+    async def funding_rate(self, symbol: str | None = None) -> dict[str, float] | float:
+        """Возвращает ставку финансирования для тикера или всех тикеров, если тикер не указан.
+
+        - Параметры:
+        symbol (`str | None`): Название тикера (Опционально).
 
         Возвращает:
-            `dict[str, float]`: Ставка финансирования для каждого тикера.
+          `dict[str, float] | float`: Ставка финансирования для тикера или словарь со ставками для всех тикеров.
         """
         raw_data = await self._client.futures_get_all_tickers("USDT-FUTURES")
-        return Adapter.funding_rate(raw_data)
+        adapted_data = Adapter.funding_rate(raw_data)
+        return adapted_data[symbol] if symbol else adapted_data
 
     @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...
