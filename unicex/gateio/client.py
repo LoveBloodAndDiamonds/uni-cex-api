@@ -704,18 +704,14 @@ class Client(BaseClient):
             "offset": offset,
         }
 
-        return await self._make_request(
-            "GET", f"/api/v4/futures/{settle}/contracts", params=params
-        )
+        return await self._make_request("GET", f"/api/v4/futures/{settle}/contracts", params=params)
 
     async def futures_contract(self, settle: str, contract: str) -> dict:
         """Получение информации о конкретном фьючерсном контракте.
 
         https://www.gate.com/docs/developers/apiv4/en/#query-single-contract-information
         """
-        return await self._make_request(
-            "GET", f"/api/v4/futures/{settle}/contracts/{contract}"
-        )
+        return await self._make_request("GET", f"/api/v4/futures/{settle}/contracts/{contract}")
 
     async def futures_order_book(
         self,
@@ -763,9 +759,7 @@ class Client(BaseClient):
             "to": to_time,
         }
 
-        return await self._make_request(
-            "GET", f"/api/v4/futures/{settle}/trades", params=params
-        )
+        return await self._make_request("GET", f"/api/v4/futures/{settle}/trades", params=params)
 
     async def futures_candlesticks(
         self,
@@ -832,9 +826,7 @@ class Client(BaseClient):
             "contract": contract,
         }
 
-        return await self._make_request(
-            "GET", f"/api/v4/futures/{settle}/tickers", params=params
-        )
+        return await self._make_request("GET", f"/api/v4/futures/{settle}/tickers", params=params)
 
     async def futures_funding_rate(
         self,
@@ -872,9 +864,7 @@ class Client(BaseClient):
             "limit": limit,
         }
 
-        return await self._make_request(
-            "GET", f"/api/v4/futures/{settle}/insurance", params=params
-        )
+        return await self._make_request("GET", f"/api/v4/futures/{settle}/insurance", params=params)
 
     async def futures_contract_stats(
         self,
@@ -957,9 +947,7 @@ class Client(BaseClient):
 
         https://www.gate.com/docs/developers/apiv4/en/#get-futures-account
         """
-        return await self._make_request(
-            "GET", f"/api/v4/futures/{settle}/accounts", signed=True
-        )
+        return await self._make_request("GET", f"/api/v4/futures/{settle}/accounts", signed=True)
 
     async def futures_account_book(
         self,
@@ -1320,7 +1308,10 @@ class Client(BaseClient):
         """
         # NOTE: Документация требует массив объектов ордеров, запрос сериализуется как JSON-массив.
         return await self._make_request(
-            "POST", f"/api/v4/futures/{settle}/batch_orders", data=orders, signed=True
+            "POST",
+            f"/api/v4/futures/{settle}/batch_orders",
+            data=orders,  # type: ignore
+            signed=True,
         )
 
     async def futures_order(
@@ -1559,7 +1550,7 @@ class Client(BaseClient):
         return await self._make_request(
             "POST",
             f"/api/v4/futures/{settle}/batch_cancel_orders",
-            data=order_ids,
+            data=order_ids,  # type: ignore
             signed=True,
         )
 
@@ -1575,7 +1566,7 @@ class Client(BaseClient):
         return await self._make_request(
             "POST",
             f"/api/v4/futures/{settle}/batch_amend_orders",
-            data=orders,
+            data=orders,  # type: ignore
             signed=True,
         )
 

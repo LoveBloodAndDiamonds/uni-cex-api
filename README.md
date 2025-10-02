@@ -14,7 +14,7 @@
 | Bitunix     |        |             |                |            |         |
 | Btse        |        | ✅          | ✅             |            |         |
 | Bybit       | ✅     | ✅          | ✅             |            |         |
-| Gateio      |        | ✅          | ✅             |            |         |
+| Gateio      | ✅     | ✅          | ✅             |            |         |
 | Hyperliquid |        |             |                |            |         |
 | Kcex        |        |             |                |            |         |
 | Kraken      |        | ✅          | ✅             |            |         |
