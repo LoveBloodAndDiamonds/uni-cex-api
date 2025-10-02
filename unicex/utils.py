@@ -7,6 +7,7 @@ __all__ = [
     "filter_params",
     "batched_list",
     "catch_adapter_errors",
+    "decorate_all_methods",
 ]
 
 import base64
@@ -15,7 +16,7 @@ import hmac
 import json
 from collections.abc import Callable, Iterable
 from functools import wraps
-from typing import Literal
+from typing import Any, Literal
 from urllib.parse import urlencode
 
 from unicex.exceptions import AdapterError
@@ -138,5 +139,48 @@ def catch_adapter_errors(func: Callable):
             raise AdapterError(
                 f"({type(e).__name__}): {e}. Can not convert input (args={args_preview}, kwargs={kwargs_preview}) in function `{func.__name__}`."
             ) from e
+
+    return wrapper
+
+
+def decorate_all_methods(decorator: Callable[[Callable[..., Any]], Callable[..., Any]]) -> Callable:
+    """Класс-декоратор, который оборачивает все методы класса указанным декоратором.
+
+    Декоратор применяется только к методам/функциям, не начинающимся с "__".
+
+    Парамтеры:
+        decorator: Декоратор, который нужно применить ко всем методам.
+
+    Возвращает:
+        Callable: Декоратор для классов.
+
+    Пример:
+        >>> def debug(func):
+        ...     def wrapper(*args, **kwargs):
+        ...         print(f"Call {func.__name__}")
+        ...         return func(*args, **kwargs)
+        ...
+        ...     return wrapper
+        >>> @decorate_all_methods(debug)
+        ... class Test:
+        ...     def hello(self):
+        ...         return "hi"
+        >>> Test().hello()
+        Call hello
+        'hi'
+
+    """
+
+    def wrapper(cls: type) -> type:
+        for k, v in cls.__dict__.items():
+            if isinstance(v, staticmethod):
+                func = v.__func__
+                setattr(cls, k, staticmethod(decorator(func)))
+            elif isinstance(v, classmethod):
+                func = v.__func__
+                setattr(cls, k, classmethod(decorator(func)))
+            elif callable(v) and not k.startswith("__"):
+                setattr(cls, k, decorator(v))
+        return cls
 
     return wrapper
