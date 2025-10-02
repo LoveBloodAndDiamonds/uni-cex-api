@@ -61,7 +61,7 @@ class UniClient(IUniClient[Client]):
             dict[str, float]: Словарь с последними ценами для каждого тикера.
         """
         raw_data = await self._client.futures_ticker_price()
-        return Adapter.futures_last_price(raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not ommited
+        return Adapter.last_price(raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not ommited
 
     async def ticker_24hr(self) -> TickerDailyDict:
         """Возвращает статистику за последние 24 часа для каждого тикера.
@@ -79,7 +79,7 @@ class UniClient(IUniClient[Client]):
             TickerDailyDict: Словарь с статистикой за последние 24 часа для каждого тикера.
         """
         raw_data = await self._client.futures_ticker_24hr()
-        return Adapter.futures_ticker_24hr(raw_data=raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not ommited
+        return Adapter.ticker_24hr(raw_data=raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not ommited
 
     async def klines(
         self,
@@ -103,17 +103,17 @@ class UniClient(IUniClient[Client]):
         """
         raw_data = await self._client.klines(
             symbol=symbol,
-            interval=interval.to_exchange_format(Exchange.BINANCE),  # type: ignore
+            interval=interval.to_exchange_format(Exchange.BINANCE),
             limit=limit,
             start_time=start_time,
             end_time=end_time,
         )
-        return Adapter.klines(raw_data)
+        return Adapter.klines(raw_data=raw_data, symbol=symbol)
 
     async def futures_klines(
         self,
         symbol: str,
-        interval: Timeframe | str,
+        interval: Timeframe,
         limit: int | None = None,
         start_time: int | None = None,
         end_time: int | None = None,
@@ -137,7 +137,7 @@ class UniClient(IUniClient[Client]):
             start_time=start_time,
             end_time=end_time,
         )
-        return Adapter.futures_klines(raw_data)
+        return Adapter.klines(raw_data=raw_data, symbol=symbol)
 
     async def funding_rate(self) -> dict[str, float]:
         """Возвращает ставку финансирования для всех тикеров.

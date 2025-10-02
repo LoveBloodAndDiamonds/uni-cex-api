@@ -101,7 +101,7 @@ class UniClient(IUniClient[Client]):
     async def futures_klines(
         self,
         symbol: str,
-        interval: Timeframe | str,
+        interval: Timeframe,
         limit: int | None = None,
         start_time: int | None = None,
         end_time: int | None = None,

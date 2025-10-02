@@ -10,7 +10,7 @@ from loguru import logger
 logger.remove()
 logger.add(sys.stderr, level="INFO")
 
-exchanges = [Exchange.BINANCE, Exchange.BITGET]
+exchanges = [Exchange.BYBIT, Exchange.BINANCE, Exchange.BITGET]
 """Exchanges to test."""
 
 

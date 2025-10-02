@@ -9,7 +9,7 @@
 | Exchange    | Client | Client Auth | Client Generic | WS Manager | User WS |
 |-------------|--------|-------------|----------------|------------|---------|
 | Binance     | ✅     | ✅          | ✅             | ✅         | ✅      |
-| Bitget      | ✅     | ✅          | ✅             |            |         |
+| Bitget      | ✅     | ✅          | ✅             | ✅         |         |
 | Bitrue      |        | ✅          | ✅             |            |         |
 | Bitunix     |        |             |                |            |         |
 | Btse        |        | ✅          | ✅             |            |         |
@@ -41,11 +41,11 @@
 | Exchange    | UniClient | UniWebsocketManager |
 |-------------|-----------|----------------------|
 | Binance     | ✅        | ✅                   |
-| Bitget      | ✅        | ✅                   |
+| Bitget      | ✅        |                      |
 | Bitrue      |           |                      |
 | Bitunix     |           |                      |
 | Btse        |           |                      |
-| Bybit       |           |                      |
+| Bybit       | ✅        |                      |
 | Gateio      |           |                      |
 | Hyperliquid |           |                      |
 | Kcex        |           |                      |
