@@ -7,7 +7,6 @@ from typing import overload
 from unicex._abc import IUniClient
 from unicex.enums import Exchange, MarketType, Timeframe
 from unicex.types import KlineDict, OpenInterestDict, OpenInterestItem, TickerDailyDict
-from unicex.utils import symbol_to_exchange_format
 
 from .adapter import Adapter
 from .client import Client
@@ -138,7 +137,7 @@ class UniClient(IUniClient[Client]):
             end_time = int(time.time())
             start_time = end_time - (limit * interval.to_seconds)  # type: ignore[reportOptionalOperand]
         raw_data = await self._client.futures_kline(
-            symbol=symbol_to_exchange_format(symbol, Exchange.MEXC, MarketType.FUTURES),
+            symbol=symbol,
             interval=interval.to_exchange_format(Exchange.MEXC),
             start=start_time,
             end=end_time,
@@ -166,9 +165,7 @@ class UniClient(IUniClient[Client]):
         raw_data = await self._client.futures_ticker()
         adapted_data = Adapter.funding_rate(raw_data=raw_data)  # type: ignore[reportArgumentType]
         if symbol:
-            return adapted_data[
-                symbol_to_exchange_format(symbol, Exchange.MEXC, MarketType.FUTURES)
-            ]
+            return adapted_data[symbol]
         return adapted_data
 
     @overload
@@ -194,7 +191,5 @@ class UniClient(IUniClient[Client]):
         raw_data = await self._client.futures_ticker()
         adapted_data = Adapter.open_interest(raw_data=raw_data)  # type: ignore[reportArgumentType]
         if symbol:
-            return adapted_data[
-                symbol_to_exchange_format(symbol, Exchange.MEXC, MarketType.FUTURES)
-            ]
+            return adapted_data[symbol]
         return adapted_data

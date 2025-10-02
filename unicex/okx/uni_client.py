@@ -4,9 +4,10 @@ __all__ = ["UniClient"]
 from typing import overload
 
 from unicex._abc import IUniClient
-from unicex.enums import Timeframe
+from unicex.enums import Exchange, Timeframe
 from unicex.types import KlineDict, OpenInterestDict, OpenInterestItem, TickerDailyDict
 
+from .adapter import Adapter
 from .client import Client
 
 
@@ -31,7 +32,8 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             list[str]: Список тикеров.
         """
-        raise NotImplementedError()
+        raw_data = await self._client.tickers(inst_type="SPOT")
+        return Adapter.tickers(raw_data=raw_data, only_usdt=only_usdt)
 
     async def futures_tickers(self, only_usdt: bool = True) -> list[str]:
         """Возвращает список тикеров.
@@ -42,7 +44,8 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             list[str]: Список тикеров.
         """
-        raise NotImplementedError()
+        raw_data = await self._client.tickers(inst_type="SWAP")
+        return Adapter.tickers(raw_data=raw_data, only_usdt=only_usdt)
 
     async def last_price(self) -> dict[str, float]:
         """Возвращает последнюю цену для каждого тикера.
@@ -50,7 +53,8 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             dict[str, float]: Словарь с последними ценами для каждого тикера.
         """
-        raise NotImplementedError()
+        raw_data = await self._client.tickers(inst_type="SPOT")
+        return Adapter.last_price(raw_data)
 
     async def futures_last_price(self) -> dict[str, float]:
         """Возвращает последнюю цену для каждого тикера.
@@ -58,7 +62,8 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             dict[str, float]: Словарь с последними ценами для каждого тикера.
         """
-        raise NotImplementedError()
+        raw_data = await self._client.tickers(inst_type="SWAP")
+        return Adapter.last_price(raw_data)
 
     async def ticker_24hr(self) -> TickerDailyDict:
         """Возвращает статистику за последние 24 часа для каждого тикера.
@@ -66,7 +71,8 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             TickerDailyDict: Словарь с статистикой за последние 24 часа для каждого тикера.
         """
-        raise NotImplementedError()
+        raw_data = await self._client.tickers(inst_type="SPOT")
+        return Adapter.ticker_24hr(raw_data=raw_data)
 
     async def futures_ticker_24hr(self) -> TickerDailyDict:
         """Возвращает статистику за последние 24 часа для каждого тикера.
@@ -74,7 +80,8 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             TickerDailyDict: Словарь с статистикой за последние 24 часа для каждого тикера.
         """
-        raise NotImplementedError()
+        raw_data = await self._client.tickers(inst_type="SWAP")
+        return Adapter.ticker_24hr(raw_data=raw_data)
 
     async def klines(
         self,
@@ -96,7 +103,14 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             list[KlineDict]: Список свечей для тикера.
         """
-        raise NotImplementedError()
+        raw_data = await self._client.candles(
+            inst_id=symbol,
+            bar=interval.to_exchange_format(Exchange.OKX),
+            after=start_time,
+            before=end_time,
+            limit=limit,
+        )
+        return Adapter.klines(raw_data=raw_data, symbol=symbol)
 
     async def futures_klines(
         self,
@@ -118,7 +132,14 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             list[KlineDict]: Список свечей для тикера.
         """
-        raise NotImplementedError()
+        raw_data = await self._client.candles(
+            inst_id=symbol,
+            bar=interval.to_exchange_format(Exchange.OKX),
+            after=start_time,
+            before=end_time,
+            limit=limit,
+        )
+        return Adapter.klines(raw_data=raw_data, symbol=symbol)
 
     @overload
     async def funding_rate(self, symbol: str) -> float: ...
@@ -129,7 +150,7 @@ class UniClient(IUniClient[Client]):
     @overload
     async def funding_rate(self) -> dict[str, float]: ...
 
-    async def funding_rate(self, symbol: str | None = None) -> dict[str, float] | float:
+    async def funding_rate(self, symbol: str = None) -> dict[str, float] | float:  # type: ignore[reportArgumentType]  # We want to raise our exception
         """Возвращает ставку финансирования для тикера или всех тикеров, если тикер не указан.
 
         Параметры:
@@ -138,7 +159,11 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             `dict[str, float] | float`: Ставка финансирования для тикера или словарь со ставками для всех тикеров.
         """
-        ...
+        if not symbol:
+            raise ValueError("Symbol is required to okx funding rate")
+        raw_data = await self._client.get_funding_rate(inst_id=symbol)
+        adapted_data = Adapter.funding_rate(raw_data)
+        return adapted_data
 
     @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...
@@ -160,4 +185,8 @@ class UniClient(IUniClient[Client]):
                 открытого интереса в монетах. Если нет передан - то словарь, в котором ключ - тикер,
                 а значение - словарь с временем и объемом открытого интереса в монетах.
         """
-        raise NotImplementedError()
+        raw_data = await self._client.get_open_interest(inst_type="SWAP")
+        adapted_data = Adapter.open_interest(raw_data)
+        if symbol:
+            return adapted_data[symbol]
+        return adapted_data

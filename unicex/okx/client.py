@@ -205,96 +205,76 @@ class Client(BaseClient):
             method=method, endpoint=endpoint, params=params, data=data, signed=signed
         )
 
-    # topic: public
+    # topic: Order Book Trading
+    # sub-topic: Market Data
 
-    async def get_server_time(self) -> dict:
-        """Получение серверного времени.
+    async def tickers(
+        self,
+        inst_type: Literal["SPOT", "SWAP", "FUTURES", "OPTION"],
+        inst_family: Literal["FUTURES", "SWAP", "OPTION"] | None = None,
+    ) -> dict:
+        """Получение информации о тикерах.
 
-        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-system-time
+        https://www.okx.com/docs-v5/en/#order-book-trading-market-data-get-tickers
+
         """
-        return await self._make_request("GET", "/api/v5/public/time")
+        params = {
+            "instType": inst_type,
+            "instFamily": inst_family,
+        }
+        return await self._make_request("GET", endpoint="/api/v5/market/tickers", params=params)
 
-    # topic: trading
-
-    async def create_order(
+    async def candles(
         self,
         inst_id: str,
-        side: Literal["buy", "sell"],
-        ord_type: Literal[
-            "market",
-            "limit",
-            "post_only",
-            "fok",
-            "ioc",
-            "optimal_limit_ioc",
-            "mmp",
-            "mmp_and_post_only",
-        ],
-        sz: str,
-        px: str | None = None,
-        cl_ord_id: str | None = None,
-        td_mode: str = "cash",
+        bar: str | None = None,
+        after: int | None = None,
+        before: int | None = None,
+        limit: int | None = None,
     ) -> dict:
-        """Создание ордера.
+        """Получение свечей.
 
-        https://www.okx.com/docs-v5/en/#order-book-trading-trade-post-place-order
+        https://www.okx.com/docs-v5/en/#order-book-trading-market-data-get-candlesticks
         """
-        body = {
+        params = {
             "instId": inst_id,
-            "tdMode": td_mode,
-            "side": side,
-            "ordType": ord_type,
-            "sz": sz,
-            "px": px,
-            "clOrdId": cl_ord_id,
+            "bar": bar,
+            "after": after,
+            "before": before,
+            "limit": limit,
         }
+        return await self._make_request("GET", endpoint="/api/v5/market/candles", params=params)
 
-        return await self._make_request("POST", "/api/v5/trade/order", signed=True, data=body)
+    # topic: Public Data
+    # sub-topic: REST API
 
-    async def cancel_order(
-        self, inst_id: str, ord_id: str | None = None, cl_ord_id: str | None = None
-    ) -> dict:
-        """Отмена ордера.
+    async def get_funding_rate(self, inst_id: str) -> dict:
+        """Получение информации о ставке финансирования.
 
-        https://www.okx.com/docs-v5/en/#order-book-trading-trade-post-cancel-order
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-funding-rate
         """
-        body = {"instId": inst_id, "ordId": ord_id, "clOrdId": cl_ord_id}
-
+        params = {
+            "instId": inst_id,
+        }
         return await self._make_request(
-            "POST", "/api/v5/trade/cancel-order", signed=True, data=body
+            "GET", endpoint="/api/v5/public/funding-rate", params=params
         )
 
-    async def get_order_status(
-        self, inst_id: str, ord_id: str | None = None, cl_ord_id: str | None = None
+    async def get_open_interest(
+        self,
+        inst_type: Literal["SWAP", "FUTURES", "OPTION"],
+        inst_family: str | None = None,
+        inst_id: str | None = None,
     ) -> dict:
-        """Получение статуса ордера.
+        """Получение информации по открытому интересу.
 
-        https://www.okx.com/docs-v5/en/#order-book-trading-trade-get-order-details
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-open-interest
         """
-        params = {"instId": inst_id, "ordId": ord_id, "clOrdId": cl_ord_id}
-
-        return await self._make_request("GET", "/api/v5/trade/order", signed=True, params=params)
-
-    # topic: account
-
-    async def get_balances(self, ccy: str | None = None) -> dict:
-        """Получение балансов аккаунта.
-
-        https://www.okx.com/docs-v5/en/#trading-account-rest-api-get-balance
-        """
-        params = {"ccy": ccy}
-
+        params = {
+            "instType": inst_type,
+            "instFamily": inst_family,
+            "instId": inst_id,
+        }
         return await self._make_request(
-            "GET", "/api/v5/account/balance", signed=True, params=params
-        )
-
-    async def get_positions(self, inst_id: str | None = None, inst_type: str | None = None) -> dict:
-        """Получение позиций.
-
-        https://www.okx.com/docs-v5/en/#trading-account-rest-api-get-positions
-        """
-        params = {"instId": inst_id, "instType": inst_type}
-
-        return await self._make_request(
-            "GET", "/api/v5/account/positions", signed=True, params=params
+            "GET", endpoint="/api/v5/public/open-interest", params=params
         )

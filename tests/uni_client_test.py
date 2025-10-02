@@ -5,8 +5,10 @@ from pprint import pp
 
 from unicex import get_uni_client
 from unicex._abc.uni_client import IUniClient
-from unicex.enums import Exchange, Timeframe
+from unicex.enums import Exchange, MarketType, Timeframe
 from loguru import logger
+
+from unicex.utils import symbol_to_exchange_format
 
 # ---------------- CONFIG ---------------- #
 
@@ -32,7 +34,7 @@ tests_config = {
 }
 
 # Какие биржи тестировать
-exchanges = [Exchange.MEXC, Exchange.BYBIT, Exchange.BINANCE, Exchange.BITGET]
+exchanges = [Exchange.MEXC, Exchange.BYBIT, Exchange.BINANCE, Exchange.BITGET, Exchange.OKX]
 
 # Сколько символов показывать в превью вывода
 repr_len = 100
@@ -62,6 +64,11 @@ def pretty_print(exchange: Exchange, test_name: str, result):
 
 async def test_exchange(e: Exchange, client: IUniClient) -> None:
     """Тестирование одной биржи."""
+    f_symbol = symbol_to_exchange_format(
+        symbol="BTCUSDT", exchange=e, market_type=MarketType.FUTURES
+    )
+    s_symbol = symbol_to_exchange_format(symbol="BTCUSDT", exchange=e, market_type=MarketType.SPOT)
+
     if should_run("tickers"):
         tickers = await client.tickers()
         pretty_print(e, "tickers", tickers)
@@ -95,12 +102,12 @@ async def test_exchange(e: Exchange, client: IUniClient) -> None:
         pretty_print(e, "futures_ticker_24hr", futures_ticker_24hr)
 
     if should_run("klines"):
-        klines = await client.klines(symbol="BTCUSDT", interval=Timeframe.DAY_1, limit=10)
+        klines = await client.klines(symbol=s_symbol, interval=Timeframe.DAY_1, limit=10)
         pretty_print(e, "klines", klines)
 
     if should_run("futures_klines"):
         futures_klines = await client.futures_klines(
-            symbol="BTCUSDT", interval=Timeframe.DAY_1, limit=10
+            symbol=f_symbol, interval=Timeframe.DAY_1, limit=10
         )
         pretty_print(e, "futures_klines", futures_klines)
 
@@ -109,15 +116,15 @@ async def test_exchange(e: Exchange, client: IUniClient) -> None:
         pretty_print(e, "open_interest", open_interest)
 
     if should_run("single_open_interest"):
-        single_open_interest = await client.open_interest(symbol="BTCUSDT")
+        single_open_interest = await client.open_interest(symbol=f_symbol)
         pretty_print(e, "single_open_interest", single_open_interest)
 
-    if should_run("funding_rate"):
+    if should_run("funding_rate") and e not in [Exchange.OKX]:
         funding_rate = await client.funding_rate()
         pretty_print(e, "funding_rate", funding_rate)
 
     if should_run("single_funding_rate"):
-        single_funding_rate = await client.funding_rate(symbol="BTCUSDT")
+        single_funding_rate = await client.funding_rate(symbol=f_symbol)
         pretty_print(e, "single_funding_rate", single_funding_rate)
 
 
@@ -130,14 +137,16 @@ async def main() -> None:
             await test_exchange(exchange, client)
             print("-------------\n")
         except Exception as exc:
-            logger.error(f"[{e}] Error: {exc}")
+            logger.exception(f"[{exc}] Error: {exc}")
             sys.exit(1)
         finally:
             try:
                 await client.close_connection()
             except:
                 pass
-    logger.success(f"[{exchange}] Success")
+        logger.success(f"[{exchange}] Success")
+
+    logger.success("All exchanges tested successfully!")
 
 
 if __name__ == "__main__":

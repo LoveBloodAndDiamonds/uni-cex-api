@@ -199,7 +199,13 @@ def symbol_to_exchange_format(
     Возвращает:
         str: Символ в формате, который используется на бирже, заглавными буквами.
     """
-    symbol_capitalized = symbol.upper()
-    if exchange == Exchange.MEXC and market_type == MarketType.FUTURES:
-        return symbol_capitalized.replace("USDT", "_USDT")
-    return symbol_capitalized
+    symbol_upper = symbol.upper()
+    if exchange == Exchange.MEXC:
+        if market_type == MarketType.FUTURES:
+            return symbol_upper.replace("USDT", "_USDT")
+    if exchange == Exchange.OKX:
+        if market_type == MarketType.FUTURES:
+            return symbol_upper.replace("USDT", "-USDT-SWAP")
+        elif market_type == MarketType.SPOT:
+            return symbol_upper.replace("USDT", "-USDT")
+    return symbol_upper
