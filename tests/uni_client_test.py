@@ -35,6 +35,7 @@ tests_config = {
 
 # Какие биржи тестировать
 exchanges = [Exchange.MEXC, Exchange.BYBIT, Exchange.BINANCE, Exchange.BITGET, Exchange.OKX]
+exchanges = [Exchange.GATEIO]
 
 # Сколько символов показывать в превью вывода
 repr_len = 100
@@ -107,7 +108,7 @@ async def test_exchange(e: Exchange, client: IUniClient) -> None:
 
     if should_run("futures_klines"):
         futures_klines = await client.futures_klines(
-            symbol=f_symbol, interval=Timeframe.DAY_1, limit=10
+            symbol=f_symbol, interval=Timeframe.MIN_1, limit=10
         )
         pretty_print(e, "futures_klines", futures_klines)
 

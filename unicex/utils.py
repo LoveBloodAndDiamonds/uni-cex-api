@@ -203,9 +203,11 @@ def symbol_to_exchange_format(
     if exchange == Exchange.MEXC:
         if market_type == MarketType.FUTURES:
             return symbol_upper.replace("USDT", "_USDT")
-    if exchange == Exchange.OKX:
+    elif exchange == Exchange.OKX:
         if market_type == MarketType.FUTURES:
             return symbol_upper.replace("USDT", "-USDT-SWAP")
         elif market_type == MarketType.SPOT:
             return symbol_upper.replace("USDT", "-USDT")
+    elif exchange == Exchange.GATEIO:
+        return symbol_upper.replace("USDT", "_USDT")
     return symbol_upper

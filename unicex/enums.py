@@ -139,7 +139,7 @@ class Timeframe(StrEnum):
                 Timeframe.WEEK_1: "1W",
                 Timeframe.MONTH_1: "1M",
             },
-            Exchange.MEXC: {
+            (Exchange.MEXC, MarketType.FUTURES): {
                 Timeframe.MIN_1: "Min1",
                 Timeframe.MIN_5: "Min5",
                 Timeframe.MIN_15: "Min15",
@@ -178,6 +178,33 @@ class Timeframe(StrEnum):
                 Timeframe.DAY_3: "3D",
                 Timeframe.WEEK_1: "1W",
                 Timeframe.MONTH_1: "1M",
+            },
+            (Exchange.GATEIO, MarketType.FUTURES): {
+                Timeframe.MIN_1: "1m",
+                Timeframe.MIN_5: "5m",
+                Timeframe.MIN_15: "15m",
+                Timeframe.MIN_30: "30m",
+                Timeframe.HOUR_1: "1h",
+                Timeframe.HOUR_2: "2h",
+                Timeframe.HOUR_4: "4h",
+                Timeframe.HOUR_6: "6h",
+                Timeframe.HOUR_8: "8h",
+                Timeframe.HOUR_12: "12h",
+                Timeframe.DAY_1: "1d",
+                Timeframe.WEEK_1: "1w",
+                Timeframe.MONTH_1: "30d",
+            },
+            (Exchange.GATEIO, MarketType.SPOT): {
+                Timeframe.MIN_1: "1m",
+                Timeframe.MIN_5: "5m",
+                Timeframe.MIN_15: "15m",
+                Timeframe.MIN_30: "30m",
+                Timeframe.HOUR_1: "1h",
+                Timeframe.HOUR_4: "4h",
+                Timeframe.HOUR_8: "8h",
+                Timeframe.DAY_1: "1d",
+                Timeframe.WEEK_1: "7d",
+                Timeframe.MONTH_1: "30d",
             },
         }
 

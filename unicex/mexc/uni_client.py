@@ -138,7 +138,7 @@ class UniClient(IUniClient[Client]):
             start_time = end_time - (limit * interval.to_seconds)  # type: ignore[reportOptionalOperand]
         raw_data = await self._client.futures_kline(
             symbol=symbol,
-            interval=interval.to_exchange_format(Exchange.MEXC),
+            interval=interval.to_exchange_format(Exchange.MEXC, MarketType.FUTURES),
             start=start_time,
             end=end_time,
         )

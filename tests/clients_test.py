@@ -16,7 +16,7 @@ async def main() -> None:
 
     # pp(await bitrue_client.server_time())
     # pp(await btse_client.server_time())
-    pp(await gateio_client.server_time())
+    pp(await gateio_client.futures_tickers(settle="usdt"))
     # pp(await kraken_client.server_time())
     # pp(await kucoin_client.server_time())
 
