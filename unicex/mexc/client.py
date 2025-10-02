@@ -611,14 +611,14 @@ class Client(BaseClient):
     async def futures_server_time(self) -> dict:
         """Получение текущего серверного времени фьючерсного API.
 
-        https://contract.mexc.com/api/v1/contract/ping
+        https://www.mexc.com/api-docs/futures/market-endpoints
         """
         return await self._make_request("GET", self._BASE_FUTURES_URL + "/api/v1/contract/ping")
 
     async def futures_contract_detail(self, symbol: str | None = None) -> dict:
         """Получение информации о фьючерсных контрактах.
 
-        https://contract.mexc.com/api/v1/contract/detail
+        https://www.mexc.com/api-docs/futures/market-endpoints
         """
         params = {"symbol": symbol}
 
@@ -629,7 +629,7 @@ class Client(BaseClient):
     async def futures_support_currencies(self) -> dict:
         """Получение списка поддерживаемых для перевода валют.
 
-        https://contract.mexc.com/api/v1/contract/support_currencies
+        https://www.mexc.com/api-docs/futures/market-endpoints
         """
         return await self._make_request(
             "GET", self._BASE_FUTURES_URL + "/api/v1/contract/support_currencies"
@@ -638,7 +638,7 @@ class Client(BaseClient):
     async def futures_depth(self, symbol: str, limit: int | None = None) -> dict:
         """Получение данных рыночного стакана по контракту.
 
-        https://contract.mexc.com/api/v1/contract/depth/{symbol}
+        https://www.mexc.com/api-docs/futures/market-endpoints
         """
         params = {"limit": limit}
 
@@ -649,7 +649,7 @@ class Client(BaseClient):
     async def futures_depth_commits(self, symbol: str, limit: int) -> dict:
         """Получение моментального снимка стакана по контракту.
 
-        https://contract.mexc.com/api/v1/contract/depth_commits/{symbol}/{limit}
+        https://www.mexc.com/api-docs/futures/market-endpoints
         """
         return await self._make_request(
             "GET",
@@ -659,7 +659,7 @@ class Client(BaseClient):
     async def futures_index_price(self, symbol: str) -> dict:
         """Получение индикативной цены контракта.
 
-        https://contract.mexc.com/api/v1/contract/index_price/{symbol}
+        https://www.mexc.com/api-docs/futures/market-endpoints
         """
         return await self._make_request(
             "GET", self._BASE_FUTURES_URL + f"/api/v1/contract/index_price/{symbol}"
@@ -668,7 +668,7 @@ class Client(BaseClient):
     async def futures_fair_price(self, symbol: str) -> dict:
         """Получение справедливой цены контракта.
 
-        https://contract.mexc.com/api/v1/contract/fair_price/{symbol}
+        https://www.mexc.com/api-docs/futures/market-endpoints
         """
         return await self._make_request(
             "GET", self._BASE_FUTURES_URL + f"/api/v1/contract/fair_price/{symbol}"
@@ -677,7 +677,7 @@ class Client(BaseClient):
     async def futures_funding_rate(self, symbol: str) -> dict:
         """Получение текущей ставки финансирования контракта.
 
-        https://contract.mexc.com/api/v1/contract/funding_rate/{symbol}
+        https://www.mexc.com/api-docs/futures/market-endpoints
         """
         return await self._make_request(
             "GET", self._BASE_FUTURES_URL + f"/api/v1/contract/funding_rate/{symbol}"
@@ -713,7 +713,7 @@ class Client(BaseClient):
     ) -> dict:
         """Получение свечей индикативной цены контракта.
 
-        https://contract.mexc.com/api/v1/contract/kline/index_price/{symbol}
+        https://www.mexc.com/api-docs/futures/market-endpoints
         """
         params = {
             "interval": interval,
@@ -736,7 +736,7 @@ class Client(BaseClient):
     ) -> dict:
         """Получение свечей справедливой цены контракта.
 
-        https://contract.mexc.com/api/v1/contract/kline/fair_price/{symbol}
+        https://www.mexc.com/api-docs/futures/market-endpoints
         """
         params = {
             "interval": interval,
@@ -753,7 +753,7 @@ class Client(BaseClient):
     async def futures_deals(self, symbol: str, limit: int | None = None) -> dict:
         """Получение последних сделок по контракту.
 
-        https://contract.mexc.com/api/v1/contract/deals/{symbol}
+        https://www.mexc.com/api-docs/futures/market-endpoints
         """
         params = {"limit": limit}
 
@@ -775,7 +775,7 @@ class Client(BaseClient):
     async def futures_risk_reverse(self) -> dict:
         """Получение текущих балансов страхового фонда.
 
-        https://contract.mexc.com/api/v1/contract/risk_reverse
+        https://www.mexc.com/api-docs/futures/market-endpoints
         """
         return await self._make_request(
             "GET", self._BASE_FUTURES_URL + "/api/v1/contract/risk_reverse"
@@ -789,7 +789,7 @@ class Client(BaseClient):
     ) -> dict:
         """Получение истории баланса страхового фонда по контракту.
 
-        https://contract.mexc.com/api/v1/contract/risk_reverse/history
+        https://www.mexc.com/api-docs/futures/market-endpoints
         """
         params = {
             "symbol": symbol,
@@ -809,7 +809,7 @@ class Client(BaseClient):
     ) -> dict:
         """Получение истории ставок финансирования по контракту.
 
-        https://contract.mexc.com/api/v1/contract/funding_rate/history
+        https://www.mexc.com/api-docs/futures/market-endpoints
         """
         params = {
             "symbol": symbol,
@@ -826,7 +826,7 @@ class Client(BaseClient):
     async def futures_account_assets(self) -> dict:
         """Получение сведений по всем валютам фьючерсного аккаунта.
 
-        https://contract.mexc.com/api/v1/private/account/assets
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
         """
         return await self._make_request(
             "GET",
@@ -837,7 +837,7 @@ class Client(BaseClient):
     async def futures_account_asset(self, currency: str) -> dict:
         """Получение баланса по одной валюте фьючерсного аккаунта.
 
-        https://contract.mexc.com/api/v1/private/account/asset/{currency}
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
         """
         return await self._make_request(
             "GET",
