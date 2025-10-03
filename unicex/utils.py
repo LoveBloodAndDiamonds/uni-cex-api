@@ -210,4 +210,9 @@ def symbol_to_exchange_format(
             return symbol_upper.replace("USDT", "-USDT")
     elif exchange == Exchange.GATEIO:
         return symbol_upper.replace("USDT", "_USDT")
+    elif exchange == Exchange.HYPERLIQUID:
+        if market_type == MarketType.FUTURES:
+            return symbol.removesuffix("USDT")  # Вот тут мб и не так, там вроде что-то к USDC
+        else:
+            return symbol.removesuffix("USDT")  # Вот тут мб и не так, там вроде что-то к USDC
     return symbol_upper

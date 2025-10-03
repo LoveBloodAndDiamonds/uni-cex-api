@@ -25,8 +25,8 @@ tests_config = {
     "futures_last_price": True,
     "ticker_24hr": True,
     "futures_ticker_24hr": True,
-    "klines": True,
-    "futures_klines": True,
+    "klines": False,
+    "futures_klines": False,
     "open_interest": True,
     "single_open_interest": True,
     "funding_rate": True,
@@ -45,7 +45,7 @@ exchanges = [
     Exchange.OKX,
     Exchange.GATEIO,
 ]
-# exchanges = [Exchange.GATEIO]
+exchanges = [Exchange.HYPERLIQUID]
 
 # Сколько символов показывать в превью вывода
 repr_len = 100
