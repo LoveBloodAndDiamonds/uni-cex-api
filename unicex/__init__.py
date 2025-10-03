@@ -4,6 +4,7 @@ __all__ = [
     # Mappers
     "get_uni_client",
     "get_uni_websocket_manager",
+    "get_exchange_info",
     # Exchanges info
     "load_exchanges_info",
     "start_exchanges_info",
@@ -147,7 +148,7 @@ from ._base import BaseClient, Websocket
 
 # enums, mappers, types
 from .enums import Exchange, MarketType, Side, Timeframe
-from .mapper import get_uni_client, get_uni_websocket_manager
+from .mapper import get_uni_client, get_uni_websocket_manager, get_exchange_info
 from .types import *
 
 # exchanges
