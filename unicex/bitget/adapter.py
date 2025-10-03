@@ -9,14 +9,14 @@ from unicex.types import (
     TickerDailyItem,
     TradeDict,
 )
-from unicex.utils import catch_adapter_errors
+from unicex.utils import catch_adapter_errors, decorate_all_methods
 
 
+@decorate_all_methods(catch_adapter_errors)
 class Adapter:
     """Адаптер для унификации данных с Bitget API."""
 
     @staticmethod
-    @catch_adapter_errors
     def tickers(raw_data: Any, only_usdt: bool) -> list[str]:
         """Преобразует сырой ответ, в котором содержатся данные о тикерах в список тикеров.
 
@@ -29,12 +29,11 @@ class Adapter:
         """
         return [
             item["symbol"]
-            for item in raw_data.get("data", [])
-            if not only_usdt or item["symbol"].endswith("USDT")
+            for item in raw_data["data"]
+            if item["symbol"].endswith("USDT") or not only_usdt
         ]
 
     @staticmethod
-    @catch_adapter_errors
     def ticker_24hr(raw_data: Any) -> TickerDailyDict:
         """Преобразует сырой ответ, в котором содержатся данные о тикере за последние 24 часа
         в унифицированный формат.
@@ -51,11 +50,10 @@ class Adapter:
                 v=float(item["baseVolume"]),  # объём в COIN
                 q=float(item["usdtVolume"]),  # объём в USDT
             )
-            for item in raw_data.get("data", [])
+            for item in raw_data["data"]
         }
 
     @staticmethod
-    @catch_adapter_errors
     def last_price(raw_data: Any) -> dict[str, float]:
         """Преобразует сырой ответ, в котором содержатся данные о последних ценах тикеров
         в унифицированный формат.
@@ -66,10 +64,9 @@ class Adapter:
         Возвращает:
             dict[str, float]: Словарь, где ключ - тикер, а значение - последняя цена.
         """
-        return {item["symbol"]: float(item["lastPr"]) for item in raw_data.get("data", [])}
+        return {item["symbol"]: float(item["lastPr"]) for item in raw_data["data"]}
 
     @staticmethod
-    @catch_adapter_errors
     def klines(raw_data: Any, symbol: str) -> list[KlineDict]:
         """Преобразует сырой ответ, в котором содержатся данные о котировках тикеров в
         унифицированный формат.
@@ -101,7 +98,6 @@ class Adapter:
         ]
 
     @staticmethod
-    @catch_adapter_errors
     def funding_rate(raw_data: Any) -> dict[str, float]:
         """Преобразует сырой ответ, в котором содержатся данные о ставках финансирования
         тикеров в унифицированный формат.
@@ -112,12 +108,9 @@ class Adapter:
         Возвращает:
             dict[str, float]: Словарь, где ключ - тикер, а значение - ставка финансирования.
         """
-        return {
-            item["symbol"]: float(item["fundingRate"]) * 100 for item in raw_data.get("data", [])
-        }
+        return {item["symbol"]: float(item["fundingRate"]) * 100 for item in raw_data["data"]}
 
     @staticmethod
-    @catch_adapter_errors
     def klines_message(raw_msg: Any) -> list[KlineDict]:
         """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
         свече/свечах в унифицированный вид.
@@ -150,7 +143,6 @@ class Adapter:
         ]
 
     @staticmethod
-    @catch_adapter_errors
     def trades_message(raw_msg: Any) -> list[TradeDict]:
         """Преобразует сырое сообщение вебсокета со сделками в унифицированный формат.
 
@@ -177,7 +169,6 @@ class Adapter:
         ]
 
     @staticmethod
-    @catch_adapter_errors
     def open_interest(raw_data: Any) -> OpenInterestDict:
         """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
         объеме открытых позиций в унифицированный вид.

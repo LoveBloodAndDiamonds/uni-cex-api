@@ -26,18 +26,13 @@ class Exchange(StrEnum):
 
     BINANCE = "BINANCE"
     BITGET = "BITGET"
-    BITRUE = "BITRUE"
     BITUNIX = "BITUNIX"
-    BTSE = "BTSE"
     BYBIT = "BYBIT"
     GATEIO = "GATEIO"
     HYPERLIQUID = "HYPERLIQUID"
     KCEX = "KCEX"
-    KRAKEN = "KRAKEN"
-    KUCOIN = "KUCOIN"
     MEXC = "MEXC"
     OKX = "OKX"
-    WEEX = "WEEX"
     XT = "XT"
 
     def __add__(self, market_type: "MarketType") -> tuple["Exchange", "MarketType"]:
@@ -54,6 +49,8 @@ class Side(StrEnum):
 
 class Timeframe(StrEnum):
     """Перечисление таймфреймов."""
+
+    SECOND_1 = "1s"
 
     MIN_1 = "1m"
     MIN_3 = "3m"
@@ -79,7 +76,25 @@ class Timeframe(StrEnum):
     def mapping(self) -> dict[Exchange | tuple[Exchange, MarketType], dict["Timeframe", str]]:
         """Возвращает словарь с маппингом таймфреймов для каждой биржи."""
         return {
-            Exchange.BINANCE: {
+            (Exchange.BINANCE, MarketType.SPOT): {
+                Timeframe.SECOND_1: "1s",
+                Timeframe.MIN_1: "1m",
+                Timeframe.MIN_3: "3m",
+                Timeframe.MIN_5: "5m",
+                Timeframe.MIN_15: "15m",
+                Timeframe.MIN_30: "30m",
+                Timeframe.HOUR_1: "1h",
+                Timeframe.HOUR_2: "2h",
+                Timeframe.HOUR_4: "4h",
+                Timeframe.HOUR_6: "6h",
+                Timeframe.HOUR_8: "8h",
+                Timeframe.HOUR_12: "12h",
+                Timeframe.DAY_1: "1d",
+                Timeframe.DAY_3: "3d",
+                Timeframe.WEEK_1: "1w",
+                Timeframe.MONTH_1: "1M",
+            },
+            (Exchange.BINANCE, MarketType.FUTURES): {
                 Timeframe.MIN_1: "1m",
                 Timeframe.MIN_3: "3m",
                 Timeframe.MIN_5: "5m",
@@ -111,7 +126,7 @@ class Timeframe(StrEnum):
                 Timeframe.WEEK_1: "W",
                 Timeframe.MONTH_1: "M",
             },
-            Exchange.BITGET: {
+            (Exchange.BITGET, MarketType.SPOT): {
                 Timeframe.MIN_1: "1min",
                 Timeframe.MIN_5: "5min",
                 Timeframe.MIN_15: "15min",
@@ -139,7 +154,19 @@ class Timeframe(StrEnum):
                 Timeframe.WEEK_1: "1W",
                 Timeframe.MONTH_1: "1M",
             },
-            Exchange.MEXC: {
+            (Exchange.MEXC, MarketType.SPOT): {
+                Timeframe.MIN_1: "1m",
+                Timeframe.MIN_5: "5m",
+                Timeframe.MIN_15: "15m",
+                Timeframe.MIN_30: "30m",
+                Timeframe.HOUR_1: "60m",
+                Timeframe.HOUR_4: "4h",
+                Timeframe.HOUR_8: "8h",
+                Timeframe.DAY_1: "1d",
+                Timeframe.WEEK_1: "1W",
+                Timeframe.MONTH_1: "1M",
+            },
+            (Exchange.MEXC, MarketType.FUTURES): {
                 Timeframe.MIN_1: "Min1",
                 Timeframe.MIN_5: "Min5",
                 Timeframe.MIN_15: "Min15",
@@ -167,15 +194,47 @@ class Timeframe(StrEnum):
                 Timeframe.WEEK_1: "1W",
                 Timeframe.MONTH_1: "1M",
             },
+            (Exchange.GATEIO, MarketType.FUTURES): {
+                Timeframe.SECOND_1: "1s",
+                Timeframe.MIN_1: "1m",
+                Timeframe.MIN_5: "5m",
+                Timeframe.MIN_15: "15m",
+                Timeframe.MIN_30: "30m",
+                Timeframe.HOUR_1: "1h",
+                Timeframe.HOUR_2: "2h",
+                Timeframe.HOUR_4: "4h",
+                Timeframe.HOUR_6: "6h",
+                Timeframe.HOUR_8: "8h",
+                Timeframe.HOUR_12: "12h",
+                Timeframe.DAY_1: "1d",
+                Timeframe.WEEK_1: "1w",
+                Timeframe.MONTH_1: "30d",
+            },
+            (Exchange.GATEIO, MarketType.SPOT): {
+                Timeframe.MIN_1: "1m",
+                Timeframe.MIN_5: "5m",
+                Timeframe.MIN_15: "15m",
+                Timeframe.MIN_30: "30m",
+                Timeframe.HOUR_1: "1h",
+                Timeframe.HOUR_4: "4h",
+                Timeframe.HOUR_8: "8h",
+                Timeframe.DAY_1: "1d",
+                Timeframe.WEEK_1: "7d",
+                Timeframe.MONTH_1: "30d",
+            },
         }
 
     def to_exchange_format(self, exchange: Exchange, market_type: MarketType | None = None) -> str:
         """Конвертирует таймфрейм в формат, подходящий для указанной биржи."""
-        key = (
-            exchange
-            if not (exchange is Exchange.BITGET and market_type)
-            else exchange + market_type
-        )
+        # Обрабатываем ситуацию, при которой биржа имеет одинаковый маппинг как на споте, так и на фьючерсах:
+        if exchange in self.mapping:
+            key = exchange
+        else:
+            if not market_type:
+                raise ValueError(
+                    f"Market type is required for exchange {exchange.value} to map to timeframe {self.value}"
+                )
+            key = exchange + market_type
         try:
             return self.mapping[key][self]  # type: ignore
         except KeyError as e:

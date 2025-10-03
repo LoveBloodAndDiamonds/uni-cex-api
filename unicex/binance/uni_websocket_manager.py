@@ -80,7 +80,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета для управления соединением.
         """
-        wrapper = self._make_wrapper(self._adapter.futures_klines_message, callback)
+        wrapper = self._make_wrapper(self._adapter.klines_message, callback)
         return self._websocket_manager.futures_klines(
             callback=wrapper,
             symbol=symbol,
@@ -140,7 +140,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета для управления соединением.
         """
-        wrapper = self._make_wrapper(self._adapter.futures_trades_message, callback)
+        wrapper = self._make_wrapper(self._adapter.trades_message, callback)
         return self._websocket_manager.futures_trade(
             callback=wrapper, symbol=symbol, symbols=symbols
         )
@@ -160,7 +160,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета для управления соединением.
         """
-        wrapper = self._make_wrapper(self._adapter.futures_aggtrades_message, callback)
+        wrapper = self._make_wrapper(self._adapter.aggtrades_message, callback)
         return self._websocket_manager.futures_agg_trade(
             callback=wrapper, symbol=symbol, symbols=symbols
         )

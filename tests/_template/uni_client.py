@@ -79,7 +79,7 @@ class UniClient(IUniClient[Client]):
     async def klines(
         self,
         symbol: str,
-        interval: Timeframe,
+        interval: Timeframe | str,
         limit: int | None = None,
         start_time: int | None = None,
         end_time: int | None = None,
@@ -89,7 +89,7 @@ class UniClient(IUniClient[Client]):
         Параметры:
             symbol (str): Название тикера.
             limit (int | None): Количество свечей.
-            interval (Timeframe): Таймфрейм свечей.
+            interval (Timeframe | str): Таймфрейм свечей.
             start_time (int | None): Время начала периода в миллисекундах.
             end_time (int | None): Время окончания периода в миллисекундах.
 
@@ -111,7 +111,7 @@ class UniClient(IUniClient[Client]):
         Параметры:
             symbol (str): Название тикера.
             limit (int | None): Количество свечей.
-            interval (Timeframe): Таймфрейм свечей.
+            interval (Timeframe | str): Таймфрейм свечей.
             start_time (int | None): Время начала периода в миллисекундах.
             end_time (int | None): Время окончания периода в миллисекундах.
 

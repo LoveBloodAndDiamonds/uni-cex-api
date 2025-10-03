@@ -11,6 +11,8 @@ __all__ = [
     "AccountType",
     "OpenInterestDict",
     "OpenInterestItem",
+    "TickerInfoItem",
+    "TickersInfoDict",
 ]
 
 from logging import Logger as LoggingLogger
@@ -21,7 +23,7 @@ import loguru
 type LoggerLike = LoggingLogger | loguru.Logger
 """Объединение логгеров: loguru._logger.Logger или logging.Logger."""
 
-type RequestMethod = Literal["GET", "POST", "PUT", "DELETE"]
+type RequestMethod = Literal["GET", "POST", "PUT", "DELETE", "PATCH"]
 """Типы методов HTTP запросов."""
 
 
@@ -117,3 +119,32 @@ type OpenInterestDict = dict[str, OpenInterestItem]
 
 type AccountType = Literal["SPOT", "FUTURES"]
 """Тип аккаунта."""
+
+
+class TickerInfoItem(TypedDict):
+    """Информация о размерах тиков, ступеней цены и множителя контракта (если есть) для тикера."""
+
+    tick_precision: int
+    """Количество знаков после запятой для цены."""
+
+    size_precision: int
+    """Количество знаков после запятой для объема."""
+
+    contract_size: float | None
+    """Множитель контракта (если есть)."""
+
+    min_market_size: float | None
+    """Минимальный размер рыночного ордера в монетах (если есть)."""
+
+    max_market_size: float | None
+    """Максимальный размер рыночного ордера в монетах (если есть)."""
+
+    min_limit_size: float | None
+    """Минимальный размер лимитного ордера в монетах (если есть)."""
+
+    max_limit_size: float | None
+    """Максимальный размер лимитного ордера в монетах (если есть)."""
+
+
+type TickersInfoDict = dict[str, TickerInfoItem]
+"""Информация о размерах тиков, ступеней цены и множителя контракта (если есть) для всех тикеров."""

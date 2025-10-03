@@ -85,7 +85,7 @@ class UniClient(IUniClient[Client]):
     async def klines(
         self,
         symbol: str,
-        interval: Timeframe,
+        interval: Timeframe | str,
         limit: int | None = None,
         start_time: int | None = None,
         end_time: int | None = None,
@@ -102,9 +102,14 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             `list[KlineDict]`: Список свечей.
         """
+        interval = (
+            interval.to_exchange_format(Exchange.BITGET, MarketType.SPOT)
+            if isinstance(interval, Timeframe)
+            else interval
+        )
         raw_data = await self._client.get_candlestick_data(
             symbol=symbol,
-            granularity=interval.to_exchange_format(Exchange.BITGET),
+            granularity=interval,
             limit=limit,
             start_time=start_time,
             end_time=end_time,
@@ -114,7 +119,7 @@ class UniClient(IUniClient[Client]):
     async def futures_klines(
         self,
         symbol: str,
-        interval: Timeframe,
+        interval: Timeframe | str,
         limit: int | None = None,
         start_time: int | None = None,
         end_time: int | None = None,
@@ -131,24 +136,42 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             `list[KlineDict]`: Список свечей.
         """
+        interval = (
+            interval.to_exchange_format(Exchange.BITGET, MarketType.FUTURES)
+            if isinstance(interval, Timeframe)
+            else interval
+        )
         raw_data = await self._client.futures_get_candlestick_data(
             symbol=symbol,
             product_type="USDT-FUTURES",
-            granularity=interval.to_exchange_format(Exchange.BITGET, MarketType.FUTURES),
+            granularity=interval,
             limit=limit,
             start_time=start_time,
             end_time=end_time,
         )
         return Adapter.klines(raw_data=raw_data, symbol=symbol)
 
-    async def funding_rate(self) -> dict[str, float]:
-        """Возвращает ставку финансирования для всех тикеров.
+    @overload
+    async def funding_rate(self, symbol: str) -> float: ...
+
+    @overload
+    async def funding_rate(self, symbol: None) -> dict[str, float]: ...
+
+    @overload
+    async def funding_rate(self) -> dict[str, float]: ...
+
+    async def funding_rate(self, symbol: str | None = None) -> dict[str, float] | float:
+        """Возвращает ставку финансирования для тикера или всех тикеров, если тикер не указан.
+
+        - Параметры:
+        symbol (`str | None`): Название тикера (Опционально).
 
         Возвращает:
-            `dict[str, float]`: Ставка финансирования для каждого тикера.
+          `dict[str, float] | float`: Ставка финансирования для тикера или словарь со ставками для всех тикеров.
         """
         raw_data = await self._client.futures_get_all_tickers("USDT-FUTURES")
-        return Adapter.funding_rate(raw_data)
+        adapted_data = Adapter.funding_rate(raw_data)
+        return adapted_data[symbol] if symbol else adapted_data
 
     @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...

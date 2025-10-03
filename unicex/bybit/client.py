@@ -83,7 +83,7 @@ class Client(BaseClient):
         # Проверяем нужно ли подписывать запрос
         if not signed:
             headers = self._get_headers(timestamp)
-            return super()._make_request(
+            return await super()._make_request(
                 method=method,
                 url=url,
                 headers=headers,

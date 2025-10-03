@@ -7,6 +7,8 @@ __all__ = [
     "filter_params",
     "batched_list",
     "catch_adapter_errors",
+    "decorate_all_methods",
+    "symbol_to_exchange_format",
 ]
 
 import base64
@@ -15,9 +17,10 @@ import hmac
 import json
 from collections.abc import Callable, Iterable
 from functools import wraps
-from typing import Literal
+from typing import Any, Literal
 from urllib.parse import urlencode
 
+from unicex.enums import Exchange, MarketType
 from unicex.exceptions import AdapterError
 
 
@@ -124,19 +127,92 @@ def catch_adapter_errors(func: Callable):
             return func(*args, **kwargs)
         except Exception as e:
             args_repr = repr(args)
-            if len(args_repr) > 200:
-                args_preview = args_repr[:200] + "... (truncated)"
+            if len(args_repr) > 400:
+                args_preview = args_repr[:400] + "... (truncated)"
             else:
                 args_preview = args_repr
 
             kwargs_repr = repr(kwargs)
-            if len(kwargs_repr) > 200:
-                kwargs_preview = kwargs_repr[:200] + "... (truncated)"
+            if len(kwargs_repr) > 400:
+                kwargs_preview = kwargs_repr[:400] + "... (truncated)"
             else:
                 kwargs_preview = kwargs_repr
 
             raise AdapterError(
                 f"({type(e).__name__}): {e}. Can not convert input (args={args_preview}, kwargs={kwargs_preview}) in function `{func.__name__}`."
-            ) from e
+            ) from None
 
     return wrapper
+
+
+def decorate_all_methods(decorator: Callable[[Callable[..., Any]], Callable[..., Any]]) -> Callable:
+    """Класс-декоратор, который оборачивает все методы класса указанным декоратором.
+
+    Декоратор применяется только к методам/функциям, не начинающимся с "__".
+
+    Парамтеры:
+        decorator: Декоратор, который нужно применить ко всем методам.
+
+    Возвращает:
+        Callable: Декоратор для классов.
+
+    Пример:
+        >>> def debug(func):
+        ...     def wrapper(*args, **kwargs):
+        ...         print(f"Call {func.__name__}")
+        ...         return func(*args, **kwargs)
+        ...
+        ...     return wrapper
+        >>> @decorate_all_methods(debug)
+        ... class Test:
+        ...     def hello(self):
+        ...         return "hi"
+        >>> Test().hello()
+        Call hello
+        'hi'
+
+    """
+
+    def wrapper(cls: type) -> type:
+        for k, v in cls.__dict__.items():
+            if isinstance(v, staticmethod):
+                func = v.__func__
+                setattr(cls, k, staticmethod(decorator(func)))
+            elif isinstance(v, classmethod):
+                func = v.__func__
+                setattr(cls, k, classmethod(decorator(func)))
+            elif callable(v) and not k.startswith("__"):
+                setattr(cls, k, decorator(v))
+        return cls
+
+    return wrapper
+
+
+def symbol_to_exchange_format(
+    symbol: str, exchange: Exchange, market_type: MarketType | None = None
+) -> str:
+    """Преобразует символ в формат, который используется на бирже.
+
+    Параметры:
+        symbol (str): Символ, обязательно в формате 'BTCUSDT' или 'btcusdt'.
+
+    Возвращает:
+        str: Символ в формате, который используется на бирже, заглавными буквами.
+    """
+    symbol_upper = symbol.upper()
+    if exchange == Exchange.MEXC:
+        if market_type == MarketType.FUTURES:
+            return symbol_upper.replace("USDT", "_USDT")
+    elif exchange == Exchange.OKX:
+        if market_type == MarketType.FUTURES:
+            return symbol_upper.replace("USDT", "-USDT-SWAP")
+        elif market_type == MarketType.SPOT:
+            return symbol_upper.replace("USDT", "-USDT")
+    elif exchange == Exchange.GATEIO:
+        return symbol_upper.replace("USDT", "_USDT")
+    elif exchange == Exchange.HYPERLIQUID:
+        if market_type == MarketType.FUTURES:
+            return symbol.removesuffix("USDT")  # Вот тут мб и не так, там вроде что-то к USDC
+        else:
+            return symbol.removesuffix("USDT")  # Вот тут мб и не так, там вроде что-то к USDC
+    return symbol_upper
