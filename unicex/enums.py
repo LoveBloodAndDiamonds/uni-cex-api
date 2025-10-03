@@ -26,18 +26,13 @@ class Exchange(StrEnum):
 
     BINANCE = "BINANCE"
     BITGET = "BITGET"
-    BITRUE = "BITRUE"
     BITUNIX = "BITUNIX"
-    BTSE = "BTSE"
     BYBIT = "BYBIT"
     GATEIO = "GATEIO"
     HYPERLIQUID = "HYPERLIQUID"
     KCEX = "KCEX"
-    KRAKEN = "KRAKEN"
-    KUCOIN = "KUCOIN"
     MEXC = "MEXC"
     OKX = "OKX"
-    WEEX = "WEEX"
     XT = "XT"
 
     def __add__(self, market_type: "MarketType") -> tuple["Exchange", "MarketType"]:

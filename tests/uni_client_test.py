@@ -25,8 +25,8 @@ tests_config = {
     "futures_last_price": True,
     "ticker_24hr": True,
     "futures_ticker_24hr": True,
-    "klines": False,
-    "futures_klines": False,
+    "klines": True,
+    "futures_klines": True,
     "open_interest": True,
     "single_open_interest": True,
     "funding_rate": True,
@@ -34,7 +34,7 @@ tests_config = {
 }
 
 # Тестировать ли все таймфреймы?
-test_all_timeframes = True
+test_all_timeframes = False
 
 # Какие биржи тестировать
 exchanges = [
@@ -44,8 +44,9 @@ exchanges = [
     Exchange.BITGET,
     Exchange.OKX,
     Exchange.GATEIO,
+    Exchange.HYPERLIQUID,
 ]
-exchanges = [Exchange.HYPERLIQUID]
+# exchanges = [Exchange.HYPERLIQUID]
 
 # Сколько символов показывать в превью вывода
 repr_len = 100
@@ -114,11 +115,11 @@ async def test_exchange(e: Exchange, client: IUniClient) -> None:
 
     intervals = Timeframe if test_all_timeframes else [Timeframe.DAY_1]
     for interval in intervals:
-        if should_run("klines"):
+        if should_run("klines") and e not in [Exchange.HYPERLIQUID]:
             klines = await client.klines(symbol=s_symbol, interval=interval, limit=10)
             pretty_print(e, f"{interval} klines", klines)
 
-        if should_run("futures_klines"):
+        if should_run("futures_klines") and e not in [Exchange.HYPERLIQUID]:
             futures_klines = await client.futures_klines(
                 symbol=f_symbol, interval=interval, limit=10
             )

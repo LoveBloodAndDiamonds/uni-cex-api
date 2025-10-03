@@ -46,13 +46,6 @@ __all__ = [
     "BitgetWebsocketManager",
     "BitgetUserWebsocket",
     "BitgetExchangeInfo",
-    # Bitrue
-    "BitrueClient",
-    "BitrueUniClient",
-    "BitrueUniWebsocketManager",
-    "BitrueWebsocketManager",
-    "BitrueUserWebsocket",
-    "BitrueExchangeInfo",
     # Mexc
     "MexcClient",
     "MexcUniClient",
@@ -88,55 +81,6 @@ __all__ = [
     "GateioWebsocketManager",
     "GateioUserWebsocket",
     "GateioExchangeInfo",
-    # Bitunix
-    "BitunixClient",
-    "BitunixUniClient",
-    "BitunixUniWebsocketManager",
-    "BitunixWebsocketManager",
-    "BitunixUserWebsocket",
-    "BitunixExchangeInfo",
-    # Btse
-    "BtseClient",
-    "BtseUniClient",
-    "BtseUniWebsocketManager",
-    "BtseWebsocketManager",
-    "BtseUserWebsocket",
-    "BtseExchangeInfo",
-    # Kcex
-    "KcexClient",
-    "KcexUniClient",
-    "KcexUniWebsocketManager",
-    "KcexWebsocketManager",
-    "KcexUserWebsocket",
-    "KcexExchangeInfo",
-    # Kraken
-    "KrakenClient",
-    "KrakenUniClient",
-    "KrakenUniWebsocketManager",
-    "KrakenWebsocketManager",
-    "KrakenUserWebsocket",
-    "KrakenExchangeInfo",
-    # Kucoin
-    "KucoinClient",
-    "KucoinUniClient",
-    "KucoinUniWebsocketManager",
-    "KucoinWebsocketManager",
-    "KucoinUserWebsocket",
-    "KucoinExchangeInfo",
-    # Weex
-    "WeexClient",
-    "WeexUniClient",
-    "WeexUniWebsocketManager",
-    "WeexWebsocketManager",
-    "WeexUserWebsocket",
-    "WeexExchangeInfo",
-    # Xt
-    "XtClient",
-    "XtUniClient",
-    "XtUniWebsocketManager",
-    "XtWebsocketManager",
-    "XtUserWebsocket",
-    "XtExchangeInfo",
 ]
 
 # ruff: noqa
@@ -171,33 +115,6 @@ from .bitget import (
     ExchangeInfo as BitgetExchangeInfo,
 )
 
-from .bitrue import (
-    Client as BitrueClient,
-    UniClient as BitrueUniClient,
-    UniWebsocketManager as BitrueUniWebsocketManager,
-    UserWebsocket as BitrueUserWebsocket,
-    WebsocketManager as BitrueWebsocketManager,
-    ExchangeInfo as BitrueExchangeInfo,
-)
-
-from .bitunix import (
-    Client as BitunixClient,
-    UniClient as BitunixUniClient,
-    UniWebsocketManager as BitunixUniWebsocketManager,
-    UserWebsocket as BitunixUserWebsocket,
-    WebsocketManager as BitunixWebsocketManager,
-    ExchangeInfo as BitunixExchangeInfo,
-)
-
-from .btse import (
-    Client as BtseClient,
-    UniClient as BtseUniClient,
-    UniWebsocketManager as BtseUniWebsocketManager,
-    UserWebsocket as BtseUserWebsocket,
-    WebsocketManager as BtseWebsocketManager,
-    ExchangeInfo as BtseExchangeInfo,
-)
-
 from .bybit import (
     Client as BybitClient,
     UniClient as BybitUniClient,
@@ -225,33 +142,6 @@ from .hyperliquid import (
     ExchangeInfo as HyperliquidExchangeInfo,
 )
 
-from .kcex import (
-    Client as KcexClient,
-    UniClient as KcexUniClient,
-    UniWebsocketManager as KcexUniWebsocketManager,
-    UserWebsocket as KcexUserWebsocket,
-    WebsocketManager as KcexWebsocketManager,
-    ExchangeInfo as KcexExchangeInfo,
-)
-
-from .kraken import (
-    Client as KrakenClient,
-    UniClient as KrakenUniClient,
-    UniWebsocketManager as KrakenUniWebsocketManager,
-    UserWebsocket as KrakenUserWebsocket,
-    WebsocketManager as KrakenWebsocketManager,
-    ExchangeInfo as KrakenExchangeInfo,
-)
-
-from .kucoin import (
-    Client as KucoinClient,
-    UniClient as KucoinUniClient,
-    UniWebsocketManager as KucoinUniWebsocketManager,
-    UserWebsocket as KucoinUserWebsocket,
-    WebsocketManager as KucoinWebsocketManager,
-    ExchangeInfo as KucoinExchangeInfo,
-)
-
 from .mexc import (
     Client as MexcClient,
     UniClient as MexcUniClient,
@@ -270,43 +160,17 @@ from .okx import (
     ExchangeInfo as OkxExchangeInfo,
 )
 
-from .weex import (
-    Client as WeexClient,
-    UniClient as WeexUniClient,
-    UniWebsocketManager as WeexUniWebsocketManager,
-    UserWebsocket as WeexUserWebsocket,
-    WebsocketManager as WeexWebsocketManager,
-    ExchangeInfo as WeexExchangeInfo,
-)
-
-from .xt import (
-    Client as XtClient,
-    UniClient as XtUniClient,
-    UniWebsocketManager as XtUniWebsocketManager,
-    UserWebsocket as XtUserWebsocket,
-    WebsocketManager as XtWebsocketManager,
-    ExchangeInfo as XtExchangeInfo,
-)
-
 
 async def load_exchanges_info() -> None:
     """Единожды загружает информацию о тикерах на всех биржах."""
     await asyncio.gather(
         BinanceExchangeInfo.load_exchange_info(),
         BitgetExchangeInfo.load_exchange_info(),
-        BitrueExchangeInfo.load_exchange_info(),
-        BitunixExchangeInfo.load_exchange_info(),
-        BtseExchangeInfo.load_exchange_info(),
         BybitExchangeInfo.load_exchange_info(),
         GateioExchangeInfo.load_exchange_info(),
         HyperliquidExchangeInfo.load_exchange_info(),
-        KcexExchangeInfo.load_exchange_info(),
-        KrakenExchangeInfo.load_exchange_info(),
-        KucoinExchangeInfo.load_exchange_info(),
         MexcExchangeInfo.load_exchange_info(),
         OkxExchangeInfo.load_exchange_info(),
-        WeexExchangeInfo.load_exchange_info(),
-        XtExchangeInfo.load_exchange_info(),
     )
 
 
@@ -315,17 +179,9 @@ async def start_exchanges_info(parse_interval_seconds: int = 60 * 60) -> None:
     asyncio.gather(
         BinanceExchangeInfo.start(parse_interval_seconds),
         BitgetExchangeInfo.start(parse_interval_seconds),
-        BitrueExchangeInfo.start(parse_interval_seconds),
-        BitunixExchangeInfo.start(parse_interval_seconds),
-        BtseExchangeInfo.start(parse_interval_seconds),
         BybitExchangeInfo.start(parse_interval_seconds),
         GateioExchangeInfo.start(parse_interval_seconds),
         HyperliquidExchangeInfo.start(parse_interval_seconds),
-        KcexExchangeInfo.start(parse_interval_seconds),
-        KrakenExchangeInfo.start(parse_interval_seconds),
-        KucoinExchangeInfo.start(parse_interval_seconds),
         MexcExchangeInfo.start(parse_interval_seconds),
         OkxExchangeInfo.start(parse_interval_seconds),
-        WeexExchangeInfo.start(parse_interval_seconds),
-        XtExchangeInfo.start(parse_interval_seconds),
     )
