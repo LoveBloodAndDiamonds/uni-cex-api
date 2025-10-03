@@ -11,6 +11,8 @@ __all__ = [
     "AccountType",
     "OpenInterestDict",
     "OpenInterestItem",
+    "TickerInfoItem",
+    "TickersInfoDict",
 ]
 
 from logging import Logger as LoggingLogger
@@ -117,3 +119,20 @@ type OpenInterestDict = dict[str, OpenInterestItem]
 
 type AccountType = Literal["SPOT", "FUTURES"]
 """Тип аккаунта."""
+
+
+class TickerInfoItem(TypedDict):
+    """Информация о размерах тиков, ступеней цены и множителя контракта (если есть) для тикера."""
+
+    price: int
+    """Количество знаков после запятой для цены."""
+
+    quantity: int
+    """Количество знаков после запятой для объема."""
+
+    contract_multiplier: float | None
+    """Множитель контракта (если есть)."""
+
+
+type TickersInfoDict = dict[str, TickerInfoItem]
+"""Информация о размерах тиков, ступеней цены и множителя контракта (если есть) для всех тикеров."""
