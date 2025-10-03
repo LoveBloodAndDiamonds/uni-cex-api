@@ -7,9 +7,11 @@ __all__ = [
     "generate_ex_link",
     "generate_tv_link",
     "generate_cg_link",
+    "make_humanreadable",
 ]
 
 import time
+from typing import Literal
 
 from .enums import Exchange, MarketType
 from .exceptions import NotSupported
@@ -205,3 +207,50 @@ def generate_cg_link(exchange: Exchange, market_type: MarketType, symbol: str) -
             return f"{base_url}/SPOT_{exchange.upper()}_{symbol.replace('USDT', '-USDT')}"
         # Для остальных бирж ссылки нет → возвращаем заглушку
         return base_url
+
+
+def make_humanreadable(value: float, locale: Literal["ru", "en"] = "ru") -> str:
+    """Функция превращает большие числа в удобочитаемый вид.
+
+    Принимает:
+        value (float): число для преобразования
+        locale (Literal["ru", "en"]): язык для форматирования числа
+
+    Возвращает:
+        str: Человеческое представление числа
+    """
+    suffixes = {
+        "ru": {
+            1_000: "тыс.",
+            1_000_000: "млн.",
+            1_000_000_000: "млрд.",
+            1_000_000_000_000: "трлн.",
+            1_000_000_000_000_000: "квдрлн.",
+            1_000_000_000_000_000_000: "квнтлн.",
+        },
+        "en": {
+            1_000: "K",
+            1_000_000: "M",
+            1_000_000_000: "B",
+            1_000_000_000_000: "T",
+            1_000_000_000_000_000: "Qa",  # Quadrillion
+            1_000_000_000_000_000_000: "Qi",  # Quintillion
+        },
+    }
+
+    selected_suffixes = suffixes[locale]
+
+    for divisor in sorted(selected_suffixes.keys(), reverse=True):
+        if abs(value) >= divisor:
+            number = value / divisor
+            if locale == "ru":
+                return (
+                    f"{number:,.2f}".replace(",", " ").replace(".", ",")
+                    + f" {selected_suffixes[divisor]}"
+                )
+            return f"{number:,.2f} {selected_suffixes[divisor]}"
+
+    # Форматирование "малых" чисел
+    if locale == "ru":
+        return f"{value:,.2f}".replace(",", " ").replace(".", ",")
+    return f"{value:,.2f}"
