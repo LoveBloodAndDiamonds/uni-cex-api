@@ -2,6 +2,7 @@ __all__ = ["IExchangeInfo"]
 
 import asyncio
 from abc import ABC, abstractmethod
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from loguru import logger
@@ -69,7 +70,6 @@ class IExchangeInfo(ABC):
         """Принудительно вызывает загрузку информации о бирже."""
         await cls._load_exchange_info()
         cls._loaded = True
-        cls._logger.debug("Exchange data loaded")
 
     @classmethod
     @abstractmethod
@@ -78,53 +78,77 @@ class IExchangeInfo(ABC):
         ...
 
     @classmethod
-    def get_price_precisions(cls, symbol: str) -> int:
-        """Возвращает количество знаков после запятой для тикера."""
+    def get_tick_precisions(cls, symbol: str) -> int:  # type: ignore[reportReturnType]
+        """Возвращает количество знаков после запятой для цены тикера."""
         try:
-            return cls._tickers_info[symbol]["price"]
+            return cls._tickers_info[symbol]["tick_precision"]
         except KeyError as e:
-            if not cls._loaded:
-                raise ValueError("Exchange data not loaded") from None
-            raise KeyError(f"Symbol {symbol} not found") from e
+            cls._handle_key_error(e, symbol)
 
     @classmethod
-    def get_quantity_precisions(cls, symbol: str) -> int:
-        """Возвращает количество знаков после запятой для объема."""
+    def get_size_precisions(cls, symbol: str) -> int:  # type: ignore[reportReturnType]
+        """Возвращает количество знаков после запятой для объема тикера."""
         try:
-            return cls._tickers_info[symbol]["quantity"]
+            return cls._tickers_info[symbol]["size_precision"]
         except KeyError as e:
-            if not cls._loaded:
-                raise ValueError("Exchange data not loaded") from None
-            raise KeyError(f"Symbol {symbol} not found") from e
+            cls._handle_key_error(e, symbol)
 
     @classmethod
-    def get_contract_multiplier(cls, symbol: str) -> float | None:
+    def get_contract_size(cls, symbol: str) -> float | None:
         """Возвращает множитель контракта."""
         try:
-            return cls._tickers_info[symbol]["contract_multiplier"]
+            return cls._tickers_info[symbol]["contract_size"]
         except KeyError as e:
-            if not cls._loaded:
-                raise ValueError("Exchange data not loaded") from None
-            raise KeyError(f"Symbol {symbol} not found") from e
+            cls._handle_key_error(e, symbol)
 
     @classmethod
     def round_price(cls, symbol: str, price: float) -> float:
         """Округляет цену до ближайшего возможного значения."""
         try:
-            precision = cls._tickers_info[symbol]["price"]
+            precision = cls._tickers_info[symbol]["tick_precision"]
         except KeyError as e:
-            if not cls._loaded:
-                raise ValueError("Exchange data not loaded") from None
-            raise KeyError(f"Symbol {symbol} not found") from e
+            cls._handle_key_error(e, symbol)
         return round(price, precision)
 
     @classmethod
     def round_quantity(cls, symbol: str, quantity: float) -> float:
         """Округляет объем до ближайшего возможного значения."""
         try:
-            precision = cls._tickers_info[symbol]["quantity"]
+            precision = cls._tickers_info[symbol]["size_precision"]
         except KeyError as e:
-            if not cls._loaded:
-                raise ValueError("Exchange data not loaded") from None
-            raise KeyError(f"Symbol {symbol} not found") from e
+            cls._handle_key_error(e, symbol)
         return round(quantity, precision)
+
+    @staticmethod
+    def step_size_to_precision(tick_size: str | int | float) -> int:
+        """Возвращает precision для round(x, precision) по шагу цены/объёма.
+
+        Работает только для шагов — степеней 10.
+        Примеры:
+            "0.0001" ->  4
+            "0.01"   ->  2
+            "0.1"    ->  1
+            "1"      ->  0
+            "10"     -> -1
+            "100"    -> -2
+        """
+        d = Decimal(str(tick_size)).normalize()
+        if d <= 0:
+            raise ValueError("tick_size must be > 0")
+
+        t = d.as_tuple()
+        # Степень десяти даёт один значащий разряд = 1 (1eN)
+        if t.digits == (1,):
+            return -t.exponent  # type: ignore
+
+        # Иначе это не степень 10 (например, 0.5, 5 и т.п.)
+        raise ValueError(
+            f"tick_size={tick_size} is not a power of 10; cannot map to round() precision."
+        )
+
+    @classmethod
+    def _handle_key_error(cls, exception: KeyError, symbol: str) -> None:
+        """Обрабатывает KeyError при получении информации о тикере."""
+        if not cls._loaded:
+            raise ValueError("Exchange data not loaded") from None
+        raise KeyError(f"Symbol {symbol} not found") from exception

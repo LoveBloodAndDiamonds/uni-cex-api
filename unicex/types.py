@@ -124,13 +124,13 @@ type AccountType = Literal["SPOT", "FUTURES"]
 class TickerInfoItem(TypedDict):
     """Информация о размерах тиков, ступеней цены и множителя контракта (если есть) для тикера."""
 
-    price: int
+    tick_precision: int
     """Количество знаков после запятой для цены."""
 
-    quantity: int
+    size_precision: int
     """Количество знаков после запятой для объема."""
 
-    contract_multiplier: float | None
+    contract_size: float | None
     """Множитель контракта (если есть)."""
 
 

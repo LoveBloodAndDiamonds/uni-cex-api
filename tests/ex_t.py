@@ -1,6 +1,6 @@
 import asyncio
 
-from unicex import load_exchanges_info, start_exchanges_info
+from unicex import load_exchanges_info, start_exchanges_info, OkxExchangeInfo
 
 
 async def main() -> None:
