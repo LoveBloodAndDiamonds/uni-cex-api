@@ -27,7 +27,9 @@ class Adapter:
         Возвращает:
             list[str]: Список тикеров.
         """
-        return [item["symbol"] for item in raw_data if only_usdt or item["symbol"].endswith("USDT")]
+        return [
+            item["symbol"] for item in raw_data if item["symbol"].endswith("USDT") or not only_usdt
+        ]
 
     @staticmethod
     def futures_tickers(raw_data: dict, only_usdt: bool = True) -> list[str]:
@@ -43,7 +45,7 @@ class Adapter:
         return [
             item["symbol"]
             for item in raw_data["data"]
-            if only_usdt or item["symbol"].endswith("USDT")
+            if item["symbol"].endswith("USDT") or not only_usdt
         ]
 
     @staticmethod

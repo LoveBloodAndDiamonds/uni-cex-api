@@ -10,6 +10,8 @@ from unicex.types import (
 )
 from unicex.utils import catch_adapter_errors, decorate_all_methods
 
+from .exchange_info import ExchangeInfo
+
 
 @decorate_all_methods(catch_adapter_errors)
 class Adapter:
@@ -29,7 +31,7 @@ class Adapter:
         return [
             item["instId"]
             for item in raw_data["data"]
-            if only_usdt or item["instId"].endswith("-USDT")
+            if item["instId"].endswith("-USDT") or not only_usdt
         ]
 
     @staticmethod
@@ -46,16 +48,19 @@ class Adapter:
         return [
             item["instId"]
             for item in raw_data["data"]
-            if only_usdt or item["instId"].endswith("-USDT-SWAP")
+            if item["instId"].endswith("-USDT-SWAP") or not only_usdt
         ]
 
     @staticmethod
     def ticker_24hr(raw_data: dict) -> TickerDailyDict:
-        """Преобразует статистику 24ч в унифицированный формат."""
+        """Преобразует статистику 24ч в унифицированный формат.
+
+        # NOTE: Обратите внимание, изменение цены в случае с OKX возвращается относительно открытия 1 day свечи.
+        """
         return {
             item["instId"]: TickerDailyItem(
                 p=round(
-                    (float(item["last"]) - float(item["open24h"]) / float(item["open24h"])) * 100, 2
+                    (float(item["last"]) - float(item["open24h"])) / float(item["open24h"]) * 100, 2
                 ),
                 v=float(item["vol24h"]),
                 q=float(item["volCcy24h"]),
@@ -65,14 +70,17 @@ class Adapter:
 
     @staticmethod
     def futures_ticker_24hr(raw_data: dict) -> TickerDailyDict:
-        """Преобразует статистику 24ч в унифицированный формат."""
+        """Преобразует статистику 24ч в унифицированный формат.
+
+        # NOTE: Обратите внимание, изменение цены в случае с OKX возвращается относительно открытия 1 day свечи.
+        """
         return {
             item["instId"]: TickerDailyItem(
                 p=round(
-                    (float(item["last"]) - float(item["open24h"]) / float(item["open24h"])) * 100, 2
+                    (float(item["last"]) - float(item["open24h"])) / float(item["open24h"]) * 100, 2
                 ),
                 v=float(item["volCcy24h"]),
-                q=float(item["vol24h"]),
+                q=float(item["volCcy24h"]) * float(item["last"]),
             )
             for item in raw_data["data"]
         }
@@ -120,3 +128,11 @@ class Adapter:
             )
             for item in raw_data["data"]
         }
+
+    @staticmethod
+    def _get_contract_size(symbol: str) -> float:
+        """Возвращает размер контракта для указанного символа тикера."""
+        try:
+            return ExchangeInfo.get_futures_ticker_info(symbol)["contract_size"] or 1
+        except:  # noqa
+            return 1

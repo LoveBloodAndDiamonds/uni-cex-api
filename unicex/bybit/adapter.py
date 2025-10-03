@@ -29,7 +29,7 @@ class Adapter:
         return [
             item["symbol"]
             for item in raw_data["result"]["list"]
-            if only_usdt or item["symbol"].endswith("USDT")
+            if item["symbol"].endswith("USDT") or not only_usdt
         ]
 
     @staticmethod

@@ -28,7 +28,7 @@ class Adapter:
             list[str]: Список тикеров.
         """
         return [
-            item["symbol"] for item in raw_data if not only_usdt or item["symbol"].endswith("USDT")
+            item["symbol"] for item in raw_data if item["symbol"].endswith("USDT") or not only_usdt
         ]
 
     @staticmethod

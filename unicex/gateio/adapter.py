@@ -32,7 +32,7 @@ class Adapter:
         return [
             item["currency_pair"]
             for item in raw_data
-            if not only_usdt or item["currency_pair"].endswith("USDT")
+            if item["currency_pair"].endswith("USDT") or not only_usdt
         ]
 
     @staticmethod
@@ -49,7 +49,7 @@ class Adapter:
         return [
             item["contract"]
             for item in raw_data
-            if not only_usdt or item["contract"].endswith("USDT")
+            if item["contract"].endswith("USDT") or not only_usdt
         ]
 
     @staticmethod

@@ -45,7 +45,7 @@ class UniClient(IUniClient[Client]):
             list[str]: Список тикеров.
         """
         raw_data = await self._client.tickers(inst_type="SWAP")
-        return Adapter.tickers(raw_data=raw_data, only_usdt=only_usdt)
+        return Adapter.futures_tickers(raw_data=raw_data, only_usdt=only_usdt)
 
     async def last_price(self) -> dict[str, float]:
         """Возвращает последнюю цену для каждого тикера.
@@ -81,7 +81,7 @@ class UniClient(IUniClient[Client]):
             TickerDailyDict: Словарь с статистикой за последние 24 часа для каждого тикера.
         """
         raw_data = await self._client.tickers(inst_type="SWAP")
-        return Adapter.ticker_24hr(raw_data=raw_data)
+        return Adapter.futures_ticker_24hr(raw_data=raw_data)
 
     async def klines(
         self,
