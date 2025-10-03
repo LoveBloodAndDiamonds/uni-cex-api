@@ -1,6 +1,6 @@
 import asyncio
 
-from unicex import load_exchanges_info, start_exchanges_info, OkxExchangeInfo
+from unicex import load_exchanges_info, start_exchanges_info, OkxExchangeInfo, MexcExchangeInfo
 
 
 async def main() -> None:
@@ -13,6 +13,11 @@ async def main() -> None:
 
     while True:
         await asyncio.sleep(1)
+        print(str(OkxExchangeInfo._tickers_info)[:200], "\n\n")
+        print(str(OkxExchangeInfo._futures_tickers_info)[:200], "\n\n")
+        print(str(MexcExchangeInfo._futures_tickers_info)[:200], "\n\n")
+
+        await asyncio.sleep(10)
 
 
 if __name__ == "__main__":

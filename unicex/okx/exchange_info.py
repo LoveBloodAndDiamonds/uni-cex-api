@@ -12,24 +12,39 @@ class ExchangeInfo(IExchangeInfo):
     @classmethod
     async def _load_exchange_info(cls) -> None:
         """Загружает информацию о бирже."""
-        tickers_info = {}
         async with aiohttp.ClientSession() as session:
+            tickers_info = {}
+            url = "https://www.okx.com/api/v5/public/instruments?instType=SPOT"
+            async with session.get(url) as response:
+                data = await response.json()
+                for el in data["data"]:
+                    tickers_info[el["instId"]] = TickerInfoItem(
+                        tick_precision=cls._step_size_to_precision(el["tickSz"]),
+                        size_precision=cls._step_size_to_precision(el["lotSz"]),
+                        contract_size=1,
+                        min_market_size=float(el["minSz"]),
+                        max_market_size=float(el["maxMktSz"]),
+                        min_limit_size=float(el["minSz"]),
+                        max_limit_size=float(el["maxLmtSz"]),
+                    )
+
+            cls._tickers_info = tickers_info
+            cls._logger.debug("Okx spot exchange info loaded")
+
+            futures_tickers_info = {}
             url = "https://www.okx.com/api/v5/public/instruments?instType=SWAP"
             async with session.get(url) as response:
                 data = await response.json()
                 for el in data["data"]:
-                    print(el)
-                    # минимальный шаг цены
-                    tick_size = el["tickSz"]
-                    # минимальный шаг количества
-                    step_size = el["lotSz"]
-                    # стоимость одного контракта
-                    contract_size = float(el["ctVal"])
-
-                    tickers_info[el["instId"]] = TickerInfoItem(
-                        tick_precision=cls.step_size_to_precision(tick_size),
-                        size_precision=cls.step_size_to_precision(step_size),
-                        contract_size=contract_size,
+                    futures_tickers_info[el["instId"]] = TickerInfoItem(
+                        tick_precision=cls._step_size_to_precision(el["tickSz"]),
+                        size_precision=cls._step_size_to_precision(el["lotSz"]),
+                        contract_size=float(el["ctVal"]),
+                        min_market_size=el["minSz"],
+                        max_market_size=el["maxMktSz"],
+                        min_limit_size=el["minSz"],
+                        max_limit_size=el["maxLmtSz"],
                     )
-        cls._tickers_info = tickers_info
-        cls._logger.debug("Okx exchange info loaded")
+
+            cls._futures_tickers_info = futures_tickers_info
+            cls._logger.debug("Okx futures exchange info loaded")

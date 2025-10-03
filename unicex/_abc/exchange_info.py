@@ -7,7 +7,8 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from unicex.types import TickersInfoDict
+from unicex.enums import MarketType
+from unicex.types import TickerInfoItem, TickersInfoDict
 
 if TYPE_CHECKING:
     import loguru
@@ -23,6 +24,9 @@ class IExchangeInfo(ABC):
     """Флаг, указывающий, запущена ли фоновая задача для обновления информации о бирже."""
 
     _tickers_info: TickersInfoDict
+    """Словарь с информацией о округлении для каждого тикера."""
+
+    _futures_tickers_info: TickersInfoDict
     """Словарь с информацией о округлении и размере контракта (если есть) для каждого тикера."""
 
     _logger: "loguru.Logger"
@@ -72,55 +76,68 @@ class IExchangeInfo(ABC):
         cls._loaded = True
 
     @classmethod
+    def get_ticker_info(
+        cls, symbol: str, market_type: MarketType = MarketType.SPOT
+    ) -> TickerInfoItem:  # type: ignore[reportReturnType]
+        """Возвращает информацию о тикере по его символу."""
+        try:
+            if market_type == MarketType.SPOT:
+                return cls._tickers_info[symbol]
+            return cls._futures_tickers_info[symbol]
+        except KeyError as e:
+            cls._handle_key_error(e, symbol)
+
+    @classmethod
+    def get_futures_ticker_info(cls, symbol: str) -> TickerInfoItem:
+        """Возвращает информацию о тикере фьючерсов по его символу."""
+        return cls.get_ticker_info(symbol, MarketType.FUTURES)
+
+    @classmethod
     @abstractmethod
     async def _load_exchange_info(cls) -> None:
         """Загружает информацию о бирже."""
         ...
 
     @classmethod
-    def get_tick_precisions(cls, symbol: str) -> int:  # type: ignore[reportReturnType]
-        """Возвращает количество знаков после запятой для цены тикера."""
-        try:
-            return cls._tickers_info[symbol]["tick_precision"]
-        except KeyError as e:
-            cls._handle_key_error(e, symbol)
-
-    @classmethod
-    def get_size_precisions(cls, symbol: str) -> int:  # type: ignore[reportReturnType]
-        """Возвращает количество знаков после запятой для объема тикера."""
-        try:
-            return cls._tickers_info[symbol]["size_precision"]
-        except KeyError as e:
-            cls._handle_key_error(e, symbol)
-
-    @classmethod
-    def get_contract_size(cls, symbol: str) -> float | None:
-        """Возвращает множитель контракта."""
-        try:
-            return cls._tickers_info[symbol]["contract_size"]
-        except KeyError as e:
-            cls._handle_key_error(e, symbol)
-
-    @classmethod
-    def round_price(cls, symbol: str, price: float) -> float:
+    def round_price(
+        cls, symbol: str, price: float, market_type: MarketType = MarketType.SPOT
+    ) -> float:
         """Округляет цену до ближайшего возможного значения."""
         try:
-            precision = cls._tickers_info[symbol]["tick_precision"]
+            if market_type == MarketType.SPOT:
+                precision = cls._tickers_info[symbol]["tick_precision"]
+            else:
+                precision = cls._futures_tickers_info[symbol]["tick_precision"]
         except KeyError as e:
             cls._handle_key_error(e, symbol)
         return round(price, precision)
 
     @classmethod
-    def round_quantity(cls, symbol: str, quantity: float) -> float:
+    def round_quantity(
+        cls, symbol: str, quantity: float, market_type: MarketType = MarketType.SPOT
+    ) -> float:
         """Округляет объем до ближайшего возможного значения."""
         try:
-            precision = cls._tickers_info[symbol]["size_precision"]
+            if market_type == MarketType.SPOT:
+                precision = cls._tickers_info[symbol]["size_precision"]
+            else:
+                precision = cls._futures_tickers_info[symbol]["size_precision"]
         except KeyError as e:
             cls._handle_key_error(e, symbol)
         return round(quantity, precision)
 
+    @classmethod
+    def round_futures_price(cls, symbol: str, price: float) -> float:
+        """Округляет цену до ближайшего возможного значения на фьючерсах."""
+        return cls.round_price(symbol, price, MarketType.FUTURES)
+
+    @classmethod
+    def round_futures_quantity(cls, symbol: str, quantity: float) -> float:
+        """Округляет объем до ближайшего возможного значения на фьючерсах."""
+        return cls.round_quantity(symbol, quantity, MarketType.FUTURES)
+
     @staticmethod
-    def step_size_to_precision(tick_size: str | int | float) -> int:
+    def _step_size_to_precision(tick_size: str | int | float) -> int:
         """Возвращает precision для round(x, precision) по шагу цены/объёма.
 
         Работает только для шагов — степеней 10.

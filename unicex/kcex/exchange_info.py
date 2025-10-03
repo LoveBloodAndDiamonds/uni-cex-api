@@ -18,13 +18,14 @@ class ExchangeInfo(IExchangeInfo):
             async with session.get(url) as response:
                 data = (await response.json())["data"]
                 for el in data:
-                    # стоимость одного контракта
-                    contract_size = float(el["cs"])
-
                     tickers_info[el["symbol"]] = TickerInfoItem(
                         tick_precision=0,
                         size_precision=0,
-                        contract_size=contract_size,
+                        contract_size=float(el["cs"]),
+                        min_market_size=None,
+                        max_market_size=None,
+                        min_limit_size=None,
+                        max_limit_size=None,
                     )
 
         cls._tickers_info = tickers_info

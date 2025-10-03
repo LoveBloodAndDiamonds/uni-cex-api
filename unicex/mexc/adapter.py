@@ -9,6 +9,8 @@ from unicex.types import (
 )
 from unicex.utils import catch_adapter_errors, decorate_all_methods
 
+from .exchange_info import ExchangeInfo
+
 
 @decorate_all_methods(catch_adapter_errors)
 class Adapter:
@@ -97,14 +99,15 @@ class Adapter:
         Возвращает:
             TickerDailyDict: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
         """
-        return {
-            item["symbol"]: TickerDailyItem(
+        result = {}
+        for item in raw_data["data"]:
+            symbol = item["symbol"]
+            result[symbol] = TickerDailyItem(
                 p=float(item["riseFallRate"]) * 100,
-                v=float(item["volume24"]),
+                v=float(item["volume24"]) * Adapter._get_contract_size(symbol),
                 q=float(item["amount24"]),
             )
-            for item in raw_data["data"]
-        }
+        return result
 
     @staticmethod
     def open_interest(raw_data: dict) -> OpenInterestDict:
@@ -116,10 +119,14 @@ class Adapter:
         Возвращает:
             OpenInterestDict: Словарь, где ключ - тикер, а значение - агрегированные данные открытого интереса.
         """
-        return {
-            item["symbol"]: OpenInterestItem(t=item["timestamp"], v=float(item["holdVol"]))
-            for item in raw_data["data"]
-        }
+        result = {}
+        for item in raw_data["data"]:
+            symbol = item["symbol"]
+            result[symbol] = OpenInterestItem(
+                t=item["timestamp"],
+                v=float(item["holdVol"]) * Adapter._get_contract_size(symbol),
+            )
+        return result
 
     @staticmethod
     def funding_rate(raw_data: dict) -> dict[str, float]:
@@ -220,3 +227,11 @@ class Adapter:
             )
 
         return sorted(klines, key=lambda kline_item: kline_item["t"])
+
+    @staticmethod
+    def _get_contract_size(symbol: str) -> float:
+        """Возвращает размер контракта для указанного символа тикера."""
+        try:
+            return ExchangeInfo.get_futures_ticker_info(symbol)["contract_size"] or 1
+        except:  # noqa
+            return 1
