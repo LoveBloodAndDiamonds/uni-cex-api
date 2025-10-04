@@ -33,7 +33,7 @@ class BaseClient:
             session (`aiohttp.ClientSession`): Сессия для выполнения HTTP‑запросов.
             api_key (`str | None`): Ключ API для аутентификации.
             api_secret (`str | None`): Секретный ключ API для аутентификации.
-            api_passphrase (`str | None`): Пароль API для аутентификации (Bitget).
+            api_passphrase (`str | None`): Пароль API для аутентификации (Bitget, OKX).
             logger (`LoggerLike | None`): Логгер для вывода информации.
             max_retries (`int`): Максимальное количество повторных попыток запроса.
             retry_delay (`int | float`): Задержка между повторными попытками, сек.
@@ -68,7 +68,7 @@ class BaseClient:
         Параметры:
             api_key (`str | None`): Ключ API для аутентификации.
             api_secret (`str | None`): Секретный ключ API для аутентификации.
-            api_passphrase (`str | None`): Пароль API для аутентификации (Bitget).
+            api_passphrase (`str | None`): Пароль API для аутентификации (Bitget, OKX).
             session (`aiohttp.ClientSession | None`): Сессия для HTTP‑запросов (если не передана, будет создана).
             logger (`LoggerLike | None`): Логгер для вывода информации.
             max_retries (`int`): Максимум повторов при ошибках запроса.

@@ -10,19 +10,9 @@ async def main() -> None:
 
     from pprint import pp
 
-    resp = await client.spot_metadata()
-
-    pp(resp)
-
-    print(len(resp["universe"]))
-
-    r2 = await client.spot_asset_contexts()
+    r2 = await client.predicted_fundings()
 
     pp(r2)
-
-    print(len(r2[1]))
-
-    r3 = await client.spot
 
     await client.close_connection()
 
