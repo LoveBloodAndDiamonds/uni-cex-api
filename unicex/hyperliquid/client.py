@@ -479,18 +479,52 @@ class Client(BaseClient):
             timeout=timeout,
         )
 
-    async def _make_request(self, method: Literal["GET", "POST"], endpoint: str, data: dict) -> Any:
-        """Создание HTTP-запроса к Hyperliquid API."""
+    async def _make_request(
+        self,
+        method: Literal["GET", "POST"],
+        endpoint: str,
+        *,
+        data: dict[str, Any] | None = None,
+    ) -> Any:
+        """Создаёт HTTP-запрос к Hyperliquid API.
+
+        Параметры:
+            method (`Literal["GET", "POST"]`): HTTP-метод запроса.
+            endpoint (`str`): Относительный путь эндпоинта.
+            data (`dict[str, Any] | None`): Тело запроса для POST-запросов.
+
+        Возвращает:
+          `Any`: Ответ Hyperliquid API.
+        """
+        filtered_data = filter_params(data) if data is not None else None
+
         return await super()._make_request(
             method=method,
             url=self._BASE_URL + endpoint,
             headers=self._BASE_HEADERS,
-            data=filter_params(data),
+            data=filtered_data,
         )
 
     async def _post_request(self, endpoint: str, data: dict) -> Any:
         """Создание POST-запроса к Hyperliquid API."""
-        return await self._make_request("POST", endpoint, data)
+        return await self._make_request("POST", endpoint, data=data)
+
+    async def request(
+        self,
+        endpoint: str,
+        *,
+        data: dict,
+    ) -> Any:
+        """Специальный метод для выполнения запросов на эндпоинты, которые не обернуты в клиенте.
+
+        Параметры:
+            endpoint (`str`): Относительный путь эндпоинта (например, `/info`).
+            data (`dict[str, Any]`): JSON-тело запроса для POST-запросов.
+
+        Возвращает:
+          `Any`: Ответ Hyperliquid API.
+        """
+        return await self._post_request(endpoint, data=data)
 
     # topic: Info endpoint
     # topic: Futures
