@@ -1,5 +1,6 @@
 __all__ = ["Client"]
 
+import time
 from typing import Any, Literal, Self
 
 import aiohttp
@@ -320,6 +321,18 @@ class Client(BaseClient):
         """Создание POST-запроса к Hyperliquid API."""
         return await self._make_request("POST", endpoint, data)
 
+    # topic: Info endpoint
+    # topic: Perpetuals
+
+    async def perp_dexs(self) -> list[dict | None]:
+        """Получение списка доступных перпетуальных DEX.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-perpdexs
+        """
+        payload = {"type": "perpDexs"}
+
+        return await self._post_request("/info", data=payload)
+
     async def metadata(self, dex: str | None = None) -> dict:
         """Получение метаинформации о бирже.
 
@@ -546,15 +559,6 @@ class Client(BaseClient):
             "type": "delegations",
             "user": user,
         }
-
-        return await self._post_request("/info", data=payload)
-
-    async def perp_dexs(self) -> list[dict | None]:
-        """Получение списка доступных перпетуальных DEX.
-
-        https://docs.chainstack.com/reference/hyperliquid-info-perpdexs
-        """
-        payload = {"type": "perpDexs"}
 
         return await self._post_request("/info", data=payload)
 
@@ -930,28 +934,111 @@ class Client(BaseClient):
 
         return await self._post_request("/info", data=payload)
 
-    async def place_order(self, *args, **kwargs) -> dict:
-        """Выставление ордера на бирже. Обертка над методом `batch_place_orders`.
+    async def place_order(
+        self,
+        asset: str,
+        is_buy: bool,
+        size: str,
+        reduce_only: bool,
+        order_type: Literal["limit", "trigger"],
+        order_body: dict,
+        price: str | None = None,
+        client_order_id: str | None = None,
+        grouping: Literal["na", "normalTpsl", "positionTpsl"] = "na",
+        builder_address: str | None = None,
+        builder_fee: int | None = None,
+        nonce: int | None = None,
+        expires_after: int | None = None,
+        vault_address: str | None = None,
+    ) -> dict:
+        """Выставление ордера на бирже.
 
         https://docs.chainstack.com/reference/hyperliquid-exchange-place-order
         """
-        order = {}
-        await self.batch_place_orders([order])
-
-    async def batch_place_orders(self, orders: list[dict], builder: str | None = None) -> dict:
-        """Выставление пакета ордеров на бирже.
-
-        https://docs.chainstack.com/reference/hyperliquid-exchange-place-order
-        """
-        if not self._wallet:
-            raise NotAuthorized("Private key required to private request")
-
-        order_action = {
-            "type": "order",
-            "orders": orders,
-            "grouping": "na",
+        order_payload: dict[str, Any] = {
+            "a": asset,
+            "b": is_buy,
+            "p": price,
+            "s": size,
+            "r": reduce_only,
+            "t": {order_type: order_body},
         }
-        if builder:
-            order_action["builder"] = builder
+        if client_order_id is not None:
+            order_payload["c"] = client_order_id
 
-        # return await self._post_request("/exchange", data=data)
+        return await self.batch_place_orders(
+            [order_payload],
+            grouping=grouping,
+            builder_address=builder_address,
+            builder_fee=builder_fee,
+            nonce=nonce,
+            expires_after=expires_after,
+            vault_address=vault_address,
+        )
+
+    async def batch_place_orders(
+        self,
+        orders: list[dict[str, Any]],
+        grouping: Literal["na", "normalTpsl", "positionTpsl"] = "na",
+        builder_address: str | None = None,
+        builder_fee: int | None = None,
+        nonce: int | None = None,
+        expires_after: int | None = None,
+        vault_address: str | None = None,
+    ) -> dict:
+        """Пакетное выставление ордеров на бирже.
+
+        https://docs.chainstack.com/reference/hyperliquid-exchange-place-order
+        """
+        if not orders:
+            raise ValueError("orders must not be empty")
+        if self._wallet is None:
+            raise NotAuthorized("Private key is required for private endpoints.")
+        if builder_address is not None and builder_fee is None:
+            raise TypeError("builder_fee is required when builder_address is provided")
+        if builder_address is None and builder_fee is not None:
+            raise TypeError("builder_address is required when builder_fee is provided")
+
+        required_keys = {"a", "b", "p", "s", "r", "t"}
+        normalized_orders: list[dict[str, Any]] = []
+        for order in orders:
+            missing_keys = required_keys - order.keys()
+            if missing_keys:
+                missing = ", ".join(sorted(missing_keys))
+                raise ValueError(f"order is missing required fields: {missing}")
+            normalized = dict(order)
+            normalized["p"] = str(normalized["p"])
+            normalized["s"] = str(normalized["s"])
+            if normalized.get("c") is None:
+                normalized.pop("c", None)
+            normalized_orders.append(normalized)
+
+        action: dict[str, Any] = {
+            "type": "order",
+            "orders": normalized_orders,
+            "grouping": grouping,
+        }
+        if builder_address is not None:
+            action["builder"] = {"b": builder_address, "f": builder_fee}
+
+        effective_vault = vault_address or self._vault_address
+        action_nonce = nonce if nonce is not None else int(time.time() * 1000)
+        signature = sign_l1_action(
+            self._wallet,
+            action,
+            effective_vault,
+            action_nonce,
+            expires_after,
+        )
+
+        payload: dict[str, Any] = {
+            "action": action,
+            "nonce": action_nonce,
+            "signature": signature,
+        }
+        if effective_vault is not None:
+            payload["vaultAddress"] = effective_vault
+        if expires_after is not None:
+            payload["expiresAfter"] = expires_after
+
+        return await self._post_request("/exchange", data=payload)
