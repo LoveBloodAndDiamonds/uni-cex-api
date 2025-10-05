@@ -218,6 +218,106 @@ def _sign_l1_action(
     return _sign_inner(wallet, data)
 
 
+def _user_signed_payload(
+    primary_type: str,
+    payload_types: list[dict[str, str]],
+    action: dict[str, Any],
+) -> dict[str, Any]:
+    """Формирует EIP-712 payload для "user-signed" подписи.
+
+    Простыми словами:
+    Это структура для подписи действий от лица пользователя.
+    В отличие от L1-подписи (где используется phantom-агент),
+    здесь кошелёк подписывает само действие напрямую.
+
+    ChainID и домен указываются специально, чтобы предотвратить
+    повторное воспроизведение (replay) на других цепях.
+
+    Пример:
+        >>> payload = _user_signed_payload(
+        ...     primary_type="Withdraw",
+        ...     payload_types=[{"name": "amount", "type": "uint256"}],
+        ...     action={"amount": 100, "signatureChainId": "0x66eee"},
+        ... )
+        >>> payload.keys()
+        dict_keys(["domain", "types", "primaryType", "message"])
+
+    Параметры:
+        primary_type (str): Основной тип сообщения, например `"Withdraw"`, `"Transfer"`.
+        payload_types (list[dict]): Список полей EIP-712 типа, например:
+            `[{"name": "amount", "type": "uint256"}, {"name": "recipient", "type": "address"}]`
+        action (dict): Само сообщение (поля, которые будут подписаны).
+            Должно содержать `"signatureChainId"` (строку в hex).
+
+    Возвращает:
+        dict: Полностью готовая структура EIP-712 для подписи кошельком.
+    """
+    chain_id = int(action["signatureChainId"], 16)
+    return {
+        "domain": {
+            "name": "HyperliquidSignTransaction",
+            "version": "1",
+            "chainId": chain_id,
+            "verifyingContract": "0x0000000000000000000000000000000000000000",
+        },
+        "types": {
+            primary_type: payload_types,
+            "EIP712Domain": [
+                {"name": "name", "type": "string"},
+                {"name": "version", "type": "string"},
+                {"name": "chainId", "type": "uint256"},
+                {"name": "verifyingContract", "type": "address"},
+            ],
+        },
+        "primaryType": primary_type,
+        "message": action,
+    }
+
+
+def _sign_user_signed_action(
+    wallet: LocalAccount,
+    action: dict[str, Any],
+    payload_types: list[dict[str, str]],
+    primary_type: str,
+    is_mainnet: bool,
+) -> dict[str, Any]:
+    """Подписывает действие "user-signed" формата (EIP-712).
+
+    Простыми словами:
+    Это альтернатива L1-подписи. Здесь сам пользователь (его кошелёк)
+    подписывает объект `action`, который будет исполнен Hyperliquid.
+    Отличие от L1: используется другой `chainId` (0x66eee) и поле `"hyperliquidChain"`,
+    чтобы действие нельзя было воспроизвести в другой сети.
+
+    Пример:
+        >>> action = {"amount": 100}
+        >>> payload_types = [{"name": "amount", "type": "uint256"}]
+        >>> sig = _sign_user_signed_action(wallet, action, payload_types, "Withdraw", True)
+        >>> sig.keys()
+        dict_keys(["r", "s", "v"])
+
+    Параметры:
+        wallet (LocalAccount): Объект кошелька, созданный через `Account.from_key(...)`.
+        action (dict): Содержимое действия, которое нужно подписать.
+        payload_types (list[dict[str, str]]): Описание полей типа для EIP-712.
+        primary_type (str): Основное имя типа, например `"Withdraw"`, `"Transfer"`.
+        is_mainnet (bool): True — подпись для основной сети, False — для тестовой.
+
+    Возвращает:
+        dict:
+            - r (str): первая часть подписи
+            - s (str): вторая часть подписи
+            - v (int): "восстановитель" подписи (27 или 28)
+    """
+    # signatureChainId — цепочка, через которую кошелёк делает подпись (не Hyperliquid chain)
+    action["signatureChainId"] = "0x66eee"
+    # hyperliquidChain — фактическая среда исполнения
+    action["hyperliquidChain"] = "Mainnet" if is_mainnet else "Testnet"
+
+    data = _user_signed_payload(primary_type, payload_types, action)
+    return _sign_inner(wallet, data)
+
+
 class Client(BaseClient):
     """Клиент для работы с Hyperliquid API."""
 
@@ -643,6 +743,918 @@ class Client(BaseClient):
         )
 
         payload = {
+            "action": action,
+            "nonce": action_nonce,
+            "signature": signature,
+        }
+        if effective_vault is not None:
+            payload["vaultAddress"] = effective_vault
+        if expires_after is not None:
+            payload["expiresAfter"] = expires_after
+
+        return await self._post_request("/exchange", data=payload)
+
+    async def cancel_order(
+        self,
+        asset: int,
+        order_id: int,
+        nonce: int | None = None,
+        expires_after: int | None = None,
+        vault_address: str | None = None,
+    ) -> dict:
+        """Отмена ордера по идентификатору.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#cancel-order-s
+        """
+        return await self.cancel_orders(
+            cancels=[{"a": asset, "o": order_id}],
+            nonce=nonce,
+            expires_after=expires_after,
+            vault_address=vault_address,
+        )
+
+    async def cancel_orders(
+        self,
+        cancels: list[dict[str, int | str]],
+        nonce: int | None = None,
+        expires_after: int | None = None,
+        vault_address: str | None = None,
+    ) -> dict:
+        """Отмена ордеров по идентификатору ордера.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#cancel-order-s
+        """
+        if not cancels:
+            raise ValueError("cancels must not be empty")
+        if self._wallet is None:
+            raise NotAuthorized("Private key is required for private endpoints.")
+
+        normalized: list[dict[str, int]] = []
+        for cancel in cancels:
+            missing_keys = {"a", "o"} - cancel.keys()
+            if missing_keys:
+                missing = ", ".join(sorted(missing_keys))
+                raise ValueError(f"cancel entry is missing required fields: {missing}")
+            normalized.append(
+                {
+                    "a": int(cancel["a"]),
+                    "o": int(cancel["o"]),
+                }
+            )
+
+        action = {"type": "cancel", "cancels": normalized}
+
+        effective_vault = vault_address or self._vault_address
+        action_nonce = nonce if nonce is not None else int(time.time() * 1000)
+        signature = _sign_l1_action(
+            self._wallet,
+            action,
+            effective_vault,
+            action_nonce,
+            expires_after,
+        )
+
+        payload: dict[str, Any] = {
+            "action": action,
+            "nonce": action_nonce,
+            "signature": signature,
+        }
+        if effective_vault is not None:
+            payload["vaultAddress"] = effective_vault
+        if expires_after is not None:
+            payload["expiresAfter"] = expires_after
+
+        return await self._post_request("/exchange", data=payload)
+
+    async def cancel_order_by_cloid(
+        self,
+        asset: int,
+        client_order_id: str,
+        nonce: int | None = None,
+        expires_after: int | None = None,
+        vault_address: str | None = None,
+    ) -> dict:
+        """Отмена ордера по клиентскому идентификатору.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#cancel-order-s-by-cloid
+        """
+        return await self.cancel_orders_by_cloid(
+            cancels=[{"asset": asset, "cloid": client_order_id}],
+            nonce=nonce,
+            expires_after=expires_after,
+            vault_address=vault_address,
+        )
+
+    async def cancel_orders_by_cloid(
+        self,
+        cancels: list[dict[str, Any]],
+        nonce: int | None = None,
+        expires_after: int | None = None,
+        vault_address: str | None = None,
+    ) -> dict:
+        """Отмена ордеров по клиентскому идентификатору.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#cancel-order-s-by-cloid
+        """
+        if not cancels:
+            raise ValueError("cancels must not be empty")
+        if self._wallet is None:
+            raise NotAuthorized("Private key is required for private endpoints.")
+
+        normalized: list[dict[str, Any]] = []
+        for cancel in cancels:
+            missing_keys = {"asset", "cloid"} - cancel.keys()
+            if missing_keys:
+                missing = ", ".join(sorted(missing_keys))
+                raise ValueError(f"cancel entry is missing required fields: {missing}")
+            normalized.append(
+                {
+                    "asset": int(cancel["asset"]),
+                    "cloid": str(cancel["cloid"]),
+                }
+            )
+
+        action = {"type": "cancelByCloid", "cancels": normalized}
+
+        effective_vault = vault_address or self._vault_address
+        action_nonce = nonce if nonce is not None else int(time.time() * 1000)
+        signature = _sign_l1_action(
+            self._wallet,
+            action,
+            effective_vault,
+            action_nonce,
+            expires_after,
+        )
+
+        payload: dict[str, Any] = {
+            "action": action,
+            "nonce": action_nonce,
+            "signature": signature,
+        }
+        if effective_vault is not None:
+            payload["vaultAddress"] = effective_vault
+        if expires_after is not None:
+            payload["expiresAfter"] = expires_after
+
+        return await self._post_request("/exchange", data=payload)
+
+    async def schedule_cancel(
+        self,
+        time_ms: int | None = None,
+        nonce: int | None = None,
+        expires_after: int | None = None,
+        vault_address: str | None = None,
+    ) -> dict:
+        """Планирование массовой отмены ордеров.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#schedule-cancel-dead-mans-switch
+        """
+        if self._wallet is None:
+            raise NotAuthorized("Private key is required for private endpoints.")
+
+        action: dict[str, Any] = {"type": "scheduleCancel"}
+        if time_ms is not None:
+            action["time"] = time_ms
+
+        effective_vault = vault_address or self._vault_address
+        action_nonce = nonce if nonce is not None else int(time.time() * 1000)
+        signature = _sign_l1_action(
+            self._wallet,
+            action,
+            effective_vault,
+            action_nonce,
+            expires_after,
+        )
+
+        payload: dict[str, Any] = {
+            "action": action,
+            "nonce": action_nonce,
+            "signature": signature,
+        }
+        if effective_vault is not None:
+            payload["vaultAddress"] = effective_vault
+        if expires_after is not None:
+            payload["expiresAfter"] = expires_after
+
+        return await self._post_request("/exchange", data=payload)
+
+    async def modify_order(
+        self,
+        order_id: int | str,
+        asset: int,
+        is_buy: bool,
+        price: str | float,
+        size: str | float,
+        reduce_only: bool,
+        order_type: Literal["limit", "trigger"],
+        order_body: dict[str, Any],
+        client_order_id: str | None = None,
+        nonce: int | None = None,
+        expires_after: int | None = None,
+        vault_address: str | None = None,
+    ) -> dict:
+        """Модификация существующего ордера.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#modify-an-order
+        """
+        order_payload: dict[str, Any] = {
+            "a": asset,
+            "b": is_buy,
+            "p": str(price),
+            "s": str(size),
+            "r": reduce_only,
+            "t": {order_type: order_body},
+        }
+        if client_order_id is not None:
+            order_payload["c"] = client_order_id
+
+        return await self.batch_modify_orders(
+            modifies=[{"oid": order_id, "order": order_payload}],
+            nonce=nonce,
+            expires_after=expires_after,
+            vault_address=vault_address,
+        )
+
+    async def batch_modify_orders(
+        self,
+        modifies: list[dict[str, Any]],
+        nonce: int | None = None,
+        expires_after: int | None = None,
+        vault_address: str | None = None,
+    ) -> dict:
+        """Пакетная модификация ордеров.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#modify-multiple-orders
+        """
+        if not modifies:
+            raise ValueError("modifies must not be empty")
+        if self._wallet is None:
+            raise NotAuthorized("Private key is required for private endpoints.")
+
+        normalized: list[dict[str, Any]] = []
+        for modify in modifies:
+            missing_keys = {"oid", "order"} - modify.keys()
+            if missing_keys:
+                missing = ", ".join(sorted(missing_keys))
+                raise ValueError(f"modify entry is missing required fields: {missing}")
+            order = dict(modify["order"])
+            required_order_keys = {"a", "b", "p", "s", "r", "t"}
+            missing_order_keys = required_order_keys - order.keys()
+            if missing_order_keys:
+                missing = ", ".join(sorted(missing_order_keys))
+                raise ValueError(f"order payload is missing required fields: {missing}")
+            order["p"] = str(order["p"])
+            order["s"] = str(order["s"])
+            if order.get("c") is None:
+                order.pop("c", None)
+            normalized.append(
+                {
+                    "oid": modify["oid"],
+                    "order": order,
+                }
+            )
+
+        action = {"type": "batchModify", "modifies": normalized}
+
+        effective_vault = vault_address or self._vault_address
+        action_nonce = nonce if nonce is not None else int(time.time() * 1000)
+        signature = _sign_l1_action(
+            self._wallet,
+            action,
+            effective_vault,
+            action_nonce,
+            expires_after,
+        )
+
+        payload: dict[str, Any] = {
+            "action": action,
+            "nonce": action_nonce,
+            "signature": signature,
+        }
+        if effective_vault is not None:
+            payload["vaultAddress"] = effective_vault
+        if expires_after is not None:
+            payload["expiresAfter"] = expires_after
+
+        return await self._post_request("/exchange", data=payload)
+
+    async def update_leverage(
+        self,
+        asset: int,
+        is_cross: bool,
+        leverage: int,
+        nonce: int | None = None,
+        expires_after: int | None = None,
+        vault_address: str | None = None,
+    ) -> dict:
+        """Обновление кредитного плеча по активу.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#update-leverage
+        """
+        if self._wallet is None:
+            raise NotAuthorized("Private key is required for private endpoints.")
+
+        action = {
+            "type": "updateLeverage",
+            "asset": asset,
+            "isCross": is_cross,
+            "leverage": leverage,
+        }
+
+        effective_vault = vault_address or self._vault_address
+        action_nonce = nonce if nonce is not None else int(time.time() * 1000)
+        signature = _sign_l1_action(
+            self._wallet,
+            action,
+            effective_vault,
+            action_nonce,
+            expires_after,
+        )
+
+        payload: dict[str, Any] = {
+            "action": action,
+            "nonce": action_nonce,
+            "signature": signature,
+        }
+        if effective_vault is not None:
+            payload["vaultAddress"] = effective_vault
+        if expires_after is not None:
+            payload["expiresAfter"] = expires_after
+
+        return await self._post_request("/exchange", data=payload)
+
+    async def update_isolated_margin(
+        self,
+        asset: int,
+        is_buy: bool,
+        notional_change: int,
+        nonce: int | None = None,
+        expires_after: int | None = None,
+        vault_address: str | None = None,
+    ) -> dict:
+        """Обновление маржи изолированной позиции.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#update-isolated-margin
+        """
+        if self._wallet is None:
+            raise NotAuthorized("Private key is required for private endpoints.")
+
+        action = {
+            "type": "updateIsolatedMargin",
+            "asset": asset,
+            "isBuy": is_buy,
+            "ntli": notional_change,
+        }
+
+        effective_vault = vault_address or self._vault_address
+        action_nonce = nonce if nonce is not None else int(time.time() * 1000)
+        signature = _sign_l1_action(
+            self._wallet,
+            action,
+            effective_vault,
+            action_nonce,
+            expires_after,
+        )
+
+        payload: dict[str, Any] = {
+            "action": action,
+            "nonce": action_nonce,
+            "signature": signature,
+        }
+        if effective_vault is not None:
+            payload["vaultAddress"] = effective_vault
+        if expires_after is not None:
+            payload["expiresAfter"] = expires_after
+
+        return await self._post_request("/exchange", data=payload)
+
+    async def usd_send(
+        self,
+        hyperliquid_chain: Literal["Mainnet", "Testnet"],
+        signature_chain_id: str,
+        destination: str,
+        amount: str,
+        time_ms: int,
+        nonce: int | None = None,
+    ) -> dict:
+        """Перевод USDC между пользователями Hyperliquid.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#core-usdc-transfer
+        """
+        if self._wallet is None:
+            raise NotAuthorized("Private key is required for private endpoints.")
+
+        action = {
+            "type": "usdSend",
+            "hyperliquidChain": hyperliquid_chain,
+            "signatureChainId": signature_chain_id,
+            "destination": destination,
+            "amount": amount,
+            "time": time_ms,
+        }
+        action_nonce = nonce if nonce is not None else time_ms
+
+        # todo: implement human-readable signature generation for usdSend
+        raise NotImplementedError("Signature generation for usdSend action is not implemented yet.")
+
+    async def spot_send(
+        self,
+        hyperliquid_chain: Literal["Mainnet", "Testnet"],
+        signature_chain_id: str,
+        destination: str,
+        token: str,
+        amount: str,
+        time_ms: int,
+        nonce: int | None = None,
+    ) -> dict:
+        """Перевод спотового актива между пользователями Hyperliquid.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#core-spot-transfer
+        """
+        if self._wallet is None:
+            raise NotAuthorized("Private key is required for private endpoints.")
+
+        action = {
+            "type": "spotSend",
+            "hyperliquidChain": hyperliquid_chain,
+            "signatureChainId": signature_chain_id,
+            "destination": destination,
+            "token": token,
+            "amount": amount,
+            "time": time_ms,
+        }
+        action_nonce = nonce if nonce is not None else time_ms
+
+        # todo: implement human-readable signature generation for spotSend
+        raise NotImplementedError(
+            "Signature generation for spotSend action is not implemented yet."
+        )
+
+    async def initiate_withdrawal(
+        self,
+        hyperliquid_chain: Literal["Mainnet", "Testnet"],
+        signature_chain_id: str,
+        amount: str,
+        time_ms: int,
+        destination: str,
+        nonce: int | None = None,
+    ) -> dict:
+        """Инициация вывода средств на L1.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#initiate-a-withdrawal-request
+        """
+        if self._wallet is None:
+            raise NotAuthorized("Private key is required for private endpoints.")
+
+        action = {
+            "type": "withdraw3",
+            "hyperliquidChain": hyperliquid_chain,
+            "signatureChainId": signature_chain_id,
+            "amount": amount,
+            "time": time_ms,
+            "destination": destination,
+        }
+        action_nonce = nonce if nonce is not None else time_ms
+
+        # todo: implement human-readable signature generation for withdraw3
+        raise NotImplementedError(
+            "Signature generation for withdraw3 action is not implemented yet."
+        )
+
+    async def usd_class_transfer(
+        self,
+        hyperliquid_chain: Literal["Mainnet", "Testnet"],
+        signature_chain_id: str,
+        amount: str,
+        to_perp: bool,
+        nonce_value: int,
+        subaccount: str | None = None,
+        nonce: int | None = None,
+    ) -> dict:
+        """Перевод USDC между спотовым и перпетуальным аккаунтами.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#transfer-from-spot-account-to-perp-account-and-vice-versa
+        """
+        if self._wallet is None:
+            raise NotAuthorized("Private key is required for private endpoints.")
+
+        amount_field = amount
+        if subaccount is not None:
+            amount_field = f"{amount} subaccount:{subaccount}"
+
+        action = {
+            "type": "usdClassTransfer",
+            "hyperliquidChain": hyperliquid_chain,
+            "signatureChainId": signature_chain_id,
+            "amount": amount_field,
+            "toPerp": to_perp,
+            "nonce": nonce_value,
+        }
+        action_nonce = nonce if nonce is not None else nonce_value
+
+        # todo: implement human-readable signature generation for usdClassTransfer
+        raise NotImplementedError(
+            "Signature generation for usdClassTransfer action is not implemented yet."
+        )
+
+    async def send_asset(
+        self,
+        hyperliquid_chain: Literal["Mainnet", "Testnet"],
+        signature_chain_id: str,
+        destination: str,
+        source_dex: str,
+        destination_dex: str,
+        token: str,
+        amount: str,
+        from_subaccount: str,
+        nonce_value: int,
+        nonce: int | None = None,
+    ) -> dict:
+        """Перевод токена между балансами и субаккаунтами (тестнет).
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#send-asset-testnet-only
+        """
+        if self._wallet is None:
+            raise NotAuthorized("Private key is required for private endpoints.")
+
+        action = {
+            "type": "sendAsset",
+            "hyperliquidChain": hyperliquid_chain,
+            "signatureChainId": signature_chain_id,
+            "destination": destination,
+            "sourceDex": source_dex,
+            "destinationDex": destination_dex,
+            "token": token,
+            "amount": amount,
+            "fromSubAccount": from_subaccount,
+            "nonce": nonce_value,
+        }
+        action_nonce = nonce if nonce is not None else nonce_value
+
+        # todo: implement human-readable signature generation for sendAsset
+        raise NotImplementedError(
+            "Signature generation for sendAsset action is not implemented yet."
+        )
+
+    async def staking_deposit(
+        self,
+        hyperliquid_chain: Literal["Mainnet", "Testnet"],
+        signature_chain_id: str,
+        wei_amount: int,
+        nonce_value: int,
+        nonce: int | None = None,
+    ) -> dict:
+        """Депозит нативного токена в стейкинг.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#deposit-into-staking
+        """
+        if self._wallet is None:
+            raise NotAuthorized("Private key is required for private endpoints.")
+
+        action = {
+            "type": "cDeposit",
+            "hyperliquidChain": hyperliquid_chain,
+            "signatureChainId": signature_chain_id,
+            "wei": wei_amount,
+            "nonce": nonce_value,
+        }
+        action_nonce = nonce if nonce is not None else nonce_value
+
+        # todo: implement human-readable signature generation for cDeposit
+        raise NotImplementedError(
+            "Signature generation for cDeposit action is not implemented yet."
+        )
+
+    async def staking_withdraw(
+        self,
+        hyperliquid_chain: Literal["Mainnet", "Testnet"],
+        signature_chain_id: str,
+        wei_amount: int,
+        nonce_value: int,
+        nonce: int | None = None,
+    ) -> dict:
+        """Вывод нативного токена из стейкинга.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#withdraw-from-staking
+        """
+        if self._wallet is None:
+            raise NotAuthorized("Private key is required for private endpoints.")
+
+        action = {
+            "type": "cWithdraw",
+            "hyperliquidChain": hyperliquid_chain,
+            "signatureChainId": signature_chain_id,
+            "wei": wei_amount,
+            "nonce": nonce_value,
+        }
+        action_nonce = nonce if nonce is not None else nonce_value
+
+        # todo: implement human-readable signature generation for cWithdraw
+        raise NotImplementedError(
+            "Signature generation for cWithdraw action is not implemented yet."
+        )
+
+    async def token_delegate(
+        self,
+        hyperliquid_chain: Literal["Mainnet", "Testnet"],
+        signature_chain_id: str,
+        validator: str,
+        is_undelegate: bool,
+        wei_amount: int,
+        nonce_value: int,
+        nonce: int | None = None,
+    ) -> dict:
+        """Делегирование или отзыв делегирования нативного токена валидатору.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#delegate-or-undelegate-stake-from-validator
+        """
+        if self._wallet is None:
+            raise NotAuthorized("Private key is required for private endpoints.")
+
+        action = {
+            "type": "tokenDelegate",
+            "hyperliquidChain": hyperliquid_chain,
+            "signatureChainId": signature_chain_id,
+            "validator": validator,
+            "isUndelegate": is_undelegate,
+            "wei": wei_amount,
+            "nonce": nonce_value,
+        }
+        action_nonce = nonce if nonce is not None else nonce_value
+
+        # todo: implement human-readable signature generation for tokenDelegate
+        raise NotImplementedError(
+            "Signature generation for tokenDelegate action is not implemented yet."
+        )
+
+    async def vault_transfer(
+        self,
+        vault_address: str,
+        is_deposit: bool,
+        usd: int,
+        nonce: int | None = None,
+        expires_after: int | None = None,
+        signing_vault_address: str | None = None,
+    ) -> dict:
+        """Перевод средств в или из хранилища.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#deposit-or-withdraw-from-a-vault
+        """
+        if self._wallet is None:
+            raise NotAuthorized("Private key is required for private endpoints.")
+
+        action = {
+            "type": "vaultTransfer",
+            "vaultAddress": vault_address,
+            "isDeposit": is_deposit,
+            "usd": usd,
+        }
+
+        effective_vault = signing_vault_address or self._vault_address
+        action_nonce = nonce if nonce is not None else int(time.time() * 1000)
+        signature = _sign_l1_action(
+            self._wallet,
+            action,
+            effective_vault,
+            action_nonce,
+            expires_after,
+        )
+
+        payload: dict[str, Any] = {
+            "action": action,
+            "nonce": action_nonce,
+            "signature": signature,
+        }
+        if effective_vault is not None:
+            payload["vaultAddress"] = effective_vault
+        if expires_after is not None:
+            payload["expiresAfter"] = expires_after
+
+        return await self._post_request("/exchange", data=payload)
+
+    async def approve_agent(
+        self,
+        hyperliquid_chain: Literal["Mainnet", "Testnet"],
+        signature_chain_id: str,
+        agent_address: str,
+        nonce_value: int,
+        agent_name: str | None = None,
+        nonce: int | None = None,
+    ) -> dict:
+        """Одобрение API-кошелька.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#approve-an-api-wallet
+        """
+        if self._wallet is None:
+            raise NotAuthorized("Private key is required for private endpoints.")
+
+        action: dict[str, Any] = {
+            "type": "approveAgent",
+            "hyperliquidChain": hyperliquid_chain,
+            "signatureChainId": signature_chain_id,
+            "agentAddress": agent_address,
+            "nonce": nonce_value,
+        }
+        if agent_name is not None:
+            action["agentName"] = agent_name
+        action_nonce = nonce if nonce is not None else nonce_value
+
+        # todo: implement human-readable signature generation for approveAgent
+        raise NotImplementedError(
+            "Signature generation for approveAgent action is not implemented yet."
+        )
+
+    async def approve_builder_fee(
+        self,
+        hyperliquid_chain: Literal["Mainnet", "Testnet"],
+        signature_chain_id: str,
+        max_fee_rate: str,
+        builder_address: str,
+        nonce_value: int,
+        nonce: int | None = None,
+    ) -> dict:
+        """Одобрение максимальной комиссии билдера.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#approve-a-builder-fee
+        """
+        if self._wallet is None:
+            raise NotAuthorized("Private key is required for private endpoints.")
+
+        action = {
+            "type": "approveBuilderFee",
+            "hyperliquidChain": hyperliquid_chain,
+            "signatureChainId": signature_chain_id,
+            "maxFeeRate": max_fee_rate,
+            "builder": builder_address,
+            "nonce": nonce_value,
+        }
+        action_nonce = nonce if nonce is not None else nonce_value
+
+        # todo: implement human-readable signature generation for approveBuilderFee
+        raise NotImplementedError(
+            "Signature generation for approveBuilderFee action is not implemented yet."
+        )
+
+    async def place_twap_order(
+        self,
+        asset: int,
+        is_buy: bool,
+        size: str | float,
+        reduce_only: bool,
+        minutes: int,
+        randomize: bool,
+        nonce: int | None = None,
+        expires_after: int | None = None,
+        vault_address: str | None = None,
+    ) -> dict:
+        """Создание TWAP-ордера.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#place-a-twap-order
+        """
+        if self._wallet is None:
+            raise NotAuthorized("Private key is required for private endpoints.")
+
+        action = {
+            "type": "twapOrder",
+            "twap": {
+                "a": asset,
+                "b": is_buy,
+                "s": str(size),
+                "r": reduce_only,
+                "m": minutes,
+                "t": randomize,
+            },
+        }
+
+        effective_vault = vault_address or self._vault_address
+        action_nonce = nonce if nonce is not None else int(time.time() * 1000)
+        signature = _sign_l1_action(
+            self._wallet,
+            action,
+            effective_vault,
+            action_nonce,
+            expires_after,
+        )
+
+        payload: dict[str, Any] = {
+            "action": action,
+            "nonce": action_nonce,
+            "signature": signature,
+        }
+        if effective_vault is not None:
+            payload["vaultAddress"] = effective_vault
+        if expires_after is not None:
+            payload["expiresAfter"] = expires_after
+
+        return await self._post_request("/exchange", data=payload)
+
+    async def cancel_twap_order(
+        self,
+        asset: int,
+        twap_id: int,
+        nonce: int | None = None,
+        expires_after: int | None = None,
+        vault_address: str | None = None,
+    ) -> dict:
+        """Отмена TWAP-ордера.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#cancel-a-twap-order
+        """
+        if self._wallet is None:
+            raise NotAuthorized("Private key is required for private endpoints.")
+
+        action = {
+            "type": "twapCancel",
+            "a": asset,
+            "t": twap_id,
+        }
+
+        effective_vault = vault_address or self._vault_address
+        action_nonce = nonce if nonce is not None else int(time.time() * 1000)
+        signature = _sign_l1_action(
+            self._wallet,
+            action,
+            effective_vault,
+            action_nonce,
+            expires_after,
+        )
+
+        payload: dict[str, Any] = {
+            "action": action,
+            "nonce": action_nonce,
+            "signature": signature,
+        }
+        if effective_vault is not None:
+            payload["vaultAddress"] = effective_vault
+        if expires_after is not None:
+            payload["expiresAfter"] = expires_after
+
+        return await self._post_request("/exchange", data=payload)
+
+    async def reserve_request_weight(
+        self,
+        weight: int,
+        nonce: int | None = None,
+        expires_after: int | None = None,
+        vault_address: str | None = None,
+    ) -> dict:
+        """Резервирование дополнительного лимита действий.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#reserve-additional-actions
+        """
+        if self._wallet is None:
+            raise NotAuthorized("Private key is required for private endpoints.")
+
+        action = {"type": "reserveRequestWeight", "weight": weight}
+
+        effective_vault = vault_address or self._vault_address
+        action_nonce = nonce if nonce is not None else int(time.time() * 1000)
+        signature = _sign_l1_action(
+            self._wallet,
+            action,
+            effective_vault,
+            action_nonce,
+            expires_after,
+        )
+
+        payload: dict[str, Any] = {
+            "action": action,
+            "nonce": action_nonce,
+            "signature": signature,
+        }
+        if effective_vault is not None:
+            payload["vaultAddress"] = effective_vault
+        if expires_after is not None:
+            payload["expiresAfter"] = expires_after
+
+        return await self._post_request("/exchange", data=payload)
+
+    async def invalidate_pending_nonce(
+        self,
+        nonce: int | None = None,
+        expires_after: int | None = None,
+        vault_address: str | None = None,
+    ) -> dict:
+        """Инвалидация ожидающего nonce без выполнения действия.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#invalidate-pending-nonce-noop
+        """
+        if self._wallet is None:
+            raise NotAuthorized("Private key is required for private endpoints.")
+
+        action = {"type": "noop"}
+
+        effective_vault = vault_address or self._vault_address
+        action_nonce = nonce if nonce is not None else int(time.time() * 1000)
+        signature = _sign_l1_action(
+            self._wallet,
+            action,
+            effective_vault,
+            action_nonce,
+            expires_after,
+        )
+
+        payload: dict[str, Any] = {
             "action": action,
             "nonce": action_nonce,
             "signature": signature,
