@@ -10,7 +10,8 @@ async def main() -> None:
 
     from pprint import pp
 
-    resp = await client.last_price()
+    resp = await client.futures_last_price()
+    resp = await client.funding_rate()
 
     pp(resp)
 
