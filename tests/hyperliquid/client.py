@@ -1,28 +1,47 @@
 from unicex.hyperliquid import Client
 
-
+from os import getenv
 import asyncio
 
 
 async def main() -> None:
     """Main entry point for the application."""
-    client = await Client.create()
+    client = await Client.create(
+        private_key=getenv("WALLET_PRIVATE_KEY"),
+    )
 
     from pprint import pp
 
-    resp = await client.spot_metadata()
+    # response = await client.place_order(
+    #     asset=0,
+    #     is_buy=True,
+    #     price="120000",
+    #     size="0.0001",
+    #     reduce_only=False,
+    #     order_type="limit",
+    #     order_body={"tif": "Gtc"},
+    #     client_order_id="0x1234567890abcdef1234567890abcdef",
+    #     # order_body={"tif": "FrontendMarket"},
+    #     # time_in_force="Gtc",
+    #     # order_type={"limit": {"tif": "Gtc"}},
+    #     # order_type={"market": {"tif": "Alo"}},
+    #     # order_type={"trigger": {"isMarket": True, "triggerPx": "100", "tpsl": "tp"}},
+    #     # order_type={"limit": {"tif": "FrontendMarket"}},
+    # )
 
-    pp(resp)
+    # 0x1234567890abcdef1234567890abcdef
 
-    print(len(resp["universe"]))
+    # response = await client.cancel_order(asset=0, order_id=187095629111)
 
-    r2 = await client.spot_asset_contexts()
+    # response = await client.cancel_order_by_cloid(
+    #     asset=0, client_order_id="0x1234567890abcdef1234567890abcdef"
+    # )
 
-    pp(r2)
+    response = await client.usd_class_transfer(
+        hyperliquid_chain="Mainnet", signature_chain_id="0xa4b1", amount="1", to_perp=True
+    )
 
-    print(len(r2[1]))
-
-    r3 = await client.spot
+    pp(response)
 
     await client.close_connection()
 
