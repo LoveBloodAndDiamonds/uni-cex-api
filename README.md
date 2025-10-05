@@ -46,59 +46,117 @@
   - Унифицированные клиенты: `from unicex.binance import UniClient`
   - Вебсокет менеджеры: `from unicex.binance import WebsocketManager, UniWebsocketManager`
 
-Пример: получить последние цены через унифицированный клиент Binance
+### Пример: Получение рыночных данных через API
 
-```
+```python
 import asyncio
-from unicex.binance import UniClient
+
+from unicex import Exchange, Timeframe, get_uni_client
+
+# Выбираем биржу, с которой хотим работать.
+# Поддерживаются: Binance, Bybit, Bitget, Mexc, Gateio, Hyperliquid и другие.
+exchange = Exchange.BYBIT
 
 
-async def main():
-    client = await UniClient.create()
-    prices = await client.last_price()
-    print(prices["BTCUSDT"])
-    await client.close()
+async def main() -> None:
+    """Пример простого использования унифицированного клиента unicex."""
+    # 1️⃣ Создаём клиент для выбранной биржи
+    client = await get_uni_client(exchange).create()
+
+    # 2️⃣ Получаем открытый интерес по всем контрактам
+    open_interest = await client.open_interest()
+    print(open_interest)
+
+    # Пример вывода:
+    # {
+    #   "BTCUSDT": {"t": 1759669833728, "v": 61099320.0},
+    #   "ETHUSDT": {"t": 1759669833728, "v": 16302340.0},
+    #   "SOLUSDT": {"t": 1759669833728, "v": 3427780.0},
+    #   ...
+    # }
+
+    # 3️⃣ Можно точно так же получать другие данные в едином формате:
+    await client.tickers()  # список всех тикеров
+    await client.futures_tickers()  # тикеры фьючерсов
+    await client.ticker_24hr()  # статистика за 24 часа (spot)
+    await client.futures_ticker_24hr()  # статистика за 24 часа (futures)
+    await client.klines("BTCUSDT", Timeframe.MIN_5)  # свечи спота
+    await client.futures_klines("BTCUSDT", Timeframe.HOUR_1)  # свечи фьючерсов
+    await client.funding_rate()  # ставка финансирования
 
 
 if __name__ == "__main__":
     asyncio.run(main())
-```
-
-Пример: подписаться на трейды через унифицированный WS‑менеджер Bitget
 
 ```
+
+### Пример: Получение данных в реальном времени через Websocket API
+
+```python
 import asyncio
-from unicex.bitget import UniWebsocketManager
-from unicex import TradeDict
+from unicex import Exchange, TradeDict, get_uni_websocket_manager
+from unicex.enums import Timeframe
+
+# Выбираем биржу, с которой хотим работать.
+# Поддерживаются: Binance, Bybit, Bitget, Mexc, Gateio, Hyperliquid и другие.
+exchange = Exchange.BITGET
 
 
-async def on_trade(msg: TradeDict):
-    print(msg)
+async def main() -> None:
+    """Пример простого использования унифицированного менеджера Websocket от UniCEX."""
+
+    # 1️⃣ Создаём WebSocket-менеджер для выбранной биржи
+    ws_manager = get_uni_websocket_manager(exchange)()
+
+    # 2️⃣ Подключаемся к потоку сделок (aggTrades)
+    aggtrades_ws = ws_manager.aggtrades(
+        callback=callback,
+        symbols=["BTCUSDT", "ETHUSDT"],
+    )
+
+    # Запускаем получение данных
+    await aggtrades_ws.start()
+
+    # 3️⃣ Примеры других типов потоков:
+    futures_aggtrades_ws = ws_manager.futures_aggtrades(
+        callback=callback,
+        symbols=["BTCUSDT", "ETHUSDT"],
+    )
+
+    klines_ws = ws_manager.klines(
+        callback=callback,
+        symbols=["BTCUSDT", "ETHUSDT"],
+        timeframe=Timeframe.MIN_5,
+    )
+
+    futures_klines_ws = ws_manager.futures_klines(
+        callback=callback,
+        symbols=["BTCUSDT", "ETHUSDT"],
+        timeframe=Timeframe.MIN_1,
+    )
+
+    # 💡 Также у каждой биржи есть свой WebsocketManager:
+    #     unicex.<exchange>.websocket_manager.WebsocketManager
+    # В нём реализованы остальные методы для работы с WS API.
 
 
-async def main():
-    uwm = UniWebsocketManager()
-    socket = uwm.trades(callback=on_trade, symbol="BTCUSDT")
-    await socket.start()
+async def callback(trade: TradeDict) -> None:
+    """Обработка входящих данных из Websocket."""
+    print(trade)
+    # Пример вывода:
+    # {'t': 1759670527594, 's': 'BTCUSDT', 'S': 'BUY',  'p': 123238.87, 'v': 0.05}
+    # {'t': 1759670527594, 's': 'BTCUSDT', 'S': 'BUY',  'p': 123238.87, 'v': 0.04}
+    # {'t': 1759670346828, 's': 'ETHUSDT', 'S': 'SELL', 'p': 4535.0,    'v': 0.0044}
+    # {'t': 1759670347087, 's': 'ETHUSDT', 'S': 'BUY',  'p': 4534.91,   'v': 0.2712}
 
 
 if __name__ == "__main__":
     asyncio.run(main())
-```
 
 ---
 
 ## 🧑‍💻 Блок для разработчика
 
 ### 📋 Todo
-- Написать 1–2 примера
-- На фьючерсах OKX ticker24hr и klines возвращают объем в контрактах
-- Как реализовать типы в сырых клиентах? str | int | float?
-- в klines и futures_klines нужно дать возможность передавать строки, чтобы они не маппились автоматически. Либо расширить список таймфреймов
-+ В mexc клиенте неправильные ссылки на документацию на фьючах
-+ Доделать BitgetClient и проверить типы
-+ Пересмотреть вопрос: должен ли быть адаптер интерфейсом?
-+ Добавить overload к методам с `None, None`
-+ Определить порядок полей, возвращаемых адаптером
-+ Не делать .get в адаптере
-+ нужно ли как-то изменять тикер в юни клиенте и ападетере?
+- Как реализовать типы (quantity, price и т.д.) в сырых клиентах? str | int | float?
+- На фьючерсах WS OKX возвращают объем в контрактах

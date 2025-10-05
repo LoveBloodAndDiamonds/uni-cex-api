@@ -193,7 +193,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        return self.trades(callback=callback, symbol=symbol, symbols=symbols)  # type: ignore[reportCallIssue]
 
     @overload
     def futures_trades(

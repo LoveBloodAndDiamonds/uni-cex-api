@@ -493,7 +493,7 @@ class Client(BaseClient):
         return await self._make_request("POST", endpoint, data)
 
     # topic: Info endpoint
-    # topic: Perpetuals
+    # topic: Futures
 
     async def perp_dexs(self) -> list[dict | None]:
         """Получение списка доступных перпетуальных DEX.
@@ -516,7 +516,7 @@ class Client(BaseClient):
 
         return await self._post_request("/info", data=payload)
 
-    async def perp_meta_and_asset_contexts(self) -> list[dict | list]:
+    async def perp_meta_and_asset_contexts(self) -> list[Any]:
         """Получение метаданных и контекстов активов перпетуальных контрактов.
 
         https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/perpetuals#retrieve-perpetuals-asset-contexts-includes-mark-price-current-funding-open-interest-etc
@@ -647,6 +647,453 @@ class Client(BaseClient):
 
         return await self._post_request("/info", data=payload)
 
+    async def open_orders(self, user: str, dex: str | None = None) -> list[dict]:
+        """Получение списка открытых ордеров пользователя.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-openorders
+        """
+        payload = {
+            "type": "openOrders",
+            "user": user,
+            "dex": dex,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def exchange_status(self) -> dict:
+        """Получение текущего статуса биржи Hyperliquid.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-exchangestatus
+        """
+        payload = {"type": "exchangeStatus"}
+
+        return await self._post_request("/info", data=payload)
+
+    async def frontend_open_orders(self, user: str, dex: str | None = None) -> list[dict]:
+        """Получение открытых ордеров в формате фронтенда.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-frontendopenorders
+        """
+        payload = {
+            "type": "frontendOpenOrders",
+            "user": user,
+            "dex": dex,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def liquidatable(self, user: str) -> dict:
+        """Проверка, подлежит ли аккаунт пользователя ликвидации.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-liquidatable
+        """
+        payload = {
+            "type": "liquidatable",
+            "user": user,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def max_market_order_ntls(self) -> list[dict]:
+        """Получение максимальных объёмов рыночных ордеров по активам.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-maxmarketorderntls
+        """
+        payload = {"type": "maxMarketOrderNtls"}
+
+        return await self._post_request("/info", data=payload)
+
+    async def vault_summaries(self) -> list[dict]:
+        """Получение сводки по всем доступным вултам (vaults).
+
+        https://docs.chainstack.com/reference/hyperliquid-info-vaultsummaries
+        """
+        payload = {"type": "vaultSummaries"}
+
+        return await self._post_request("/info", data=payload)
+
+    async def user_vault_equities(self, user: str) -> list[dict]:
+        """Получение данных об инвестициях пользователя в вулты (vaults).
+
+        https://docs.chainstack.com/reference/hyperliquid-info-uservaultequities
+        """
+        payload = {
+            "type": "userVaultEquities",
+            "user": user,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def leading_vaults(self, user: str) -> list[dict]:
+        """Получение списка вултов (vaults), которыми управляет пользователь.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-leadingvaults
+        """
+        payload = {
+            "type": "leadingVaults",
+            "user": user,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def extra_agents(self, user: str) -> list[dict]:
+        """Получение списка дополнительных агентов пользователя.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-extraagents
+        """
+        payload = {
+            "type": "extraAgents",
+            "user": user,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def sub_accounts(self, user: str) -> list[dict]:
+        """Получение списка саб-аккаунтов пользователя.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-subaccounts
+        """
+        payload = {
+            "type": "subAccounts",
+            "user": user,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def user_fees(self, user: str) -> dict:
+        """Получение информации о торговых комиссиях пользователя.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-userfees
+        """
+        payload = {
+            "type": "userFees",
+            "user": user,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def user_rate_limit(self, user: str) -> dict:
+        """Получение сведений о лимитах запросов пользователя.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-userratelimit
+        """
+        payload = {
+            "type": "userRateLimit",
+            "user": user,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def delegations(self, user: str) -> list[dict]:
+        """Получение списка делегаций пользователя.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-delegations
+        """
+        payload = {
+            "type": "delegations",
+            "user": user,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def delegator_summary(self, user: str) -> dict:
+        """Получение сводки по делегациям пользователя.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-delegator-summary
+        """
+        payload = {
+            "type": "delegatorSummary",
+            "user": user,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def max_builder_fee(self, user: str, builder: str) -> int:
+        """Получение максимальной комиссии билдера, одобренной пользователем.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-max-builder-fee
+        """
+        payload = {
+            "type": "maxBuilderFee",
+            "user": user,
+            "builder": builder,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def user_to_multi_sig_signers(self, user: str) -> list[str]:
+        """Получение списка подписантов мультисиг-кошелька пользователя.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-user-to-multi-sig-signers
+        """
+        payload = {
+            "type": "userToMultiSigSigners",
+            "user": user,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def user_role(self, user: str) -> dict:
+        """Получение информации о роли пользователя в системе.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-user-role
+        """
+        payload = {
+            "type": "userRole",
+            "user": user,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def validator_l1_votes(self) -> list[dict]:
+        """Получение сведений о голосах валидаторов на L1.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-validator-l1-votes
+        """
+        payload = {"type": "validatorL1Votes"}
+
+        return await self._post_request("/info", data=payload)
+
+    async def web_data2(self) -> dict:
+        """Получение агрегированных данных для веб-интерфейса.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-web-data2
+        """
+        payload = {"type": "webData2"}
+
+        return await self._post_request("/info", data=payload)
+
+    async def all_mids(self, dex: str | None = None) -> dict:
+        """Получение текущих средних цен по всем активам.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-allmids
+        """
+        payload = {
+            "type": "allMids",
+            "dex": dex,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def user_fills(
+        self,
+        user: str,
+        aggregate_by_time: bool | None = None,
+    ) -> list[dict]:
+        """Получение последних исполнений ордеров пользователя.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-user-fills
+        """
+        payload = {
+            "type": "userFills",
+            "user": user,
+            "aggregateByTime": aggregate_by_time,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def user_fills_by_time(
+        self,
+        user: str,
+        start_time: int,
+        end_time: int | None = None,
+        aggregate_by_time: bool | None = None,
+    ) -> list[dict]:
+        """Получение исполнений ордеров пользователя за период.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-user-fills-by-time
+        """
+        payload = {
+            "type": "userFillsByTime",
+            "user": user,
+            "startTime": start_time,
+            "endTime": end_time,
+            "aggregateByTime": aggregate_by_time,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def order_status(self, user: str, oid: int | str) -> dict:
+        """Получение статуса ордера по идентификатору.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-order-status
+        """
+        payload = {
+            "type": "orderStatus",
+            "user": user,
+            "oid": oid,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def l2_book(
+        self,
+        coin: str,
+        n_sig_figs: Literal[2, 3, 4, 5] | None = None,
+        mantissa: Literal[1, 2, 5] | None = None,
+    ) -> list[list[dict]]:
+        """Получение снапшота стакана уровня L2 для актива.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-l2-book
+        """
+        payload = {
+            "type": "l2Book",
+            "coin": coin,
+            "nSigFigs": n_sig_figs,
+            "mantissa": mantissa,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def batch_clearinghouse_states(
+        self,
+        users: list[str],
+        dex: str | None = None,
+    ) -> list[dict | None]:
+        """Получение сводок фьючерсных аккаунтов группы пользователей.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-batch-clearinghouse-states
+        """
+        payload = {
+            "type": "batchClearinghouseStates",
+            "users": users,
+            "dex": dex,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def candle_snapshot(
+        self,
+        coin: str,
+        interval: Literal[
+            "1m",
+            "3m",
+            "5m",
+            "15m",
+            "30m",
+            "1h",
+            "2h",
+            "4h",
+            "8h",
+            "12h",
+            "1d",
+            "3d",
+            "1w",
+            "1M",
+        ],
+        start_time: int,
+        end_time: int,
+    ) -> list[dict]:
+        """Получение датасета свечей за указанный период.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-candle-snapshot
+        """
+        payload = {
+            "type": "candleSnapshot",
+            "req": {
+                "coin": coin,
+                "interval": interval,
+                "startTime": start_time,
+                "endTime": end_time,
+            },
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def historical_orders(self, user: str) -> list[dict]:
+        """Получение истории ордеров пользователя.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-historical-orders
+        """
+        payload = {
+            "type": "historicalOrders",
+            "user": user,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def user_twap_slice_fills(self, user: str) -> list[dict]:
+        """Получение последних TWAP-исполнений пользователя.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-user-twap-slice-fills
+        """
+        payload = {
+            "type": "userTwapSliceFills",
+            "user": user,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def recent_trades(self, coin: str) -> list[dict]:
+        """Получение последних публичных сделок по активу.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-recent-trades
+        """
+        payload = {
+            "type": "recentTrades",
+            "coin": coin,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def vault_details(self, vault_address: str, user: str | None = None) -> dict:
+        """Получение подробной информации о выбранном вулте.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-vault-details
+        """
+        payload = {
+            "type": "vaultDetails",
+            "vaultAddress": vault_address,
+            "user": user,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def portfolio(self, user: str) -> list[list[Any]]:
+        """Получение данных о производительности портфеля пользователя.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-portfolio
+        """
+        payload = {
+            "type": "portfolio",
+            "user": user,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def referral(self, user: str) -> dict:
+        """Получение реферальной информации пользователя.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-referral
+        """
+        payload = {
+            "type": "referral",
+            "user": user,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def delegator_rewards(self, user: str) -> list[dict]:
+        """Получение истории стейкинг-наград пользователя.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-delegator-rewards
+        """
+        payload = {
+            "type": "delegatorRewards",
+            "user": user,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def gossip_root_ips(self) -> list[str]:
+        """Получение списка узлов для P2P-госсипа.
+
+        https://docs.chainstack.com/reference/hyperliquid-info-gossip-root-ips
+        """
+        payload = {"type": "gossipRootIps"}
+
+        return await self._post_request("/info", data=payload)
+
     # topic: Spot
 
     async def spot_metadata(self) -> dict:
@@ -658,7 +1105,7 @@ class Client(BaseClient):
 
         return await self._post_request("/info", data=payload)
 
-    async def spot_meta_and_asset_contexts(self) -> list[dict | list]:
+    async def spot_meta_and_asset_contexts(self) -> list[Any]:
         """Получение метаданных и контекстов спотовых активов.
 
         https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/spot#retrieve-spot-asset-contexts

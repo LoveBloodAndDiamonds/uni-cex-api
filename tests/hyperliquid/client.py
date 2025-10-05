@@ -37,11 +37,30 @@ async def main() -> None:
     #     asset=0, client_order_id="0x1234567890abcdef1234567890abcdef"
     # )
 
-    response = await client.usd_class_transfer(
-        hyperliquid_chain="Mainnet", signature_chain_id="0xa4b1", amount="1", to_perp=True
-    )
+    # response = await client.usd_class_transfer(
+    #     hyperliquid_chain="Mainnet", signature_chain_id="0xa4b1", amount="1", to_perp=True
+    # )
+
+    response = await client.all_mids()
 
     pp(response)
+
+    response = await client.spot_metadata()
+
+    # pp(response)
+
+    tokens = response[0]["tokens"]
+    universe = response[0]["universe"]
+
+    # for t in tokens:
+    #     print(t)
+    #     if t["name"] in ["BTC/USDC"]:
+    #         print(t)
+
+    for t in universe:
+        print(t)
+
+    # pp(response)
 
     await client.close_connection()
 
