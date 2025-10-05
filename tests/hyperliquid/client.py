@@ -12,20 +12,33 @@ async def main() -> None:
 
     from pprint import pp
 
-    response = await client.place_order(
-        asset="PURR",
-        is_buy=False,
-        price="0",
-        size="0.0001",
-        reduce_only=False,
-        order_type="limit",
-        # order_body={"tif": "Gtc"},
-        order_body={"tif": "FrontendMarket"},
-        # time_in_force="Gtc",
-        # order_type={"limit": {"tif": "Gtc"}},
-        # order_type={"market": {"tif": "Alo"}},
-        # order_type={"trigger": {"isMarket": True, "triggerPx": "100", "tpsl": "tp"}},
-        # order_type={"limit": {"tif": "FrontendMarket"}},
+    # response = await client.place_order(
+    #     asset=0,
+    #     is_buy=True,
+    #     price="120000",
+    #     size="0.0001",
+    #     reduce_only=False,
+    #     order_type="limit",
+    #     order_body={"tif": "Gtc"},
+    #     client_order_id="0x1234567890abcdef1234567890abcdef",
+    #     # order_body={"tif": "FrontendMarket"},
+    #     # time_in_force="Gtc",
+    #     # order_type={"limit": {"tif": "Gtc"}},
+    #     # order_type={"market": {"tif": "Alo"}},
+    #     # order_type={"trigger": {"isMarket": True, "triggerPx": "100", "tpsl": "tp"}},
+    #     # order_type={"limit": {"tif": "FrontendMarket"}},
+    # )
+
+    # 0x1234567890abcdef1234567890abcdef
+
+    # response = await client.cancel_order(asset=0, order_id=187095629111)
+
+    # response = await client.cancel_order_by_cloid(
+    #     asset=0, client_order_id="0x1234567890abcdef1234567890abcdef"
+    # )
+
+    response = await client.usd_class_transfer(
+        hyperliquid_chain="Mainnet", signature_chain_id="0xa4b1", amount="1", to_perp=True
     )
 
     pp(response)

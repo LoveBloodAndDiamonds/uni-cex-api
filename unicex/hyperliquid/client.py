@@ -318,6 +318,75 @@ def _sign_user_signed_action(
     return _sign_inner(wallet, data)
 
 
+USD_SEND_SIGN_TYPES = [
+    {"name": "hyperliquidChain", "type": "string"},
+    {"name": "destination", "type": "string"},
+    {"name": "amount", "type": "string"},
+    {"name": "time", "type": "uint64"},
+]
+
+SPOT_TRANSFER_SIGN_TYPES = [
+    {"name": "hyperliquidChain", "type": "string"},
+    {"name": "destination", "type": "string"},
+    {"name": "token", "type": "string"},
+    {"name": "amount", "type": "string"},
+    {"name": "time", "type": "uint64"},
+]
+
+WITHDRAW_SIGN_TYPES = [
+    {"name": "hyperliquidChain", "type": "string"},
+    {"name": "destination", "type": "string"},
+    {"name": "amount", "type": "string"},
+    {"name": "time", "type": "uint64"},
+]
+
+USD_CLASS_TRANSFER_SIGN_TYPES = [
+    {"name": "hyperliquidChain", "type": "string"},
+    {"name": "amount", "type": "string"},
+    {"name": "toPerp", "type": "bool"},
+    {"name": "nonce", "type": "uint64"},
+]
+
+SEND_ASSET_SIGN_TYPES = [
+    {"name": "hyperliquidChain", "type": "string"},
+    {"name": "destination", "type": "string"},
+    {"name": "sourceDex", "type": "string"},
+    {"name": "destinationDex", "type": "string"},
+    {"name": "token", "type": "string"},
+    {"name": "amount", "type": "string"},
+    {"name": "fromSubAccount", "type": "string"},
+    {"name": "nonce", "type": "uint64"},
+]
+
+STAKING_SIGN_TYPES = [
+    {"name": "hyperliquidChain", "type": "string"},
+    {"name": "wei", "type": "uint64"},
+    {"name": "nonce", "type": "uint64"},
+]
+
+TOKEN_DELEGATE_TYPES = [
+    {"name": "hyperliquidChain", "type": "string"},
+    {"name": "validator", "type": "address"},
+    {"name": "wei", "type": "uint64"},
+    {"name": "isUndelegate", "type": "bool"},
+    {"name": "nonce", "type": "uint64"},
+]
+
+APPROVE_AGENT_SIGN_TYPES = [
+    {"name": "hyperliquidChain", "type": "string"},
+    {"name": "agentAddress", "type": "address"},
+    {"name": "agentName", "type": "string"},
+    {"name": "nonce", "type": "uint64"},
+]
+
+APPROVE_BUILDER_FEE_SIGN_TYPES = [
+    {"name": "hyperliquidChain", "type": "string"},
+    {"name": "maxFeeRate", "type": "string"},
+    {"name": "builder", "type": "address"},
+    {"name": "nonce", "type": "uint64"},
+]
+
+
 class Client(BaseClient):
     """Клиент для работы с Hyperliquid API."""
 
@@ -647,7 +716,7 @@ class Client(BaseClient):
 
     async def place_order(
         self,
-        asset: str,
+        asset: int,
         is_buy: bool,
         size: str,
         reduce_only: bool,
@@ -1153,9 +1222,22 @@ class Client(BaseClient):
             "time": time_ms,
         }
         action_nonce = nonce if nonce is not None else time_ms
+        is_mainnet = hyperliquid_chain == "Mainnet"
+        signature = _sign_user_signed_action(
+            self._wallet,
+            action,
+            USD_SEND_SIGN_TYPES,
+            "HyperliquidTransaction:UsdSend",
+            is_mainnet,
+        )
 
-        # todo: implement human-readable signature generation for usdSend
-        raise NotImplementedError("Signature generation for usdSend action is not implemented yet.")
+        payload = {
+            "action": action,
+            "nonce": action_nonce,
+            "signature": signature,
+        }
+
+        return await self._post_request("/exchange", data=payload)
 
     async def spot_send(
         self,
@@ -1184,11 +1266,22 @@ class Client(BaseClient):
             "time": time_ms,
         }
         action_nonce = nonce if nonce is not None else time_ms
-
-        # todo: implement human-readable signature generation for spotSend
-        raise NotImplementedError(
-            "Signature generation for spotSend action is not implemented yet."
+        is_mainnet = hyperliquid_chain == "Mainnet"
+        signature = _sign_user_signed_action(
+            self._wallet,
+            action,
+            SPOT_TRANSFER_SIGN_TYPES,
+            "HyperliquidTransaction:SpotSend",
+            is_mainnet,
         )
+
+        payload = {
+            "action": action,
+            "nonce": action_nonce,
+            "signature": signature,
+        }
+
+        return await self._post_request("/exchange", data=payload)
 
     async def initiate_withdrawal(
         self,
@@ -1215,11 +1308,22 @@ class Client(BaseClient):
             "destination": destination,
         }
         action_nonce = nonce if nonce is not None else time_ms
-
-        # todo: implement human-readable signature generation for withdraw3
-        raise NotImplementedError(
-            "Signature generation for withdraw3 action is not implemented yet."
+        is_mainnet = hyperliquid_chain == "Mainnet"
+        signature = _sign_user_signed_action(
+            self._wallet,
+            action,
+            WITHDRAW_SIGN_TYPES,
+            "HyperliquidTransaction:Withdraw",
+            is_mainnet,
         )
+
+        payload = {
+            "action": action,
+            "nonce": action_nonce,
+            "signature": signature,
+        }
+
+        return await self._post_request("/exchange", data=payload)
 
     async def usd_class_transfer(
         self,
@@ -1227,9 +1331,7 @@ class Client(BaseClient):
         signature_chain_id: str,
         amount: str,
         to_perp: bool,
-        nonce_value: int,
         subaccount: str | None = None,
-        nonce: int | None = None,
     ) -> dict:
         """Перевод USDC между спотовым и перпетуальным аккаунтами.
 
@@ -1242,20 +1344,32 @@ class Client(BaseClient):
         if subaccount is not None:
             amount_field = f"{amount} subaccount:{subaccount}"
 
+        nonce = int(time.time() * 1000)
+
         action = {
             "type": "usdClassTransfer",
             "hyperliquidChain": hyperliquid_chain,
             "signatureChainId": signature_chain_id,
             "amount": amount_field,
             "toPerp": to_perp,
-            "nonce": nonce_value,
+            "nonce": nonce,
         }
-        action_nonce = nonce if nonce is not None else nonce_value
-
-        # todo: implement human-readable signature generation for usdClassTransfer
-        raise NotImplementedError(
-            "Signature generation for usdClassTransfer action is not implemented yet."
+        is_mainnet = hyperliquid_chain == "Mainnet"
+        signature = _sign_user_signed_action(
+            self._wallet,
+            action,
+            USD_CLASS_TRANSFER_SIGN_TYPES,
+            "HyperliquidTransaction:UsdClassTransfer",
+            is_mainnet,
         )
+
+        payload = {
+            "action": action,
+            "nonce": nonce,
+            "signature": signature,
+        }
+
+        return await self._post_request("/exchange", data=payload)
 
     async def send_asset(
         self,
@@ -1290,11 +1404,22 @@ class Client(BaseClient):
             "nonce": nonce_value,
         }
         action_nonce = nonce if nonce is not None else nonce_value
-
-        # todo: implement human-readable signature generation for sendAsset
-        raise NotImplementedError(
-            "Signature generation for sendAsset action is not implemented yet."
+        is_mainnet = hyperliquid_chain == "Mainnet"
+        signature = _sign_user_signed_action(
+            self._wallet,
+            action,
+            SEND_ASSET_SIGN_TYPES,
+            "HyperliquidTransaction:SendAsset",
+            is_mainnet,
         )
+
+        payload = {
+            "action": action,
+            "nonce": action_nonce,
+            "signature": signature,
+        }
+
+        return await self._post_request("/exchange", data=payload)
 
     async def staking_deposit(
         self,
@@ -1319,11 +1444,22 @@ class Client(BaseClient):
             "nonce": nonce_value,
         }
         action_nonce = nonce if nonce is not None else nonce_value
-
-        # todo: implement human-readable signature generation for cDeposit
-        raise NotImplementedError(
-            "Signature generation for cDeposit action is not implemented yet."
+        is_mainnet = hyperliquid_chain == "Mainnet"
+        signature = _sign_user_signed_action(
+            self._wallet,
+            action,
+            STAKING_SIGN_TYPES,
+            "HyperliquidTransaction:CDeposit",
+            is_mainnet,
         )
+
+        payload = {
+            "action": action,
+            "nonce": action_nonce,
+            "signature": signature,
+        }
+
+        return await self._post_request("/exchange", data=payload)
 
     async def staking_withdraw(
         self,
@@ -1348,11 +1484,22 @@ class Client(BaseClient):
             "nonce": nonce_value,
         }
         action_nonce = nonce if nonce is not None else nonce_value
-
-        # todo: implement human-readable signature generation for cWithdraw
-        raise NotImplementedError(
-            "Signature generation for cWithdraw action is not implemented yet."
+        is_mainnet = hyperliquid_chain == "Mainnet"
+        signature = _sign_user_signed_action(
+            self._wallet,
+            action,
+            STAKING_SIGN_TYPES,
+            "HyperliquidTransaction:CWithdraw",
+            is_mainnet,
         )
+
+        payload = {
+            "action": action,
+            "nonce": action_nonce,
+            "signature": signature,
+        }
+
+        return await self._post_request("/exchange", data=payload)
 
     async def token_delegate(
         self,
@@ -1381,11 +1528,22 @@ class Client(BaseClient):
             "nonce": nonce_value,
         }
         action_nonce = nonce if nonce is not None else nonce_value
-
-        # todo: implement human-readable signature generation for tokenDelegate
-        raise NotImplementedError(
-            "Signature generation for tokenDelegate action is not implemented yet."
+        is_mainnet = hyperliquid_chain == "Mainnet"
+        signature = _sign_user_signed_action(
+            self._wallet,
+            action,
+            TOKEN_DELEGATE_TYPES,
+            "HyperliquidTransaction:TokenDelegate",
+            is_mainnet,
         )
+
+        payload = {
+            "action": action,
+            "nonce": action_nonce,
+            "signature": signature,
+        }
+
+        return await self._post_request("/exchange", data=payload)
 
     async def vault_transfer(
         self,
@@ -1457,12 +1615,25 @@ class Client(BaseClient):
         }
         if agent_name is not None:
             action["agentName"] = agent_name
+        else:
+            action["agentName"] = ""
         action_nonce = nonce if nonce is not None else nonce_value
-
-        # todo: implement human-readable signature generation for approveAgent
-        raise NotImplementedError(
-            "Signature generation for approveAgent action is not implemented yet."
+        is_mainnet = hyperliquid_chain == "Mainnet"
+        signature = _sign_user_signed_action(
+            self._wallet,
+            action,
+            APPROVE_AGENT_SIGN_TYPES,
+            "HyperliquidTransaction:ApproveAgent",
+            is_mainnet,
         )
+
+        payload = {
+            "action": action,
+            "nonce": action_nonce,
+            "signature": signature,
+        }
+
+        return await self._post_request("/exchange", data=payload)
 
     async def approve_builder_fee(
         self,
@@ -1489,11 +1660,22 @@ class Client(BaseClient):
             "nonce": nonce_value,
         }
         action_nonce = nonce if nonce is not None else nonce_value
-
-        # todo: implement human-readable signature generation for approveBuilderFee
-        raise NotImplementedError(
-            "Signature generation for approveBuilderFee action is not implemented yet."
+        is_mainnet = hyperliquid_chain == "Mainnet"
+        signature = _sign_user_signed_action(
+            self._wallet,
+            action,
+            APPROVE_BUILDER_FEE_SIGN_TYPES,
+            "HyperliquidTransaction:ApproveBuilderFee",
+            is_mainnet,
         )
+
+        payload = {
+            "action": action,
+            "nonce": action_nonce,
+            "signature": signature,
+        }
+
+        return await self._post_request("/exchange", data=payload)
 
     async def place_twap_order(
         self,
