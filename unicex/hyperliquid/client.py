@@ -516,7 +516,7 @@ class Client(BaseClient):
 
         return await self._post_request("/info", data=payload)
 
-    async def perp_meta_and_asset_contexts(self) -> list[dict | list]:
+    async def perp_meta_and_asset_contexts(self) -> list[Any]:
         """Получение метаданных и контекстов активов перпетуальных контрактов.
 
         https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/perpetuals#retrieve-perpetuals-asset-contexts-includes-mark-price-current-funding-open-interest-etc
@@ -1105,7 +1105,7 @@ class Client(BaseClient):
 
         return await self._post_request("/info", data=payload)
 
-    async def spot_meta_and_asset_contexts(self) -> list[dict | list]:
+    async def spot_meta_and_asset_contexts(self) -> list[Any]:
         """Получение метаданных и контекстов спотовых активов.
 
         https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/spot#retrieve-spot-asset-contexts
