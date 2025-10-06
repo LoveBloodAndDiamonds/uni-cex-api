@@ -17,7 +17,7 @@ class Adapter:
     """Адаптер для унификации данных с Binance API."""
 
     @staticmethod
-    def tickers(raw_data: list[dict], only_usdt: bool = True) -> list[str]:
+    def tickers(raw_data: list[dict], only_usdt: bool) -> list[str]:
         """Преобразует сырой ответ, в котором содержатся данные о тикерах в список тикеров.
 
         Параметры:

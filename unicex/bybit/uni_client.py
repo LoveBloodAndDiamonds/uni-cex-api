@@ -33,7 +33,7 @@ class UniClient(IUniClient[Client]):
             list[str]: Список тикеров.
         """
         raw_data = await self._client.tickers("spot")
-        return Adapter.tickers(raw_data)
+        return Adapter.tickers(raw_data, only_usdt)
 
     async def futures_tickers(self, only_usdt: bool = True) -> list[str]:
         """Возвращает список тикеров.
@@ -45,7 +45,7 @@ class UniClient(IUniClient[Client]):
             list[str]: Список тикеров.
         """
         raw_data = await self._client.tickers("linear")
-        return Adapter.tickers(raw_data)
+        return Adapter.tickers(raw_data, only_usdt)
 
     async def last_price(self) -> dict[str, float]:
         """Возвращает последнюю цену для каждого тикера.

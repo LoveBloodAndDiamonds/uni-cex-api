@@ -174,7 +174,8 @@ def generate_ex_link(exchange: Exchange, market_type: MarketType, symbol: str):
     Возвращает:
         `str`: Ссылка на биржу.
     """
-    ticker = symbol.removesuffix("USDT").removesuffix("_USDT").removesuffix("-USDT")
+    symbol = normalize_symbol(symbol)
+    ticker = normalize_ticker(symbol)
     if exchange == Exchange.BINANCE:
         if market_type == MarketType.FUTURES:
             return f"https://www.binance.com/en/futures/{symbol}"
@@ -224,7 +225,7 @@ def generate_ex_link(exchange: Exchange, market_type: MarketType, symbol: str):
         if market_type == MarketType.FUTURES:
             return f"https://app.hyperliquid.xyz/trade/{ticker}"
         else:
-            return f"https://www.kcex.com/ru-RU/exchange/{ticker}/USDC"
+            return f"https://app.hyperliquid.xyz/trade/{ticker}/USDC"
     else:
         raise NotSupported(f"Exchange {exchange} is not supported")
 
@@ -240,6 +241,7 @@ def generate_tv_link(exchange: Exchange, market_type: MarketType, symbol: str) -
     Возвращает:
         `str`: Ссылка для TradingView.
     """
+    symbol = normalize_symbol(symbol)
     if market_type == MarketType.FUTURES:
         return f"https://www.tradingview.com/chart/?symbol={exchange}:{symbol}.P"
     else:
@@ -259,6 +261,8 @@ def generate_cg_link(exchange: Exchange, market_type: MarketType, symbol: str) -
     """
     base_url = "https://www.coinglass.com/tv/ru"
 
+    symbol = normalize_symbol(symbol)
+
     if market_type == MarketType.FUTURES:
         match exchange:
             case Exchange.OKX:
@@ -268,9 +272,11 @@ def generate_cg_link(exchange: Exchange, market_type: MarketType, symbol: str) -
             case Exchange.BITGET:
                 return f"{base_url}/{exchange.capitalize()}_{symbol}_UMCBL"
             case Exchange.GATEIO:
-                return f"{base_url}/{exchange.capitalize()}_{symbol.replace('USDT', '_USDT')}"
+                return f"{base_url}/Gate_{symbol.replace('USDT', '_USDT')}"
             case Exchange.BITUNIX:
                 return f"{base_url}/{exchange.capitalize()}_{symbol}"
+            case Exchange.HYPERLIQUID:
+                return f"{base_url}/{exchange.capitalize()}_{symbol.replace('USDT', '-USD')}"
             case _:
                 return f"{base_url}/{exchange.capitalize()}_{symbol}"
     else:
@@ -278,7 +284,7 @@ def generate_cg_link(exchange: Exchange, market_type: MarketType, symbol: str) -
         if exchange == Exchange.OKX:
             return f"{base_url}/SPOT_{exchange.upper()}_{symbol.replace('USDT', '-USDT')}"
         # Для остальных бирж ссылки нет → возвращаем заглушку
-        return base_url
+        return generate_cg_link(exchange, MarketType.FUTURES, symbol)
 
 
 def make_humanreadable(value: float, locale: Literal["ru", "en"] = "ru") -> str:

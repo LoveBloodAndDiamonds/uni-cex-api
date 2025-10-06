@@ -1,4 +1,11 @@
-from unicex.extra import normalize_ticker, normalize_symbol
+from unicex.extra import (
+    normalize_ticker,
+    normalize_symbol,
+    generate_tv_link,
+    generate_ex_link,
+    generate_cg_link,
+)
+from unicex import MarketType, Exchange
 
 
 def test_normalize_functions():
@@ -39,7 +46,45 @@ def test_normalize_functions():
 
     print("✅ Все тесты успешно пройдены!")
 
+    print("=" * 80)
+
+
+def test_generate_links():
+    """Проверяет генерацию ссылок для всех бирж и типов рынка."""
+    symbol = "XRPUSDT"
+
+    print("🧪 Тестирование генерации ссылок...")
+
+    for exchange in Exchange:
+        for market_type in MarketType:
+            print(f"\n🌐 {exchange.name} | {market_type.name}")
+            print("-" * 80)
+
+            try:
+                ex_link = generate_ex_link(exchange, market_type, symbol)
+            except Exception as e:
+                ex_link = f"⚠️ Ошибка: {e}"
+
+            try:
+                tv_link = generate_tv_link(exchange, market_type, symbol)
+            except Exception as e:
+                tv_link = f"⚠️ Ошибка: {e}"
+
+            try:
+                cg_link = generate_cg_link(exchange, market_type, symbol)
+            except Exception as e:
+                cg_link = f"⚠️ Ошибка: {e}"
+
+            print(f"📈 Exchange:     {ex_link}")
+            print(f"📊 TradingView:  {tv_link}")
+            print(f"🧠 CoinGlass:    {cg_link}")
+            print("-" * 80)
+
+    print("\n✅ Тестирование ссылок завершено!")
+    print("=" * 80)
+
 
 # Запуск тестов
 if __name__ == "__main__":
     test_normalize_functions()
+    test_generate_links()
