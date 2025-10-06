@@ -166,6 +166,11 @@ class IExchangeInfo(ABC):
     @classmethod
     def _handle_key_error(cls, exception: KeyError, symbol: str) -> None:
         """Обрабатывает KeyError при получении информации о тикере."""
+        cls._check_loaded()
+        raise KeyError(f"Symbol {symbol} not found") from exception
+
+    @classmethod
+    def _check_loaded(cls) -> None:
+        """Проверяет, загружены ли данные об обмене."""
         if not cls._loaded:
             raise ValueError("Exchange data not loaded") from None
-        raise KeyError(f"Symbol {symbol} not found") from exception

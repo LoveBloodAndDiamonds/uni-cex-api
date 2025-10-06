@@ -3,7 +3,7 @@ import sys
 import time
 from pprint import pp
 
-from unicex import get_uni_client
+from unicex import get_uni_client, start_exchanges_info
 from unicex._abc.uni_client import IUniClient
 from unicex.enums import Exchange, MarketType, Timeframe
 from loguru import logger
@@ -38,129 +38,139 @@ test_all_timeframes = False
 
 # Какие биржи тестировать
 exchanges = [
+    Exchange.HYPERLIQUID,
     Exchange.MEXC,
     Exchange.BYBIT,
     Exchange.BINANCE,
     Exchange.BITGET,
     Exchange.OKX,
     Exchange.GATEIO,
-    Exchange.HYPERLIQUID,
 ]
-# exchanges = [Exchange.HYPERLIQUID]
 
 # Сколько символов показывать в превью вывода
 repr_len = 100
 
-# ---------------------------------------- #
-
+# Настройки логирования
 logger.remove()
 logger.add(sys.stderr, level="INFO")
 
-
-def should_run(test_name: str) -> bool:
-    """Определяет, запускать ли тест."""
-    return test_all or tests_config.get(test_name, False)
+# ---------------- LOGIC ---------------- #
 
 
-def pretty_print(exchange: Exchange, test_name: str, result):
-    """Красивый вывод результата теста."""
-    cyan = "\033[96m"
-    reset = "\033[0m"
-    print(f"{cyan}[{exchange}] [{test_name}]{reset}")
-    print(f"  preview: {str(result)[:repr_len]}")
+def should_run(name: str) -> bool:
+    return test_all or tests_config.get(name, False)
+
+
+async def safe_call(exc, func, *args, **kwargs):
+    """Безопасный вызов метода клиента, возвращает (ok, result_or_error)."""
     try:
-        print(f"  length : {len(result)}\n")
-    except Exception:
-        pass
+        res = await func(*args, **kwargs)
+        if repr_len:
+            print(f"{exc} {func.__name__} {str(res)[:repr_len]}")
+        return True, res
+    except Exception as exc:
+        return False, str(exc)
 
 
-async def test_exchange(e: Exchange, client: IUniClient) -> None:
-    """Тестирование одной биржи."""
-    f_symbol = symbol_to_exchange_format(
-        symbol="BTCUSDT", exchange=e, market_type=MarketType.FUTURES
-    )
-    s_symbol = symbol_to_exchange_format(symbol="BTCUSDT", exchange=e, market_type=MarketType.SPOT)
+async def test_exchange(exchange: Exchange) -> dict:
+    """Тестирует все методы для конкретной биржи, возвращает результаты."""
+    results = {}
+    start = time.perf_counter()
 
-    if should_run("tickers"):
-        tickers = await client.tickers()
-        pretty_print(e, "tickers", tickers)
+    try:
+        client: IUniClient = await get_uni_client(exchange).create(logger=logger)
+    except Exception as e:
+        return {"_fatal_": str(e)}
 
-    if should_run("tickers_batched"):
-        tickers_batched = await client.tickers_batched()
-        pretty_print(e, "tickers_batched", tickers_batched)
+    try:
+        f_symbol = symbol_to_exchange_format("BTCUSDT", exchange, MarketType.FUTURES)
+        s_symbol = symbol_to_exchange_format("BTCUSDT", exchange, MarketType.SPOT)
 
-    if should_run("futures_tickers"):
-        futures_tickers = await client.futures_tickers()
-        pretty_print(e, "futures_tickers", futures_tickers)
-
-    if should_run("futures_tickers_batched"):
-        futures_tickers_batched = await client.futures_tickers_batched()
-        pretty_print(e, "futures_tickers_batched", futures_tickers_batched)
-
-    if should_run("last_price"):
-        last_price = await client.last_price()
-        pretty_print(e, "last_price", last_price)
-
-    if should_run("futures_last_price"):
-        futures_last_price = await client.futures_last_price()
-        pretty_print(e, "futures_last_price", futures_last_price)
-
-    if should_run("ticker_24hr"):
-        ticker_24hr = await client.ticker_24hr()
-        pretty_print(e, "ticker_24hr", ticker_24hr)
-
-    if should_run("futures_ticker_24hr"):
-        futures_ticker_24hr = await client.futures_ticker_24hr()
-        pretty_print(e, "futures_ticker_24hr", futures_ticker_24hr)
-
-    intervals = Timeframe if test_all_timeframes else [Timeframe.DAY_1]
-    for interval in intervals:
-        if should_run("klines") and e not in [Exchange.HYPERLIQUID]:
-            klines = await client.klines(symbol=s_symbol, interval=interval, limit=10)
-            pretty_print(e, f"{interval} klines", klines)
-
-        if should_run("futures_klines") and e not in [Exchange.HYPERLIQUID]:
-            futures_klines = await client.futures_klines(
-                symbol=f_symbol, interval=interval, limit=10
+        if should_run("tickers"):
+            results["tickers"] = await safe_call(exchange, client.tickers)
+        if should_run("tickers_batched"):
+            results["tickers_batched"] = await safe_call(exchange, client.tickers_batched)
+        if should_run("futures_tickers"):
+            results["futures_tickers"] = await safe_call(exchange, client.futures_tickers)
+        if should_run("futures_tickers_batched"):
+            results["futures_tickers_batched"] = await safe_call(
+                exchange, client.futures_tickers_batched
             )
-            pretty_print(e, f"{interval} futures_klines", futures_klines)
+        if should_run("last_price"):
+            results["last_price"] = await safe_call(exchange, client.last_price)
+        if should_run("futures_last_price"):
+            results["futures_last_price"] = await safe_call(exchange, client.futures_last_price)
+        if should_run("ticker_24hr"):
+            results["ticker_24hr"] = await safe_call(exchange, client.ticker_24hr)
+        if should_run("futures_ticker_24hr"):
+            results["futures_ticker_24hr"] = await safe_call(exchange, client.futures_ticker_24hr)
 
-    if should_run("open_interest") and e not in [Exchange.BINANCE]:
-        open_interest = await client.open_interest()
-        pretty_print(e, "open_interest", open_interest)
+        intervals = Timeframe if test_all_timeframes else [Timeframe.DAY_1]
+        for interval in intervals:
+            if should_run("klines"):
+                results[f"klines_{interval.name}"] = await safe_call(
+                    exchange, client.klines, symbol=s_symbol, interval=interval, limit=10
+                )
+            if should_run("futures_klines"):
+                results[f"futures_klines_{interval.name}"] = await safe_call(
+                    exchange, client.futures_klines, symbol=f_symbol, interval=interval, limit=10
+                )
 
-    if should_run("single_open_interest"):
-        single_open_interest = await client.open_interest(symbol=f_symbol)
-        pretty_print(e, "single_open_interest", single_open_interest)
+        if should_run("open_interest") and exchange not in [Exchange.BINANCE]:
+            results["open_interest"] = await safe_call(exchange, client.open_interest)
+        if should_run("single_open_interest"):
+            results["single_open_interest"] = await safe_call(
+                exchange, client.open_interest, symbol=f_symbol
+            )
+        if should_run("funding_rate") and exchange not in [Exchange.OKX]:
+            results["funding_rate"] = await safe_call(exchange, client.funding_rate)
+        if should_run("single_funding_rate"):
+            results["single_funding_rate"] = await safe_call(
+                exchange, client.funding_rate, symbol=f_symbol
+            )
 
-    if should_run("funding_rate") and e not in [Exchange.OKX]:
-        funding_rate = await client.funding_rate()
-        pretty_print(e, "funding_rate", funding_rate)
-
-    if should_run("single_funding_rate"):
-        single_funding_rate = await client.funding_rate(symbol=f_symbol)
-        pretty_print(e, "single_funding_rate", single_funding_rate)
-
-
-async def main() -> None:
-    """Main entry point for the tests."""
-
-    for exchange in exchanges:
+    finally:
         try:
-            client = await get_uni_client(exchange).create(logger=logger)
-            await test_exchange(exchange, client)
-            print("-------------\n")
-        except Exception as exc:
-            logger.exception(f"[{exc}] Error: {exc}")
-            sys.exit(1)
-        finally:
-            try:
-                await client.close_connection()
-            except:
-                pass
-        logger.success(f"[{exchange}] Success")
+            await client.close_connection()
+        except Exception:
+            pass
 
-    logger.success("All exchanges tested successfully!")
+    duration = round(time.perf_counter() - start, 2)
+    results["_time_"] = duration
+
+    return results
+
+
+async def main():
+    """Запускает тесты параллельно и выводит сводку."""
+    all_results = await asyncio.gather(
+        *[test_exchange(e) for e in exchanges], return_exceptions=False
+    )
+
+    print("\n\n==================== TEST SUMMARY ====================\n")
+
+    for exchange, results in zip(exchanges, all_results):
+        name = f"[{exchange}]"
+        if "_fatal_" in results:
+            print(f"\033[91m{name} ❌ FAILED TO START: {results['_fatal_']}\033[0m")
+            continue
+
+        time_s = results.pop("_time_")
+        ok_count = sum(1 for ok, _ in results.values() if ok)
+        total = len(results)
+        color = "\033[92m" if ok_count == total else "\033[91m"
+        status = "✅ OK" if ok_count == total else "❌ ERRORS"
+        print(f"{color}{name} {status} ({ok_count}/{total} passed) [{time_s:.2f}s]\033[0m")
+
+        # выводим упавшие тесты
+        failed = {k: v for k, (ok, v) in results.items() if not ok}
+        if failed:
+            for k, err in failed.items():
+                print(f"   - {k}: {err}")
+
+        print()
+
+    print("=====================================================\n")
 
 
 if __name__ == "__main__":
