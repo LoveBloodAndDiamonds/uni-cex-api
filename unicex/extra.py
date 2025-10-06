@@ -8,6 +8,8 @@ __all__ = [
     "generate_tv_link",
     "generate_cg_link",
     "make_humanreadable",
+    "normalize_ticker",
+    "normalize_symbol",
 ]
 
 import time
@@ -89,6 +91,76 @@ class TimeoutTracker[T]:
             duration (`int`): Длительность блокировки в секундах.
         """
         self._blocked_items[item] = time.time() + duration
+
+
+def normalize_ticker(raw_ticker: str) -> str:
+    """Нормализует тикер и возвращает базовую валюту (например, `BTC`).
+
+    Эта функция принимает тикер в различных форматах (с разделителями, постфиксом SWAP,
+    в верхнем или нижнем регистре) и приводит его к стандартному виду — только базовый актив.
+
+    Примеры:
+        ```python
+        normalize_ticker("BTC-USDT")  # "BTC"
+        normalize_ticker("BTC-USDT-SWAP")  # "BTC"
+        normalize_ticker("btc_usdt")  # "BTC"
+        normalize_ticker("BTCUSDT")  # "BTC"
+        normalize_ticker("BTC")  # "BTC"
+        ```
+
+    Параметры:
+        raw_ticker (`str`): Исходный тикер в любом из распространённых форматов.
+
+    Возвращает:
+        `str`: Базовый актив в верхнем регистре (например, `"BTC"`).
+    """
+    ticker = raw_ticker.upper()
+
+    # Удаляем постфиксы SWAP
+    if ticker.endswith(("SWAP", "-SWAP", "_SWAP", ".SWAP")):
+        ticker = (
+            ticker.removesuffix("-SWAP")
+            .removesuffix("_SWAP")
+            .removesuffix(".SWAP")
+            .removesuffix("SWAP")
+        )
+
+    # Удаляем разделители
+    ticker = ticker.translate(str.maketrans("", "", "-_."))
+
+    # Убираем суффикс валюты котировки
+    for quote in ("USDT", "USDC"):
+        if ticker.endswith(quote):
+            ticker = ticker.removesuffix(quote)
+            break
+
+    return ticker
+
+
+def normalize_symbol(raw_ticker: str, quote: Literal["USDT", "USDC"] = "USDT") -> str:
+    """Нормализует тикер до унифицированного символа (например, `BTCUSDT`).
+
+    Функция принимает тикер в любом из популярных форматов и возвращает полный символ,
+    состоящий из базовой валюты и указанной валюты котировки (`USDT` или `USDC`).
+
+    Примеры:
+        ```python
+        normalize_symbol("BTC-USDT")  # "BTCUSDT"
+        normalize_symbol("BTC")  # "BTCUSDT"
+        normalize_symbol("btc_usdt_swap")  # "BTCUSDT"
+        normalize_symbol("ETH", "USDC")  # "ETHUSDC"
+        ```
+
+    Параметры:
+        raw_ticker (`str`): Исходный тикер в любом из распространённых форматов.
+        quote (`Literal["USDT", "USDC"]`, optional): Валюта котировки.
+            По умолчанию `"USDT"`.
+
+    Возвращает:
+        `str`: Символ в унифицированном формате, например `"BTCUSDT"`.
+    """
+    base = normalize_ticker(raw_ticker)
+    return f"{base}{quote}"
 
 
 def generate_ex_link(exchange: Exchange, market_type: MarketType, symbol: str):
