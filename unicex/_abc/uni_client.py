@@ -172,7 +172,7 @@ class IUniClient(ABC, Generic[TClient]):
         Возвращает:
             `list[list[str]]`: Список тикеров в чанках.
         """
-        tickers = await self.tickers(only_usdt=only_usdt)
+        tickers = await self.tickers(only_usdt)
         return batched_list(tickers, batch_size)
 
     @abstractmethod
@@ -199,7 +199,7 @@ class IUniClient(ABC, Generic[TClient]):
         Возвращает:
             `list[list[str]]`: Список тикеров в чанках.
         """
-        tickers = await self.futures_tickers(only_usdt=only_usdt)
+        tickers = await self.futures_tickers(only_usdt)
         return batched_list(tickers, batch_size)
 
     @abstractmethod

@@ -138,9 +138,15 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             list[KlineDict]: Список свечей для тикера.
         """
+        if not limit and not all([start_time, end_time]):
+            raise ValueError("limit and (start_time and end_time) must be provided")
+
         if limit:  # Перезаписываем start_time и end_time если указан limit, т.к. по умолчанию Mexc Futures не принимают этот параметр
+            if not isinstance(interval, Timeframe):
+                raise ValueError("interval must be a Timeframe if limit param provided")
             end_time = int(time.time())
             start_time = end_time - (limit * interval.to_seconds)  # type: ignore[reportOptionalOperand]
+
         interval = (
             interval.to_exchange_format(Exchange.MEXC, MarketType.FUTURES)
             if isinstance(interval, Timeframe)

@@ -222,6 +222,22 @@ class Timeframe(StrEnum):
                 Timeframe.WEEK_1: "7d",
                 Timeframe.MONTH_1: "30d",
             },
+            Exchange.HYPERLIQUID: {
+                Timeframe.MIN_1: "1m",
+                Timeframe.MIN_3: "3m",
+                Timeframe.MIN_5: "5m",
+                Timeframe.MIN_15: "15m",
+                Timeframe.MIN_30: "30m",
+                Timeframe.HOUR_1: "1h",
+                Timeframe.HOUR_2: "2h",
+                Timeframe.HOUR_4: "4h",
+                Timeframe.HOUR_8: "8h",
+                Timeframe.HOUR_12: "12h",
+                Timeframe.DAY_1: "1d",
+                Timeframe.DAY_3: "3d",
+                Timeframe.WEEK_1: "1w",
+                Timeframe.MONTH_1: "1M",
+            },
         }
 
     def to_exchange_format(self, exchange: Exchange, market_type: MarketType | None = None) -> str:

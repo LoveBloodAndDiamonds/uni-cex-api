@@ -3,7 +3,7 @@ import sys
 import time
 from pprint import pp
 
-from unicex import get_uni_client
+from unicex import get_uni_client, start_exchanges_info
 from unicex._abc.uni_client import IUniClient
 from unicex.enums import Exchange, MarketType, Timeframe
 from loguru import logger
@@ -38,13 +38,13 @@ test_all_timeframes = False
 
 # Какие биржи тестировать
 exchanges = [
+    Exchange.HYPERLIQUID,
     Exchange.MEXC,
     Exchange.BYBIT,
     Exchange.BINANCE,
     Exchange.BITGET,
     Exchange.OKX,
     Exchange.GATEIO,
-    Exchange.HYPERLIQUID,
 ]
 # exchanges = [Exchange.HYPERLIQUID]
 
@@ -115,11 +115,11 @@ async def test_exchange(e: Exchange, client: IUniClient) -> None:
 
     intervals = Timeframe if test_all_timeframes else [Timeframe.DAY_1]
     for interval in intervals:
-        if should_run("klines") and e not in [Exchange.HYPERLIQUID]:
+        if should_run("klines"):
             klines = await client.klines(symbol=s_symbol, interval=interval, limit=10)
             pretty_print(e, f"{interval} klines", klines)
 
-        if should_run("futures_klines") and e not in [Exchange.HYPERLIQUID]:
+        if should_run("futures_klines"):
             futures_klines = await client.futures_klines(
                 symbol=f_symbol, interval=interval, limit=10
             )
@@ -144,6 +144,8 @@ async def test_exchange(e: Exchange, client: IUniClient) -> None:
 
 async def main() -> None:
     """Main entry point for the tests."""
+    # await start_exchanges_info()
+    # await asyncio.sleep(1)
 
     for exchange in exchanges:
         try:

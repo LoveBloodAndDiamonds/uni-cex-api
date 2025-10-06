@@ -1,2 +1,4 @@
 - Как реализовать типы (quantity, price и т.д.) в сырых клиентах? str | int | float?
 - На фьючерсах WS OKX возвращают объем в контрактах
+- Проверить все значения last_price, futures_last_price, ticker24hr futuresticker24hr
+- убрать из адаптера все default аргументы
