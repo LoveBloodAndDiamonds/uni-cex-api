@@ -19,7 +19,7 @@ class Adapter:
     """Адаптер для унификации данных с Gateio API."""
 
     @staticmethod
-    def tickers(raw_data: list[dict], only_usdt: bool = True) -> list[str]:
+    def tickers(raw_data: list[dict], only_usdt: bool) -> list[str]:
         """Преобразует сырой ответ о тикерах в список символов.
 
         Параметры:
@@ -36,7 +36,7 @@ class Adapter:
         ]
 
     @staticmethod
-    def futures_tickers(raw_data: list[dict], only_usdt: bool = True) -> list[str]:
+    def futures_tickers(raw_data: list[dict], only_usdt: bool) -> list[str]:
         """Преобразует сырой ответ о фьючерсных тикерах в список символов.
 
         Параметры:

@@ -18,7 +18,7 @@ class Adapter:
     """Адаптер для унификации данных с Okx API."""
 
     @staticmethod
-    def tickers(raw_data: dict, only_usdt: bool = True) -> list[str]:
+    def tickers(raw_data: dict, only_usdt: bool) -> list[str]:
         """Преобразует сырые данные о тикерах в список унифицированных символов.
 
         Параметры:
@@ -35,7 +35,7 @@ class Adapter:
         ]
 
     @staticmethod
-    def futures_tickers(raw_data: dict, only_usdt: bool = True) -> list[str]:
+    def futures_tickers(raw_data: dict, only_usdt: bool) -> list[str]:
         """Преобразует сырые данные о тикерах в список унифицированных символов.
 
         Параметры:

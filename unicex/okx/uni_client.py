@@ -32,7 +32,7 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             list[str]: Список тикеров.
         """
-        raw_data = await self._client.tickers(inst_type="SPOT")
+        raw_data = await self._client.get_tickers(inst_type="SPOT")
         return Adapter.tickers(raw_data=raw_data, only_usdt=only_usdt)
 
     async def futures_tickers(self, only_usdt: bool = True) -> list[str]:
@@ -44,7 +44,7 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             list[str]: Список тикеров.
         """
-        raw_data = await self._client.tickers(inst_type="SWAP")
+        raw_data = await self._client.get_tickers(inst_type="SWAP")
         return Adapter.futures_tickers(raw_data=raw_data, only_usdt=only_usdt)
 
     async def last_price(self) -> dict[str, float]:
@@ -53,7 +53,7 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             dict[str, float]: Словарь с последними ценами для каждого тикера.
         """
-        raw_data = await self._client.tickers(inst_type="SPOT")
+        raw_data = await self._client.get_tickers(inst_type="SPOT")
         return Adapter.last_price(raw_data)
 
     async def futures_last_price(self) -> dict[str, float]:
@@ -62,7 +62,7 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             dict[str, float]: Словарь с последними ценами для каждого тикера.
         """
-        raw_data = await self._client.tickers(inst_type="SWAP")
+        raw_data = await self._client.get_tickers(inst_type="SWAP")
         return Adapter.last_price(raw_data)
 
     async def ticker_24hr(self) -> TickerDailyDict:
@@ -71,7 +71,7 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             TickerDailyDict: Словарь с статистикой за последние 24 часа для каждого тикера.
         """
-        raw_data = await self._client.tickers(inst_type="SPOT")
+        raw_data = await self._client.get_tickers(inst_type="SPOT")
         return Adapter.ticker_24hr(raw_data=raw_data)
 
     async def futures_ticker_24hr(self) -> TickerDailyDict:
@@ -80,7 +80,7 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             TickerDailyDict: Словарь с статистикой за последние 24 часа для каждого тикера.
         """
-        raw_data = await self._client.tickers(inst_type="SWAP")
+        raw_data = await self._client.get_tickers(inst_type="SWAP")
         return Adapter.futures_ticker_24hr(raw_data=raw_data)
 
     async def klines(
@@ -108,7 +108,7 @@ class UniClient(IUniClient[Client]):
             if isinstance(interval, Timeframe)
             else interval
         )
-        raw_data = await self._client.candles(
+        raw_data = await self._client.get_candlesticks(
             inst_id=symbol,
             bar=interval,
             after=start_time,
@@ -142,7 +142,7 @@ class UniClient(IUniClient[Client]):
             if isinstance(interval, Timeframe)
             else interval
         )
-        raw_data = await self._client.candles(
+        raw_data = await self._client.get_candlesticks(
             inst_id=symbol,
             bar=interval,
             after=start_time,

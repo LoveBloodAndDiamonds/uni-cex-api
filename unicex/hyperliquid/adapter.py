@@ -110,7 +110,18 @@ class Adapter:
                 v = (day_ntl_vlm / mid_px) if mid_px else 0.0
                 q = day_ntl_vlm
 
-                result[coin] = TickerDailyItem(p=p, v=v, q=q)
+                if coin in result:
+                    # В случае с конфликтом оставляем ту монету, в которой больше дневного объема, т.к
+                    # для 6 монет (на 07.10.2025) встречаются пары к USDH, которые повторяют идентификатор.
+                    # Проблема не критичная - т.к. флаг resolve_symbols по идее использовать должен редко.
+                    prev_ticker_daily = result[coin]
+                    curr_ticker_daily = TickerDailyItem(p=p, v=v, q=q)
+                    if prev_ticker_daily["q"] > curr_ticker_daily["q"]:
+                        result[coin] = prev_ticker_daily
+                    else:
+                        result[coin] = curr_ticker_daily
+                else:
+                    result[coin] = TickerDailyItem(p=p, v=v, q=q)
 
             except (KeyError, TypeError, ValueError):
                 continue

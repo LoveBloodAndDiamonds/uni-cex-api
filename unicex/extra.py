@@ -8,6 +8,8 @@ __all__ = [
     "generate_tv_link",
     "generate_cg_link",
     "make_humanreadable",
+    "normalize_ticker",
+    "normalize_symbol",
 ]
 
 import time
@@ -32,7 +34,7 @@ def percent_greater(higher: float, lower: float) -> float:
         `float`: На сколько процентов `higher` больше `lower`.
     """
     if lower == 0:
-        return float("inf")
+        return 0.0  # Не будем возвращать float('inf'), чтобы не ломать логику приложения
     return (higher / lower - 1) * 100
 
 
@@ -51,7 +53,7 @@ def percent_less(higher: float, lower: float) -> float:
         `float`: На сколько процентов `lower` меньше `higher`.
     """
     if lower == 0:
-        return float("inf")
+        return 0.0  # Не будем возвращать float('inf'), чтобы не ломать логику приложения
     return (1 - lower / higher) * 100
 
 
@@ -91,6 +93,76 @@ class TimeoutTracker[T]:
         self._blocked_items[item] = time.time() + duration
 
 
+def normalize_ticker(raw_ticker: str) -> str:
+    """Нормализует тикер и возвращает базовую валюту (например, `BTC`).
+
+    Эта функция принимает тикер в различных форматах (с разделителями, постфиксом SWAP,
+    в верхнем или нижнем регистре) и приводит его к стандартному виду — только базовый актив.
+
+    Примеры:
+        ```python
+        normalize_ticker("BTC-USDT")  # "BTC"
+        normalize_ticker("BTC-USDT-SWAP")  # "BTC"
+        normalize_ticker("btc_usdt")  # "BTC"
+        normalize_ticker("BTCUSDT")  # "BTC"
+        normalize_ticker("BTC")  # "BTC"
+        ```
+
+    Параметры:
+        raw_ticker (`str`): Исходный тикер в любом из распространённых форматов.
+
+    Возвращает:
+        `str`: Базовый актив в верхнем регистре (например, `"BTC"`).
+    """
+    ticker = raw_ticker.upper()
+
+    # Удаляем постфиксы SWAP
+    if ticker.endswith(("SWAP", "-SWAP", "_SWAP", ".SWAP")):
+        ticker = (
+            ticker.removesuffix("-SWAP")
+            .removesuffix("_SWAP")
+            .removesuffix(".SWAP")
+            .removesuffix("SWAP")
+        )
+
+    # Удаляем разделители
+    ticker = ticker.translate(str.maketrans("", "", "-_."))
+
+    # Убираем суффикс валюты котировки
+    for quote in ("USDT", "USDC"):
+        if ticker.endswith(quote):
+            ticker = ticker.removesuffix(quote)
+            break
+
+    return ticker
+
+
+def normalize_symbol(raw_ticker: str, quote: Literal["USDT", "USDC"] = "USDT") -> str:
+    """Нормализует тикер до унифицированного символа (например, `BTCUSDT`).
+
+    Функция принимает тикер в любом из популярных форматов и возвращает полный символ,
+    состоящий из базовой валюты и указанной валюты котировки (`USDT` или `USDC`).
+
+    Примеры:
+        ```python
+        normalize_symbol("BTC-USDT")  # "BTCUSDT"
+        normalize_symbol("BTC")  # "BTCUSDT"
+        normalize_symbol("btc_usdt_swap")  # "BTCUSDT"
+        normalize_symbol("ETH", "USDC")  # "ETHUSDC"
+        ```
+
+    Параметры:
+        raw_ticker (`str`): Исходный тикер в любом из распространённых форматов.
+        quote (`Literal["USDT", "USDC"]`, optional): Валюта котировки.
+            По умолчанию `"USDT"`.
+
+    Возвращает:
+        `str`: Символ в унифицированном формате, например `"BTCUSDT"`.
+    """
+    base = normalize_ticker(raw_ticker)
+    return f"{base}{quote}"
+
+
 def generate_ex_link(exchange: Exchange, market_type: MarketType, symbol: str):
     """Генерирует ссылку на биржу.
 
@@ -102,7 +174,8 @@ def generate_ex_link(exchange: Exchange, market_type: MarketType, symbol: str):
     Возвращает:
         `str`: Ссылка на биржу.
     """
-    ticker = symbol.removesuffix("USDT").removesuffix("_USDT").removesuffix("-USDT")
+    symbol = normalize_symbol(symbol)
+    ticker = normalize_ticker(symbol)
     if exchange == Exchange.BINANCE:
         if market_type == MarketType.FUTURES:
             return f"https://www.binance.com/en/futures/{symbol}"
@@ -152,7 +225,7 @@ def generate_ex_link(exchange: Exchange, market_type: MarketType, symbol: str):
         if market_type == MarketType.FUTURES:
             return f"https://app.hyperliquid.xyz/trade/{ticker}"
         else:
-            return f"https://www.kcex.com/ru-RU/exchange/{ticker}/USDC"
+            return f"https://app.hyperliquid.xyz/trade/{ticker}/USDC"
     else:
         raise NotSupported(f"Exchange {exchange} is not supported")
 
@@ -168,6 +241,7 @@ def generate_tv_link(exchange: Exchange, market_type: MarketType, symbol: str) -
     Возвращает:
         `str`: Ссылка для TradingView.
     """
+    symbol = normalize_symbol(symbol)
     if market_type == MarketType.FUTURES:
         return f"https://www.tradingview.com/chart/?symbol={exchange}:{symbol}.P"
     else:
@@ -187,6 +261,8 @@ def generate_cg_link(exchange: Exchange, market_type: MarketType, symbol: str) -
     """
     base_url = "https://www.coinglass.com/tv/ru"
 
+    symbol = normalize_symbol(symbol)
+
     if market_type == MarketType.FUTURES:
         match exchange:
             case Exchange.OKX:
@@ -196,9 +272,11 @@ def generate_cg_link(exchange: Exchange, market_type: MarketType, symbol: str) -
             case Exchange.BITGET:
                 return f"{base_url}/{exchange.capitalize()}_{symbol}_UMCBL"
             case Exchange.GATEIO:
-                return f"{base_url}/{exchange.capitalize()}_{symbol.replace('USDT', '_USDT')}"
+                return f"{base_url}/Gate_{symbol.replace('USDT', '_USDT')}"
             case Exchange.BITUNIX:
                 return f"{base_url}/{exchange.capitalize()}_{symbol}"
+            case Exchange.HYPERLIQUID:
+                return f"{base_url}/{exchange.capitalize()}_{symbol.replace('USDT', '-USD')}"
             case _:
                 return f"{base_url}/{exchange.capitalize()}_{symbol}"
     else:
@@ -206,7 +284,7 @@ def generate_cg_link(exchange: Exchange, market_type: MarketType, symbol: str) -
         if exchange == Exchange.OKX:
             return f"{base_url}/SPOT_{exchange.upper()}_{symbol.replace('USDT', '-USDT')}"
         # Для остальных бирж ссылки нет → возвращаем заглушку
-        return base_url
+        return generate_cg_link(exchange, MarketType.FUTURES, symbol)
 
 
 def make_humanreadable(value: float, locale: Literal["ru", "en"] = "ru") -> str:
