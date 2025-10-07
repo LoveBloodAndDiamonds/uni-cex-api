@@ -3,7 +3,7 @@ __all__ = ["Websocket"]
 import asyncio
 import time
 from collections.abc import Awaitable, Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import orjson
 import websockets
@@ -13,12 +13,21 @@ from websockets.asyncio.client import ClientConnection
 from unicex.exceptions import QueueOverflowError
 from unicex.types import LoggerLike
 
+if TYPE_CHECKING:
+    from unicex._abc import IDecoder
+
 
 class Websocket:
     """Базовый класс асинхронного вебсокета."""
 
     MAX_QUEUE_SIZE: int = 100
     """Максимальная длина очереди."""
+
+    class _JsonDecoder:
+        """Базовый JSON декодер для WebSocket сообщений."""
+
+        def decode(self, message: bytes | str) -> dict:
+            return orjson.loads(message)
 
     def __init__(
         self,
@@ -32,6 +41,7 @@ class Websocket:
         reconnect_timeout: int | float | None = 5,
         worker_count: int = 2,
         logger: LoggerLike | None = None,
+        decoder: type["IDecoder"] = _JsonDecoder,
         **kwargs: Any,  # Не дадим сломаться, если юзер передал ненужные аргументы
     ) -> None:
         """Инициализация вебсокета.
@@ -47,6 +57,7 @@ class Websocket:
             reconnect_timeout (`int | float | None`): Пауза перед переподключением, сек.
             worker_count (`int`): Количество рабочих задач для обработки сообщений.
             logger (`LoggerLike | None`): Логгер для записи логов.
+            decoder (`IDecoder | None`): Декодер для обработки входящих сообщений.
         """
         self._callback = callback
         self._url = url
@@ -59,6 +70,7 @@ class Websocket:
         self._last_message_time = time.monotonic()
         self._worker_count = worker_count
         self._logger = logger or _logger
+        self._decoder = decoder()
         self._tasks: list[asyncio.Task] = []
         self._queue = asyncio.Queue()
         self._running = False
@@ -114,14 +126,14 @@ class Websocket:
                 await asyncio.sleep(self._reconnect_timeout)
                 await self._after_disconnect()
 
-    async def _handle_message(self, message: str) -> None:
+    async def _handle_message(self, message: str | bytes) -> None:
         """Обрабатывает входящее сообщение вебсокета."""
         try:
             # Обновленяем время последнего сообщения
             self._last_message_time = time.monotonic()
 
             # Ложим сообщение в очередь, предварительно его сериализуя
-            await self._queue.put(orjson.loads(message))
+            await self._queue.put(self._decoder.decode(message))
 
             # Проверяем размер очереди сообщений и выбрасываем ошибку, если он превышает максимальный размер
             self._check_queue_size()
@@ -139,7 +151,7 @@ class Websocket:
         """Проверяет размер очереди и выбрасывает ошибку при переполнении."""
         qsize = self._queue.qsize()
         if qsize >= self.MAX_QUEUE_SIZE:
-            raise QueueOverflowError("Message queue is overflow")
+            raise QueueOverflowError(f"Message queue is overflow: {qsize}")
 
     async def _after_connect(self, conn: ClientConnection) -> None:
         """Вызывается после установки соединения."""
