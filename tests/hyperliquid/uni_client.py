@@ -10,15 +10,20 @@ async def main() -> None:
     await ExchangeInfo.start()
     await asyncio.sleep(2)
 
+    print(ExchangeInfo.resolve_spot_symbol("@38"))  # @52
+
+    # return
+
     client = await UniClient.create()
 
     from pprint import pp
 
-    resp = await client.ticker_24hr()
+    resp = await client.ticker_24hr(resolve_symbols=True)
 
     # resp = await client.client.spot_meta_and_asset_contexts()
 
-    pp(resp)
+    pp(resp["UBTC"])
+    print(len(resp))
 
     # print(len(spot_meta_and_asset_contexts[0]["universe"]))
     # print(len(spot_meta_and_asset_contexts[0]["tokens"]))
