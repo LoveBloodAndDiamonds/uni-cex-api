@@ -5,7 +5,7 @@ fix = true
 line-length = 100
 
 # Исключаем тесты из проверок
-exclude = ["tests"]
+exclude = ["tests", "unicex/mexc/spot_ws_proto"]
 
 # Выбрать правила - не слишком строгие, но полезные
 lint.select = [

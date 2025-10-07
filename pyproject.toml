@@ -19,6 +19,7 @@ dependencies = [
     "loguru>=0.7.3",
     "msgpack>=1.1.1",
     "orjson>=3.11.3",
+    "protobuf>=6.32.1",
     "websockets>=15.0.1",
 ]
 
