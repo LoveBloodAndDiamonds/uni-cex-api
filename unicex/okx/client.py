@@ -207,7 +207,7 @@ class Client(BaseClient):
 
     # topic: Trading Account
 
-    async def get_instruments(
+    async def get_account_instruments(
         self,
         inst_type: Literal["SPOT", "MARGIN", "SWAP", "FUTURES", "OPTION"],
         inst_family: str | None = None,
@@ -2233,5 +2233,621 @@ class Client(BaseClient):
         return await self._make_request(
             "GET",
             endpoint="/api/v5/market/call-auction-details",
+            params=params,
+        )
+
+    # topic: Public Data
+
+    async def get_instruments(
+        self,
+        inst_type: Literal["SPOT", "MARGIN", "SWAP", "FUTURES", "OPTION"],
+        inst_family: str | None = None,
+        inst_id: str | None = None,
+    ) -> dict:
+        """Получение списка доступных публичных инструментов.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-instruments
+        """
+        params = {
+            "instType": inst_type,
+            "instFamily": inst_family,
+            "instId": inst_id,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/instruments",
+            params=params,
+        )
+
+    async def get_estimated_delivery_price(self, inst_id: str) -> dict:
+        """Получение оценочной цены поставки или исполнения опциона.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-estimated-delivery-exercise-price
+        """
+        params = {
+            "instId": inst_id,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/estimated-price",
+            params=params,
+        )
+
+    async def get_delivery_exercise_history(
+        self,
+        inst_type: Literal["FUTURES", "OPTION"],
+        inst_family: str,
+        after: int | None = None,
+        before: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Получение истории поставок и исполнений за последние три месяца.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-delivery-exercise-history
+        """
+        params = {
+            "instType": inst_type,
+            "instFamily": inst_family,
+            "after": after,
+            "before": before,
+            "limit": limit,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/delivery-exercise-history",
+            params=params,
+        )
+
+    async def get_estimated_settlement_info(self, inst_id: str) -> dict:
+        """Получение оценочной цены ближайшего расчета по фьючерсу.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-estimated-future-settlement-price
+        """
+        params = {
+            "instId": inst_id,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/estimated-settlement-info",
+            params=params,
+        )
+
+    async def get_futures_settlement_history(
+        self,
+        inst_family: str,
+        after: int | None = None,
+        before: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Получение истории расчетов фьючерсов за последние три месяца.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-futures-settlement-history
+        """
+        params = {
+            "instFamily": inst_family,
+            "after": after,
+            "before": before,
+            "limit": limit,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/settlement-history",
+            params=params,
+        )
+
+    async def get_funding_rate(self, inst_id: str) -> dict:
+        """Получение текущей ставки финансирования.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-funding-rate
+        """
+        params = {
+            "instId": inst_id,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/funding-rate",
+            params=params,
+        )
+
+    async def get_funding_rate_history(
+        self,
+        inst_id: str,
+        before: int | None = None,
+        after: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Получение истории ставок финансирования за последние три месяца.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-funding-rate-history
+        """
+        params = {
+            "instId": inst_id,
+            "before": before,
+            "after": after,
+            "limit": limit,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/funding-rate-history",
+            params=params,
+        )
+
+    async def get_open_interest(
+        self,
+        inst_type: Literal["SWAP", "FUTURES", "OPTION"],
+        inst_family: str | None = None,
+        inst_id: str | None = None,
+    ) -> dict:
+        """Получение общего открытого интереса по контрактам OKX.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-open-interest
+        """
+        params = {
+            "instType": inst_type,
+            "instFamily": inst_family,
+            "instId": inst_id,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/open-interest",
+            params=params,
+        )
+
+    async def get_price_limit(self, inst_id: str) -> dict:
+        """Получение верхнего и нижнего лимитов цен для инструмента.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-limit-price
+        """
+        params = {
+            "instId": inst_id,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/price-limit",
+            params=params,
+        )
+
+    async def get_option_market_data(
+        self,
+        inst_family: str,
+        exp_time: str | None = None,
+    ) -> dict:
+        """Получение сводных рыночных данных по опционам.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-option-market-data
+        """
+        params = {
+            "instFamily": inst_family,
+            "expTime": exp_time,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/opt-summary",
+            params=params,
+        )
+
+    async def get_discount_rate_quota(
+        self,
+        ccy: str | None = None,
+        discount_lv: str | None = None,
+    ) -> dict:
+        """Получение ставок скидок и беспроцентных квот.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-discount-rate-and-interest-free-quota
+        """
+        params = {
+            "ccy": ccy,
+            "discountLv": discount_lv,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/discount-rate-interest-free-quota",
+            params=params,
+        )
+
+    async def get_system_time(self) -> dict:
+        """Получение времени сервера OKX.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-system-time
+        """
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/time",
+        )
+
+    async def get_mark_price(
+        self,
+        inst_type: Literal["MARGIN", "SWAP", "FUTURES", "OPTION"],
+        inst_family: str | None = None,
+        inst_id: str | None = None,
+    ) -> dict:
+        """Получение маржинальной цены инструмента.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-mark-price
+        """
+        params = {
+            "instType": inst_type,
+            "instFamily": inst_family,
+            "instId": inst_id,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/mark-price",
+            params=params,
+        )
+
+    async def get_position_tiers(
+        self,
+        inst_type: Literal["MARGIN", "SWAP", "FUTURES", "OPTION"],
+        td_mode: Literal["cross", "isolated"],
+        inst_family: str | None = None,
+        inst_id: str | None = None,
+        ccy: str | None = None,
+        tier: str | None = None,
+    ) -> dict:
+        """Получение уровней позиций и допустимого плеча.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-position-tiers
+        """
+        params = {
+            "instType": inst_type,
+            "tdMode": td_mode,
+            "instFamily": inst_family,
+            "instId": inst_id,
+            "ccy": ccy,
+            "tier": tier,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/position-tiers",
+            params=params,
+        )
+
+    async def get_interest_rate_loan_quota(self) -> dict:
+        """Получение ставок и квот заимствования.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-interest-rate-and-loan-quota
+        """
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/interest-rate-loan-quota",
+        )
+
+    async def get_underlying(self, inst_type: Literal["SWAP", "FUTURES", "OPTION"]) -> dict:
+        """Получение списка базовых активов по типу инструмента.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-underlying
+        """
+        params = {
+            "instType": inst_type,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/underlying",
+            params=params,
+        )
+
+    async def get_insurance_fund(
+        self,
+        inst_type: Literal["MARGIN", "SWAP", "FUTURES", "OPTION"],
+        type_: Literal[
+            "regular_update",
+            "liquidation_balance_deposit",
+            "bankruptcy_loss",
+            "platform_revenue",
+            "adl",
+        ]
+        | None = None,
+        inst_family: str | None = None,
+        ccy: str | None = None,
+        before: int | None = None,
+        after: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Получение данных страхового фонда.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-insurance-fund
+        """
+        params = {
+            "instType": inst_type,
+            "type": type_,
+            "instFamily": inst_family,
+            "ccy": ccy,
+            "before": before,
+            "after": after,
+            "limit": limit,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/insurance-fund",
+            params=params,
+        )
+
+    async def convert_contract_coin(
+        self,
+        inst_id: str,
+        sz: str,
+        type_: Literal["1", "2"] | None = None,
+        px: str | None = None,
+        unit: Literal["coin", "usds"] | None = None,
+        op_type: Literal["open", "close"] | None = None,
+    ) -> dict:
+        """Конвертация размера контракта и количества монет.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-unit-convert
+        """
+        params = {
+            "type": type_,
+            "instId": inst_id,
+            "sz": sz,
+            "px": px,
+            "unit": unit,
+            "opType": op_type,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/convert-contract-coin",
+            params=params,
+        )
+
+    async def get_option_tick_bands(self, inst_family: str | None = None) -> dict:
+        """Получение доступных ценовых диапазонов опционов.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-option-tick-bands
+        """
+        params = {
+            "instType": "OPTION",
+            "instFamily": inst_family,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/instrument-tick-bands",
+            params=params,
+        )
+
+    async def get_premium_history(
+        self,
+        inst_id: str,
+        after: int | None = None,
+        before: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Получение истории премии индекса за полгода.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-premium-history
+        """
+        params = {
+            "instId": inst_id,
+            "after": after,
+            "before": before,
+            "limit": limit,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/premium-history",
+            params=params,
+        )
+
+    async def get_index_tickers(
+        self,
+        quote_ccy: str | None = None,
+        inst_id: str | None = None,
+    ) -> dict:
+        """Получение индексов и ключевых метрик по ним.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-index-tickers
+        """
+        params = {
+            "quoteCcy": quote_ccy,
+            "instId": inst_id,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/market/index-tickers",
+            params=params,
+        )
+
+    async def get_index_candlesticks(
+        self,
+        inst_id: str,
+        after: int | None = None,
+        before: int | None = None,
+        bar: str | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Получение свечей по индексным значениям.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-index-candlesticks
+        """
+        params = {
+            "instId": inst_id,
+            "after": after,
+            "before": before,
+            "bar": bar,
+            "limit": limit,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/market/index-candles",
+            params=params,
+        )
+
+    async def get_index_candlesticks_history(
+        self,
+        inst_id: str,
+        after: int | None = None,
+        before: int | None = None,
+        bar: str | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Получение исторических свечей по индексам.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-index-candlesticks-history
+        """
+        params = {
+            "instId": inst_id,
+            "after": after,
+            "before": before,
+            "bar": bar,
+            "limit": limit,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/market/history-index-candles",
+            params=params,
+        )
+
+    async def get_mark_price_candlesticks(
+        self,
+        inst_id: str,
+        after: int | None = None,
+        before: int | None = None,
+        bar: str | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Получение свечей по маржинальной цене инструмента.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-mark-price-candlesticks
+        """
+        params = {
+            "instId": inst_id,
+            "after": after,
+            "before": before,
+            "bar": bar,
+            "limit": limit,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/market/mark-price-candles",
+            params=params,
+        )
+
+    async def get_mark_price_candlesticks_history(
+        self,
+        inst_id: str,
+        after: int | None = None,
+        before: int | None = None,
+        bar: str | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Получение исторических свечей по маржинальной цене.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-mark-price-candlesticks-history
+        """
+        params = {
+            "instId": inst_id,
+            "after": after,
+            "before": before,
+            "bar": bar,
+            "limit": limit,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/market/history-mark-price-candles",
+            params=params,
+        )
+
+    async def get_exchange_rate(self) -> dict:
+        """Получение средневзвешенного курса USD/CNY за две недели.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-exchange-rate
+        """
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/market/exchange-rate",
+        )
+
+    async def get_index_components(self, index: str) -> dict:
+        """Получение состава выбранного индекса.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-index-components
+        """
+        params = {
+            "index": index,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/market/index-components",
+            params=params,
+        )
+
+    async def get_economic_calendar(
+        self,
+        region: str | None = None,
+        importance: Literal["1", "2", "3"] | None = None,
+        before: int | None = None,
+        after: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Получение данных макроэкономического календаря.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-economic-calendar-data
+        """
+        params = {
+            "region": region,
+            "importance": importance,
+            "before": before,
+            "after": after,
+            "limit": limit,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/economic-calendar",
+            params=params,
+            signed=True,
+        )
+
+    async def get_market_data_history(
+        self,
+        module: Literal["1", "2", "3", "6"],
+        inst_type: Literal["SPOT", "FUTURES", "SWAP", "OPTION"],
+        begin: int,
+        end: int,
+        inst_id_list: str | None = None,
+        inst_family_list: str | None = None,
+        date_aggr_type: Literal["daily", "monthly"] = "daily",
+    ) -> dict:
+        """Получение ссылок на исторические рыночные данные OKX.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-historical-market-data
+        """
+        params = {
+            "module": module,
+            "instType": inst_type,
+            "instIdList": inst_id_list,
+            "instFamilyList": inst_family_list,
+            "dateAggrType": date_aggr_type,
+            "begin": begin,
+            "end": end,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/market-data-history",
             params=params,
         )
