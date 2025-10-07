@@ -34,7 +34,7 @@ def percent_greater(higher: float, lower: float) -> float:
         `float`: На сколько процентов `higher` больше `lower`.
     """
     if lower == 0:
-        return float("inf")
+        return 0.0  # Не будем возвращать float('inf'), чтобы не ломать логику приложения
     return (higher / lower - 1) * 100
 
 
@@ -53,7 +53,7 @@ def percent_less(higher: float, lower: float) -> float:
         `float`: На сколько процентов `lower` меньше `higher`.
     """
     if lower == 0:
-        return float("inf")
+        return 0.0  # Не будем возвращать float('inf'), чтобы не ломать логику приложения
     return (1 - lower / higher) * 100
 
 
