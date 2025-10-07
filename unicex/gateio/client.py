@@ -45,7 +45,7 @@ class Client(BaseClient):
             return url, params, data, headers
 
         if not self.is_authorized():
-            raise NotAuthorized("Api key is required to private endpoints")
+            raise NotAuthorized("Api key and api secret is required to private endpoints")
 
         payload_string = json.dumps(data, separators=(",", ":")) if data else ""
         query_string = dict_to_query_string(params) if params else ""

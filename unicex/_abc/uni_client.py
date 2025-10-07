@@ -115,7 +115,7 @@ class IUniClient(ABC, Generic[TClient]):
         Возвращает:
             `bool`: True, если апи ключи присутствуют, иначе False.
         """
-        return self._client._api_key is not None and self._client._api_secret is not None
+        return self._client.is_authorized()
 
     async def close_connection(self) -> None:
         """Закрывает сессию клиента."""

@@ -5,6 +5,7 @@ import time
 from typing import Any, Literal
 
 from unicex._base import BaseClient
+from unicex.exceptions import NotAuthorized
 from unicex.types import RequestMethod
 from unicex.utils import (
     dict_to_query_string,
@@ -19,6 +20,18 @@ class Client(BaseClient):
 
     _BASE_URL: str = "https://api.bitget.com"
     """Базовый URL для REST API Bitget."""
+
+    def is_authorized(self) -> bool:
+        """Проверяет наличие API‑ключей у клиента.
+
+        Возвращает:
+            `bool`: Признак наличия ключей.
+        """
+        return (
+            self._api_key is not None
+            and self._api_secret is not None
+            and self._api_passphrase is not None
+        )
 
     def _sign_message(
         self,
@@ -45,6 +58,9 @@ class Client(BaseClient):
                 - `timestamp (str)`: Временная метка в миллисекундах.
                 - `signature (str)`: Подпись в формате base64.
         """
+        if not self.is_authorized():
+            raise NotAuthorized("Api key and api secret is required to private endpoints")
+
         timestamp = str(int(time.time() * 1000))
 
         path = f"{endpoint}?{dict_to_query_string(params)}" if params else endpoint
@@ -68,16 +84,15 @@ class Client(BaseClient):
             `dict[str, str]`: Словарь заголовков запроса.
         """
         headers = {"Content-Type": "application/json", "Accept": "application/json"}
-        if self._api_key:  # type: ignore[attr-defined]
-            headers.update(
-                {
-                    "ACCESS-KEY": self._api_key,  # type: ignore[attr-defined]
-                    "ACCESS-PASSPHRASE": self._api_passphrase,  # type: ignore[attr-defined]
-                    "ACCESS-TIMESTAMP": timestamp,
-                    "ACCESS-SIGN": signature,
-                    "locale": "en-US",
-                }
-            )
+        headers.update(
+            {
+                "ACCESS-KEY": self._api_key,  # type: ignore[attr-defined]
+                "ACCESS-PASSPHRASE": self._api_passphrase,  # type: ignore[attr-defined]
+                "ACCESS-TIMESTAMP": timestamp,
+                "ACCESS-SIGN": signature,
+                "locale": "en-US",
+            }
+        )
         return headers
 
     def _prepare_request_params(

@@ -33,8 +33,8 @@ class Client(BaseClient):
 
     def _generate_signature(self, payload: dict) -> str:
         """Генерирует подпись на основе данных запроса."""
-        if not self._api_secret:
-            raise NotAuthorized("API secret is required for private endpoints.")
+        if not self.is_authorized():
+            raise NotAuthorized("Api key and api secret is required to private endpoints")
 
         query_string = dict_to_query_string(payload)
         return generate_hmac_sha256_signature(
