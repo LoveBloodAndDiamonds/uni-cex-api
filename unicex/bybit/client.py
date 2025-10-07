@@ -41,12 +41,12 @@ class Client(BaseClient):
         Источник: https://github.com/bybit-exchange/api-usage-examples/blob/master/V5_demo/api_demo/Encryption_HMAC.py
         """
         # Проверяем наличие апи ключей для подписи запроса
-        if not self._api_key or not self._api_secret:
-            raise NotAuthorized("API key and secret are required to private endpoints.")
+        if not self.is_authorized():
+            raise NotAuthorized("Api key and api secret is required to private endpoints")
 
         dumped_payload = json.dumps(payload)
-        prepared_query_string = timestamp + self._api_key + self._RECV_WINDOW + dumped_payload
-        return generate_hmac_sha256_signature(self._api_secret, prepared_query_string)
+        prepared_query_string = timestamp + self._api_key + self._RECV_WINDOW + dumped_payload  # type: ignore[attrDefined]
+        return generate_hmac_sha256_signature(self._api_secret, prepared_query_string)  # type: ignore[attrDefined]
 
     async def _make_request(
         self,

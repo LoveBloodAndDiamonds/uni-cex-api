@@ -16,6 +16,18 @@ class Client(BaseClient):
     _BASE_URL: str = "https://www.okx.com"
     """Базовый URL для REST API OKX."""
 
+    def is_authorized(self) -> bool:
+        """Проверяет наличие API‑ключей у клиента.
+
+        Возвращает:
+            `bool`: Признак наличия ключей.
+        """
+        return (
+            self._api_key is not None
+            and self._api_secret is not None
+            and self._api_passphrase is not None
+        )
+
     def _get_timestamp(self) -> str:
         """Генерирует timestamp в формате OKX (ISO с миллисекундами и Z).
 
@@ -51,6 +63,11 @@ class Client(BaseClient):
                 - `timestamp (str)`: Временная метка в формате OKX.
                 - `signature (str)`: Подпись в формате base64.
         """
+        if not self.is_authorized():
+            raise NotAuthorized(
+                "Api key and api secret and api passphrase is required to private endpoints"
+            )
+
         timestamp = self._get_timestamp()
 
         # Формируем query string для GET запросов
@@ -82,16 +99,15 @@ class Client(BaseClient):
             `dict[str, str]`: Словарь заголовков запроса.
         """
         headers = {"Content-Type": "application/json", "Accept": "application/json"}
-        if self._api_key:  # type: ignore[attr-defined]
-            headers.update(
-                {
-                    "OK-ACCESS-KEY": self._api_key,  # type: ignore[attr-defined]
-                    "OK-ACCESS-SIGN": signature,
-                    "OK-ACCESS-TIMESTAMP": timestamp,
-                    "OK-ACCESS-PASSPHRASE": self._api_passphrase,  # type: ignore[attr-defined]
-                    "x-simulated-trading": "0",
-                }
-            )
+        headers.update(
+            {
+                "OK-ACCESS-KEY": self._api_key,  # type: ignore[attr-defined]
+                "OK-ACCESS-SIGN": signature,
+                "OK-ACCESS-TIMESTAMP": timestamp,
+                "OK-ACCESS-PASSPHRASE": self._api_passphrase,  # type: ignore[attr-defined]
+                "x-simulated-trading": "0",
+            }
+        )
         return headers
 
     def _prepare_request_params(
@@ -134,11 +150,6 @@ class Client(BaseClient):
 
         headers = None
         if signed:
-            if not self._api_key or not self._api_secret or not self._api_passphrase:
-                raise NotAuthorized(
-                    "API key, secret, and passphrase are required for private endpoints"
-                )
-
             timestamp, signature = self._sign_message(method, endpoint, params, body)
             headers = self._get_headers(timestamp, signature)
         return url, params, body, headers

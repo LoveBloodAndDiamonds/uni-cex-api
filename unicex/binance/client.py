@@ -62,8 +62,8 @@ class Client(BaseClient):
         if not signed:
             return {"params": params, "data": data}, None
 
-        if not self._api_key or not self._api_secret:  # type: ignore[attr-defined]
-            raise NotAuthorized("Api key is required to private endpoints")
+        if not self.is_authorized():
+            raise NotAuthorized("Api key and api secret is required to private endpoints")
 
         # Объединяем все параметры в payload
         payload = {**params, **data}
