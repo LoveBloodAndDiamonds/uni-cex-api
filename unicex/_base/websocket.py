@@ -3,7 +3,7 @@ __all__ = ["Websocket"]
 import asyncio
 import time
 from collections.abc import Awaitable, Callable
-from typing import TYPE_CHECKING, Any
+from typing import Any, Protocol
 
 import orjson
 import websockets
@@ -13,9 +13,6 @@ from websockets.asyncio.client import ClientConnection
 from unicex.exceptions import QueueOverflowError
 from unicex.types import LoggerLike
 
-if TYPE_CHECKING:
-    from unicex._abc import IDecoder
-
 
 class Websocket:
     """Базовый класс асинхронного вебсокета."""
@@ -23,10 +20,15 @@ class Websocket:
     MAX_QUEUE_SIZE: int = 100
     """Максимальная длина очереди."""
 
-    class _JsonDecoder:
-        """Базовый JSON декодер для WebSocket сообщений."""
+    class _DecoderProtocol(Protocol):
+        """Протокол декодирования сообщений."""
 
-        def decode(self, message: bytes | str) -> dict:
+        def decode(self, message: Any) -> dict: ...
+
+    class _JsonDecoder:
+        """Протокол декодирования сообщений в формате JSON."""
+
+        def decode(self, message: Any) -> dict:
             return orjson.loads(message)
 
     def __init__(
@@ -41,7 +43,7 @@ class Websocket:
         reconnect_timeout: int | float | None = 5,
         worker_count: int = 2,
         logger: LoggerLike | None = None,
-        decoder: type["IDecoder"] = _JsonDecoder,
+        decoder: type[_DecoderProtocol] = _JsonDecoder,
         **kwargs: Any,  # Не дадим сломаться, если юзер передал ненужные аргументы
     ) -> None:
         """Инициализация вебсокета.

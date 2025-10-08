@@ -5,7 +5,7 @@ fix = true
 line-length = 100
 
 # Исключаем тесты из проверок
-exclude = ["tests", "unicex/mexc/spot_ws_proto"]
+exclude = ["tests", "**/unicex/mexc/_spot_ws_proto"]
 
 # Выбрать правила - не слишком строгие, но полезные
 lint.select = [
@@ -39,6 +39,6 @@ lint.flake8-quotes.docstring-quotes = "double"
 format.quote-style = "double"
 format.indent-style = "space"
 format.line-ending = "auto"
-format.exclude = ["tests"]
+format.exclude = ["tests", "**/unicex/mexc/_spot_ws_proto"]
 format.skip-magic-trailing-comma = false # Всегда добавлять висящую запятую
 format.docstring-code-format = true      # Приводить код внутри docstring к единому стилю
