@@ -1,18 +1,6 @@
-# type: ignore
-# ruff: noqa
-
 from __future__ import annotations
-
 from typing import Any, Literal, Optional, Self, Union
 
-from . import PrivateAccountV3Api_pb2 as PrivateAccountV3Api__pb2
-from . import PrivateDealsV3Api_pb2 as PrivateDealsV3Api__pb2
-from . import PrivateOrdersV3Api_pb2 as PrivateOrdersV3Api__pb2
-from . import PublicAggreBookTickerV3Api_pb2 as PublicAggreBookTickerV3Api__pb2
-from . import PublicAggreDealsV3Api_pb2 as PublicAggreDealsV3Api__pb2
-from . import PublicAggreDepthsV3Api_pb2 as PublicAggreDepthsV3Api__pb2
-from . import PublicBookTickerBatchV3Api_pb2 as PublicBookTickerBatchV3Api__pb2
-from . import PublicBookTickerV3Api_pb2 as PublicBookTickerV3Api__pb2
 
 # from proto import PublicDealsV3Api_pb2 as PublicDealsV3Api__pb2
 # from proto import PublicIncreaseDepthsV3Api_pb2 as PublicIncreaseDepthsV3Api__pb2
@@ -30,13 +18,22 @@ from . import PublicBookTickerV3Api_pb2 as PublicBookTickerV3Api__pb2
 # from proto import PublicAggreDealsV3Api_pb2 as PublicAggreDealsV3Api__pb2
 # from proto import PublicAggreBookTickerV3Api_pb2 as PublicAggreBookTickerV3Api__pb2
 # from proto import PushDataV3ApiWrapper_pb2 as PushDataV3ApiWrapper__pb2
+
 from . import PublicDealsV3Api_pb2 as PublicDealsV3Api__pb2
-from . import PublicIncreaseDepthsBatchV3Api_pb2 as PublicIncreaseDepthsBatchV3Api__pb2
 from . import PublicIncreaseDepthsV3Api_pb2 as PublicIncreaseDepthsV3Api__pb2
 from . import PublicLimitDepthsV3Api_pb2 as PublicLimitDepthsV3Api__pb2
-from . import PublicMiniTickersV3Api_pb2 as PublicMiniTickersV3Api__pb2
-from . import PublicMiniTickerV3Api_pb2 as PublicMiniTickerV3Api__pb2
+from . import PrivateOrdersV3Api_pb2 as PrivateOrdersV3Api__pb2
+from . import PublicBookTickerV3Api_pb2 as PublicBookTickerV3Api__pb2
+from . import PrivateDealsV3Api_pb2 as PrivateDealsV3Api__pb2
+from . import PrivateAccountV3Api_pb2 as PrivateAccountV3Api__pb2
 from . import PublicSpotKlineV3Api_pb2 as PublicSpotKlineV3Api__pb2
+from . import PublicMiniTickerV3Api_pb2 as PublicMiniTickerV3Api__pb2
+from . import PublicMiniTickersV3Api_pb2 as PublicMiniTickersV3Api__pb2
+from . import PublicBookTickerBatchV3Api_pb2 as PublicBookTickerBatchV3Api__pb2
+from . import PublicIncreaseDepthsBatchV3Api_pb2 as PublicIncreaseDepthsBatchV3Api__pb2
+from . import PublicAggreDepthsV3Api_pb2 as PublicAggreDepthsV3Api__pb2
+from . import PublicAggreDealsV3Api_pb2 as PublicAggreDealsV3Api__pb2
+from . import PublicAggreBookTickerV3Api_pb2 as PublicAggreBookTickerV3Api__pb2
 from . import PushDataV3ApiWrapper_pb2 as PushDataV3ApiWrapper__pb2
 
 
@@ -95,21 +92,21 @@ class ProtoTyping:
         isMaker: bool
         remainAmount: str
         remainQuantity: str
-        lastDealQuantity: str | None
+        lastDealQuantity: Optional[str]
         cumulativeQuantity: str
         cumulativeAmount: str
         status: int
         createTime: int
-        market: str | None
-        triggerType: int | None
-        triggerPrice: str | None
-        state: int | None
-        ocoId: str | None
-        routeFactor: str | None
-        symbolId: str | None
-        marketId: str | None
-        marketCurrencyId: str | None
-        currencyId: str | None
+        market: Optional[str]
+        triggerType: Optional[int]
+        triggerPrice: Optional[str]
+        state: Optional[int]
+        ocoId: Optional[str]
+        routeFactor: Optional[str]
+        symbolId: Optional[str]
+        marketId: Optional[str]
+        marketCurrencyId: Optional[str]
+        currencyId: Optional[str]
 
     # PublicBookTickerV3Api__pb2
 
@@ -255,10 +252,10 @@ class ProtoTyping:
         publicAggreDeals: ProtoTyping.PublicAggreDealsV3Api
         publicAggreBookTicker: ProtoTyping.PublicAggreBookTickerV3Api
 
-        symbol: str | None
-        symbolId: str | None
-        createTime: int | None
-        sendTime: int | None
+        symbol: Optional[str]
+        symbolId: Optional[str]
+        createTime: Optional[int]
+        sendTime: Optional[int]
 
 
 PublicSpotKlineV3Api: ProtoTyping.PublicSpotKlineV3Api = (
@@ -277,12 +274,18 @@ PublicLimitDepthV3ApiItem: ProtoTyping.PublicLimitDepthV3ApiItem = (
 PublicLimitDepthsV3Api: ProtoTyping.PublicLimitDepthsV3Api = (
     PublicLimitDepthsV3Api__pb2.PublicLimitDepthsV3Api
 )
-PrivateOrdersV3Api: ProtoTyping.PrivateOrdersV3Api = PrivateOrdersV3Api__pb2.PrivateOrdersV3Api
+PrivateOrdersV3Api: ProtoTyping.PrivateOrdersV3Api = (
+    PrivateOrdersV3Api__pb2.PrivateOrdersV3Api
+)
 PublicBookTickerV3Api: ProtoTyping.PublicBookTickerV3Api = (
     PublicBookTickerV3Api__pb2.PublicBookTickerV3Api
 )
-PrivateDealsV3Api: ProtoTyping.PrivateDealsV3Api = PrivateDealsV3Api__pb2.PrivateDealsV3Api
-PrivateAccountV3Api: ProtoTyping.PrivateAccountV3Api = PrivateAccountV3Api__pb2.PrivateAccountV3Api
+PrivateDealsV3Api: ProtoTyping.PrivateDealsV3Api = (
+    PrivateDealsV3Api__pb2.PrivateDealsV3Api
+)
+PrivateAccountV3Api: ProtoTyping.PrivateAccountV3Api = (
+    PrivateAccountV3Api__pb2.PrivateAccountV3Api
+)
 PublicMiniTickerV3Api: ProtoTyping.PublicMiniTickerV3Api = (
     PublicMiniTickerV3Api__pb2.PublicMiniTickerV3Api
 )

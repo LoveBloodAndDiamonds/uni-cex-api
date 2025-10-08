@@ -7,7 +7,7 @@
     "**/.git",
     "**/.idea",
     "**/migrations",
-    "unicex/mexc/spot_ws_proto",
+    "**/unicex/mexc/_spot_ws_proto",
     "tests"
   ],
   "venvPath": ".",
