@@ -123,7 +123,8 @@ class Websocket:
 
             except websockets.exceptions.ConnectionClosed as e:
                 self._logger.error(f"Websocket connection was closed unexpectedly: {e}")
-                continue
+            except Exception as e:
+                self._logger.error(f"Unexpected error in websosocket connection: {e}")
             finally:
                 await asyncio.sleep(self._reconnect_timeout)
                 await self._after_disconnect()
