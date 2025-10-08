@@ -78,7 +78,7 @@ class Adapter:
         Возвращает:
             dict[str, float]: Словарь тикеров и последних цен.
         """
-        return {k: v for k, v in raw_data.items() if not k.startswith("@")}
+        return {k: float(v) for k, v in raw_data.items() if not k.startswith("@")}
 
     @staticmethod
     def ticker_24hr(raw_data: list, resolve_symbols: bool) -> TickerDailyDict:
