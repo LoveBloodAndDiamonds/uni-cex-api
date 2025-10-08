@@ -1,4 +1,5 @@
 import asyncio
+from operator import call
 
 from unicex.mexc import WebsocketManager
 
@@ -20,6 +21,15 @@ async def main() -> None:
     ws = manager.book_ticker(callback=callback, symbols=["BTCUSDT", "ETHUSDT"])
     ws = manager.diff_depth(callback=callback, symbols=["BTCUSDT", "ETHUSDT"])
     ws = manager.partial_depth(callback=callback, symbols=["BTCUSDT", "ETHUSDT"])
+    ws = manager.futures_tickers(callback=callback)
+    ws = manager.futures_ticker(callback=callback, symbols=["BTC_USDT", "ETH_USDT"])
+    ws = manager.futures_depth(callback=callback, symbols=["BTC_USDT", "ETH_USDT"], limit=20)
+    ws = manager.futures_kline(
+        callback=callback, symbols=["BTC_USDT", "ETH_USDT"], interval="Min60"
+    )
+    ws = manager.funding_rate(callback=callback, symbols=["BTC_USDT", "ETH_USDT"])
+    ws = manager.futures_index_price(callback=callback, symbols=["BTC_USDT", "ETH_USDT"])
+    ws = manager.futures_fair_price(callback=callback, symbols=["BTC_USDT", "ETH_USDT"])
     await ws.start()
 
 
