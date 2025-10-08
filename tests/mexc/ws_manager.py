@@ -14,9 +14,12 @@ async def main() -> None:
     """Main entry point for the application."""
     manager = WebsocketManager()
 
-    # ws = manager.trade(callback=callback, symbols=["BTCUSDT", "ETHUSDT"])
-    # ws = manager.klines(callback=callback, symbols=["BTCUSDT", "ETHUSDT"], interval="Min1")
+    ws = manager.trade(callback=callback, symbols=["BTCUSDT", "ETHUSDT"])
+    ws = manager.klines(callback=callback, symbols=["BTCUSDT", "ETHUSDT"], interval="Min1")
     ws = manager.book_ticker_batch(callback=callback, symbols=["BTCUSDT", "ETHUSDT"])
+    ws = manager.book_ticker(callback=callback, symbols=["BTCUSDT", "ETHUSDT"])
+    ws = manager.diff_depth(callback=callback, symbols=["BTCUSDT", "ETHUSDT"])
+    ws = manager.partial_depth(callback=callback, symbols=["BTCUSDT", "ETHUSDT"])
     await ws.start()
 
 

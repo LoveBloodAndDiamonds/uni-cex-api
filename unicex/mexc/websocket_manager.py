@@ -52,10 +52,10 @@ class WebsocketManager:
 
     def _generate_subscription_message(
         self,
-        market_type: str,
-        channel: str,
+        channel_template: str,
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
+        **template_kwargs: Any,
     ) -> list[str]:
         """Сформировать сообщение для подписки на вебсокет."""
         if symbol and symbols:
@@ -64,9 +64,11 @@ class WebsocketManager:
             raise ValueError("Either symbol or symbols must be provided")
 
         if symbol:
-            params = [f"{market_type}@{channel}@{symbol}"]
+            params = [channel_template.format(symbol=symbol, **template_kwargs)]
         elif symbols:
-            params = [f"{market_type}@{channel}@{symbol}" for symbol in symbols]
+            params = [
+                channel_template.format(symbol=symbol, **template_kwargs) for symbol in symbols
+            ]
 
         return [json.dumps({"method": "SUBSCRIPTION", "params": params})]
 
@@ -91,10 +93,10 @@ class WebsocketManager:
             `Websocket`: Объект для управления вебсокет соединением.
         """
         subscription_messages = self._generate_subscription_message(
-            market_type="spot",
-            channel=f"public.aggre.deals.v3.api.pb@{update_interval}",
+            channel_template="spot@public.aggre.deals.v3.api.pb@{update_interval}@{symbol}",
             symbol=symbol,
             symbols=symbols,
+            update_interval=update_interval,
         )
         return Websocket(
             callback=callback,
@@ -124,23 +126,12 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        if symbol and symbols:
-            raise ValueError("Parameters symbol and symbols cannot be used together")
-        if not (symbol or symbols):
-            raise ValueError("Either symbol or symbols must be provided")
-
-        subscription_messages = []
-
-        if symbol:
-            params = [f"spot@public.kline.v3.api.pb@{symbol}@{interval}"]
-            subscription_messages.append(json.dumps({"method": "SUBSCRIPTION", "params": params}))
-        elif symbols:
-            for sym in symbols:
-                params = [f"spot@public.kline.v3.api.pb@{sym}@{interval}"]
-                subscription_messages.append(
-                    json.dumps({"method": "SUBSCRIPTION", "params": params})
-                )
-
+        subscription_messages = self._generate_subscription_message(
+            channel_template="spot@public.kline.v3.api.pb@{symbol}@{interval}",
+            symbol=symbol,
+            symbols=symbols,
+            interval=interval,
+        )
         return Websocket(
             callback=callback,
             url=self._BASE_SPOT_URL,
@@ -169,23 +160,12 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        if symbol and symbols:
-            raise ValueError("Parameters symbol and symbols cannot be used together")
-        if not (symbol or symbols):
-            raise ValueError("Either symbol or symbols must be provided")
-
-        subscription_messages = []
-
-        if symbol:
-            params = [f"spot@public.aggre.depth.v3.api.pb@{update_speed}@{symbol}"]
-            subscription_messages.append(json.dumps({"method": "SUBSCRIPTION", "params": params}))
-        elif symbols:
-            for sym in symbols:
-                params = [f"spot@public.aggre.depth.v3.api.pb@{update_speed}@{sym}"]
-                subscription_messages.append(
-                    json.dumps({"method": "SUBSCRIPTION", "params": params})
-                )
-
+        subscription_messages = self._generate_subscription_message(
+            channel_template="spot@public.aggre.depth.v3.api.pb@{update_speed}@{symbol}",
+            symbol=symbol,
+            symbols=symbols,
+            update_speed=update_speed,
+        )
         return Websocket(
             callback=callback,
             url=self._BASE_SPOT_URL,
@@ -214,23 +194,12 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        if symbol and symbols:
-            raise ValueError("Parameters symbol and symbols cannot be used together")
-        if not (symbol or symbols):
-            raise ValueError("Either symbol or symbols must be provided")
-
-        subscription_messages = []
-
-        if symbol:
-            params = [f"spot@public.limit.depth.v3.api.pb@{symbol}@{levels}"]
-            subscription_messages.append(json.dumps({"method": "SUBSCRIPTION", "params": params}))
-        elif symbols:
-            for sym in symbols:
-                params = [f"spot@public.limit.depth.v3.api.pb@{sym}@{levels}"]
-                subscription_messages.append(
-                    json.dumps({"method": "SUBSCRIPTION", "params": params})
-                )
-
+        subscription_messages = self._generate_subscription_message(
+            channel_template="spot@public.limit.depth.v3.api.pb@{symbol}@{levels}",
+            symbol=symbol,
+            symbols=symbols,
+            levels=levels,
+        )
         return Websocket(
             callback=callback,
             url=self._BASE_SPOT_URL,
@@ -259,23 +228,12 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        if symbol and symbols:
-            raise ValueError("Parameters symbol and symbols cannot be used together")
-        if not (symbol or symbols):
-            raise ValueError("Either symbol or symbols must be provided")
-
-        subscription_messages = []
-
-        if symbol:
-            params = [f"spot@public.aggre.bookTicker.v3.api.pb@{update_speed}@{symbol}"]
-            subscription_messages.append(json.dumps({"method": "SUBSCRIPTION", "params": params}))
-        elif symbols:
-            for sym in symbols:
-                params = [f"spot@public.aggre.bookTicker.v3.api.pb@{update_speed}@{sym}"]
-                subscription_messages.append(
-                    json.dumps({"method": "SUBSCRIPTION", "params": params})
-                )
-
+        subscription_messages = self._generate_subscription_message(
+            channel_template="spot@public.aggre.bookTicker.v3.api.pb@{update_speed}@{symbol}",
+            symbol=symbol,
+            symbols=symbols,
+            update_speed=update_speed,
+        )
         return Websocket(
             callback=callback,
             url=self._BASE_SPOT_URL,
@@ -302,23 +260,11 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        if symbol and symbols:
-            raise ValueError("Parameters symbol and symbols cannot be used together")
-        if not (symbol or symbols):
-            raise ValueError("Either symbol or symbols must be provided")
-
-        subscription_messages = []
-
-        if symbol:
-            params = [f"spot@public.bookTicker.batch.v3.api.pb@{symbol}"]
-            subscription_messages.append(json.dumps({"method": "SUBSCRIPTION", "params": params}))
-        elif symbols:
-            for sym in symbols:
-                params = [f"spot@public.bookTicker.batch.v3.api.pb@{sym}"]
-                subscription_messages.append(
-                    json.dumps({"method": "SUBSCRIPTION", "params": params})
-                )
-
+        subscription_messages = self._generate_subscription_message(
+            channel_template="spot@public.bookTicker.batch.v3.api.pb@{symbol}",
+            symbol=symbol,
+            symbols=symbols,
+        )
         return Websocket(
             callback=callback,
             url=self._BASE_SPOT_URL,
