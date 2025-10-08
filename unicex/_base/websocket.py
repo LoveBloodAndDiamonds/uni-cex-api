@@ -118,11 +118,11 @@ class Websocket:
 
                 # Цикл получения сообщений
                 while self._running:
-                    message = await conn.recv(decode=True)
+                    message = await conn.recv()
                     await self._handle_message(message)
 
-            except websockets.exceptions.ConnectionClosed:
-                self._logger.error("Websocket connection was closed unexpectedly")
+            except websockets.exceptions.ConnectionClosed as e:
+                self._logger.error(f"Websocket connection was closed unexpectedly: {e}")
                 continue
             finally:
                 await asyncio.sleep(self._reconnect_timeout)
@@ -135,7 +135,8 @@ class Websocket:
             self._last_message_time = time.monotonic()
 
             # Ложим сообщение в очередь, предварительно его сериализуя
-            await self._queue.put(self._decoder.decode(message))
+            decoded_message = self._decoder.decode(message)
+            await self._queue.put(decoded_message)
 
             # Проверяем размер очереди сообщений и выбрасываем ошибку, если он превышает максимальный размер
             self._check_queue_size()

@@ -5,6 +5,7 @@ from collections.abc import Awaitable, Callable, Sequence
 from typing import Any, Literal
 
 import orjson
+from google.protobuf.json_format import MessageToDict
 
 from unicex._base import Websocket
 
@@ -30,8 +31,7 @@ class WebsocketManager:
             if isinstance(message, bytes):
                 wrapper = PushDataV3ApiWrapper()  # noqa
                 wrapper.ParseFromString(message)
-                print(wrapper)
-                return wrapper  # type: ignore
+                return MessageToDict(wrapper, preserving_proto_field_name=True)  # type: ignore
             elif isinstance(message, str):
                 return orjson.loads(message)
             else:
@@ -60,19 +60,12 @@ class WebsocketManager:
         if not (symbol or symbols):
             raise ValueError("Either symbol or symbols must be provided")
 
-        subscription_messages = []
-
         if symbol:
             params = [f"{market_type}@{channel}@{symbol}"]
-            subscription_messages.append(json.dumps({"method": "SUBSCRIPTION", "params": params}))
         elif symbols:
-            for symbol in symbols:
-                params = [f"{market_type}@{channel}@{symbol}"]
-                subscription_messages.append(
-                    json.dumps({"method": "SUBSCRIPTION", "params": params})
-                )
+            params = [f"{market_type}@{channel}@{symbol}" for symbol in symbols]
 
-        return subscription_messages
+        return [json.dumps({"method": "SUBSCRIPTION", "params": params})]
 
     def trade(
         self,
