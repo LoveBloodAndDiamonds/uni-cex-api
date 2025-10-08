@@ -15,8 +15,8 @@ async def main() -> None:
     manager = WebsocketManager()
 
     # ws = manager.trade(callback=callback, symbols=["BTCUSDT", "ETHUSDT"])
-    ws = manager.klines(callback=callback, symbols=["BTCUSDT", "ETHUSDT"], interval="Min1")
-
+    # ws = manager.klines(callback=callback, symbols=["BTCUSDT", "ETHUSDT"], interval="Min1")
+    ws = manager.book_ticker_batch(callback=callback, symbols=["BTCUSDT", "ETHUSDT"])
     await ws.start()
 
 

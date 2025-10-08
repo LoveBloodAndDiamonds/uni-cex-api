@@ -46,6 +46,9 @@ class WebsocketManager:
         """
         self.client = client
         self._ws_kwargs = ws_kwargs
+        self._ws_kwargs.update(
+            ping_message='{"method": "PING"}',
+        )
 
     def _generate_subscription_message(
         self,
@@ -98,18 +101,17 @@ class WebsocketManager:
             url=self._BASE_SPOT_URL,
             subscription_messages=subscription_messages,
             decoder=self._MexcProtobufDecoder,
-            ping_message='{"method": "PING"}',
             **self._ws_kwargs,
         )
 
     def klines(
         self,
         callback: CallbackType,
+        interval: str,
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
-        interval: str = "Min1",
     ) -> Websocket:
-        """Создает вебсокет для получения свечных данных (K-line).
+        """Создает вебсокет для получения K-line (candlestick) данных.
 
         https://mexcdevelop.github.io/apidocs/spot_v3_en/#k-line-streams
 
@@ -117,7 +119,7 @@ class WebsocketManager:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-            interval (`str`): Интервал свечей. Доступные: Min1, Min5, Min15, Min30, Min60, Hour4, Hour8, Day1, Week1, Month1.
+            interval (`Literal[...]`): Интервал K-line.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -135,6 +137,184 @@ class WebsocketManager:
         elif symbols:
             for sym in symbols:
                 params = [f"spot@public.kline.v3.api.pb@{sym}@{interval}"]
+                subscription_messages.append(
+                    json.dumps({"method": "SUBSCRIPTION", "params": params})
+                )
+
+        return Websocket(
+            callback=callback,
+            url=self._BASE_SPOT_URL,
+            subscription_messages=subscription_messages,
+            decoder=self._MexcProtobufDecoder,
+            **self._ws_kwargs,
+        )
+
+    def diff_depth(
+        self,
+        callback: CallbackType,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+        update_speed: Literal["100ms", "10ms"] = "100ms",
+    ) -> Websocket:
+        """Создает вебсокет для получения инкрементальных изменений в книге заявок.
+
+        https://mexcdevelop.github.io/apidocs/spot_v3_en/#diff-depth-stream
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+            update_speed (`Literal["100ms", "10ms"]`): Скорость обновления данных.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        if symbol and symbols:
+            raise ValueError("Parameters symbol and symbols cannot be used together")
+        if not (symbol or symbols):
+            raise ValueError("Either symbol or symbols must be provided")
+
+        subscription_messages = []
+
+        if symbol:
+            params = [f"spot@public.aggre.depth.v3.api.pb@{update_speed}@{symbol}"]
+            subscription_messages.append(json.dumps({"method": "SUBSCRIPTION", "params": params}))
+        elif symbols:
+            for sym in symbols:
+                params = [f"spot@public.aggre.depth.v3.api.pb@{update_speed}@{sym}"]
+                subscription_messages.append(
+                    json.dumps({"method": "SUBSCRIPTION", "params": params})
+                )
+
+        return Websocket(
+            callback=callback,
+            url=self._BASE_SPOT_URL,
+            subscription_messages=subscription_messages,
+            decoder=self._MexcProtobufDecoder,
+            **self._ws_kwargs,
+        )
+
+    def partial_depth(
+        self,
+        callback: CallbackType,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+        levels: Literal["5", "10", "20"] = "5",
+    ) -> Websocket:
+        """Создает вебсокет для получения ограниченной глубины книги заявок.
+
+        https://mexcdevelop.github.io/apidocs/spot_v3_en/#partial-book-depth-streams
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+            levels (`Literal["5", "10", "20"]`): Количество уровней глубины.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        if symbol and symbols:
+            raise ValueError("Parameters symbol and symbols cannot be used together")
+        if not (symbol or symbols):
+            raise ValueError("Either symbol or symbols must be provided")
+
+        subscription_messages = []
+
+        if symbol:
+            params = [f"spot@public.limit.depth.v3.api.pb@{symbol}@{levels}"]
+            subscription_messages.append(json.dumps({"method": "SUBSCRIPTION", "params": params}))
+        elif symbols:
+            for sym in symbols:
+                params = [f"spot@public.limit.depth.v3.api.pb@{sym}@{levels}"]
+                subscription_messages.append(
+                    json.dumps({"method": "SUBSCRIPTION", "params": params})
+                )
+
+        return Websocket(
+            callback=callback,
+            url=self._BASE_SPOT_URL,
+            subscription_messages=subscription_messages,
+            decoder=self._MexcProtobufDecoder,
+            **self._ws_kwargs,
+        )
+
+    def book_ticker(
+        self,
+        callback: CallbackType,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+        update_speed: Literal["100ms", "10ms"] = "100ms",
+    ) -> Websocket:
+        """Создает вебсокет для получения лучших цен покупки и продажи в реальном времени.
+
+        https://mexcdevelop.github.io/apidocs/spot_v3_en/#individual-symbol-book-ticker-streams
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+            update_speed (`Literal["100ms", "10ms"]`): Скорость обновления данных.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        if symbol and symbols:
+            raise ValueError("Parameters symbol and symbols cannot be used together")
+        if not (symbol or symbols):
+            raise ValueError("Either symbol or symbols must be provided")
+
+        subscription_messages = []
+
+        if symbol:
+            params = [f"spot@public.aggre.bookTicker.v3.api.pb@{update_speed}@{symbol}"]
+            subscription_messages.append(json.dumps({"method": "SUBSCRIPTION", "params": params}))
+        elif symbols:
+            for sym in symbols:
+                params = [f"spot@public.aggre.bookTicker.v3.api.pb@{update_speed}@{sym}"]
+                subscription_messages.append(
+                    json.dumps({"method": "SUBSCRIPTION", "params": params})
+                )
+
+        return Websocket(
+            callback=callback,
+            url=self._BASE_SPOT_URL,
+            subscription_messages=subscription_messages,
+            decoder=self._MexcProtobufDecoder,
+            **self._ws_kwargs,
+        )
+
+    def book_ticker_batch(
+        self,
+        callback: CallbackType,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для получения лучших цен покупки и продажи (батч версия).
+
+        https://mexcdevelop.github.io/apidocs/spot_v3_en/#individual-symbol-book-ticker-streams-batch-aggregation
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        if symbol and symbols:
+            raise ValueError("Parameters symbol and symbols cannot be used together")
+        if not (symbol or symbols):
+            raise ValueError("Either symbol or symbols must be provided")
+
+        subscription_messages = []
+
+        if symbol:
+            params = [f"spot@public.bookTicker.batch.v3.api.pb@{symbol}"]
+            subscription_messages.append(json.dumps({"method": "SUBSCRIPTION", "params": params}))
+        elif symbols:
+            for sym in symbols:
+                params = [f"spot@public.bookTicker.batch.v3.api.pb@{sym}"]
                 subscription_messages.append(
                     json.dumps({"method": "SUBSCRIPTION", "params": params})
                 )
