@@ -15,7 +15,7 @@ type CallbackType = Callable[[Any], Awaitable[None]]
 class WebsocketManager:
     """Менеджер асинхронных вебсокетов для Bitget."""
 
-    _BASE_URL: str = "wss://ws.bitget.com/v2/ws/public"
+    _URL: str = "wss://ws.bitget.com/v2/ws/public"
     """Базовый URL для вебсокета."""
 
     def __init__(self, client: Client | None = None, **ws_kwargs: Any) -> None:
@@ -91,7 +91,7 @@ class WebsocketManager:
         )
         return Websocket(
             callback=callback,
-            url=self._BASE_URL,
+            url=self._URL,
             subscription_messages=subsription_messages,
             **self._ws_kwargs,
         )
@@ -124,7 +124,7 @@ class WebsocketManager:
         )
         return Websocket(
             callback=callback,
-            url=self._BASE_URL,
+            url=self._URL,
             subscription_messages=subscription_messages,
             **self._ws_kwargs,
         )
@@ -160,7 +160,7 @@ class WebsocketManager:
         )
         return Websocket(
             callback=callback,
-            url=self._BASE_URL,
+            url=self._URL,
             subscription_messages=subscription_messages,
             **self._ws_kwargs,
         )
@@ -195,7 +195,7 @@ class WebsocketManager:
         )
         return Websocket(
             callback=callback,
-            url=self._BASE_URL,
+            url=self._URL,
             subscription_messages=subscription_messages,
             **self._ws_kwargs,
         )
@@ -226,7 +226,7 @@ class WebsocketManager:
         )
         return Websocket(
             callback=callback,
-            url=self._BASE_URL,
+            url=self._URL,
             subscription_messages=subscription_messages,
             **self._ws_kwargs,
         )

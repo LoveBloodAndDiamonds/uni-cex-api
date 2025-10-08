@@ -14,7 +14,7 @@ type CallbackType = Callable[[Any], Awaitable[None]]
 class WebsocketManager:
     """Менеджер асинхронных вебсокетов для Hyperliquid."""
 
-    _BASE_URL: str = "wss://api.hyperliquid.xyz/ws"
+    _URL: str = "wss://api.hyperliquid.xyz/ws"
     """Базовый URL для вебсокета."""
 
     def __init__(self, client: Client | None = None, **ws_kwargs: Any) -> None:
@@ -58,7 +58,7 @@ class WebsocketManager:
         subscription_message = self._create_subscription_message("allMids", **params)
         return Websocket(
             callback=callback,
-            url=self._BASE_URL,
+            url=self._URL,
             subscription_messages=[subscription_message],
             **self._ws_kwargs,
         )
@@ -76,7 +76,7 @@ class WebsocketManager:
         subscription_message = self._create_subscription_message("notification", user=user)
         return Websocket(
             callback=callback,
-            url=self._BASE_URL,
+            url=self._URL,
             subscription_messages=[subscription_message],
             **self._ws_kwargs,
         )
@@ -94,7 +94,7 @@ class WebsocketManager:
         subscription_message = self._create_subscription_message("webData2", user=user)
         return Websocket(
             callback=callback,
-            url=self._BASE_URL,
+            url=self._URL,
             subscription_messages=[subscription_message],
             **self._ws_kwargs,
         )
@@ -115,7 +115,7 @@ class WebsocketManager:
         )
         return Websocket(
             callback=callback,
-            url=self._BASE_URL,
+            url=self._URL,
             subscription_messages=[subscription_message],
             **self._ws_kwargs,
         )
@@ -147,7 +147,7 @@ class WebsocketManager:
         subscription_message = self._create_subscription_message("l2Book", **params)
         return Websocket(
             callback=callback,
-            url=self._BASE_URL,
+            url=self._URL,
             subscription_messages=[subscription_message],
             **self._ws_kwargs,
         )
@@ -165,7 +165,7 @@ class WebsocketManager:
         subscription_message = self._create_subscription_message("trades", coin=coin)
         return Websocket(
             callback=callback,
-            url=self._BASE_URL,
+            url=self._URL,
             subscription_messages=[subscription_message],
             **self._ws_kwargs,
         )
@@ -183,7 +183,7 @@ class WebsocketManager:
         subscription_message = self._create_subscription_message("orderUpdates", user=user)
         return Websocket(
             callback=callback,
-            url=self._BASE_URL,
+            url=self._URL,
             subscription_messages=[subscription_message],
             **self._ws_kwargs,
         )
@@ -201,7 +201,7 @@ class WebsocketManager:
         subscription_message = self._create_subscription_message("userEvents", user=user)
         return Websocket(
             callback=callback,
-            url=self._BASE_URL,
+            url=self._URL,
             subscription_messages=[subscription_message],
             **self._ws_kwargs,
         )
@@ -226,7 +226,7 @@ class WebsocketManager:
         subscription_message = self._create_subscription_message("userFills", **params)
         return Websocket(
             callback=callback,
-            url=self._BASE_URL,
+            url=self._URL,
             subscription_messages=[subscription_message],
             **self._ws_kwargs,
         )
@@ -244,7 +244,7 @@ class WebsocketManager:
         subscription_message = self._create_subscription_message("userFundings", user=user)
         return Websocket(
             callback=callback,
-            url=self._BASE_URL,
+            url=self._URL,
             subscription_messages=[subscription_message],
             **self._ws_kwargs,
         )
@@ -264,7 +264,7 @@ class WebsocketManager:
         )
         return Websocket(
             callback=callback,
-            url=self._BASE_URL,
+            url=self._URL,
             subscription_messages=[subscription_message],
             **self._ws_kwargs,
         )
@@ -282,7 +282,7 @@ class WebsocketManager:
         subscription_message = self._create_subscription_message("activeAssetCtx", coin=coin)
         return Websocket(
             callback=callback,
-            url=self._BASE_URL,
+            url=self._URL,
             subscription_messages=[subscription_message],
             **self._ws_kwargs,
         )
@@ -303,7 +303,7 @@ class WebsocketManager:
         )
         return Websocket(
             callback=callback,
-            url=self._BASE_URL,
+            url=self._URL,
             subscription_messages=[subscription_message],
             **self._ws_kwargs,
         )
@@ -321,7 +321,7 @@ class WebsocketManager:
         subscription_message = self._create_subscription_message("userTwapSliceFills", user=user)
         return Websocket(
             callback=callback,
-            url=self._BASE_URL,
+            url=self._URL,
             subscription_messages=[subscription_message],
             **self._ws_kwargs,
         )
@@ -339,7 +339,7 @@ class WebsocketManager:
         subscription_message = self._create_subscription_message("userTwapHistory", user=user)
         return Websocket(
             callback=callback,
-            url=self._BASE_URL,
+            url=self._URL,
             subscription_messages=[subscription_message],
             **self._ws_kwargs,
         )
@@ -357,7 +357,7 @@ class WebsocketManager:
         subscription_message = self._create_subscription_message("bbo", coin=coin)
         return Websocket(
             callback=callback,
-            url=self._BASE_URL,
+            url=self._URL,
             subscription_messages=[subscription_message],
             **self._ws_kwargs,
         )
