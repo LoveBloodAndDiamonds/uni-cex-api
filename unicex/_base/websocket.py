@@ -37,8 +37,8 @@ class Websocket:
         url: str,
         subscription_messages: list[dict] | list[str] | None = None,
         ping_interval: int | float = 10,
-        ping_message: str | None = None,
-        pong_message: str | None = None,
+        ping_message: str | Callable | None = None,
+        pong_message: str | Callable | None = None,
         no_message_reconnect_timeout: int | float | None = 60,
         reconnect_timeout: int | float | None = 5,
         worker_count: int = 2,
@@ -53,8 +53,8 @@ class Websocket:
             url (`str`): URL вебсокета.
             subscription_messages (`list[dict] | list[str] | None`): Сообщения для подписки после подключения.
             ping_interval (`int | float`): Интервал отправки ping, сек.
-            ping_message (`str | None`): Сообщение для ping (если не указано — используется ping‑frame).
-            pong_message (`str | None`): Сообщение для pong (если не указано — используется pong‑frame).
+            ping_message (`str | Callable | None`): Сообщение для ping, или функция генерации ping (если не указано — используется ping‑frame).
+            pong_message (`str | Callable | None`): Сообщение для pong, или функция генерации pong (если не указано — используется pong‑frame).
             no_message_reconnect_timeout (`int | float | None`): Таймаут ожидания без сообщений до рестарта, сек.
             reconnect_timeout (`int | float | None`): Пауза перед переподключением, сек.
             worker_count (`int`): Количество рабочих задач для обработки сообщений.
@@ -123,7 +123,8 @@ class Websocket:
 
             except websockets.exceptions.ConnectionClosed as e:
                 self._logger.error(f"Websocket connection was closed unexpectedly: {e}")
-                continue
+            except Exception as e:
+                self._logger.error(f"Unexpected error in websosocket connection: {e}")
             finally:
                 await asyncio.sleep(self._reconnect_timeout)
                 await self._after_disconnect()
@@ -216,8 +217,12 @@ class Websocket:
         """Периодически отправляет пользовательский ping."""
         while self._running and self._ping_message:
             try:
-                await conn.send(self._ping_message)
-                self._logger.debug(f"Sent ping message: {self._ping_message}")
+                if isinstance(self._ping_message, Callable):
+                    ping_message = self._ping_message()
+                else:
+                    ping_message = self._ping_message
+                await conn.send(ping_message)
+                self._logger.debug(f"Sent ping message: {ping_message}")
             except Exception as e:
                 self._logger.error(f"Error sending ping: {e}")
                 return

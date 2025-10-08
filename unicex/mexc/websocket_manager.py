@@ -18,10 +18,10 @@ type CallbackType = Callable[[Any], Awaitable[None]]
 class WebsocketManager:
     """Менеджер асинхронных вебсокетов для Mexc."""
 
-    _BASE_SPOT_URL: str = "wss://wbs-api.mexc.com/ws"
+    _SPOT_URL: str = "wss://wbs-api.mexc.com/ws"
     """Базовый URL для вебсокета на спот."""
 
-    _BASE_FUTURES_URL: str = "wss://contract.mexc.com/edge"
+    _FUTURES_URL: str = "wss://contract.mexc.com/edge"
     """Базовый URL для вебсокета на фьючерсы."""
 
     class _MexcProtobufDecoder:
@@ -98,7 +98,7 @@ class WebsocketManager:
         """Шорткат для создания вебсокета."""
         return Websocket(
             callback=callback,
-            url=self._BASE_SPOT_URL,
+            url=self._SPOT_URL,
             subscription_messages=subscription_messages,
             decoder=self._MexcProtobufDecoder,
             ping_message='{"method": "PING"}',
@@ -111,7 +111,7 @@ class WebsocketManager:
         """Шорткат для создания фьючерсного вебсокета."""
         return Websocket(
             callback=callback,
-            url=self._BASE_FUTURES_URL,
+            url=self._FUTURES_URL,
             subscription_messages=subscription_messages,
             ping_message='{"method": "ping"}',
             **self._ws_kwargs,

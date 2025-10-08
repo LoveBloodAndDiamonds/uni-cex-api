@@ -15,19 +15,19 @@ type CallbackType = Callable[[Any], Awaitable[None]]
 class WebsocketManager:
     """Менеджер асинхронных вебсокетов для Bybit."""
 
-    _BASE_SPOT_URL: str = "wss://stream.bybit.com/v5/public/spot"
+    _SPOT_URL: str = "wss://stream.bybit.com/v5/public/spot"
     """Базовый URL для вебсокета на спот."""
 
-    _BASE_LINEAR_URL: str = "wss://stream.bybit.com/v5/public/linear"
+    _LINEAR_URL: str = "wss://stream.bybit.com/v5/public/linear"
     """Базовый URL для вебсокета на USDT/USDC перпетуалы и фьючерсы."""
 
-    _BASE_INVERSE_URL: str = "wss://stream.bybit.com/v5/public/inverse"
+    _INVERSE_URL: str = "wss://stream.bybit.com/v5/public/inverse"
     """Базовый URL для вебсокета на инверсные контракты."""
 
-    _BASE_OPTION_URL: str = "wss://stream.bybit.com/v5/public/option"
+    _OPTION_URL: str = "wss://stream.bybit.com/v5/public/option"
     """Базовый URL для вебсокета на опционы."""
 
-    _BASE_PRIVATE_URL: str = "wss://stream.bybit.com/v5/private"
+    _PRIVATE_URL: str = "wss://stream.bybit.com/v5/private"
     """Базовый URL для приватных вебсокетов."""
 
     def __init__(self, client: Client | None = None, **ws_kwargs: Any) -> None:
@@ -72,15 +72,15 @@ class WebsocketManager:
             `str`: URL для вебсокета.
         """
         if category == "spot":
-            return self._BASE_SPOT_URL
+            return self._SPOT_URL
         elif category == "linear":
-            return self._BASE_LINEAR_URL
+            return self._LINEAR_URL
         elif category == "inverse":
-            return self._BASE_INVERSE_URL
+            return self._INVERSE_URL
         elif category == "option":
-            return self._BASE_OPTION_URL
+            return self._OPTION_URL
         elif category == "private":
-            return self._BASE_PRIVATE_URL
+            return self._PRIVATE_URL
         else:
             raise ValueError(f"Unsupported category: {category}")
 
