@@ -105,7 +105,7 @@ class Adapter:
         for item in raw_data["data"]:
             symbol = item["symbol"]
             result[symbol] = TickerDailyItem(
-                p=float(item["riseFallRate"]) * 100,
+                p=round(float(item["riseFallRate"]) * 100, 2),
                 v=float(item["volume24"]) * Adapter._get_contract_size(symbol),
                 q=float(item["amount24"]),
             )

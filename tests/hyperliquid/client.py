@@ -16,8 +16,6 @@ async def main() -> None:
 
     time_start = time.time()
 
-    return
-
     response = await client.place_order(
         asset=0,
         is_buy=True,
