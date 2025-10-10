@@ -199,12 +199,11 @@ class Websocket:
             try:
                 data = await self._queue.get()  # Получаем сообщение
                 await self._callback(data)  # Передаем в callback
+                self._queue.task_done()
             except asyncio.exceptions.CancelledError:
                 break
             except Exception as e:
                 self._logger.error(f"Error({type(e)}) while processing message: {e}")
-
-            self._queue.task_done()
 
     def _generate_ws_kwargs(self) -> dict:
         """Генерирует аргументы для запуска вебсокета."""
