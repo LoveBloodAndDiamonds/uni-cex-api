@@ -1,7 +1,7 @@
 __all__ = ["Adapter"]
 
 from typing import Any
-from unicex.types import KlineDict
+from unicex.types import KlineDict, TradeDict
 from unicex.utils import catch_adapter_errors, decorate_all_methods
 
 

@@ -119,6 +119,8 @@ type OpenInterestDict = dict[str, OpenInterestItem]
 
 
 class LiquidationDict(TypedDict):
+    """Модель ликвидации."""
+
     t: int
     """Время. В миллисекундах."""
 
@@ -140,28 +142,27 @@ type AccountType = Literal["SPOT", "FUTURES"]
 
 
 class TickerInfoItem(TypedDict):
-    """Информация о размерах тиков, ступеней цены и множителя контракта (если есть) для тикера."""
+    """Информация о размерах тиков, ступеней цены и множителя контракта (если есть) для тикера.
 
-    tick_precision: int
+    На некоторых биржах удобнее делать округление через precisions, на некоторых через step,
+    потому что иногда встречаются шаги, которые не являются степенью 10. Поэтому обязательно
+    должны быть определены tick_precision ИЛИ tick_step, а так же size_precision ИЛИ size_step.
+    """
+
+    tick_precision: int | None
     """Количество знаков после запятой для цены."""
 
-    size_precision: int
+    tick_step: float | None
+    """Шаг одного деления для цены."""
+
+    size_precision: int | None
     """Количество знаков после запятой для объема."""
+
+    size_step: float | None
+    """Шаг одного деления для объема."""
 
     contract_size: float | None
     """Множитель контракта (если есть)."""
-
-    min_market_size: float | None
-    """Минимальный размер рыночного ордера в монетах (если есть)."""
-
-    max_market_size: float | None
-    """Максимальный размер рыночного ордера в монетах (если есть)."""
-
-    min_limit_size: float | None
-    """Минимальный размер лимитного ордера в монетах (если есть)."""
-
-    max_limit_size: float | None
-    """Максимальный размер лимитного ордера в монетах (если есть)."""
 
 
 type TickersInfoDict = dict[str, TickerInfoItem]

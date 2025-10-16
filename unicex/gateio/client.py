@@ -4,7 +4,7 @@ import hashlib
 import hmac
 import json
 import time
-from typing import Any
+from typing import Any, Literal
 
 from unicex._base import BaseClient
 from unicex.exceptions import NotAuthorized
@@ -691,7 +691,7 @@ class Client(BaseClient):
 
     async def futures_contracts(
         self,
-        settle: str,
+        settle: Literal["usdt", "btc"],
         limit: int | None = None,
         offset: int | None = None,
     ) -> dict:

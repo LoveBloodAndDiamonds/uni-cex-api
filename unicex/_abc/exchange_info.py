@@ -1,10 +1,12 @@
 __all__ = ["IExchangeInfo"]
 
 import asyncio
+import math
 from abc import ABC, abstractmethod
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
+import aiohttp
 from loguru import logger
 
 from unicex.enums import MarketType
@@ -31,6 +33,9 @@ class IExchangeInfo(ABC):
 
     _logger: "loguru.Logger"
     """Логгер для записи сообщений о работе с биржей."""
+
+    exchange_name: ClassVar[str] = "not_defined_exchange"
+    """Название биржи, на которой работает класс."""
 
     def __init_subclass__(cls, **kwargs):
         """Инициализация подкласса. Функция нужна, чтобы у каждого наследника была своя копия атрибутов."""
@@ -63,7 +68,7 @@ class IExchangeInfo(ABC):
             try:
                 await cls.load_exchange_info()
             except Exception as e:
-                cls._logger.error(f"Error loading exchange data: {e}")
+                cls._logger.error(f"Error loading exchange data for {cls.exchange_name}: {e}")
             for _ in range(update_interval_seconds):
                 if not cls._running:
                     break
@@ -72,8 +77,32 @@ class IExchangeInfo(ABC):
     @classmethod
     async def load_exchange_info(cls) -> None:
         """Принудительно вызывает загрузку информации о бирже."""
-        await cls._load_exchange_info()
+        async with aiohttp.ClientSession() as session:
+            try:
+                await cls._load_spot_exchange_info(session)
+                cls._logger.debug(f"Loaded spot exchange data for {cls.exchange_name} ")
+            except Exception as e:
+                cls._logger.error(f"Error loading spot exchange data for {cls.exchange_name}: {e}")
+            try:
+                await cls._load_futures_exchange_info(session)
+                cls._logger.debug(f"Loaded futures exchange data for {cls.exchange_name} ")
+            except Exception as e:
+                cls._logger.error(
+                    f"Error loading futures exchange data for {cls.exchange_name}: {e}"
+                )
         cls._loaded = True
+
+    @classmethod
+    @abstractmethod
+    async def _load_spot_exchange_info(cls, session: aiohttp.ClientSession) -> None:
+        """Загружает информацию о бирже для спотового рынка."""
+        ...
+
+    @classmethod
+    @abstractmethod
+    async def _load_futures_exchange_info(cls, session: aiohttp.ClientSession) -> None:
+        """Загружает информацию о бирже для фьючерсного рынка."""
+        ...
 
     @classmethod
     def get_ticker_info(
@@ -93,38 +122,40 @@ class IExchangeInfo(ABC):
         return cls.get_ticker_info(symbol, MarketType.FUTURES)
 
     @classmethod
-    @abstractmethod
-    async def _load_exchange_info(cls) -> None:
-        """Загружает информацию о бирже."""
-        ...
-
-    @classmethod
     def round_price(
         cls, symbol: str, price: float, market_type: MarketType = MarketType.SPOT
-    ) -> float:
+    ) -> float:  # type: ignore
         """Округляет цену до ближайшего возможного значения."""
         try:
             if market_type == MarketType.SPOT:
                 precision = cls._tickers_info[symbol]["tick_precision"]
+                step = cls._tickers_info[symbol]["tick_step"]
             else:
                 precision = cls._futures_tickers_info[symbol]["tick_precision"]
+                step = cls._futures_tickers_info[symbol]["tick_step"]
+            if precision:
+                return cls._floor_round(price, precision)
+            return cls._floor_to_step(price, step)  # type: ignore
         except KeyError as e:
             cls._handle_key_error(e, symbol)
-        return round(price, precision)
 
     @classmethod
     def round_quantity(
         cls, symbol: str, quantity: float, market_type: MarketType = MarketType.SPOT
-    ) -> float:
+    ) -> float:  # type: ignore
         """Округляет объем до ближайшего возможного значения."""
         try:
             if market_type == MarketType.SPOT:
                 precision = cls._tickers_info[symbol]["size_precision"]
+                step = cls._tickers_info[symbol]["size_step"]
             else:
                 precision = cls._futures_tickers_info[symbol]["size_precision"]
+                step = cls._futures_tickers_info[symbol]["size_step"]
+            if precision:
+                return cls._floor_round(quantity, precision)
+            return cls._floor_to_step(quantity, step)  # type: ignore
         except KeyError as e:
             cls._handle_key_error(e, symbol)
-        return round(quantity, precision)
 
     @classmethod
     def round_futures_price(cls, symbol: str, price: float) -> float:
@@ -137,31 +168,40 @@ class IExchangeInfo(ABC):
         return cls.round_quantity(symbol, quantity, MarketType.FUTURES)
 
     @staticmethod
-    def _step_size_to_precision(tick_size: str | int | float) -> int:
-        """Возвращает precision для round(x, precision) по шагу цены/объёма.
+    def _floor_to_step(value: float, step: float) -> float:
+        """Округляет число вниз до ближайшего кратного шага.
 
-        Работает только для шагов — степеней 10.
+        Принимает:
+            value (float): Исходное число.
+            step: (float): Шаг округления (> 0).
+
+        Возвращает:
+            Число, округлённое вниз до кратного step.
+
         Примеры:
-            "0.0001" ->  4
-            "0.01"   ->  2
-            "0.1"    ->  1
-            "1"      ->  0
-            "10"     -> -1
-            "100"    -> -2
+            >>> floor_to_step(0.16, 0.05)
+            0.15
+            >>> floor_to_step(16, 5)
+            15
+            >>> floor_to_step(1.2345, 0.01)
+            1.23
+            >>> floor_to_step(-1.23, 0.1)
+            -1.3
+            >>> floor_to_step(100, 25)
+            100
+
         """
-        d = Decimal(str(tick_size)).normalize()
-        if d <= 0:
-            raise ValueError("tick_size must be > 0")
+        if step <= 0:
+            raise ValueError("step must be > 0")
+        result = math.floor(value / step) * step
+        digits = abs(Decimal(str(step)).as_tuple().exponent)  # type: ignore
+        return round(result, digits)
 
-        t = d.as_tuple()
-        # Степень десяти даёт один значащий разряд = 1 (1eN)
-        if t.digits == (1,):
-            return -t.exponent  # type: ignore
-
-        # Иначе это не степень 10 (например, 0.5, 5 и т.п.)
-        raise ValueError(
-            f"tick_size={tick_size} is not a power of 10; cannot map to round() precision."
-        )
+    @staticmethod
+    def _floor_round(value: float, digits: int) -> float:
+        """Округляет число вниз до указанного количества знаков после запятой."""
+        factor = 10**digits
+        return math.floor(value * factor) / factor
 
     @classmethod
     def _handle_key_error(cls, exception: KeyError, symbol: str) -> None:
