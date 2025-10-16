@@ -36,10 +36,6 @@ class ExchangeInfo(IExchangeInfo):
         tickers_info = {}
         exchange_info = await Client(session).get_instruments("SWAP")
         for el in exchange_info["data"]:
-            if el["instId"] == "BTC-USDT-SWAP":
-                from pprint import pp
-
-                pp(el)
             tickers_info[el["instId"]] = TickerInfoItem(
                 tick_precision=None,
                 tick_step=float(el["tickSz"]),

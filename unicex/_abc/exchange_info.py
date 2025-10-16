@@ -3,6 +3,7 @@ __all__ = ["IExchangeInfo"]
 import asyncio
 import math
 from abc import ABC, abstractmethod
+from decimal import Decimal
 from typing import TYPE_CHECKING, ClassVar
 
 import aiohttp
@@ -192,7 +193,9 @@ class IExchangeInfo(ABC):
         """
         if step <= 0:
             raise ValueError("step must be > 0")
-        return math.floor(value / step) * step
+        result = math.floor(value / step) * step
+        digits = abs(Decimal(str(step)).as_tuple().exponent)  # type: ignore
+        return round(result, digits)
 
     @staticmethod
     def _floor_round(value: float, digits: int) -> float:
