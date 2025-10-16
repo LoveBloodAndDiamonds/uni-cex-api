@@ -1,8 +1,8 @@
 __all__ = ["IExchangeInfo"]
 
 import asyncio
+import math
 from abc import ABC, abstractmethod
-from decimal import Decimal
 from typing import TYPE_CHECKING, ClassVar
 
 import aiohttp
@@ -123,30 +123,38 @@ class IExchangeInfo(ABC):
     @classmethod
     def round_price(
         cls, symbol: str, price: float, market_type: MarketType = MarketType.SPOT
-    ) -> float:
+    ) -> float:  # type: ignore
         """Округляет цену до ближайшего возможного значения."""
         try:
             if market_type == MarketType.SPOT:
                 precision = cls._tickers_info[symbol]["tick_precision"]
+                step = cls._tickers_info[symbol]["tick_step"]
             else:
                 precision = cls._futures_tickers_info[symbol]["tick_precision"]
+                step = cls._futures_tickers_info[symbol]["tick_step"]
+            if precision:
+                return round(price, precision)
+            return cls._floor_to_step(price, step)  # type: ignore
         except KeyError as e:
             cls._handle_key_error(e, symbol)
-        return round(price, precision)
 
     @classmethod
     def round_quantity(
         cls, symbol: str, quantity: float, market_type: MarketType = MarketType.SPOT
-    ) -> float:
+    ) -> float:  # type: ignore
         """Округляет объем до ближайшего возможного значения."""
         try:
             if market_type == MarketType.SPOT:
                 precision = cls._tickers_info[symbol]["size_precision"]
+                step = cls._tickers_info[symbol]["size_step"]
             else:
                 precision = cls._futures_tickers_info[symbol]["size_precision"]
+                step = cls._futures_tickers_info[symbol]["size_step"]
+            if precision:
+                return round(quantity, precision)
+            return cls._floor_to_step(quantity, step)  # type: ignore
         except KeyError as e:
             cls._handle_key_error(e, symbol)
-        return round(quantity, precision)
 
     @classmethod
     def round_futures_price(cls, symbol: str, price: float) -> float:
@@ -159,31 +167,32 @@ class IExchangeInfo(ABC):
         return cls.round_quantity(symbol, quantity, MarketType.FUTURES)
 
     @staticmethod
-    def _value_to_precision(value: str | int | float) -> int:
-        """Возвращает precision для round(x, precision) по шагу цены/объёма.
+    def _floor_to_step(value: float, step: float) -> float:
+        """Округляет число вниз до ближайшего кратного шага.
 
-        Работает только для шагов — степеней 10.
+        Принимает:
+            value (float): Исходное число.
+            step: (float): Шаг округления (> 0).
+
+        Возвращает:
+            Число, округлённое вниз до кратного step.
+
         Примеры:
-            "0.0001" ->  4
-            "0.01"   ->  2
-            "0.1"    ->  1
-            "1"      ->  0
-            "10"     -> -1
-            "100"    -> -2
+            >>> floor_to_step(0.16, 0.05)
+            0.15
+            >>> floor_to_step(16, 5)
+            15
+            >>> floor_to_step(1.2345, 0.01)
+            1.23
+            >>> floor_to_step(-1.23, 0.1)
+            -1.3
+            >>> floor_to_step(100, 25)
+            100
+
         """
-        d = Decimal(str(value)).normalize()
-        if d <= 0:
-            raise ValueError("value must be > 0")
-
-        t = d.as_tuple()
-        # Степень десяти даёт один значащий разряд = 1 (1eN)
-        if t.digits == (1,):
-            return -t.exponent  # type: ignore
-
-        # Иначе это не степень 10 (например, 0.5, 5 и т.п.)
-        raise ValueError(
-            f"tick_size={value} is not a power of 10; cannot map to round() precision."
-        )
+        if step <= 0:
+            raise ValueError("step must be > 0")
+        return math.floor(value / step) * step
 
     @classmethod
     def _handle_key_error(cls, exception: KeyError, symbol: str) -> None:

@@ -21,8 +21,10 @@ class ExchangeInfo(IExchangeInfo):
         exchange_info = await Client(session).get_instruments("SPOT")
         for el in exchange_info["data"]:
             tickers_info[el["instId"]] = TickerInfoItem(
-                tick_precision=cls._value_to_precision(el["tickSz"]),
-                size_precision=cls._value_to_precision(el["lotSz"]),
+                tick_precision=None,
+                tick_step=float(el["tickSz"]),
+                size_precision=None,
+                size_step=float(el["lotSz"]),
                 contract_size=1,
             )
 
@@ -35,8 +37,10 @@ class ExchangeInfo(IExchangeInfo):
         exchange_info = await Client(session).get_instruments("SWAP")
         for el in exchange_info["data"]:
             tickers_info[el["instId"]] = TickerInfoItem(
-                tick_precision=cls._value_to_precision(el["tickSz"]),
-                size_precision=cls._value_to_precision(el["lotSz"]),
+                tick_precision=None,
+                tick_step=float(el["tickSz"]),
+                size_precision=None,
+                size_step=float(el["lotSz"]),
                 contract_size=float(el["ctVal"]),
             )
 

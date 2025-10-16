@@ -21,10 +21,10 @@ class ExchangeInfo(IExchangeInfo):
         tickers_info: dict[str, TickerInfoItem] = {}
         for symbol_info in exchange_info["result"]["list"]:
             tickers_info[symbol_info["symbol"]] = TickerInfoItem(
-                tick_precision=cls._value_to_precision(symbol_info["priceFilter"]["tickSize"]),
-                size_precision=cls._value_to_precision(
-                    symbol_info["lotSizeFilter"]["basePrecision"]
-                ),
+                tick_step=float(symbol_info["priceFilter"]["tickSize"]),
+                tick_precision=None,
+                size_step=float(symbol_info["lotSizeFilter"]["basePrecision"]),
+                size_precision=None,
                 contract_size=1,
             )
 
@@ -38,8 +38,10 @@ class ExchangeInfo(IExchangeInfo):
         for symbol_info in exchange_info["result"]["list"]:
             try:
                 tickers_info[symbol_info["symbol"]] = TickerInfoItem(
-                    tick_precision=cls._value_to_precision(symbol_info["priceFilter"]["tickSize"]),
-                    size_precision=cls._value_to_precision(symbol_info["lotSizeFilter"]["qtyStep"]),
+                    tick_step=float(symbol_info["priceFilter"]["tickSize"]),
+                    tick_precision=None,
+                    size_step=float(symbol_info["lotSizeFilter"]["qtyStep"]),
+                    size_precision=None,
                     contract_size=1,
                 )
             except ValueError as e:

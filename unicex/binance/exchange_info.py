@@ -29,8 +29,10 @@ class ExchangeInfo(IExchangeInfo):
             price_filter = filters["PRICE_FILTER"]
             lot_size_filter = filters["LOT_SIZE"]
             tickers_info[symbol_info["symbol"]] = TickerInfoItem(
-                tick_precision=cls._value_to_precision(price_filter["tickSize"]),
-                size_precision=cls._value_to_precision(lot_size_filter["stepSize"]),
+                tick_step=float(price_filter["tickSize"]),
+                tick_precision=None,
+                size_step=float(lot_size_filter["stepSize"]),
+                size_precision=None,
                 contract_size=1,
             )
 
@@ -50,8 +52,10 @@ class ExchangeInfo(IExchangeInfo):
             price_filter = filters["PRICE_FILTER"]
             lot_size_filter = filters["LOT_SIZE"]
             tickers_info[symbol_info["symbol"]] = TickerInfoItem(
-                tick_precision=cls._value_to_precision(price_filter["tickSize"]),
-                size_precision=cls._value_to_precision(lot_size_filter["stepSize"]),
+                tick_step=float(price_filter["tickSize"]),
+                tick_precision=None,
+                size_step=float(lot_size_filter["stepSize"]),
+                size_precision=None,
                 contract_size=1,
             )
 

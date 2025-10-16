@@ -22,7 +22,9 @@ class ExchangeInfo(IExchangeInfo):
         for symbol_info in exchange_info["data"]:
             tickers_info[symbol_info["symbol"]] = TickerInfoItem(
                 tick_precision=int(symbol_info["pricePrecision"]),
+                tick_step=None,
                 size_precision=int(symbol_info["quantityPrecision"]),
+                size_step=None,
                 contract_size=1,
             )
 
@@ -37,7 +39,9 @@ class ExchangeInfo(IExchangeInfo):
             symbol = symbol_info["symbol"]
             tickers_info[symbol] = TickerInfoItem(
                 tick_precision=int(symbol_info["pricePlace"]),
+                tick_step=None,
                 size_precision=int(symbol_info["volumePlace"]),
+                size_step=None,
                 contract_size=float(symbol_info["sizeMultiplier"]),
             )
 

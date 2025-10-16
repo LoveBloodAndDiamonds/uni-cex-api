@@ -26,8 +26,10 @@ class ExchangeInfo(IExchangeInfo):
         exchange_info = await Client(session).futures_contract_detail()
         for el in exchange_info["data"]:
             tickers_info[el["symbol"]] = TickerInfoItem(
-                tick_precision=cls._value_to_precision(el["priceUnit"]),
+                tick_precision=el["priceUnit"],
+                tick_step=None,
                 size_precision=el["amountScale"],
+                size_step=None,
                 contract_size=el["contractSize"],
             )
 
