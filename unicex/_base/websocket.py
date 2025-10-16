@@ -41,7 +41,7 @@ class Websocket:
         pong_message: str | Callable | None = None,
         no_message_reconnect_timeout: int | float | None = 60,
         reconnect_timeout: int | float | None = 5,
-        worker_count: int = 2,
+        worker_count: int = 1,
         logger: LoggerLike | None = None,
         decoder: type[_DecoderProtocol] = _JsonDecoder,
         **kwargs: Any,  # Не дадим сломаться, если юзер передал ненужные аргументы
@@ -238,3 +238,7 @@ class Websocket:
                 await self.restart()
                 return
             await asyncio.sleep(1)
+
+    def __repr__(self) -> str:
+        """Репрезентация вебсокета."""
+        return f"<Websocket(url={self._url[:15]}...)>"
