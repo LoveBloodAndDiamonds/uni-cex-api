@@ -17,19 +17,30 @@ class ExchangeInfo(IExchangeInfo):
     @classmethod
     async def _load_spot_exchange_info(cls, session: aiohttp.ClientSession) -> None:
         """Загружает информацию о бирже для спотового рынка."""
-        ...
+        exchange_info = await Client(session).exchange_info()
+        tickers_info = {}
+        for el in exchange_info["symbols"]:
+            tickers_info[el["symbol"]] = TickerInfoItem(
+                tick_precision=int(el["quotePrecision"]),
+                tick_step=None,
+                size_precision=int(el["baseAssetPrecision"]),
+                size_step=None,
+                contract_size=1,
+            )
+
+        cls._tickers_info = tickers_info
 
     @classmethod
     async def _load_futures_exchange_info(cls, session: aiohttp.ClientSession) -> None:
         """Загружает информацию о бирже для фьючерсного рынка."""
-        tickers_info = {}
         exchange_info = await Client(session).futures_contract_detail()
+        tickers_info = {}
         for el in exchange_info["data"]:
             tickers_info[el["symbol"]] = TickerInfoItem(
-                tick_precision=el["priceUnit"],
-                tick_step=None,
-                size_precision=el["amountScale"],
-                size_step=None,
+                tick_precision=None,
+                tick_step=el["priceUnit"],
+                size_precision=None,
+                size_step=el["contractSize"],
                 contract_size=el["contractSize"],
             )
 
