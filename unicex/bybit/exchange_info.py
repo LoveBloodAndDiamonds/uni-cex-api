@@ -14,7 +14,7 @@ class ExchangeInfo(IExchangeInfo):
     @classmethod
     async def _load_spot_exchange_info(cls, session: aiohttp.ClientSession) -> None:
         """Загружает информацию о бирже для спотового рынка."""
-        r = 1 / 0
+        ...
 
     @classmethod
     async def _load_futures_exchange_info(cls, session: aiohttp.ClientSession) -> None:
