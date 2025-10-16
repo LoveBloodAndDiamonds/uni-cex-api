@@ -5,6 +5,8 @@ import aiohttp
 from unicex._abc import IExchangeInfo
 from unicex.types import TickerInfoItem
 
+from .client import Client
+
 
 class ExchangeInfo(IExchangeInfo):
     """Предзагружает информацию о тикерах для биржи Mexc."""
@@ -20,15 +22,13 @@ class ExchangeInfo(IExchangeInfo):
     @classmethod
     async def _load_futures_exchange_info(cls, session: aiohttp.ClientSession) -> None:
         """Загружает информацию о бирже для фьючерсного рынка."""
-        futures_tickers_info = {}
-        url = "https://contract.mexc.com/api/v1/contract/detail"
-        async with session.get(url) as response:
-            data = await response.json()
-            for el in data["data"]:
-                futures_tickers_info[el["symbol"]] = TickerInfoItem(
-                    tick_precision=cls._step_size_to_precision(el["priceUnit"]),
-                    size_precision=el["amountScale"],
-                    contract_size=el["contractSize"],
-                )
+        tickers_info = {}
+        exchange_info = await Client(session).futures_contract_detail()
+        for el in exchange_info["data"]:
+            tickers_info[el["symbol"]] = TickerInfoItem(
+                tick_precision=cls._value_to_precision(el["priceUnit"]),
+                size_precision=el["amountScale"],
+                contract_size=el["contractSize"],
+            )
 
-        cls._futures_tickers_info = futures_tickers_info
+        cls._futures_tickers_info = tickers_info

@@ -381,128 +381,32 @@ def _generate_subscription_message(
 
 Готово — после вставки в `unicex/<exchange>/websocket_manager.py` код должен выглядеть и вести себя идентично существующим методам по стилю и способу создания `Websocket` соединений.
 
-  # EXCHANGE INFO
+# EXCHANGE INFO
 
-  Цель: сгенерировать реализацию класса `ExchangeInfo` в `unicex/<exchange>/exchange_info.py`, которая подготавливает данные о тикерах (spot и, при наличии, futures) на основе распарсенной
-  документации биржи.
+  Цель: сгенерировать реализацию класса `ExchangeInfo` в `unicex/<exchange>/exchange_info.py`, которая подготавливает данные о тикерах (spot и, при наличии, futures) на основе распарсенной документации биржи.
 
   Что я передаю модели как вход:
-  - `exchange_name`: название биржи (`str`), используется в логировании и строках.
-  - `docs_url`: ссылка на раздел документации, откуда получены данные.
-  - `exchange_docs`: структурированные данные из документации (JSON/словарь). Внутри указываю списки инструментов и их поля. Пример структуры:
-    ```json
-    {
-      "spot": [
-        {
-          "symbol": "BTCUSDT",
-          "price_tick": "0.1",
-          "quantity_step": "0.0001",
-          "contract_size": null,
-          "extra": { ... }  // любые дополнительные поля, которые помогут понять формат
-        }
-      ],
-      "futures": [
-        {
-          "symbol": "BTCUSDT",
-          "price_tick": "0.5",
-          "quantity_step": "0.001",
-          "contract_size": "0.01",
-          "delivery_type": "perpetual"
-        }
-      ]
-    }
+  - `exchange_name`: строка с названием биржи, которую нужно проставить в `exchange_name`.
+  - `пример запроса и ответа на биржу из документации содержащий нужную информацию по округлению.
 
-  - опционально: словарь с описанием необходимых HTTP‑эндпоинтов, если нужно обращаться к живому API (api_endpoints.spot, api_endpoints.futures и т.п.).
-
-  Контекст кода (важно для стиля):
-
-  - Файл: unicex/<exchange>/exchange_info.py.
-  - Класс наследует IExchangeInfo и реализует _load_exchange_info.
-  - Используем aiohttp.ClientSession для HTTP‑запросов, как в unicex/okx/exchange_info.py.
-  - Вспомогательные методы и свойства (_tickers_info, _futures_tickers_info, _logger, _step_size_to_precision) уже реализованы в базовом классе.
-  - Типы данных берём из unicex.types.
+  Контекст кода:
+  - Файл `unicex/<exchange>/exchange_info.py` наследуется от `IExchangeInfo` и должен копировать структуру `unicex/okx/exchange_info.py`.
+  - В файле уже объявлены `__all__`, импорт `aiohttp`, базовый интерфейс и класс `ExchangeInfo` с докстрингом.
+  - Для заполнения данных необходимо использовать `TickerInfoItem` из `unicex.types` и клиент конкретной биржи (`from .client import Client`).
 
   Требования к результату (строго):
+  - Реализовать `_load_spot_exchange_info` и `_load_futures_exchange_info` по образцу `unicex/okx/exchange_info.py`, без добавления новых вспомогательных методов.
+  - Каждая функция должна вызывать соответствующий метод клиента, пройтись по списку инструментов и собрать словарь `TickerInfoItem`, маппя `tick_precision`, `size_precision` и `contract_size`.
+  - Для вычисления precision обязательно использовать `cls._value_to_precision(...)` из базового класса, не писать собственные функции округления.
+  - Для спота заполнять `contract_size=1`. Для фьючерсов брать размер контракта из ответа, преобразуя к `float`; если поле отсутствует, использовать `1.0`.
+  - Всегда сохранять итог в `cls._tickers_info` и `cls._futures_tickers_info` (если данных нет, установить пустой словарь и добавить поясняющий комментарий).
 
-  - Вернуть полный контент файла unicex/<exchange>/exchange_info.py с готовой реализацией.
-  - Объявить __all__, импорты и класс ExchangeInfo в точности как в проекте.
-  - Реализовать _load_exchange_info как асинхронный метод, использующий aiohttp для получения информации из API или подготовленных данных, и заполняющий cls._tickers_info и при наличии
-    cls._futures_tickers_info.
-  - Для каждой записи создавать TickerInfoItem с полями:
-      - tick_precision: вычисляется через cls._step_size_to_precision, если шаг — степень 10; иначе явно рассчитать количество знаков после запятой или пометить допущение # NOTE:.
-      - size_precision: то же правило для шага объёма.
-      - contract_size: float(...), 1, либо None, если поле отсутствует.
-  - Если futures/деривативные данные не требуются или отсутствуют в документации — оставить cls._futures_tickers_info = {} и добавить понятный комментарий/лог.
-  - Добавить cls._logger.debug(...) после загрузки каждого набора данных (spot/futures) с информативными сообщениями.
-  - Обрабатывать сетевые ошибки: использовать response.raise_for_status() или проверку status, выбрасывая понятный RuntimeError с описанием запроса/статуса.
-  - Не менять другие части проекта и не добавлять лишние зависимости.
-  - Докстринги соблюдать в стиле проекта:
-
-    """Предзагружает информацию о тикерах для биржи <Exchange>."""
-    """
-    """Загружает информацию о бирже."""
-
-  Шаблон реализации (адаптируй под документацию):
-
-  __all__ = ["ExchangeInfo"]
-
-  import aiohttp
-
-  from unicex._abc import IExchangeInfo
-  from unicex.types import TickerInfoItem
-
-
-  class ExchangeInfo(IExchangeInfo):
-      """Предзагружает информацию о тикерах для биржи {exchange_name}."""
-
-      @classmethod
-      async def _load_exchange_info(cls) -> None:
-          """Загружает информацию о бирже."""
-          async with aiohttp.ClientSession() as session:
-              tickers_info: dict[str, TickerInfoItem] = {}
-              spot_url = "<spot endpoint>"
-              async with session.get(spot_url) as response:
-                  response.raise_for_status()
-                  data = await response.json()
-                  for item in <извлечение списка инструментов>:
-                      price_tick = <доступ к шагу цены>
-                      quantity_step = <доступ к шагу объёма>
-                      tickers_info[item["symbol"]] = TickerInfoItem(
-                          tick_precision=cls._step_size_to_precision(price_tick),
-                          size_precision=cls._step_size_to_precision(quantity_step),
-                          contract_size=None,
-                      )
-
-              cls._tickers_info = tickers_info
-              cls._logger.debug("{exchange_name} spot exchange info loaded")
-
-              futures_url = "<futures endpoint>"  # если есть
-              futures_tickers_info: dict[str, TickerInfoItem] = {}
-              async with session.get(futures_url) as response:
-                  response.raise_for_status()
-                  data = await response.json()
-                  for item in <извлечение списка деривативов>:
-                      futures_tickers_info[item["symbol"]] = TickerInfoItem(
-                          tick_precision=cls._step_size_to_precision(<price_tick>),
-                          size_precision=cls._step_size_to_precision(<quantity_step>),
-                          contract_size=float(item["contractSize"]),
-                      )
-
-              cls._futures_tickers_info = futures_tickers_info
-              cls._logger.debug("{exchange_name} futures exchange info loaded")
-
-  Дополнительные указания:
-
-  - Если документация уже содержит готовые значения precision (например, "pricePrecision": 5) — используем их напрямую вместо _step_size_to_precision.
-  - При необходимости преобразовать символы (например, baseAsset + quoteAsset) — строим строку в соответствии с биржей.
-  - Если найденные шаги не являются степенью десяти, попытаться вычислить precision через Decimal; при сомнениях добавить комментарий # NOTE: и чётко описать предположение.
-  - Чётко отразить в коде структуру ответа, используя говорящие имена переменных.
-  - Не допускать "магических" строк без пояснений — если шаги берутся из вложенных полей, оставь короткий комментарий.
-  - Если документация описывает несколько типов рынков (spot, futures, options) — реализуй только те, которые присутствуют во входных данных; остальные явно проигнорируй или пометь
-    комментариями.
-  - В случае отсутствия данных по какой-либо секции (например, futures), не оставляй старые данные: явно присвой пустой словарь и залогируй, что данные не загружены.
+  Дополнительные указания и проверки качества:
+  - Поддерживай формат докстрингов проекта: краткое описание на русском + пустая строка + (при необходимости) ссылка на документацию; для приватных методов — однострочные докстринги.
+  - Добавь по одному лаконичному комментарию в каждую функцию, чтобы пояснить основную операцию (например, зачем формируется словарь).
+  - Импорты ограничь стандартным набором (`aiohttp`, `TickerInfoItem`, `Client`); никакие дополнительные зависимости не нужны.
+  - Сохраняй типы значений ровно в том виде, как ожидает модель данных: символы — ключи словаря, размеры — `int` precision, contract size — `float`.
 
   Формат ожидаемого ответа от модели:
-
-  - Один блок кода с полным содержимым файла unicex/<exchange>/exchange_info.py.
-  - Блок должен сразу быть пригоден для вставки в проект без дополнительных правок.
+  - Верни полный блок класса `ExchangeInfo` с реализованными методами, готовый к замене заглушек в `unicex/<exchange>/exchange_info.py`.
+  - Код должен оставаться компактным: два асинхронных метода без дополнительных функций, с читаемыми именами переменных и аккуратным форматированием.

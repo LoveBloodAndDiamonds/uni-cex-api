@@ -159,7 +159,7 @@ class IExchangeInfo(ABC):
         return cls.round_quantity(symbol, quantity, MarketType.FUTURES)
 
     @staticmethod
-    def _step_size_to_precision(value: str | int | float) -> int:
+    def _value_to_precision(value: str | int | float) -> int:
         """Возвращает precision для round(x, precision) по шагу цены/объёма.
 
         Работает только для шагов — степеней 10.
