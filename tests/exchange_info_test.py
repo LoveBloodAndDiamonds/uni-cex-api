@@ -13,9 +13,9 @@ async def main() -> None:
 
     while True:
         await asyncio.sleep(1)
-        print(str(OkxExchangeInfo._tickers_info)[:200], "\n\n")
-        print(str(OkxExchangeInfo._futures_tickers_info)[:200], "\n\n")
-        print(str(MexcExchangeInfo._futures_tickers_info)[:200], "\n\n")
+        print(str(OkxExchangeInfo._tickers_info)[:100], "\n\n")
+        print(str(OkxExchangeInfo._futures_tickers_info)[:100], "\n\n")
+        print(str(MexcExchangeInfo._futures_tickers_info)[:100], "\n\n")
 
         await asyncio.sleep(10)
 

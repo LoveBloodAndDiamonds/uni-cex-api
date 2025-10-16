@@ -119,6 +119,8 @@ type OpenInterestDict = dict[str, OpenInterestItem]
 
 
 class LiquidationDict(TypedDict):
+    """Модель ликвидации."""
+
     t: int
     """Время. В миллисекундах."""
 
@@ -150,18 +152,6 @@ class TickerInfoItem(TypedDict):
 
     contract_size: float | None
     """Множитель контракта (если есть)."""
-
-    min_market_size: float | None
-    """Минимальный размер рыночного ордера в монетах (если есть)."""
-
-    max_market_size: float | None
-    """Максимальный размер рыночного ордера в монетах (если есть)."""
-
-    min_limit_size: float | None
-    """Минимальный размер лимитного ордера в монетах (если есть)."""
-
-    max_limit_size: float | None
-    """Максимальный размер лимитного ордера в монетах (если есть)."""
 
 
 type TickersInfoDict = dict[str, TickerInfoItem]

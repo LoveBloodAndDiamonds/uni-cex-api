@@ -3,8 +3,9 @@ __all__ = ["IExchangeInfo"]
 import asyncio
 from abc import ABC, abstractmethod
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
+import aiohttp
 from loguru import logger
 
 from unicex.enums import MarketType
@@ -31,6 +32,9 @@ class IExchangeInfo(ABC):
 
     _logger: "loguru.Logger"
     """Логгер для записи сообщений о работе с биржей."""
+
+    exchange_name: ClassVar[str] = "not_defined_exchange"
+    """Название биржи, на которой работает класс."""
 
     def __init_subclass__(cls, **kwargs):
         """Инициализация подкласса. Функция нужна, чтобы у каждого наследника была своя копия атрибутов."""
@@ -63,7 +67,7 @@ class IExchangeInfo(ABC):
             try:
                 await cls.load_exchange_info()
             except Exception as e:
-                cls._logger.error(f"Error loading exchange data: {e}")
+                cls._logger.error(f"Error loading exchange data for {cls.exchange_name}: {e}")
             for _ in range(update_interval_seconds):
                 if not cls._running:
                     break
@@ -72,8 +76,32 @@ class IExchangeInfo(ABC):
     @classmethod
     async def load_exchange_info(cls) -> None:
         """Принудительно вызывает загрузку информации о бирже."""
-        await cls._load_exchange_info()
+        async with aiohttp.ClientSession() as session:
+            try:
+                await cls._load_spot_exchange_info(session)
+                cls._logger.debug(f"Loaded spot exchange data for {cls.exchange_name} ")
+            except Exception as e:
+                cls._logger.error(f"Error loading spot exchange data for {cls.exchange_name}: {e}")
+            try:
+                await cls._load_futures_exchange_info(session)
+                cls._logger.debug(f"Loaded futures exchange data for {cls.exchange_name} ")
+            except Exception as e:
+                cls._logger.error(
+                    f"Error loading futures exchange data for {cls.exchange_name}: {e}"
+                )
         cls._loaded = True
+
+    @classmethod
+    @abstractmethod
+    async def _load_spot_exchange_info(cls, session: aiohttp.ClientSession) -> None:
+        """Загружает информацию о бирже для спотового рынка."""
+        ...
+
+    @classmethod
+    @abstractmethod
+    async def _load_futures_exchange_info(cls, session: aiohttp.ClientSession) -> None:
+        """Загружает информацию о бирже для фьючерсного рынка."""
+        ...
 
     @classmethod
     def get_ticker_info(
@@ -91,12 +119,6 @@ class IExchangeInfo(ABC):
     def get_futures_ticker_info(cls, symbol: str) -> TickerInfoItem:
         """Возвращает информацию о тикере фьючерсов по его символу."""
         return cls.get_ticker_info(symbol, MarketType.FUTURES)
-
-    @classmethod
-    @abstractmethod
-    async def _load_exchange_info(cls) -> None:
-        """Загружает информацию о бирже."""
-        ...
 
     @classmethod
     def round_price(
@@ -137,7 +159,7 @@ class IExchangeInfo(ABC):
         return cls.round_quantity(symbol, quantity, MarketType.FUTURES)
 
     @staticmethod
-    def _step_size_to_precision(tick_size: str | int | float) -> int:
+    def _step_size_to_precision(value: str | int | float) -> int:
         """Возвращает precision для round(x, precision) по шагу цены/объёма.
 
         Работает только для шагов — степеней 10.
@@ -149,9 +171,9 @@ class IExchangeInfo(ABC):
             "10"     -> -1
             "100"    -> -2
         """
-        d = Decimal(str(tick_size)).normalize()
+        d = Decimal(str(value)).normalize()
         if d <= 0:
-            raise ValueError("tick_size must be > 0")
+            raise ValueError("value must be > 0")
 
         t = d.as_tuple()
         # Степень десяти даёт один значащий разряд = 1 (1eN)
@@ -160,7 +182,7 @@ class IExchangeInfo(ABC):
 
         # Иначе это не степень 10 (например, 0.5, 5 и т.п.)
         raise ValueError(
-            f"tick_size={tick_size} is not a power of 10; cannot map to round() precision."
+            f"tick_size={value} is not a power of 10; cannot map to round() precision."
         )
 
     @classmethod
