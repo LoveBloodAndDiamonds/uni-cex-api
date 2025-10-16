@@ -1,12 +1,15 @@
 __all__ = ["Adapter"]
 
+from typing import Any
 
 from unicex.types import (
     KlineDict,
+    LiquidationDict,
     OpenInterestDict,
     OpenInterestItem,
     TickerDailyDict,
     TickerDailyItem,
+    TradeDict,
 )
 from unicex.utils import catch_adapter_errors, decorate_all_methods
 
@@ -123,5 +126,83 @@ class Adapter:
             for kline in sorted(
                 raw_data["result"]["list"],
                 key=lambda x: int(x[0]),
+            )
+        ]
+
+    @staticmethod
+    def Klines_message(raw_msg: Any) -> list[KlineDict]:
+        """Преобразует вебсокет-сообщение с данными о свечах в унифицированный формат.
+
+        Параметры:
+        raw_msg (`Any`): Сырое сообщение из вебсокета Bybit.
+
+        Возвращает:
+          `list[KlineDict]`: Список свечей в унифицированном формате.
+        """
+        symbol = raw_msg["topic"].split(".")[-1]
+        return [
+            KlineDict(
+                s=symbol,
+                t=kline["start"],
+                o=float(kline["open"]),
+                h=float(kline["high"]),
+                l=float(kline["low"]),
+                c=float(kline["close"]),
+                v=float(kline["volume"]),
+                q=float(kline["turnover"]),
+                T=kline["end"],
+                x=kline["confirm"],
+            )
+            for kline in sorted(
+                raw_msg["data"],
+                key=lambda x: int(x["start"]),
+            )
+        ]
+
+    @staticmethod
+    def trades_message(raw_msg: Any) -> list[TradeDict]:
+        """Преобразует вебсокет-сообщение с данными о сделках в унифицированный формат.
+
+        Параметры:
+        raw_msg (`Any`): Сырое сообщение из вебсокета Bybit.
+
+        Возвращает:
+          `list[TradeDict]`: Список сделок в унифицированном формате.
+        """
+        return [
+            TradeDict(
+                t=trade["T"],
+                s=trade["s"],
+                S=trade["S"].upper(),
+                p=float(trade["p"]),
+                v=float(trade["v"]),
+            )
+            for trade in sorted(
+                raw_msg["data"],
+                key=lambda x: int(x["T"]),
+            )
+        ]
+
+    @staticmethod
+    def liquidations_message(raw_msg: Any) -> list[LiquidationDict]:
+        """Преобразует вебсокет-сообщение с данными о ликвидациях в унифицированный формат.
+
+        Параметры:
+        raw_msg (`Any`): Сырое сообщение из вебсокета Bybit.
+
+        Возвращает:
+          `list[LiquidationDict]`: Список ликвидаций в унифицированном формате.
+        """
+        return [
+            LiquidationDict(
+                t=liquidation["T"],
+                s=liquidation["s"],
+                S=liquidation["S"].upper(),
+                v=float(liquidation["v"]),
+                p=float(liquidation["p"]),
+            )
+            for liquidation in sorted(
+                raw_msg["data"],
+                key=lambda x: int(x["T"]),
             )
         ]

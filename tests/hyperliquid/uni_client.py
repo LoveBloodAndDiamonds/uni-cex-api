@@ -8,7 +8,7 @@ import asyncio
 async def main() -> None:
     """Main entry point for the application."""
     await ExchangeInfo.start()
-    await asyncio.sleep(2)
+    await asyncio.sleep(3)
 
     print(ExchangeInfo.resolve_spot_symbol("@38"))  # @52
 
@@ -18,12 +18,14 @@ async def main() -> None:
 
     from pprint import pp
 
-    resp = await client.ticker_24hr(resolve_symbols=True)
+    resp = await client.futures_last_price()
+
+    raise Exception(resp)
 
     # resp = await client.client.spot_meta_and_asset_contexts()
 
-    pp(resp["UBTC"])
-    print(len(resp))
+    # pp(resp["UBTC"])
+    # print(len(resp))
 
     # print(len(spot_meta_and_asset_contexts[0]["universe"]))
     # print(len(spot_meta_and_asset_contexts[0]["tokens"]))

@@ -78,7 +78,7 @@ class Adapter:
         Возвращает:
             dict[str, float]: Словарь тикеров и последних цен.
         """
-        return {k: v for k, v in raw_data.items() if not k.startswith("@")}
+        return {k: float(v) for k, v in raw_data.items() if not k.startswith("@")}
 
     @staticmethod
     def ticker_24hr(raw_data: list, resolve_symbols: bool) -> TickerDailyDict:
@@ -106,7 +106,7 @@ class Adapter:
                 mark_px = float(item.get("markPx") or "0")
                 day_ntl_vlm = float(item.get("dayNtlVlm") or "0")
 
-                p = ((mark_px - prev_day_px) / prev_day_px * 100) if prev_day_px else 0.0
+                p = round(((mark_px - prev_day_px) / prev_day_px * 100), 2) if prev_day_px else 0.0
                 v = (day_ntl_vlm / mid_px) if mid_px else 0.0
                 q = day_ntl_vlm
 
