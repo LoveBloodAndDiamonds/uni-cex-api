@@ -126,7 +126,7 @@ class WebsocketManager:
             **self._ws_kwargs,
         )
 
-    def klines(
+    def kline(
         self,
         callback: CallbackType,
         category: Literal["spot", "linear", "inverse", "option"],
@@ -170,7 +170,7 @@ class WebsocketManager:
             **self._ws_kwargs,
         )
 
-    def public_trade(
+    def trade(
         self,
         callback: CallbackType,
         category: Literal["spot", "linear", "inverse", "option"],

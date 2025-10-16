@@ -18,9 +18,9 @@ async def main() -> None:
 
     # ws = manager.all_liquidation(**kwargs)
     # ws = manager.orderbook(**kwargs)
-    # ws = manager.klines(**kwargs, interval="1")
+    ws = manager.klines(**kwargs, interval="1")
     # ws = manager.public_trade(**kwargs)
-    ws = manager.ticker(**kwargs)  # type: ignore
+    # ws = manager.ticker(**kwargs)  # type: ignore
     # ws = manager.liquidation(**kwargs)
 
     await ws.start()

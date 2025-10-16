@@ -5,7 +5,7 @@ from typing import Any, overload
 
 from unicex._abc import IUniWebsocketManager
 from unicex._base import Websocket
-from unicex.enums import Timeframe
+from unicex.enums import Exchange, Timeframe
 from unicex.types import LoggerLike
 
 from .adapter import Adapter
@@ -72,7 +72,13 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета для управления соединением.
         """
-        raise NotImplementedError()
+        return self._websocket_manager.kline(
+            callback=self._make_wrapper(self._adapter.Klines_message, callback),
+            category="spot",
+            interval=timeframe.to_exchange_format(Exchange.BYBIT),  # type: ignore
+            symbol=symbol,
+            symbols=symbols,
+        )
 
     @overload
     def futures_klines(
@@ -114,7 +120,13 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        return self._websocket_manager.kline(
+            callback=self._make_wrapper(self._adapter.Klines_message, callback),
+            category="linear",
+            interval=timeframe.to_exchange_format(Exchange.BYBIT),  # type: ignore
+            symbol=symbol,
+            symbols=symbols,
+        )
 
     @overload
     def trades(
@@ -152,7 +164,12 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        return self._websocket_manager.trade(
+            callback=self._make_wrapper(self._adapter.trades_message, callback),
+            category="spot",
+            symbol=symbol,
+            symbols=symbols,
+        )
 
     @overload
     def aggtrades(
@@ -228,7 +245,12 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        return self._websocket_manager.trade(
+            callback=self._make_wrapper(self._adapter.trades_message, callback),
+            category="linear",
+            symbol=symbol,
+            symbols=symbols,
+        )
 
     @overload
     def futures_aggtrades(

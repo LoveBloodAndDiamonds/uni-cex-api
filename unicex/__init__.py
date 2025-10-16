@@ -26,6 +26,7 @@ __all__ = [
     "OpenInterestItem",
     "TickerInfoItem",
     "TickersInfoDict",
+    "LiquidationDict",
     # Interfaces
     "IUniClient",
     "IUniWebsocketManager",
@@ -93,7 +94,21 @@ from ._base import BaseClient, Websocket
 # enums, mappers, types
 from .enums import Exchange, MarketType, Side, Timeframe
 from .mapper import get_uni_client, get_uni_websocket_manager, get_exchange_info
-from .types import *
+from .types import (
+    TickerDailyDict,
+    TickerDailyItem,
+    KlineDict,
+    TradeDict,
+    AggTradeDict,
+    RequestMethod,
+    LoggerLike,
+    AccountType,
+    OpenInterestDict,
+    OpenInterestItem,
+    TickerInfoItem,
+    TickersInfoDict,
+    LiquidationDict,
+)
 
 # exchanges
 

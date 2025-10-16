@@ -13,6 +13,7 @@ __all__ = [
     "OpenInterestItem",
     "TickerInfoItem",
     "TickersInfoDict",
+    "LiquidationDict",
 ]
 
 from logging import Logger as LoggingLogger
@@ -115,6 +116,23 @@ class OpenInterestItem(TypedDict):
 
 type OpenInterestDict = dict[str, OpenInterestItem]
 """Модель открытого интереса."""
+
+
+class LiquidationDict(TypedDict):
+    t: int
+    """Время. В миллисекундах."""
+
+    s: str
+    """Символ."""
+
+    S: Literal["BUY", "SELL"]
+    """Сторона."""
+
+    v: float
+    """Объем ликвидации. В монетах."""
+
+    p: float
+    """Цена ликвидации."""
 
 
 type AccountType = Literal["SPOT", "FUTURES"]
