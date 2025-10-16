@@ -29,7 +29,7 @@ class ExchangeInfo(IExchangeInfo):
                     contract_size=1,
                 )
             except ValueError as e:
-                cls._logger.debug(
+                cls._logger.trace(
                     f"ValueError on {cls.exchange_name} by {symbol_info['symbol']}: {e}"
                 )
 
@@ -50,6 +50,6 @@ class ExchangeInfo(IExchangeInfo):
                     contract_size=float(contract["quanto_multiplier"]),
                 )
             except ValueError as e:
-                cls._logger.debug(f"ValueError on {cls.exchange_name} by {contract['name']}: {e}")
+                cls._logger.trace(f"ValueError on {cls.exchange_name} by {contract['name']}: {e}")
 
         cls._futures_tickers_info = tickers_info

@@ -3,6 +3,7 @@ __all__ = ["ExchangeInfo"]
 import aiohttp
 
 from unicex._abc import IExchangeInfo
+from unicex.types import TickerInfoItem
 
 from .client import Client
 
@@ -25,11 +26,25 @@ class ExchangeInfo(IExchangeInfo):
     _futures_meta: dict = {}
     """Словарь с метаинформацией о фьючерсном рынке."""
 
+    # DOCS: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/tick-and-lot-size
+
     @classmethod
     async def _load_spot_exchange_info(cls, session: aiohttp.ClientSession) -> None:
         """Загружает информацию о бирже для спотового рынка."""
         cls._spot_meta = await Client(session).spot_metadata()
         cls._build_spot_mappings(cls._spot_meta)
+
+        tickers_info: dict[str, TickerInfoItem] = {}
+        for symbol_info in cls._spot_meta["tokens"]:
+            tickers_info[symbol_info["name"]] = TickerInfoItem(
+                tick_step=None,
+                tick_precision=int(symbol_info["weiDecimals"]),
+                size_step=None,
+                size_precision=int(symbol_info["szDecimals"]),
+                contract_size=1,
+            )
+
+        cls._tickers_info = tickers_info
 
     @classmethod
     async def _load_futures_exchange_info(cls, session: aiohttp.ClientSession) -> None:

@@ -133,7 +133,7 @@ class IExchangeInfo(ABC):
                 precision = cls._futures_tickers_info[symbol]["tick_precision"]
                 step = cls._futures_tickers_info[symbol]["tick_step"]
             if precision:
-                return round(price, precision)
+                return cls._floor_round(price, precision)
             return cls._floor_to_step(price, step)  # type: ignore
         except KeyError as e:
             cls._handle_key_error(e, symbol)
@@ -151,7 +151,7 @@ class IExchangeInfo(ABC):
                 precision = cls._futures_tickers_info[symbol]["size_precision"]
                 step = cls._futures_tickers_info[symbol]["size_step"]
             if precision:
-                return round(quantity, precision)
+                return cls._floor_round(quantity, precision)
             return cls._floor_to_step(quantity, step)  # type: ignore
         except KeyError as e:
             cls._handle_key_error(e, symbol)
@@ -193,6 +193,12 @@ class IExchangeInfo(ABC):
         if step <= 0:
             raise ValueError("step must be > 0")
         return math.floor(value / step) * step
+
+    @staticmethod
+    def _floor_round(value: float, digits: int) -> float:
+        """Округляет число вниз до указанного количества знаков после запятой."""
+        factor = 10**digits
+        return math.floor(value * factor) / factor
 
     @classmethod
     def _handle_key_error(cls, exception: KeyError, symbol: str) -> None:
