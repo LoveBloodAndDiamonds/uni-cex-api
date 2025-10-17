@@ -19,9 +19,9 @@ from .bybit import UniClient as BybitUniClient
 from .bybit import UniWebsocketManager as BybitUniWebsocketManager
 from .enums import Exchange
 from .exceptions import NotSupported
-from .gateio import ExchangeInfo as GateioExchangeInfo
-from .gateio import UniClient as GateioUniClient
-from .gateio import UniWebsocketManager as GateioUniWebsocketManager
+from .gate import ExchangeInfo as GateioExchangeInfo
+from .gate import UniClient as GateioUniClient
+from .gate import UniWebsocketManager as GateioUniWebsocketManager
 from .hyperliquid import ExchangeInfo as HyperliquidExchangeInfo
 from .hyperliquid import UniClient as HyperliquidUniClient
 from .hyperliquid import UniWebsocketManager as HyperliquidUniWebsocketManager
@@ -36,7 +36,7 @@ _UNI_CLIENT_MAPPER: dict[Exchange, type[IUniClient]] = {
     Exchange.BINANCE: BinanceUniClient,
     Exchange.BITGET: BitgetUniClient,
     Exchange.BYBIT: BybitUniClient,
-    Exchange.GATEIO: GateioUniClient,
+    Exchange.GATE: GateioUniClient,
     Exchange.HYPERLIQUID: HyperliquidUniClient,
     Exchange.MEXC: MexcUniClient,
     Exchange.OKX: OkxUniClient,
@@ -47,7 +47,7 @@ _UNI_WS_MANAGER_MAPPER: dict[Exchange, type[IUniWebsocketManager]] = {
     Exchange.BINANCE: BinanceUniWebsocketManager,
     Exchange.BITGET: BitgetUniWebsocketManager,
     Exchange.BYBIT: BybitUniWebsocketManager,
-    Exchange.GATEIO: GateioUniWebsocketManager,
+    Exchange.GATE: GateioUniWebsocketManager,
     Exchange.HYPERLIQUID: HyperliquidUniWebsocketManager,
     Exchange.MEXC: MexcUniWebsocketManager,
     Exchange.OKX: OkxUniWebsocketManager,
@@ -58,7 +58,7 @@ _EXCHANGE_INFO_MAPPER: dict[Exchange, type[IExchangeInfo]] = {
     Exchange.BINANCE: BinanceExchangeInfo,
     Exchange.BITGET: BitgetExchangeInfo,
     Exchange.BYBIT: BybitExchangeInfo,
-    Exchange.GATEIO: GateioExchangeInfo,
+    Exchange.GATE: GateioExchangeInfo,
     Exchange.HYPERLIQUID: HyperliquidExchangeInfo,
     Exchange.MEXC: MexcExchangeInfo,
     Exchange.OKX: OkxExchangeInfo,

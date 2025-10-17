@@ -57,16 +57,22 @@ class Adapter:
 
         # NOTE: Обратите внимание, изменение цены в случае с OKX возвращается относительно открытия 1 day свечи.
         """
-        return {
-            item["instId"]: TickerDailyItem(
-                p=round(
-                    (float(item["last"]) - float(item["open24h"])) / float(item["open24h"]) * 100, 2
-                ),
-                v=float(item["vol24h"]),
-                q=float(item["volCcy24h"]),
-            )
-            for item in raw_data["data"]
-        }
+        result = {}
+        for item in raw_data["data"]:
+            try:
+                result[item["instId"]] = TickerDailyItem(
+                    p=round(
+                        (float(item["last"]) - float(item["open24h"]))
+                        / float(item["open24h"])
+                        * 100,
+                        2,
+                    ),
+                    v=float(item["vol24h"]),
+                    q=float(item["volCcy24h"]),
+                )
+            except (ValueError, TypeError, KeyError):
+                continue
+        return result
 
     @staticmethod
     def futures_ticker_24hr(raw_data: dict) -> TickerDailyDict:
@@ -88,7 +94,13 @@ class Adapter:
     @staticmethod
     def last_price(raw_data: dict) -> dict[str, float]:
         """Преобразует данные о последней цене в унифицированный формат."""
-        return {item["instId"]: float(item["last"]) for item in raw_data["data"]}
+        result = {}
+        for item in raw_data["data"]:
+            try:
+                result[item["instId"]] = float(item["last"])
+            except (ValueError, TypeError, KeyError):
+                continue
+        return result
 
     @staticmethod
     def klines(raw_data: dict, symbol: str) -> list[KlineDict]:

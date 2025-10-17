@@ -1,4 +1,4 @@
-from unicex.gateio import UniClient
+from unicex.gate import UniClient
 
 
 import asyncio

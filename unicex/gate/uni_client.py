@@ -104,7 +104,7 @@ class UniClient(IUniClient[Client]):
             list[KlineDict]: Список свечей для тикера.
         """
         interval = (
-            interval.to_exchange_format(Exchange.GATEIO, MarketType.SPOT)
+            interval.to_exchange_format(Exchange.GATE, MarketType.SPOT)
             if isinstance(interval, Timeframe)
             else interval
         )
@@ -138,7 +138,7 @@ class UniClient(IUniClient[Client]):
             list[KlineDict]: Список свечей для тикера.
         """
         interval = (
-            interval.to_exchange_format(Exchange.GATEIO, MarketType.FUTURES)
+            interval.to_exchange_format(Exchange.GATE, MarketType.FUTURES)
             if isinstance(interval, Timeframe)
             else interval
         )

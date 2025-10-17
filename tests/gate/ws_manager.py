@@ -1,7 +1,7 @@
 import asyncio
 from operator import call
 
-from unicex.gateio import WebsocketManager
+from unicex.gate import WebsocketManager
 
 
 async def callback(msg):

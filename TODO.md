@@ -1,10 +1,9 @@
 - Как реализовать типы (quantity, price и т.д.) в сырых клиентах? str | int | float?
 - На фьючерсах WS OKX возвращают объем в контрактах
-- Что должно быть в utils а что в extra?
 - Способы авторизации слишком сильно отличаются на каждой бирже
 - Отрефакторить Okx Websocket Manager
 - NotSupported вместо NotImplementedError
 - там где нет futures_trades возвращать trades вебсокет и наоборот
 - добавить ликвидации в вебсокет юни менеджер
 - добавить orderbook в вебсокет юни менеджер
-- переделать GATEIO на GATE
+- добавить min_order_size,max_order_size в ExchangeInfo

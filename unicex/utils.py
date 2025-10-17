@@ -208,7 +208,7 @@ def symbol_to_exchange_format(
             return symbol_upper.replace("USDT", "-USDT-SWAP")
         elif market_type == MarketType.SPOT:
             return symbol_upper.replace("USDT", "-USDT")
-    elif exchange == Exchange.GATEIO:
+    elif exchange == Exchange.GATE:
         return symbol_upper.replace("USDT", "_USDT")
     elif exchange == Exchange.HYPERLIQUID:
         if market_type == MarketType.FUTURES:
