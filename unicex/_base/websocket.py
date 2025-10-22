@@ -17,7 +17,7 @@ from unicex.types import LoggerLike
 class Websocket:
     """Базовый класс асинхронного вебсокета."""
 
-    MAX_QUEUE_SIZE: int = 100
+    MAX_QUEUE_SIZE: int = 500
     """Максимальная длина очереди."""
 
     class _DecoderProtocol(Protocol):
@@ -111,25 +111,27 @@ class Websocket:
     async def _connect(self) -> None:
         """Подключается к вебсокету и настраивает соединение."""
         self._logger.debug(f"Establishing connection with {self._url}")
-        while self._running:
-            async with websockets.connect(uri=self._url, **self._generate_ws_kwargs()) as conn:
-                try:
-                    self._logger.info(f"Websocket connection was established to {self._url}")
-                    await self._after_connect(conn)
+        async for conn in websockets.connect(uri=self._url, **self._generate_ws_kwargs()):
+            try:
+                self._logger.info(f"Websocket connection was established to {self._url}")
+                await self._after_connect(conn)
 
-                    # Цикл получения сообщений
-                    while self._running:
-                        message = await conn.recv()
-                        await self._handle_message(message)
+                # Цикл получения сообщений
+                while self._running:
+                    message = await conn.recv()
+                    await self._handle_message(message)
 
-                except websockets.exceptions.ConnectionClosed as e:
-                    self._logger.error(f"Websocket connection was closed unexpectedly: {e}")
-                except Exception as e:
-                    self._logger.error(f"Unexpected error in websosocket connection: {e}")
-                finally:
-                    if self._running:
-                        await asyncio.sleep(self._reconnect_timeout)
-                        await self._after_disconnect()
+            except websockets.exceptions.ConnectionClosed as e:
+                self._logger.error(f"Websocket connection was closed unexpectedly: {e}")
+            except Exception as e:
+                self._logger.error(f"Unexpected error in websosocket connection: {e}")
+            finally:
+                # Делаем реконнект только если вебсокет активен, иначе выходим из итератора
+                if self._running:
+                    await asyncio.sleep(self._reconnect_timeout)
+                    await self._after_disconnect()
+                else:
+                    return  # Выходим из итератора, если вебсокет уже выключен
 
     async def _handle_message(self, message: str | bytes) -> None:
         """Обрабатывает входящее сообщение вебсокета."""
