@@ -247,14 +247,16 @@ class Client(BaseClient):
         """
         params = {"coin": coin}
 
-        return await self._make_request("GET", "/api/v2/account/funding-assets", params=params)
+        return await self._make_request(
+            "GET", "/api/v2/account/funding-assets", params=params, signed=True
+        )
 
     async def all_account_balance(self) -> dict:
         """Получение балансов по всем типам аккаунтов.
 
         https://www.bitget.com/api-doc/common/account/All-Account-Balance
         """
-        return await self._make_request("GET", "/api/v2/account/all-account-balance")
+        return await self._make_request("GET", "/api/v2/account/all-account-balance", signed=True)
 
     # topic: market
 
