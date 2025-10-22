@@ -38,7 +38,7 @@ def test_decimal_exponent_behavior() -> None:
 
     for step in steps:
         d = Decimal(str(step))
-        digits = abs(d.as_tuple().exponent)
+        digits = abs(d.as_tuple().exponent)  # type: ignore
         print(f"step={step:<15} exponent={d.as_tuple().exponent:<4} digits={digits}")
 
 

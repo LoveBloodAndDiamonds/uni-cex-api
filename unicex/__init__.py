@@ -139,7 +139,7 @@ from .bybit import (
     ExchangeInfo as BybitExchangeInfo,
 )
 
-from .gateio import (
+from .gate import (
     Client as GateioClient,
     UniClient as GateioUniClient,
     UniWebsocketManager as GateioUniWebsocketManager,

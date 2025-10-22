@@ -17,7 +17,7 @@ from unicex.types import LoggerLike
 class Websocket:
     """Базовый класс асинхронного вебсокета."""
 
-    MAX_QUEUE_SIZE: int = 100
+    MAX_QUEUE_SIZE: int = 500
     """Максимальная длина очереди."""
 
     class _DecoderProtocol(Protocol):
@@ -110,7 +110,7 @@ class Websocket:
 
     async def _connect(self) -> None:
         """Подключается к вебсокету и настраивает соединение."""
-        self._logger.debug(f"Estabilishing connection with {self._url}")
+        self._logger.debug(f"Establishing connection with {self._url}")
         async for conn in websockets.connect(uri=self._url, **self._generate_ws_kwargs()):
             try:
                 self._logger.info(f"Websocket connection was established to {self._url}")
@@ -126,8 +126,12 @@ class Websocket:
             except Exception as e:
                 self._logger.error(f"Unexpected error in websosocket connection: {e}")
             finally:
-                await asyncio.sleep(self._reconnect_timeout)
-                await self._after_disconnect()
+                # Делаем реконнект только если вебсокет активен, иначе выходим из итератора
+                if self._running:
+                    await asyncio.sleep(self._reconnect_timeout)
+                    await self._after_disconnect()
+                else:
+                    return  # Выходим из итератора, если вебсокет уже выключен
 
     async def _handle_message(self, message: str | bytes) -> None:
         """Обрабатывает входящее сообщение вебсокета."""

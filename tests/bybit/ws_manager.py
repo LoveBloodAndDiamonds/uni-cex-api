@@ -12,7 +12,7 @@ async def main() -> None:
 
     manager = WebsocketManager()
 
-    symbols = ["BTCUSDT", "ETHUSDT", "XRPUSDT"]
+    symbols = ["DOGEUSDT"]
 
     kwargs = dict(callback=callback, category="spot", symbols=symbols)
 

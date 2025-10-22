@@ -1,6 +1,6 @@
 import asyncio
 
-from unicex.gateio.exchange_info import ExchangeInfo
+from unicex.gate.exchange_info import ExchangeInfo
 
 
 async def main() -> None:

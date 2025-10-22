@@ -28,7 +28,7 @@ class Exchange(StrEnum):
     BITGET = "BITGET"
     BITUNIX = "BITUNIX"
     BYBIT = "BYBIT"
-    GATEIO = "GATEIO"
+    GATE = "GATE"
     HYPERLIQUID = "HYPERLIQUID"
     KCEX = "KCEX"
     MEXC = "MEXC"
@@ -194,7 +194,7 @@ class Timeframe(StrEnum):
                 Timeframe.WEEK_1: "1W",
                 Timeframe.MONTH_1: "1M",
             },
-            (Exchange.GATEIO, MarketType.FUTURES): {
+            (Exchange.GATE, MarketType.FUTURES): {
                 Timeframe.SECOND_1: "1s",
                 Timeframe.MIN_1: "1m",
                 Timeframe.MIN_5: "5m",
@@ -210,7 +210,7 @@ class Timeframe(StrEnum):
                 Timeframe.WEEK_1: "1w",
                 Timeframe.MONTH_1: "30d",
             },
-            (Exchange.GATEIO, MarketType.SPOT): {
+            (Exchange.GATE, MarketType.SPOT): {
                 Timeframe.MIN_1: "1m",
                 Timeframe.MIN_5: "5m",
                 Timeframe.MIN_15: "15m",

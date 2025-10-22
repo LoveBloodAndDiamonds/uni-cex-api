@@ -44,7 +44,7 @@ exchanges = [
     Exchange.BINANCE,
     Exchange.BITGET,
     Exchange.OKX,
-    Exchange.GATEIO,
+    Exchange.GATE,
 ]
 
 # Сколько символов показывать в превью вывода

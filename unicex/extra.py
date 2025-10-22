@@ -201,7 +201,7 @@ def generate_ex_link(exchange: Exchange, market_type: MarketType, symbol: str):
             return f"https://www.mexc.com/ru-RU/futures/{ticker}_USDT?type=linear_swap"
         else:
             return f"https://www.mexc.com/ru-RU/exchange/{ticker}_USDT"
-    elif exchange == Exchange.GATEIO:
+    elif exchange == Exchange.GATE:
         if market_type == MarketType.FUTURES:
             return f"https://www.gate.com/ru/futures/USDT/{ticker}_USDT"
         else:
@@ -242,10 +242,11 @@ def generate_tv_link(exchange: Exchange, market_type: MarketType, symbol: str) -
         `str`: Ссылка для TradingView.
     """
     symbol = normalize_symbol(symbol)
+    exchange_str = "GATEIO" if exchange == Exchange.GATE else str(exchange)
     if market_type == MarketType.FUTURES:
-        return f"https://www.tradingview.com/chart/?symbol={exchange}:{symbol}.P"
+        return f"https://www.tradingview.com/chart/?symbol={exchange_str}:{symbol}.P"
     else:
-        return f"https://www.tradingview.com/chart/?symbol={exchange}:{symbol}"
+        return f"https://www.tradingview.com/chart/?symbol={exchange_str}:{symbol}"
 
 
 def generate_cg_link(exchange: Exchange, market_type: MarketType, symbol: str) -> str:
@@ -266,17 +267,17 @@ def generate_cg_link(exchange: Exchange, market_type: MarketType, symbol: str) -
     if market_type == MarketType.FUTURES:
         match exchange:
             case Exchange.OKX:
-                return f"{base_url}/{exchange.upper()}_{symbol.replace('USDT', '-USDT')}-SWAP"
+                return f"{base_url}/OKX_{symbol.replace('USDT', '-USDT')}-SWAP"
             case Exchange.MEXC:
-                return f"{base_url}/{exchange.upper()}_{symbol.replace('USDT', '_USDT')}"
+                return f"{base_url}/MEXC_{symbol.replace('USDT', '_USDT')}"
             case Exchange.BITGET:
-                return f"{base_url}/{exchange.capitalize()}_{symbol}_UMCBL"
-            case Exchange.GATEIO:
+                return f"{base_url}/Bitget_{symbol}_UMCBL"
+            case Exchange.GATE:
                 return f"{base_url}/Gate_{symbol.replace('USDT', '_USDT')}"
             case Exchange.BITUNIX:
-                return f"{base_url}/{exchange.capitalize()}_{symbol}"
+                return f"{base_url}/Bitunix_{symbol}"
             case Exchange.HYPERLIQUID:
-                return f"{base_url}/{exchange.capitalize()}_{symbol.replace('USDT', '-USD')}"
+                return f"{base_url}/Hyperliquid_{symbol.replace('USDT', '-USD')}"
             case _:
                 return f"{base_url}/{exchange.capitalize()}_{symbol}"
     else:
