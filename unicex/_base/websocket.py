@@ -179,18 +179,25 @@ class Websocket:
 
     async def _after_disconnect(self) -> None:
         """Вызывается после отключения от вебсокета."""
-        # Останавливаем воркеров
+        current_task = asyncio.current_task()
+
+        # Останавливаем воркеров, исключая задачу, которая уже выполняет остановку
+        tasks_to_wait: list[asyncio.Task] = []
         for task in self._tasks:
+            if task is current_task:
+                continue
+
             task.cancel()
+            tasks_to_wait.append(task)
 
         # Дожидаемся завершения задач (в т.ч. воркеров)
-        for task in self._tasks:
-            try:
-                await task
-            except asyncio.CancelledError:
-                pass
-            except Exception as e:
-                self._logger.warning(f"Worker raised during shutdown: {e}")
+        if tasks_to_wait:
+            results = await asyncio.gather(*tasks_to_wait, return_exceptions=True)
+            for task_result in results:
+                if isinstance(task_result, asyncio.CancelledError):
+                    continue
+                if isinstance(task_result, Exception):
+                    self._logger.warning(f"Worker raised during shutdown: {task_result}")
 
         self._tasks.clear()
 
