@@ -99,24 +99,38 @@ class WebsocketManager:
             **self._ws_kwargs,
         )
 
-    def candle(self, callback: CallbackType, coin: str, interval: str) -> Websocket:
+    def candle(
+        self,
+        callback: CallbackType,
+        interval: str,
+        coin: str | None = None,
+        coins: list[str] | None = None,
+    ) -> Websocket:
         """Создает вебсокет для получения свечей.
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             coin (`str`): Символ монеты.
+            coins (`list[str]`): Список символов монет для мультиплекс подключения.
             interval (`str`): Интервал свечей ("1m", "3m", "5m", "15m", "30m", "1h", "2h", "4h", "8h", "12h", "1d", "3d", "1w", "1M").
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = self._create_subscription_message(
-            "candle", coin=coin, interval=interval
-        )
+        if coin and coins:
+            raise ValueError("Parameters coin and coins cannot be used together")
+        if not (coin or coins):
+            raise ValueError("Either coin or coins must be provided")
+        if coin:
+            coins = [coin]
+        subscription_messages = [
+            self._create_subscription_message("candle", coin=coin, interval=interval)
+            for coin in coins  # type: ignore
+        ]
         return Websocket(
             callback=callback,
             url=self._URL,
-            subscription_messages=[subscription_message],
+            subscription_messages=subscription_messages,
             **self._ws_kwargs,
         )
 
@@ -152,21 +166,33 @@ class WebsocketManager:
             **self._ws_kwargs,
         )
 
-    def trades(self, callback: CallbackType, coin: str) -> Websocket:
+    def trades(
+        self, callback: CallbackType, coin: str | None = None, coins: list[str] | None = None
+    ) -> Websocket:
         """Создает вебсокет для получения сделок.
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            coin (`str`): Символ монеты.
+            coin (`str | None`): Символ монеты.
+            coins (`list[str] | None`): Список символов монет для мультиплекс подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = self._create_subscription_message("trades", coin=coin)
+        if coin and coins:
+            raise ValueError("Parameters coin and coins cannot be used together")
+        if not (coin or coins):
+            raise ValueError("Either coin or coins must be provided")
+        if coin:
+            coins = [coin]
+        subscription_messages = [
+            self._create_subscription_message("trades", coin=coin)
+            for coin in coins  # type: ignore
+        ]
         return Websocket(
             callback=callback,
             url=self._URL,
-            subscription_messages=[subscription_message],
+            subscription_messages=subscription_messages,
             **self._ws_kwargs,
         )
 
