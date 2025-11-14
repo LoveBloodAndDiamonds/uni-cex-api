@@ -24,7 +24,7 @@ async def main() -> None:
 
     # orders = await client.position_info(category="option", settle_coin="USDT")
 
-    resp = await client.account_info()
+    # resp = await client.account_info()
 
     # resp = await client.set_leverage(
     #     category="linear", symbol="BTCUSDT", buy_leverage="11", sell_leverage="11"
@@ -38,10 +38,12 @@ async def main() -> None:
     #     symbol="TRXUSDT",
     #     side="Buy",
     # )
+    #
+    positions_raw = await client.position_info(category="linear", symbol="BTCUSDT")
 
     from pprint import pp
 
-    pp(resp)
+    pp(positions_raw)
 
     await client.close_connection()
 
