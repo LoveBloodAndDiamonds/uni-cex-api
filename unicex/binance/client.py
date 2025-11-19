@@ -23,16 +23,19 @@ class Client(BaseClient):
     _RECV_WINDOW: int = 5000
     """Стандартный интервал времени для получения ответа от сервера."""
 
-    def _get_headers(self) -> dict:
+    def _get_headers(self, method: RequestMethod) -> dict:
         """Возвращает заголовки для запросов к Binance API."""
         headers = {"Accept": "application/json"}
         if self._api_key:  # type: ignore[attr-defined]
             headers["X-MBX-APIKEY"] = self._api_key  # type: ignore[attr-defined]
+        if method in ["POST", "PUT", "DELETE"]:
+            headers.update({"Content-Type": "application/x-www-form-urlencoded"})
         return headers
 
     def _prepare_payload(
         self,
         *,
+        method: RequestMethod,
         signed: bool,
         params: dict[str, Any] | None,
         data: dict[str, Any] | None,
@@ -46,6 +49,7 @@ class Client(BaseClient):
             - возвращает только отфильтрованные params/data.
 
         Параметры:
+            method (`RequestMethod`): Метод запроса.
             signed (`bool`): Нужно ли подписывать запрос.
             params (`dict | None`): Параметры для query string.
             data (`dict | None`): Параметры для тела запроса.
@@ -78,7 +82,7 @@ class Client(BaseClient):
             "hex",
         )
 
-        headers = self._get_headers()
+        headers = self._get_headers(method)
         return payload, headers
 
     async def _make_request(
@@ -108,7 +112,9 @@ class Client(BaseClient):
         Возвращает:
             `dict`: Ответ в формате JSON.
         """
-        payload, headers = self._prepare_payload(signed=signed, params=params, data=data)
+        payload, headers = self._prepare_payload(
+            method=method, signed=signed, params=params, data=data
+        )
 
         if not signed:
             return await super()._make_request(method=method, url=url, **payload)
@@ -400,7 +406,8 @@ class Client(BaseClient):
             "selfTradePreventionMode": self_trade_prevention_mode,
         }
 
-        return await self._make_request("POST", url, True, data=data)
+        # return await self._make_request("POST", url, True, data=data)
+        return await self._make_request("POST", url, True, params=data)
 
     async def order_test(
         self,
@@ -1486,7 +1493,7 @@ class Client(BaseClient):
         )
         url = self._BASE_SPOT_URL + "/api/v3/userDataStream"
 
-        return await super()._make_request("POST", url, headers=self._get_headers())
+        return await super()._make_request("POST", url, headers=self._get_headers("POST"))
 
     async def renew_listen_key(self, listen_key: str) -> dict:
         """Обновление ключа прослушивания для подключения к пользовательскому вебсокету.
@@ -1501,7 +1508,9 @@ class Client(BaseClient):
         url = self._BASE_SPOT_URL + "/api/v3/userDataStream"
         params = {"listenKey": listen_key}
 
-        return await super()._make_request("PUT", url, params=params, headers=self._get_headers())
+        return await super()._make_request(
+            "PUT", url, params=params, headers=self._get_headers("PUT")
+        )
 
     async def close_listen_key(self, listen_key: str) -> dict:
         """Закрытие ключа прослушивания для подключения к пользовательскому вебсокету.
@@ -1517,7 +1526,7 @@ class Client(BaseClient):
         params = {"listenKey": listen_key}
 
         return await super()._make_request(
-            "DELETE", url, params=params, headers=self._get_headers()
+            "DELETE", url, params=params, headers=self._get_headers("DELETE")
         )
 
     # topic: futures user data streams
@@ -1529,7 +1538,7 @@ class Client(BaseClient):
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/listenKey"
 
-        return await super()._make_request("POST", url, headers=self._get_headers())
+        return await super()._make_request("POST", url, headers=self._get_headers("POST"))
 
     async def futures_renew_listen_key(self) -> dict:
         """Обновление ключа прослушивания для подключения к пользовательскому вебсокету.
@@ -1538,7 +1547,7 @@ class Client(BaseClient):
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/listenKey"
 
-        return await super()._make_request("PUT", url, headers=self._get_headers())
+        return await super()._make_request("PUT", url, headers=self._get_headers("PUT"))
 
     async def futures_close_listen_key(self) -> dict:
         """Закрытие ключа прослушивания для подключения к пользовательскому вебсокету.
@@ -1547,4 +1556,4 @@ class Client(BaseClient):
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/listenKey"
 
-        return await super()._make_request("DELETE", url, headers=self._get_headers())
+        return await super()._make_request("DELETE", url, headers=self._get_headers("DELETE"))

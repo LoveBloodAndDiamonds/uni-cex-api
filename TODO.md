@@ -8,3 +8,4 @@
 - добавить orderbook в вебсокет юни менеджер
 - добавить min_order_size,max_order_size в ExchangeInfo
 - передавать ws_kwargs через uniwebsocketmanager
+- POST запросы в binance
