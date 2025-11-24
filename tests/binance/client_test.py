@@ -12,19 +12,25 @@ async def main() -> None:
     )
 
     async with client as conn:
-        r = await conn.order_create(
-            **{
-                "symbol": "ETHUSDT",
-                "side": "BUY",
-                "type": "MARKET",
-                "quote_order_qty": 10,
-                # "new_client_order_id": "open_VzTDBv6AGsI7XcBnm1wdAeTohpR",
-            }
-        )
+        # r = await conn.oco_order_create(
+        #     symbol="BTCUSDT",
+        #     side="SELL",
+        #     quantity="0.00016",
+        #     above_type="TAKE_PROFIT",
+        #     above_stop_price="93000",
+        #     below_type="STOP_LOSS",
+        #     below_stop_price="90000",
+        # )
+
+        r = await conn.my_trades(symbol="BTCUSDT")
 
         from pprint import pp
 
-        pp(r)
+        # pp(r)
+        #
+        for item in r:
+            pp(item)
+            # pp(item["orderId"])
 
 
 if __name__ == "__main__":
