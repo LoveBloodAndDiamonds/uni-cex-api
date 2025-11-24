@@ -5,7 +5,7 @@ from typing import Any
 
 from unicex._abc import IUniWebsocketManager
 from unicex._base import Websocket
-from unicex.enums import Exchange, Timeframe
+from unicex.enums import Exchange, MarketType, Timeframe
 from unicex.types import LoggerLike
 
 from .adapter import Adapter
@@ -57,7 +57,7 @@ class UniWebsocketManager(IUniWebsocketManager):
             callback=wrapper,
             symbol=symbol,
             symbols=symbols,
-            interval=timeframe.to_exchange_format(Exchange.BINANCE),  # type: ignore
+            interval=timeframe.to_exchange_format(Exchange.BINANCE, MarketType.SPOT),
         )
 
     def futures_klines(
@@ -85,7 +85,7 @@ class UniWebsocketManager(IUniWebsocketManager):
             callback=wrapper,
             symbol=symbol,
             symbols=symbols,
-            interval=timeframe.to_exchange_format(Exchange.BINANCE),  # type: ignore
+            interval=timeframe.to_exchange_format(Exchange.BINANCE, MarketType.FUTURES),
         )
 
     def trades(

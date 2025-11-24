@@ -23,19 +23,21 @@ class Client(BaseClient):
     _RECV_WINDOW: int = 5000
     """Стандартный интервал времени для получения ответа от сервера."""
 
-    def _get_headers(self) -> dict:
+    def _get_headers(self, method: RequestMethod) -> dict:
         """Возвращает заголовки для запросов к Binance API."""
         headers = {"Accept": "application/json"}
         if self._api_key:  # type: ignore[attr-defined]
             headers["X-MBX-APIKEY"] = self._api_key  # type: ignore[attr-defined]
+        if method in ["POST", "PUT", "DELETE"]:
+            headers.update({"Content-Type": "application/x-www-form-urlencoded"})
         return headers
 
     def _prepare_payload(
         self,
         *,
+        method: RequestMethod,
         signed: bool,
         params: dict[str, Any] | None,
-        data: dict[str, Any] | None,
     ) -> tuple[dict[str, Any], dict[str, Any] | None]:
         """Подготавливает payload и заголовки для запроса.
 
@@ -43,12 +45,12 @@ class Client(BaseClient):
             - добавляет подпись и все обязательные параметры в заголовки
 
         Если signed=False:
-            - возвращает только отфильтрованные params/data.
+            - возвращает только отфильтрованные params.
 
         Параметры:
+            method (`RequestMethod`): Метод запроса.
             signed (`bool`): Нужно ли подписывать запрос.
             params (`dict | None`): Параметры для query string.
-            data (`dict | None`): Параметры для тела запроса.
 
         Возвращает:
             tuple:
@@ -57,16 +59,18 @@ class Client(BaseClient):
         """
         # Фильтруем параметры от None значений
         params = filter_params(params) if params else {}
-        data = filter_params(data) if data else {}
+
+        # Получаем заголовки для запроса
+        headers = self._get_headers(method)
 
         if not signed:
-            return {"params": params, "data": data}, None
+            return {"params": params}, headers
 
         if not self.is_authorized():
             raise NotAuthorized("Api key and api secret is required to private endpoints")
 
         # Объединяем все параметры в payload
-        payload = {**params, **data}
+        payload = {**params}
         payload["timestamp"] = int(time.time() * 1000)
         payload["recvWindow"] = self._RECV_WINDOW
 
@@ -78,7 +82,6 @@ class Client(BaseClient):
             "hex",
         )
 
-        headers = self._get_headers()
         return payload, headers
 
     async def _make_request(
@@ -88,13 +91,12 @@ class Client(BaseClient):
         signed: bool = False,
         *,
         params: dict[str, Any] | None = None,
-        data: dict[str, Any] | None = None,
     ) -> Any:
         """Выполняет HTTP-запрос к эндпоинтам Binance API.
 
         Если signed=True, формируется подпись для приватных endpoint'ов:
-            - Если переданы params — подпись добавляется в параметры запроса.
-            - Если передан data — подпись добавляется в тело запроса.
+            - Если метод запроса "GET" — подпись добавляется в параметры запроса.
+            - Если метод запроса "POST" | "PUT" | "DELETE" — подпись добавляется в тело запроса.
 
         Если signed=False, запрос отправляется как публичный.
 
@@ -103,20 +105,15 @@ class Client(BaseClient):
             url (`str`): Полный URL эндпоинта Binance API.
             signed (`bool`): Нужно ли подписывать запрос.
             params (`dict | None`): Query-параметры.
-            data (`dict | None`): Тело запроса.
 
         Возвращает:
             `dict`: Ответ в формате JSON.
         """
-        payload, headers = self._prepare_payload(signed=signed, params=params, data=data)
+        payload, headers = self._prepare_payload(method=method, signed=signed, params=params)
 
         if not signed:
             return await super()._make_request(method=method, url=url, **payload)
 
-        if data:
-            return await super()._make_request(
-                method=method, url=url, data=payload, headers=headers
-            )
         return await super()._make_request(method=method, url=url, params=payload, headers=headers)
 
     async def request(
@@ -385,7 +382,7 @@ class Client(BaseClient):
         https://developers.binance.com/docs/binance-spot-api-docs/rest-api/spot-trading-endpoints#new-order-trade
         """
         url = self._BASE_SPOT_URL + "/api/v3/order"
-        data = {
+        params = {
             "symbol": symbol,
             "side": side,
             "type": type,
@@ -400,7 +397,8 @@ class Client(BaseClient):
             "selfTradePreventionMode": self_trade_prevention_mode,
         }
 
-        return await self._make_request("POST", url, True, data=data)
+        # return await self._make_request("POST", url, True, params=params)
+        return await self._make_request("POST", url, True, params=params)
 
     async def order_test(
         self,
@@ -422,7 +420,7 @@ class Client(BaseClient):
         https://developers.binance.com/docs/binance-spot-api-docs/rest-api/spot-trading-endpoints#test-new-order-trade
         """
         url = self._BASE_SPOT_URL + "/api/v3/order/test"
-        data = {
+        params = {
             "symbol": symbol,
             "side": side,
             "type": type,
@@ -437,7 +435,7 @@ class Client(BaseClient):
             "selfTradePreventionMode": self_trade_prevention_mode,
         }
 
-        return await self._make_request("POST", url, True, data=data)
+        return await self._make_request("POST", url, True, params=params)
 
     async def order_cancel(
         self,
@@ -451,14 +449,14 @@ class Client(BaseClient):
         https://developers.binance.com/docs/binance-spot-api-docs/rest-api/spot-trading-endpoints#cancel-order-trade
         """
         url = self._BASE_SPOT_URL + "/api/v3/order"
-        data = {
+        params = {
             "symbol": symbol,
             "orderId": order_id,
             "origClientOrderId": orig_client_order_id,
             "newClientOrderId": new_client_order_id,
         }
 
-        return await self._make_request("DELETE", url, True, data=data)
+        return await self._make_request("DELETE", url, True, params=params)
 
     async def orders_cancel_all(self, symbol: str) -> list[dict]:
         """Отмена всех активных ордеров по символу.
@@ -466,9 +464,9 @@ class Client(BaseClient):
         https://developers.binance.com/docs/binance-spot-api-docs/rest-api/spot-trading-endpoints#cancel-all-open-orders-on-a-symbol-trade
         """
         url = self._BASE_SPOT_URL + "/api/v3/openOrders"
-        data = {"symbol": symbol}
+        params = {"symbol": symbol}
 
-        return await self._make_request("DELETE", url, True, data=data)
+        return await self._make_request("DELETE", url, True, params=params)
 
     async def orders_open(self, symbol: str | None = None) -> list[dict]:
         """Получение всех активных ордеров.
@@ -484,42 +482,69 @@ class Client(BaseClient):
         self,
         symbol: str,
         side: str,
-        quantity: float,
-        price: float,
-        stop_price: float,
-        stop_limit_price: float | None = None,
+        quantity: str,
         list_client_order_id: str | None = None,
-        limit_client_order_id: str | None = None,
-        stop_client_order_id: str | None = None,
-        stop_limit_time_in_force: str | None = None,
+        # ABOVE ORDER
+        above_type: str = "TAKE_PROFIT_LIMIT",
+        above_client_order_id: str | None = None,
+        above_price: str | None = None,
+        above_stop_price: str | None = None,
+        above_trailing_delta: int | None = None,
+        above_time_in_force: str | None = None,
+        above_iceberg_qty: str | None = None,
+        above_strategy_id: int | None = None,
+        above_strategy_type: int | None = None,
+        # BELOW ORDER
+        below_type: str = "STOP_LOSS_LIMIT",
+        below_client_order_id: str | None = None,
+        below_price: str | None = None,
+        below_stop_price: str | None = None,
+        below_trailing_delta: int | None = None,
+        below_time_in_force: str | None = None,
+        below_iceberg_qty: str | None = None,
+        below_strategy_id: int | None = None,
+        below_strategy_type: int | None = None,
+        # EXTRA
         new_order_resp_type: str | None = None,
         self_trade_prevention_mode: str | None = None,
-        limit_iceberg_qty: float | None = None,
-        stop_iceberg_qty: float | None = None,
     ) -> dict:
-        """Создание OCO ордера.
+        """Создание OCO ордера (новая версия).
 
-        https://developers.binance.com/docs/binance-spot-api-docs/rest-api/spot-trading-endpoints#new-oco-trade
+        https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-list---oco-trade
         """
-        url = self._BASE_SPOT_URL + "/api/v3/order/oco"
-        data = {
+        url = self._BASE_SPOT_URL + "/api/v3/orderList/oco"
+
+        params = {
             "symbol": symbol,
             "side": side,
             "quantity": quantity,
-            "price": price,
-            "stopPrice": stop_price,
-            "stopLimitPrice": stop_limit_price,
             "listClientOrderId": list_client_order_id,
-            "limitClientOrderId": limit_client_order_id,
-            "stopClientOrderId": stop_client_order_id,
-            "stopLimitTimeInForce": stop_limit_time_in_force,
+            # ABOVE
+            "aboveType": above_type,
+            "aboveClientOrderId": above_client_order_id,
+            "abovePrice": above_price,
+            "aboveStopPrice": above_stop_price,
+            "aboveTrailingDelta": above_trailing_delta,
+            "aboveTimeInForce": above_time_in_force,
+            "aboveIcebergQty": above_iceberg_qty,
+            "aboveStrategyId": above_strategy_id,
+            "aboveStrategyType": above_strategy_type,
+            # BELOW
+            "belowType": below_type,
+            "belowClientOrderId": below_client_order_id,
+            "belowPrice": below_price,
+            "belowStopPrice": below_stop_price,
+            "belowTrailingDelta": below_trailing_delta,
+            "belowTimeInForce": below_time_in_force,
+            "belowIcebergQty": below_iceberg_qty,
+            "belowStrategyId": below_strategy_id,
+            "belowStrategyType": below_strategy_type,
+            # EXTRA
             "newOrderRespType": new_order_resp_type,
             "selfTradePreventionMode": self_trade_prevention_mode,
-            "limitIcebergQty": limit_iceberg_qty,
-            "stopIcebergQty": stop_iceberg_qty,
         }
 
-        return await self._make_request("POST", url, True, data=data)
+        return await self._make_request("POST", url, True, params=params)
 
     async def oco_order_cancel(
         self,
@@ -533,14 +558,14 @@ class Client(BaseClient):
         https://developers.binance.com/docs/binance-spot-api-docs/rest-api/spot-trading-endpoints#cancel-oco-trade
         """
         url = self._BASE_SPOT_URL + "/api/v3/orderList"
-        data = {
+        params = {
             "symbol": symbol,
             "orderListId": order_list_id,
             "listClientOrderId": list_client_order_id,
             "newClientOrderId": new_client_order_id,
         }
 
-        return await self._make_request("DELETE", url, True, data=data)
+        return await self._make_request("DELETE", url, True, params=params)
 
     async def oco_order_get(
         self, order_list_id: int | None = None, orig_client_order_id: str | None = None
@@ -1081,9 +1106,9 @@ class Client(BaseClient):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Change-Multi-Assets-Mode
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/multiAssetsMargin"
-        data = {"multiAssetsMargin": multi_assets_margin}
+        params = {"multiAssetsMargin": multi_assets_margin}
 
-        return await self._make_request("POST", url, True, data=data)
+        return await self._make_request("POST", url, True, params=params)
 
     async def futures_multi_asset_mode_get(self) -> dict:
         """Получение режима мультиактивной маржи.
@@ -1122,7 +1147,7 @@ class Client(BaseClient):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api/New-Order
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/order"
-        data = {
+        params = {
             "symbol": symbol,
             "side": side,
             "type": type,
@@ -1143,7 +1168,7 @@ class Client(BaseClient):
             "goodTillDate": good_till_date,
         }
 
-        return await self._make_request("POST", url, True, data=data)
+        return await self._make_request("POST", url, True, params=params)
 
     async def futures_order_modify(
         self,
@@ -1160,7 +1185,7 @@ class Client(BaseClient):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api/Modify-Order
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/order"
-        data = {
+        params = {
             "orderId": order_id,
             "origClientOrderId": orig_client_order_id,
             "symbol": symbol,
@@ -1170,7 +1195,7 @@ class Client(BaseClient):
             "priceMatch": price_match,
         }
 
-        return await self._make_request("PUT", url, True, data=data)
+        return await self._make_request("PUT", url, True, params=params)
 
     async def futures_order_get(
         self,
@@ -1230,9 +1255,9 @@ class Client(BaseClient):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api/Cancel-All-Open-Orders
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/allOpenOrders"
-        data = {"symbol": symbol}
+        params = {"symbol": symbol}
 
-        return await self._make_request("DELETE", url, True, data=data)
+        return await self._make_request("DELETE", url, True, params=params)
 
     async def futures_countdown_cancel_all(
         self,
@@ -1244,12 +1269,12 @@ class Client(BaseClient):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api/Auto-Cancel-All-Open-Orders
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/countdownCancelAll"
-        data = {
+        params = {
             "symbol": symbol,
             "countdownTime": countdown_time,
         }
 
-        return await self._make_request("POST", url, True, data=data)
+        return await self._make_request("POST", url, True, params=params)
 
     async def futures_position_info(self, symbol: str | None = None) -> list[dict]:
         """Получение информации о позициях на фьючерсах.
@@ -1313,9 +1338,9 @@ class Client(BaseClient):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Change-Initial-Leverage
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/leverage"
-        data = {"symbol": symbol, "leverage": leverage}
+        params = {"symbol": symbol, "leverage": leverage}
 
-        return await self._make_request("POST", url, True, data=data)
+        return await self._make_request("POST", url, True, params=params)
 
     async def futures_margin_type_change(self, symbol: str, margin_type: str) -> dict:
         """Изменение типа маржи на фьючерсах.
@@ -1323,9 +1348,9 @@ class Client(BaseClient):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Change-Margin-Type
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/marginType"
-        data = {"symbol": symbol, "marginType": margin_type}
+        params = {"symbol": symbol, "marginType": margin_type}
 
-        return await self._make_request("POST", url, True, data=data)
+        return await self._make_request("POST", url, True, params=params)
 
     async def futures_position_margin_modify(
         self,
@@ -1339,14 +1364,14 @@ class Client(BaseClient):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Modify-Isolated-Position-Margin
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/positionMargin"
-        data = {
+        params = {
             "symbol": symbol,
             "positionSide": position_side,
             "amount": amount,
             "type": type,
         }
 
-        return await self._make_request("POST", url, True, data=data)
+        return await self._make_request("POST", url, True, params=params)
 
     async def futures_position_margin_history(
         self,
@@ -1431,13 +1456,13 @@ class Client(BaseClient):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api/Cancel-Order
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/order"
-        data = {
+        params = {
             "symbol": symbol,
             "orderId": order_id,
             "origClientOrderId": orig_client_order_id,
         }
 
-        return await self._make_request("DELETE", url, data=data)
+        return await self._make_request("DELETE", url, params=params)
 
     async def futures_batch_orders_create(self, orders: list[dict]) -> list[dict]:
         """Создание множественных ордеров одновременно на фьючерсах.
@@ -1445,9 +1470,9 @@ class Client(BaseClient):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api/Place-Multiple-Orders
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/batchOrders"
-        data = {"batchOrders": json.dumps(orders)}  # Нужен особый дамп
+        params = {"batchOrders": json.dumps(orders)}  # Нужен особый дамп
 
-        return await self._make_request("POST", url, signed=True, data=data)
+        return await self._make_request("POST", url, signed=True, params=params)
 
     async def futures_batch_orders_cancel(
         self,
@@ -1460,17 +1485,17 @@ class Client(BaseClient):
         https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api/Cancel-Multiple-Orders
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/batchOrders"
-        data = {"symbol": symbol}
+        params = {"symbol": symbol}
 
         if order_id_list:
-            data["orderIdList"] = json.dumps(order_id_list)  # Нужен особый дамп
+            params["orderIdList"] = json.dumps(order_id_list)  # Нужен особый дамп
 
         if orig_client_order_id_list:
-            data["origClientOrderIdList"] = json.dumps(  # Нужен особый дамп
+            params["origClientOrderIdList"] = json.dumps(  # Нужен особый дамп
                 orig_client_order_id_list
             )
 
-        return await self._make_request("DELETE", url, signed=True, data=data)
+        return await self._make_request("DELETE", url, signed=True, params=params)
 
     # topic: user data streams
 
@@ -1486,7 +1511,7 @@ class Client(BaseClient):
         )
         url = self._BASE_SPOT_URL + "/api/v3/userDataStream"
 
-        return await super()._make_request("POST", url, headers=self._get_headers())
+        return await super()._make_request("POST", url, headers=self._get_headers("POST"))
 
     async def renew_listen_key(self, listen_key: str) -> dict:
         """Обновление ключа прослушивания для подключения к пользовательскому вебсокету.
@@ -1501,7 +1526,9 @@ class Client(BaseClient):
         url = self._BASE_SPOT_URL + "/api/v3/userDataStream"
         params = {"listenKey": listen_key}
 
-        return await super()._make_request("PUT", url, params=params, headers=self._get_headers())
+        return await super()._make_request(
+            "PUT", url, params=params, headers=self._get_headers("PUT")
+        )
 
     async def close_listen_key(self, listen_key: str) -> dict:
         """Закрытие ключа прослушивания для подключения к пользовательскому вебсокету.
@@ -1517,7 +1544,7 @@ class Client(BaseClient):
         params = {"listenKey": listen_key}
 
         return await super()._make_request(
-            "DELETE", url, params=params, headers=self._get_headers()
+            "DELETE", url, params=params, headers=self._get_headers("DELETE")
         )
 
     # topic: futures user data streams
@@ -1529,7 +1556,7 @@ class Client(BaseClient):
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/listenKey"
 
-        return await super()._make_request("POST", url, headers=self._get_headers())
+        return await super()._make_request("POST", url, headers=self._get_headers("POST"))
 
     async def futures_renew_listen_key(self) -> dict:
         """Обновление ключа прослушивания для подключения к пользовательскому вебсокету.
@@ -1538,7 +1565,7 @@ class Client(BaseClient):
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/listenKey"
 
-        return await super()._make_request("PUT", url, headers=self._get_headers())
+        return await super()._make_request("PUT", url, headers=self._get_headers("PUT"))
 
     async def futures_close_listen_key(self) -> dict:
         """Закрытие ключа прослушивания для подключения к пользовательскому вебсокету.
@@ -1547,4 +1574,4 @@ class Client(BaseClient):
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/listenKey"
 
-        return await super()._make_request("DELETE", url, headers=self._get_headers())
+        return await super()._make_request("DELETE", url, headers=self._get_headers("DELETE"))

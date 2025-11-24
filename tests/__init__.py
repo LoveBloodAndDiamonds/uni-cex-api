@@ -1,29 +1,16 @@
-# from unicex._base.asyncio import BaseWebsocket, BaseClient
-# from unicex._base import BaseWebsocket, BaseClient
+import asyncio
 
-# from unicex.bitget.asyncio import Websocket, Client
-
-# from unicex.bitget import Websocket, Client
-
-# from unicex._abc.asyncio import IUniWebsocketManager
-# from unicex.binance.asyncio import UniWebsocketManager
+from unicex import BybitUniClient
 
 
-# import asyncio
+async def main() -> None:
+    """Main entry point for the application."""
+    client = await BybitUniClient.create()
 
-# from unicex.enums import Timeframe
-
-
-# async def callback(msg):
-#     print(msg)
-
-
-# async def main() -> None:
-#     """Main entry point for the application."""
-#     uwm: IUniWebsocketManager = IUniWebsocketManager()
-#     socket = uwm.klines(callback=callback, symbols=["BTCUSDT"], timeframe=Timeframe.MIN_5)
-#     await socket.start()
+    async with client as conn:
+        t = await conn.futures_tickers()
+        print("len spot tickers: ", len(t))
 
 
-# if __name__ == "__main__":
-#     asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())

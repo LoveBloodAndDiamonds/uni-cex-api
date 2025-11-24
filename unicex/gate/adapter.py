@@ -115,14 +115,14 @@ class Adapter:
             KlineDict(
                 s=symbol,
                 t=int(kline[0]),
-                o=float(kline[1]),
-                h=float(kline[2]),
-                l=float(kline[3]),
-                c=float(kline[4]),
-                v=float(kline[5]),
-                q=float(kline[6]),
+                o=float(kline[5]),
+                h=float(kline[3]),
+                l=float(kline[4]),
+                c=float(kline[2]),
+                v=float(kline[6]),
+                q=float(kline[1]),
                 T=None,
-                x=None,
+                x=kline[7] == "true",
             )
             for kline in sorted(
                 raw_data,

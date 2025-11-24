@@ -7,7 +7,7 @@ from typing import Any, Literal
 from unicex._base import BaseClient
 from unicex.exceptions import NotAuthorized
 from unicex.types import RequestMethod
-from unicex.utils import filter_params, generate_hmac_sha256_signature
+from unicex.utils import dict_to_query_string, filter_params, generate_hmac_sha256_signature
 
 
 class Client(BaseClient):
@@ -35,7 +35,7 @@ class Client(BaseClient):
             headers["X-BAPI-TIMESTAMP"] = timestamp
         return headers
 
-    def _generate_signature(self, timestamp: str, payload: dict) -> str:
+    def _generate_signature(self, timestamp: str, payload: dict, method: RequestMethod) -> str:
         """Генерация подписи.
 
         Источник: https://github.com/bybit-exchange/api-usage-examples/blob/master/V5_demo/api_demo/Encryption_HMAC.py
@@ -44,9 +44,16 @@ class Client(BaseClient):
         if not self.is_authorized():
             raise NotAuthorized("Api key and api secret is required to private endpoints")
 
-        dumped_payload = json.dumps(payload)
-        prepared_query_string = timestamp + self._api_key + self._RECV_WINDOW + dumped_payload  # type: ignore[attrDefined]
-        return generate_hmac_sha256_signature(self._api_secret, prepared_query_string)  # type: ignore[attrDefined]
+        if method == "POST":
+            # timestamp+api_key+recv_window+jsonBodyString
+            dumped_payload = json.dumps(payload)
+            prepared_query_string = timestamp + self._api_key + self._RECV_WINDOW + dumped_payload  # type: ignore[attrDefined]
+            return generate_hmac_sha256_signature(self._api_secret, prepared_query_string)  # type: ignore[attrDefined]
+        else:
+            # timestamp+api_key+recv_window+queryString
+            query_string = dict_to_query_string(payload)
+            prepared_query_string = timestamp + self._api_key + self._RECV_WINDOW + query_string  # type: ignore[attrDefined]
+            return generate_hmac_sha256_signature(self._api_secret, prepared_query_string)  # type: ignore[attrDefined]
 
     async def _make_request(
         self,
@@ -94,7 +101,7 @@ class Client(BaseClient):
         payload = params
 
         # Генерируем строку для подписи
-        signature = self._generate_signature(timestamp, payload)
+        signature = self._generate_signature(timestamp, payload, method)
 
         # Генерируем заголовки (вкл. в себя подпись и апи ключ)
         headers = self._get_headers(timestamp, signature)
@@ -110,7 +117,7 @@ class Client(BaseClient):
             return await super()._make_request(
                 method=method,
                 url=url,
-                params=payload,
+                params=params,
                 headers=headers,
             )
 

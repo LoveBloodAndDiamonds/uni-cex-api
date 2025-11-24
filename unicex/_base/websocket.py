@@ -95,12 +95,7 @@ class Websocket:
     async def stop(self) -> None:
         """Останавливает вебсокет и рабочие задачи."""
         self._running = False
-        for task in self._tasks:
-            task.cancel()
-        self._tasks.clear()
-
-        # Очистка очереди
-        self._queue = asyncio.Queue()
+        await self._after_disconnect()
 
     async def restart(self) -> None:
         """Перезапускает вебсокет."""
@@ -184,11 +179,29 @@ class Websocket:
 
     async def _after_disconnect(self) -> None:
         """Вызывается после отключения от вебсокета."""
+        current_task = asyncio.current_task()
+
+        # Останавливаем воркеров, исключая задачу, которая уже выполняет остановку
+        tasks_to_wait: list[asyncio.Task] = []
         for task in self._tasks:
+            if task is current_task:
+                continue
+
             task.cancel()
+            tasks_to_wait.append(task)
+
+        # Дожидаемся завершения задач (в т.ч. воркеров)
+        if tasks_to_wait:
+            results = await asyncio.gather(*tasks_to_wait, return_exceptions=True)
+            for task_result in results:
+                if isinstance(task_result, asyncio.CancelledError):
+                    continue
+                if isinstance(task_result, Exception):
+                    self._logger.warning(f"Worker raised during shutdown: {task_result}")
+
         self._tasks.clear()
 
-        # Очистить очередь
+        # Очистить очередь уже безопасно, после остановки воркеров
         self._queue = asyncio.Queue()
 
     async def _send_subscribe_messages(self, conn: ClientConnection) -> None:
