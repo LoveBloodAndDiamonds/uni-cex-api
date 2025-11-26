@@ -3,17 +3,30 @@ from operator import call
 
 from unicex.hyperliquid import WebsocketManager
 
+from loguru import logger
+
+import sys
+
+logger.remove()
+
+logger.add(sys.stderr, format="{time} {level} {message}", level="DEBUG")
+
 
 async def callback(msg):
     try:
-        print(type(msg), msg)
+        pass
+        # print(type(msg), msg)
+        # if msg.get("channel") == "trades":
+        #     # print(len(msg["data"]))
+        #     print(msg)
+        #     print()
     except Exception as e:
         print(f"Error in callback: {e}")
 
 
 async def main() -> None:
     """Main entry point for the application."""
-    manager = WebsocketManager()
+    manager = WebsocketManager(logger=logger)
 
     c = {"callback": callback}
 
@@ -21,9 +34,9 @@ async def main() -> None:
 
     # ws = manager.notification(*c, user=user)  # type: ignore
     # ws = manager.web_data2(*c, user=user)  # type: ignore
-    ws = manager.candle(**c, coins=["BTC", "ETH"], interval="1m")  # type: ignore
+    # ws = manager.candle(**c, coins=["BTC", "ETH"], interval="1m")  # type: ignore
     # ws = manager.l2_book(**c, coin="BTC")  # type: ignore
-    # ws = manager.trades(**c, coins=["BTC", "ETH"])
+    ws = manager.trades(**c, coins=["BTC", "ETH"])
     # ws = manager.order_updates(**c, user=user)
     # ws = manager.user_events(**c, user=user)
     # ws = manager.user_fills(**c, user=user)  # type: ignore

@@ -25,7 +25,11 @@ class WebsocketManager:
             ws_kwargs (`dict[str, Any]`): Дополнительные аргументы, которые прокидываются в `Websocket`.
         """
         self.client = client
-        self._ws_kwargs = ws_kwargs
+        self._ws_kwargs = {
+            "ping_message": json.dumps({"method": "ping"}),
+            "ping_interval": 30,
+            **ws_kwargs,
+        }
 
     def _create_subscription_message(self, subscription_type: str, **params: Any) -> str:
         """Создает сообщение подписки для Hyperliquid.

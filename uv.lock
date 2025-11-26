@@ -1702,7 +1702,7 @@ wheels = [
 
 [[package]]
 name = "unicex"
-version = "0.13.14"
+version = "0.13.15"
 source = { virtual = "." }
 dependencies = [
     { name = "aiohttp" },
