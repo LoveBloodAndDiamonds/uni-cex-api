@@ -17,7 +17,7 @@ class ExchangeInfo(IExchangeInfo):
     @classmethod
     async def _load_spot_exchange_info(cls, session: aiohttp.ClientSession) -> None:
         """Загружает информацию о бирже для спотового рынка."""
-        exchange_info = await Client(session).instruments_info("spot")
+        exchange_info = await Client(session).instruments_info("spot", limit=1000)
         tickers_info: dict[str, TickerInfoItem] = {}
         for symbol_info in exchange_info["result"]["list"]:
             tickers_info[symbol_info["symbol"]] = TickerInfoItem(
