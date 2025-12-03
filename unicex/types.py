@@ -8,7 +8,6 @@ __all__ = [
     "AggTradeDict",
     "RequestMethod",
     "LoggerLike",
-    "AccountType",
     "OpenInterestDict",
     "OpenInterestItem",
     "TickerInfoItem",
@@ -135,10 +134,6 @@ class LiquidationDict(TypedDict):
 
     p: float
     """Цена ликвидации."""
-
-
-type AccountType = Literal["SPOT", "FUTURES"]
-"""Тип аккаунта."""
 
 
 class TickerInfoItem(TypedDict):
