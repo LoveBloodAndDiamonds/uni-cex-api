@@ -26,6 +26,7 @@ class ExchangeInfo(IExchangeInfo):
                 size_step=float(symbol_info["lotSizeFilter"]["basePrecision"]),
                 size_precision=None,
                 contract_size=1,
+                min_order_quantity=float(symbol_info["lotSizeFilter"]["minOrderQty"]),  # type: ignore
             )
 
         cls._tickers_info = tickers_info
@@ -43,6 +44,7 @@ class ExchangeInfo(IExchangeInfo):
                     size_step=float(symbol_info["lotSizeFilter"]["qtyStep"]),
                     size_precision=None,
                     contract_size=1,
+                    min_order_quantity=float(symbol_info["lotSizeFilter"]["minOrderQty"]),  # type: ignore
                 )
             except ValueError as e:
                 cls._logger.trace(
