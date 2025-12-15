@@ -206,26 +206,26 @@ def generate_ex_link(exchange: Exchange, market_type: MarketType, symbol: str):
             return f"https://www.gate.com/ru/futures/USDT/{ticker}_USDT"
         else:
             return f"https://www.gate.com/ru/trade/{ticker}_USDT"
-    elif exchange == Exchange.XT:
-        if market_type == MarketType.FUTURES:
-            return f"https://www.xt.com/ru/futures/trade/{ticker.lower()}_usdt"
-        else:
-            return f"https://www.xt.com/ru/trade/{ticker.lower()}_usdt"
-    elif exchange == Exchange.BITUNIX:
-        if market_type == MarketType.FUTURES:
-            return f"https://www.bitunix.com/ru-ru/contract-trade/{ticker.upper()}USDT"
-        else:
-            return f"https://www.bitunix.com/ru-ru/spot-trade/{ticker.upper()}USDT"
-    elif exchange == Exchange.KCEX:
-        if market_type == MarketType.FUTURES:
-            return f"https://www.kcex.com/ru-RU/futures/exchange/{ticker.upper()}_USDT"
-        else:
-            return f"https://www.kcex.com/ru-RU/exchange/{ticker.upper()}_USDT"
     elif exchange == Exchange.HYPERLIQUID:
         if market_type == MarketType.FUTURES:
             return f"https://app.hyperliquid.xyz/trade/{ticker}"
         else:
             return f"https://app.hyperliquid.xyz/trade/{ticker}/USDC"
+    # elif exchange == Exchange.XT:
+    #     if market_type == MarketType.FUTURES:
+    #         return f"https://www.xt.com/ru/futures/trade/{ticker.lower()}_usdt"
+    #     else:
+    #         return f"https://www.xt.com/ru/trade/{ticker.lower()}_usdt"
+    # elif exchange == Exchange.BITUNIX:
+    #     if market_type == MarketType.FUTURES:
+    #         return f"https://www.bitunix.com/ru-ru/contract-trade/{ticker.upper()}USDT"
+    #     else:
+    #         return f"https://www.bitunix.com/ru-ru/spot-trade/{ticker.upper()}USDT"
+    # elif exchange == Exchange.KCEX:
+    #     if market_type == MarketType.FUTURES:
+    #         return f"https://www.kcex.com/ru-RU/futures/exchange/{ticker.upper()}_USDT"
+    #     else:
+    #         return f"https://www.kcex.com/ru-RU/exchange/{ticker.upper()}_USDT"
     else:
         raise NotSupported(f"Exchange {exchange} is not supported")
 
@@ -274,8 +274,6 @@ def generate_cg_link(exchange: Exchange, market_type: MarketType, symbol: str) -
                 return f"{base_url}/Bitget_{symbol}_UMCBL"
             case Exchange.GATE:
                 return f"{base_url}/Gate_{symbol.replace('USDT', '_USDT')}"
-            case Exchange.BITUNIX:
-                return f"{base_url}/Bitunix_{symbol}"
             case Exchange.HYPERLIQUID:
                 return f"{base_url}/Hyperliquid_{symbol.replace('USDT', '-USD')}"
             case _:

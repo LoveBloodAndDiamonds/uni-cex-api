@@ -26,14 +26,12 @@ class Exchange(StrEnum):
 
     BINANCE = "BINANCE"
     BITGET = "BITGET"
-    BITUNIX = "BITUNIX"
     BYBIT = "BYBIT"
     GATE = "GATE"
     HYPERLIQUID = "HYPERLIQUID"
-    KCEX = "KCEX"
     MEXC = "MEXC"
     OKX = "OKX"
-    XT = "XT"
+    KUCOIN = "KUCOIN"
 
     def __add__(self, market_type: "MarketType") -> tuple["Exchange", "MarketType"]:
         """Возвращает кортеж из биржи и типа рынка."""
