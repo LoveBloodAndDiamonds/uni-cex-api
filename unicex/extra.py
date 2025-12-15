@@ -125,6 +125,10 @@ def normalize_ticker(raw_ticker: str) -> str:
             .removesuffix("SWAP")
         )
 
+    # Меняем постфикс USDTM на USDT
+    if ticker.endswith("USDTM"):
+        ticker = ticker.removesuffix("USDTM") + "USDT"
+
     # Удаляем разделители
     ticker = ticker.translate(str.maketrans("", "", "-_."))
 
@@ -149,6 +153,7 @@ def normalize_symbol(raw_ticker: str, quote: Literal["USDT", "USDC"] = "USDT") -
         normalize_symbol("BTC")  # "BTCUSDT"
         normalize_symbol("btc_usdt_swap")  # "BTCUSDT"
         normalize_symbol("ETH", "USDC")  # "ETHUSDC"
+        normalize_symbol("BTCUSDTM")  # "BTCUSDT"
         ```
 
     Параметры:
@@ -211,21 +216,11 @@ def generate_ex_link(exchange: Exchange, market_type: MarketType, symbol: str):
             return f"https://app.hyperliquid.xyz/trade/{ticker}"
         else:
             return f"https://app.hyperliquid.xyz/trade/{ticker}/USDC"
-    # elif exchange == Exchange.XT:
-    #     if market_type == MarketType.FUTURES:
-    #         return f"https://www.xt.com/ru/futures/trade/{ticker.lower()}_usdt"
-    #     else:
-    #         return f"https://www.xt.com/ru/trade/{ticker.lower()}_usdt"
-    # elif exchange == Exchange.BITUNIX:
-    #     if market_type == MarketType.FUTURES:
-    #         return f"https://www.bitunix.com/ru-ru/contract-trade/{ticker.upper()}USDT"
-    #     else:
-    #         return f"https://www.bitunix.com/ru-ru/spot-trade/{ticker.upper()}USDT"
-    # elif exchange == Exchange.KCEX:
-    #     if market_type == MarketType.FUTURES:
-    #         return f"https://www.kcex.com/ru-RU/futures/exchange/{ticker.upper()}_USDT"
-    #     else:
-    #         return f"https://www.kcex.com/ru-RU/exchange/{ticker.upper()}_USDT"
+    elif exchange == Exchange.KUCOIN:
+        if market_type == MarketType.FUTURES:
+            return f"https://www.kucoin.com/trade/futures/{symbol}M"
+        else:
+            return f"https://www.kucoin.com/trade/{ticker}-USDT"
     else:
         raise NotSupported(f"Exchange {exchange} is not supported")
 
@@ -276,6 +271,8 @@ def generate_cg_link(exchange: Exchange, market_type: MarketType, symbol: str) -
                 return f"{base_url}/Gate_{symbol.replace('USDT', '_USDT')}"
             case Exchange.HYPERLIQUID:
                 return f"{base_url}/Hyperliquid_{symbol.replace('USDT', '-USD')}"
+            case Exchange.KUCOIN:
+                return f"https://www.coinglass.com/tv/ru/KuCoin_{symbol}M"
             case _:
                 return f"{base_url}/{exchange.capitalize()}_{symbol}"
     else:
