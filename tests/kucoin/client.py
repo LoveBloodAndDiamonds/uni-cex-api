@@ -7,7 +7,7 @@ async def main() -> None:
     """Main entry point for the application."""
     c = await Client.create()
 
-    r = await c.ticker("FUTURES")
+    r = await c.symbol("FUTURES", symbol="CUDISUSDTM")
 
     from pprint import pp
 
