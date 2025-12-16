@@ -110,6 +110,24 @@ class Adapter:
         }
 
     @staticmethod
+    def funding_rate(raw_data: dict) -> dict[str, float]:
+        """Преобразует историю ставок финансирования в унифицированный формат.
+
+        Параметры:
+            raw_data (dict): Сырой ответ с биржи.
+
+        Возвращает:
+            dict[str, float]: Словарь, где ключ - тикер, а значение - актуальная ставка финансирования.
+        """
+        symbol = raw_data["data"]["symbol"]
+        history = raw_data["data"]["list"]
+        if not history:
+            return {}
+
+        last_point = max(history, key=lambda item: int(item["ts"]))
+        return {symbol: float(last_point["fundingRate"]) * 100}
+
+    @staticmethod
     def _get_contract_size(symbol: str) -> float:
         """Возвращает размер контракта для указанного символа тикера."""
         try:

@@ -98,3 +98,25 @@ class Client(BaseClient):
         }
 
         return await self._make_request("GET", "/api/ua/v1/market/kline", params=params)
+
+    async def funding_rate_history(
+        self,
+        symbol: str,
+        start_at: int,
+        end_at: int,
+    ) -> dict[str, Any]:
+        """Получение истории ставок финансирования.
+
+        https://www.kucoin.com/docs-new/rest/ua/get-history-funding-rate
+        """
+        params = {
+            "symbol": symbol,
+            "startAt": start_at,
+            "endAt": end_at,
+        }
+
+        return await self._make_request(
+            "GET",
+            "/api/ua/v1/market/funding-rate-history",
+            params=params,
+        )

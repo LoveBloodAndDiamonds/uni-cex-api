@@ -123,7 +123,7 @@ async def test_exchange(exchange: Exchange) -> dict:
             results["single_open_interest"] = await safe_call(
                 exchange, client.open_interest, symbol=f_symbol
             )
-        if should_run("funding_rate") and exchange not in [Exchange.OKX]:
+        if should_run("funding_rate") and exchange not in [Exchange.OKX, Exchange.KUCOIN]:
             results["funding_rate"] = await safe_call(exchange, client.funding_rate)
         if should_run("single_funding_rate"):
             results["single_funding_rate"] = await safe_call(

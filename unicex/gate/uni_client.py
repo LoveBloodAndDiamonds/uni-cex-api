@@ -173,8 +173,7 @@ class UniClient(IUniClient[Client]):
         raw_data = await self._client.futures_tickers(settle="usdt", contract=symbol)
         items = raw_data if isinstance(raw_data, list) else [raw_data]
         adapted_data = Adapter.funding_rate(raw_data=items)  # type: ignore[reportArgumentType]
-        if symbol:
-            return adapted_data[symbol]
+        return adapted_data[symbol] if symbol else adapted_data
         return adapted_data
 
     @overload
