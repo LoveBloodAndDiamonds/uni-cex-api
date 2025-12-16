@@ -1,6 +1,5 @@
 __all__ = ["UniClient"]
 
-import time
 from typing import Self, overload
 
 import aiohttp
@@ -217,15 +216,14 @@ class UniClient(IUniClient[Client]):
             list[KlineDict]: Список свечей для тикера.
         """
         if not limit and not all([start_time, end_time]):
-            raise ValueError("limit and (start_time and end_time) must be provided")
+            raise ValueError("limit or (start_time and end_time) must be provided")
 
         if limit:  # Перезаписываем start_time и end_time если указан limit, т.к. по умолчанию HyperLiquid не принимают этот параметр
             if not isinstance(interval, Timeframe):
                 raise ValueError("interval must be a Timeframe if limit param provided")
-            end_time = int(time.time() * 1000)
-            start_time = end_time - (limit * interval.to_seconds * 1000)  # type: ignore[reportOptionalOperand]
+            start_time, end_time = self.limit_to_start_and_end_time(interval, limit)
         interval = (
-            interval.to_exchange_format(Exchange.HYPERLIQUID, MarketType.SPOT)
+            interval.to_exchange_format(Exchange.HYPERLIQUID)
             if isinstance(interval, Timeframe)
             else interval
         )
@@ -263,8 +261,7 @@ class UniClient(IUniClient[Client]):
         if limit:  # Перезаписываем start_time и end_time если указан limit, т.к. по умолчанию HyperLiquid не принимают этот параметр
             if not isinstance(interval, Timeframe):
                 raise ValueError("interval must be a Timeframe if limit param provided")
-            end_time = int(time.time() * 1000)
-            start_time = end_time - (limit * interval.to_seconds * 1000)  # type: ignore[reportOptionalOperand]
+            start_time, end_time = self.limit_to_start_and_end_time(interval, limit)
         interval = (
             interval.to_exchange_format(Exchange.HYPERLIQUID, MarketType.FUTURES)
             if isinstance(interval, Timeframe)

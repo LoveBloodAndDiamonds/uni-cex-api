@@ -1,5 +1,6 @@
 __all__ = ["IUniClient"]
 
+import time
 from abc import ABC, abstractmethod
 from typing import Generic, Self, TypeVar, overload
 
@@ -174,6 +175,35 @@ class IUniClient(ABC, Generic[TClient]):
         """
         tickers = await self.tickers(only_usdt)
         return batched_list(tickers, batch_size)
+
+    @staticmethod
+    def limit_to_start_and_end_time(
+        interval: Timeframe, limit: int, use_milliseconds: bool = True
+    ) -> tuple[int, int]:
+        """Преобразует `limit` в `start_time` и `end_time`.
+
+        Параметры:
+            interval (`Timeframe`): Интервал времени.
+            limit (`int`): Количество элементов.
+            use_milliseconds (`bool`): Использовать миллисекунды.
+
+        Нужен, потому что на некоторых биржах параметр `limit` не принимается напрямую.
+        """
+        end_time = int(time.time())
+        start_time = end_time - (limit * interval.to_seconds)  # type: ignore[reportOptionalOperand]
+        if use_milliseconds:
+            start_time *= 1000
+            end_time *= 1000
+        return start_time, end_time
+
+    @staticmethod
+    def to_seconds(value: int | None) -> int | None:
+        """Преобразует значение из миллисекунд в секунды для передачи в API."""
+        if value is None:
+            return None
+        if value >= 1_000_000_000_000:
+            return value // 1000
+        return value
 
     @abstractmethod
     async def futures_tickers(self, only_usdt: bool = True) -> list[str]:
