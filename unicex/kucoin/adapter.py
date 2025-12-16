@@ -2,7 +2,13 @@ __all__ = ["Adapter"]
 
 from typing import Any
 
-from unicex.types import OpenInterestDict, OpenInterestItem, TickerDailyDict, TickerDailyItem
+from unicex.types import (
+    KlineDict,
+    OpenInterestDict,
+    OpenInterestItem,
+    TickerDailyDict,
+    TickerDailyItem,
+)
 from unicex.utils import catch_adapter_errors, decorate_all_methods
 
 from .exchange_info import ExchangeInfo
@@ -14,6 +20,23 @@ class Adapter:
 
     @staticmethod
     def tickers(raw_data: dict, only_usdt: bool) -> list[str]:
+        """Преобразует сырой ответ, в котором содержатся данные о тикерах в список тикеров.
+
+        Параметры:
+            raw_data (dict): Сырой ответ с биржи.
+            only_usdt (bool): Флаг, указывающий, нужно ли включать только тикеры в паре к USDT.
+
+        Возвращает:
+            list[str]: Список тикеров.
+        """
+        return [
+            item["symbol"]
+            for item in raw_data["data"]["list"]
+            if item["symbol"].endswith("USDT") or not only_usdt
+        ]
+
+    @staticmethod
+    def futures_tickers(raw_data: dict, only_usdt: bool) -> list[str]:
         """Преобразует сырой ответ, в котором содержатся данные о тикерах в список тикеров.
 
         Параметры:
@@ -62,7 +85,11 @@ class Adapter:
         Возвращает:
             dict[str, float]: Словарь, где ключ - тикер, а значение - последняя цена.
         """
-        return {item["symbol"]: float(item["lastPrice"]) for item in raw_data["data"]["list"]}
+        return {
+            item["symbol"]: float(item["lastPrice"])
+            for item in raw_data["data"]["list"]
+            if item["lastPrice"]
+        }
 
     @staticmethod
     def open_interest(raw_data: dict[str, Any]) -> OpenInterestDict:
@@ -89,3 +116,32 @@ class Adapter:
             return ExchangeInfo.get_futures_ticker_info(symbol)["contract_size"] or 1
         except:  # noqa
             return 1
+
+    @staticmethod
+    def klines(raw_data: dict, symbol: str) -> list[KlineDict]:
+        """Преобразует данные о свечах в унифицированный формат.
+
+        Параметры:
+            raw_data (dict): Сырой ответ с биржи.
+            symbol (str): Символ тикера.
+
+        Возвращает:
+            list[KlineDict]: Список свечей.
+        """
+        klines: list[KlineDict] = []
+        for item in sorted(raw_data["data"]["list"], key=lambda x: int(float(x[0]))):
+            klines.append(  # noqa: PERF401
+                KlineDict(
+                    s=symbol,
+                    t=item[0],
+                    o=float(item[1]),
+                    h=float(item[3]),
+                    l=float(item[4]),
+                    c=float(item[2]),
+                    v=float(item[5]),
+                    q=float(item[6]),
+                    T=None,
+                    x=None,
+                )
+            )
+        return klines

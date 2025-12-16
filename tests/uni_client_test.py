@@ -38,13 +38,14 @@ test_all_timeframes = False
 
 # Какие биржи тестировать
 exchanges = [
-    Exchange.HYPERLIQUID,
-    Exchange.MEXC,
-    Exchange.BYBIT,
-    Exchange.BINANCE,
-    Exchange.BITGET,
-    Exchange.OKX,
-    Exchange.GATE,
+    # Exchange.HYPERLIQUID,
+    # Exchange.MEXC,
+    # Exchange.BYBIT,
+    # Exchange.BINANCE,
+    # Exchange.BITGET,
+    # Exchange.OKX,
+    # Exchange.GATE,
+    Exchange.KUCOIN,
 ]
 
 # Сколько символов показывать в превью вывода
@@ -83,7 +84,7 @@ async def test_exchange(exchange: Exchange) -> dict:
         return {"_fatal_": str(e)}
 
     try:
-        f_symbol = symbol_to_exchange_format("BTCUSDT", exchange, MarketType.FUTURES)
+        f_symbol = symbol_to_exchange_format("ETHUSDT", exchange, MarketType.FUTURES)
         s_symbol = symbol_to_exchange_format("BTCUSDT", exchange, MarketType.SPOT)
 
         if should_run("tickers"):

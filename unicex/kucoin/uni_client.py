@@ -4,7 +4,7 @@ __all__ = ["UniClient"]
 from typing import overload
 
 from unicex._abc import IUniClient
-from unicex.enums import Timeframe
+from unicex.enums import Exchange, Timeframe
 from unicex.types import KlineDict, OpenInterestDict, OpenInterestItem, TickerDailyDict
 
 from .adapter import Adapter
@@ -45,7 +45,7 @@ class UniClient(IUniClient[Client]):
             list[str]: Список тикеров.
         """
         raw_data = await self._client.ticker("FUTURES")
-        return Adapter.tickers(raw_data, only_usdt)
+        return Adapter.futures_tickers(raw_data, only_usdt)
 
     async def last_price(self) -> dict[str, float]:
         """Возвращает последнюю цену для каждого тикера.
@@ -103,7 +103,28 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             list[KlineDict]: Список свечей для тикера.
         """
-        raise NotImplementedError()
+        if not limit and not all([start_time, end_time]):
+            raise ValueError("limit or (start_time and end_time) must be provided")
+
+        if limit:  # Перезаписываем start_time и end_time если указан limit, т.к. по умолчанию HyperLiquid не принимают этот параметр
+            if not isinstance(interval, Timeframe):
+                raise ValueError("interval must be a Timeframe if limit param provided")
+            start_time, end_time = self.limit_to_start_and_end_time(
+                interval, limit, use_milliseconds=False
+            )
+        interval = (
+            interval.to_exchange_format(Exchange.KUCOIN)
+            if isinstance(interval, Timeframe)
+            else interval
+        )
+        raw_data = await self._client.kline(
+            trade_type="SPOT",
+            symbol=symbol,
+            interval=interval,
+            start_at=self.to_seconds(start_time),
+            end_at=self.to_seconds(end_time),
+        )
+        return Adapter.klines(raw_data=raw_data, symbol=symbol)
 
     async def futures_klines(
         self,
@@ -125,9 +146,30 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             list[KlineDict]: Список свечей для тикера.
         """
-        raise NotImplementedError()
+        if not limit and not all([start_time, end_time]):
+            raise ValueError("limit or (start_time and end_time) must be provided")
 
-    async def funding_rate(self) -> dict[str, float]:
+        if limit:  # Перезаписываем start_time и end_time если указан limit, т.к. по умолчанию HyperLiquid не принимают этот параметр
+            if not isinstance(interval, Timeframe):
+                raise ValueError("interval must be a Timeframe if limit param provided")
+            start_time, end_time = self.limit_to_start_and_end_time(
+                interval, limit, use_milliseconds=False
+            )
+        interval = (
+            interval.to_exchange_format(Exchange.KUCOIN)
+            if isinstance(interval, Timeframe)
+            else interval
+        )
+        raw_data = await self._client.kline(
+            trade_type="FUTURES",
+            symbol=symbol,
+            interval=interval,
+            start_at=self.to_seconds(start_time),
+            end_at=self.to_seconds(end_time),
+        )
+        return Adapter.klines(raw_data=raw_data, symbol=symbol)
+
+    async def funding_rate(self, symbol: str | None = None) -> dict[str, float]:
         """Возвращает ставку финансирования для всех тикеров.
 
         Возвращает:

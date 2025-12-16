@@ -22,9 +22,9 @@ class ExchangeInfo(IExchangeInfo):
         for el in exchange_info["data"]["list"]:
             tickers_info[el["symbol"]] = TickerInfoItem(
                 tick_precision=None,
-                tick_step=None,
+                tick_step=float(el["tickSize"]),
                 size_precision=None,
-                size_step=None,
+                size_step=float(el["baseOrderStep"]),
                 contract_size=1,
             )
 
@@ -36,12 +36,15 @@ class ExchangeInfo(IExchangeInfo):
         tickers_info = {}
         exchange_info = await Client(session).symbol("FUTURES")
         for el in exchange_info["data"]["list"]:
-            tickers_info[el["symbol"]] = TickerInfoItem(
-                tick_precision=None,
-                tick_step=None,
-                size_precision=None,
-                size_step=None,
-                contract_size=float(el["unitSize"]),
-            )
+            try:
+                tickers_info[el["symbol"]] = TickerInfoItem(
+                    tick_precision=None,
+                    tick_step=float(el["tickSize"]),
+                    size_precision=None,
+                    size_step=float(el["lotSize"]),
+                    contract_size=float(el["unitSize"]),
+                )
+            except Exception as e:
+                cls._logger.error(f"Error loading ticker info for {el}: {e}")
 
         cls._futures_tickers_info = tickers_info
