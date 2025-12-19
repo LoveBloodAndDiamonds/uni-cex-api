@@ -24,9 +24,9 @@ async def main() -> None:
         # r = await conn.futures_tickers()
         # r = await conn.last_price()
         # r = await conn.futures_last_price()
-        # r = await conn.futures_ticker_24hr()
+        r = await conn.futures_ticker_24hr()
         # r = await conn.futures_klines(symbol="ETHUSDT", interval=Timeframe.MIN_1, limit=3)
-        r = await conn.tickers()
+        # r = await conn.tickers()
         from pprint import pp
 
         pp(r)

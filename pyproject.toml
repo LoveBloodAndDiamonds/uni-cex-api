@@ -4,7 +4,7 @@ name = "unicex"
 # •	PATCH (x.y.Z) → увеличивается при багфиксе, который не ломает совместимость.
 # •	MINOR (x.Y.z) → увеличивается при добавлении новой функциональности, но без ломающих изменений (backward-compatible).
 # •	MAJOR (X.y.z) → увеличивается при изменениях, которые ломают обратную совместимость.
-version = "0.14.6"
+version = "0.14.7"
 
 description = "Unified Crypto Exchange API "
 readme = "README.md"
