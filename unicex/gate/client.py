@@ -479,7 +479,7 @@ class Client(BaseClient):
         order_id: str,
         currency_pair: str | None = None,
         account: str | None = None,
-        amount: str | None = None,
+        amount: NumberLike | None = None,
         price: NumberLike | None = None,
         amend_text: str | None = None,
         action_mode: str | None = None,
