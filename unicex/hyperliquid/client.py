@@ -13,7 +13,7 @@ from eth_utils.crypto import keccak
 
 from unicex._base import BaseClient
 from unicex.exceptions import NotAuthorized
-from unicex.types import LoggerLike
+from unicex.types import LoggerLike, NumberLike
 from unicex.utils import filter_params
 
 # Authentication
@@ -1184,11 +1184,11 @@ class Client(BaseClient):
         self,
         asset: int,
         is_buy: bool,
-        size: str,
+        size: NumberLike,
         reduce_only: bool,
         order_type: Literal["limit", "trigger"],
         order_body: dict,
-        price: str | None = None,
+        price: NumberLike | None = None,
         client_order_id: str | None = None,
         grouping: Literal["na", "normalTpsl", "positionTpsl"] = "na",
         builder_address: str | None = None,
@@ -1478,8 +1478,8 @@ class Client(BaseClient):
         order_id: int | str,
         asset: int,
         is_buy: bool,
-        price: str | float,
-        size: str | float,
+        price: NumberLike,
+        size: NumberLike,
         reduce_only: bool,
         order_type: Literal["limit", "trigger"],
         order_body: dict[str, Any],
@@ -2147,7 +2147,7 @@ class Client(BaseClient):
         self,
         asset: int,
         is_buy: bool,
-        size: str | float,
+        size: NumberLike,
         reduce_only: bool,
         minutes: int,
         randomize: bool,

@@ -8,6 +8,7 @@ __all__ = [
     "AggTradeDict",
     "RequestMethod",
     "LoggerLike",
+    "NumberLike",
     "OpenInterestDict",
     "OpenInterestItem",
     "TickerInfoItem",
@@ -25,6 +26,13 @@ type LoggerLike = LoggingLogger | loguru.Logger
 
 type RequestMethod = Literal["GET", "POST", "PUT", "DELETE", "PATCH"]
 """Типы методов HTTP запросов."""
+
+type NumberLike = str | int | float
+"""
+Числовое значение для аргументов API-клиентов.
+API бирж принимают числа как str, int или float — значение
+передаётся без преобразований и сериализуется HTTP-клиентом.
+"""
 
 
 class TickerDailyItem(TypedDict):

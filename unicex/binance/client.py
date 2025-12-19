@@ -7,7 +7,7 @@ from typing import Any
 
 from unicex._base import BaseClient
 from unicex.exceptions import NotAuthorized
-from unicex.types import RequestMethod
+from unicex.types import NumberLike, RequestMethod
 from unicex.utils import dict_to_query_string, filter_params, generate_hmac_sha256_signature
 
 
@@ -367,13 +367,13 @@ class Client(BaseClient):
         symbol: str,
         side: str,
         type: str,
-        quantity: float | None = None,
+        quantity: NumberLike | None = None,
         quote_order_qty: float | None = None,
-        price: float | None = None,
-        stop_price: float | None = None,
+        price: NumberLike | None = None,
+        stop_price: NumberLike | None = None,
         time_in_force: str | None = None,
         new_client_order_id: str | None = None,
-        iceberg_qty: float | None = None,
+        iceberg_qty: NumberLike | None = None,
         new_order_resp_type: str | None = None,
         self_trade_prevention_mode: str | None = None,
     ) -> dict:
@@ -405,13 +405,13 @@ class Client(BaseClient):
         symbol: str,
         side: str,
         type: str,
-        quantity: float | None = None,
+        quantity: NumberLike | None = None,
         quote_order_qty: float | None = None,
-        price: float | None = None,
-        stop_price: float | None = None,
+        price: NumberLike | None = None,
+        stop_price: NumberLike | None = None,
         time_in_force: str | None = None,
         new_client_order_id: str | None = None,
-        iceberg_qty: float | None = None,
+        iceberg_qty: NumberLike | None = None,
         new_order_resp_type: str | None = None,
         self_trade_prevention_mode: str | None = None,
     ) -> dict:
@@ -1126,11 +1126,11 @@ class Client(BaseClient):
         symbol: str,
         side: str,
         type: str,
-        quantity: float | None = None,
+        quantity: NumberLike | None = None,
         reduce_only: bool | None = None,
-        price: float | None = None,
+        price: NumberLike | None = None,
         new_client_order_id: str | None = None,
-        stop_price: float | None = None,
+        stop_price: NumberLike | None = None,
         close_position: bool | None = None,
         activation_price: float | None = None,
         callback_rate: float | None = None,
@@ -1176,8 +1176,8 @@ class Client(BaseClient):
         orig_client_order_id: str | None = None,
         symbol: str | None = None,
         side: str | None = None,
-        quantity: float | None = None,
-        price: float | None = None,
+        quantity: NumberLike | None = None,
+        price: NumberLike | None = None,
         price_match: str | None = None,
     ) -> dict:
         """Изменение ордера на фьючерсах.
