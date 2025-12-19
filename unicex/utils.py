@@ -215,4 +215,9 @@ def symbol_to_exchange_format(
             return symbol.removesuffix("USDT")  # Вот тут мб и не так, там вроде что-то к USDC
         else:
             return symbol.removesuffix("USDT")  # Вот тут мб и не так, там вроде что-то к USDC
+    elif exchange == Exchange.KUCOIN:
+        if market_type == MarketType.FUTURES:
+            return symbol_upper + "M"
+        else:
+            return symbol_upper.replace("USDT", "-USDT")
     return symbol_upper

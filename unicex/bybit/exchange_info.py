@@ -17,7 +17,7 @@ class ExchangeInfo(IExchangeInfo):
     @classmethod
     async def _load_spot_exchange_info(cls, session: aiohttp.ClientSession) -> None:
         """Загружает информацию о бирже для спотового рынка."""
-        exchange_info = await Client(session).instruments_info("spot")
+        exchange_info = await Client(session).instruments_info("spot", limit=1000)
         tickers_info: dict[str, TickerInfoItem] = {}
         for symbol_info in exchange_info["result"]["list"]:
             tickers_info[symbol_info["symbol"]] = TickerInfoItem(
@@ -26,6 +26,7 @@ class ExchangeInfo(IExchangeInfo):
                 size_step=float(symbol_info["lotSizeFilter"]["basePrecision"]),
                 size_precision=None,
                 contract_size=1,
+                min_order_quantity=float(symbol_info["lotSizeFilter"]["minOrderQty"]),  # type: ignore
             )
 
         cls._tickers_info = tickers_info
@@ -43,6 +44,7 @@ class ExchangeInfo(IExchangeInfo):
                     size_step=float(symbol_info["lotSizeFilter"]["qtyStep"]),
                     size_precision=None,
                     contract_size=1,
+                    min_order_quantity=float(symbol_info["lotSizeFilter"]["minOrderQty"]),  # type: ignore
                 )
             except ValueError as e:
                 cls._logger.trace(

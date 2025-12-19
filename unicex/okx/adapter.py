@@ -10,8 +10,6 @@ from unicex.types import (
 )
 from unicex.utils import catch_adapter_errors, decorate_all_methods
 
-from .exchange_info import ExchangeInfo
-
 
 @decorate_all_methods(catch_adapter_errors)
 class Adapter:
@@ -140,11 +138,3 @@ class Adapter:
             )
             for item in raw_data["data"]
         }
-
-    @staticmethod
-    def _get_contract_size(symbol: str) -> float:
-        """Возвращает размер контракта для указанного символа тикера."""
-        try:
-            return ExchangeInfo.get_futures_ticker_info(symbol)["contract_size"] or 1
-        except:  # noqa
-            return 1

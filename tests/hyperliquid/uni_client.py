@@ -1,5 +1,5 @@
 from unicex.enums import Timeframe
-from unicex.hyperliquid import Client, ExchangeInfo
+from unicex.hyperliquid import Client, ExchangeInfo, UniClient
 
 
 import asyncio
@@ -14,10 +14,10 @@ async def main() -> None:
 
     # return
 
-    client = await Client.create()
+    client = await UniClient.create()
 
     # r = await client.perp_meta_and_asset_contexts()
-    r = await client.spot_meta_and_asset_contexts()
+    r = await client.klines(symbol="@142", interval=Timeframe.MIN_5, limit=1)
 
     from pprint import pp
 

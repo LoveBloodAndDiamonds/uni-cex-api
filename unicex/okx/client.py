@@ -6,7 +6,7 @@ from typing import Any, Literal
 
 from unicex._base import BaseClient
 from unicex.exceptions import NotAuthorized
-from unicex.types import RequestMethod
+from unicex.types import NumberLike, RequestMethod
 from unicex.utils import filter_params, generate_hmac_sha256_signature
 
 
@@ -510,7 +510,7 @@ class Client(BaseClient):
         inst_id: str,
         td_mode: Literal["cross", "isolated", "cash", "spot_isolated"],
         ccy: str | None = None,
-        px: str | None = None,
+        px: NumberLike | None = None,
         leverage: str | None = None,
         trade_quote_ccy: str | None = None,
     ) -> dict:
@@ -540,7 +540,7 @@ class Client(BaseClient):
         td_mode: Literal["cross", "isolated", "cash", "spot_isolated"],
         ccy: str | None = None,
         reduce_only: bool | None = None,
-        px: str | None = None,
+        px: NumberLike | None = None,
         trade_quote_ccy: str | None = None,
     ) -> dict:
         """Получение максимального доступного баланса/эквити.
@@ -1313,14 +1313,14 @@ class Client(BaseClient):
             "mmp_and_post_only",
             "op_fok",
         ],
-        sz: str,
+        sz: NumberLike,
         ccy: str | None = None,
         cl_ord_id: str | None = None,
         tag: str | None = None,
         pos_side: Literal["net", "long", "short"] | None = None,
-        px: str | None = None,
-        px_usd: str | None = None,
-        px_vol: str | None = None,
+        px: NumberLike | None = None,
+        px_usd: NumberLike | None = None,
+        px_vol: NumberLike | None = None,
         reduce_only: bool | None = None,
         tgt_ccy: Literal["base_ccy", "quote_ccy"] | None = None,
         ban_amend: bool | None = None,
@@ -1430,10 +1430,10 @@ class Client(BaseClient):
         ord_id: str | None = None,
         cl_ord_id: str | None = None,
         *,
-        new_sz: str | None = None,
-        new_px: str | None = None,
-        new_px_usd: str | None = None,
-        new_px_vol: str | None = None,
+        new_sz: NumberLike | None = None,
+        new_px: NumberLike | None = None,
+        new_px_usd: NumberLike | None = None,
+        new_px_vol: NumberLike | None = None,
         cxl_on_fail: bool | None = None,
         req_id: str | None = None,
         px_amend_type: Literal["0", "1"] | None = None,
@@ -1987,9 +1987,9 @@ class Client(BaseClient):
             "ioc",
             "optimal_limit_ioc",
         ],
-        sz: str,
+        sz: NumberLike,
         pos_side: Literal["net", "long", "short"] | None = None,
-        px: str | None = None,
+        px: NumberLike | None = None,
         reduce_only: bool | None = None,
         tgt_ccy: Literal["base_ccy", "quote_ccy"] | None = None,
         attach_algo_orders: list[dict[str, Any]] | None = None,
@@ -2592,9 +2592,9 @@ class Client(BaseClient):
     async def convert_contract_coin(
         self,
         inst_id: str,
-        sz: str,
+        sz: NumberLike,
         type_: Literal["1", "2"] | None = None,
-        px: str | None = None,
+        px: NumberLike | None = None,
         unit: Literal["coin", "usds"] | None = None,
         op_type: Literal["open", "close"] | None = None,
     ) -> dict:

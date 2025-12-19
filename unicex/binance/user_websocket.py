@@ -2,13 +2,13 @@ __all__ = ["UserWebsocket"]
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from typing import Any
+from typing import Any, Literal
 
 from loguru import logger as _logger
 
 from unicex._base import Websocket
 from unicex.exceptions import NotSupported
-from unicex.types import AccountType, LoggerLike
+from unicex.types import LoggerLike
 
 from .client import Client
 
@@ -32,7 +32,7 @@ class UserWebsocket:
         self,
         callback: Callable[[Any], Awaitable[None]],
         client: Client,
-        type: AccountType,
+        type: Literal["SPOT", "FUTURES"],
         logger: LoggerLike | None = None,
         **kwargs: Any,  # Не дадим сломаться, если юзер передал ненужные аргументы
     ) -> None:
@@ -57,7 +57,7 @@ class UserWebsocket:
         self._running = False
 
     @classmethod
-    def _create_ws_url(cls, type: AccountType, listen_key: str) -> str:
+    def _create_ws_url(cls, type: Literal["SPOT", "FUTURES"], listen_key: str) -> str:
         """Создает URL для подключения к WebSocket."""
         if type == "FUTURES":
             return f"{cls._BASE_FUTURES_URL}/ws/{listen_key}"

@@ -161,12 +161,12 @@ class Adapter:
             KlineDict(
                 s=symbol,
                 t=kline[0],
-                o=kline[1],
-                h=kline[2],
-                l=kline[3],
-                c=kline[4],
-                v=kline[5],
-                q=kline[7],
+                o=float(kline[1]),
+                h=float(kline[2]),
+                l=float(kline[3]),
+                c=float(kline[4]),
+                v=float(kline[5]),
+                q=float(kline[7]),
                 T=kline[6],
                 x=None,
             )

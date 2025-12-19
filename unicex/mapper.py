@@ -25,6 +25,9 @@ from .gate import UniWebsocketManager as GateioUniWebsocketManager
 from .hyperliquid import ExchangeInfo as HyperliquidExchangeInfo
 from .hyperliquid import UniClient as HyperliquidUniClient
 from .hyperliquid import UniWebsocketManager as HyperliquidUniWebsocketManager
+from .kucoin import ExchangeInfo as KucoinExchangeInfo
+from .kucoin import UniClient as KucoinUniClient
+from .kucoin import UniWebsocketManager as KucoinUniWebsocketManager
 from .mexc import ExchangeInfo as MexcExchangeInfo
 from .mexc import UniClient as MexcUniClient
 from .mexc import UniWebsocketManager as MexcUniWebsocketManager
@@ -40,6 +43,7 @@ _UNI_CLIENT_MAPPER: dict[Exchange, type[IUniClient]] = {
     Exchange.HYPERLIQUID: HyperliquidUniClient,
     Exchange.MEXC: MexcUniClient,
     Exchange.OKX: OkxUniClient,
+    Exchange.KUCOIN: KucoinUniClient,
 }
 """Маппер, который связывает биржу и реализацию унифицированного клиента."""
 
@@ -51,6 +55,7 @@ _UNI_WS_MANAGER_MAPPER: dict[Exchange, type[IUniWebsocketManager]] = {
     Exchange.HYPERLIQUID: HyperliquidUniWebsocketManager,
     Exchange.MEXC: MexcUniWebsocketManager,
     Exchange.OKX: OkxUniWebsocketManager,
+    Exchange.KUCOIN: KucoinUniWebsocketManager,
 }
 """Маппер, который связывает биржу и реализацию унифицированного вебсокет-менеджера."""
 
@@ -62,6 +67,7 @@ _EXCHANGE_INFO_MAPPER: dict[Exchange, type[IExchangeInfo]] = {
     Exchange.HYPERLIQUID: HyperliquidExchangeInfo,
     Exchange.MEXC: MexcExchangeInfo,
     Exchange.OKX: OkxExchangeInfo,
+    Exchange.KUCOIN: KucoinExchangeInfo,
 }
 """Маппер, который связывает биржу и реализацию сборщика информации о тикерах на бирже."""
 

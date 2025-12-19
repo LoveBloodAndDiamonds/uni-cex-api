@@ -114,7 +114,7 @@ class Adapter:
         return [
             KlineDict(
                 s=symbol,
-                t=int(kline[0]),
+                t=int(kline[0]) * 1000,  # переводим секунды → миллисекунды
                 o=float(kline[5]),
                 h=float(kline[3]),
                 l=float(kline[4]),

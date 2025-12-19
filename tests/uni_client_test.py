@@ -38,13 +38,14 @@ test_all_timeframes = False
 
 # Какие биржи тестировать
 exchanges = [
-    Exchange.HYPERLIQUID,
-    Exchange.MEXC,
-    Exchange.BYBIT,
-    Exchange.BINANCE,
-    Exchange.BITGET,
-    Exchange.OKX,
-    Exchange.GATE,
+    # Exchange.HYPERLIQUID,
+    # Exchange.MEXC,
+    # Exchange.BYBIT,
+    # Exchange.BINANCE,
+    # Exchange.BITGET,
+    # Exchange.OKX,
+    # Exchange.GATE,
+    Exchange.KUCOIN,
 ]
 
 # Сколько символов показывать в превью вывода
@@ -83,7 +84,7 @@ async def test_exchange(exchange: Exchange) -> dict:
         return {"_fatal_": str(e)}
 
     try:
-        f_symbol = symbol_to_exchange_format("BTCUSDT", exchange, MarketType.FUTURES)
+        f_symbol = symbol_to_exchange_format("ETHUSDT", exchange, MarketType.FUTURES)
         s_symbol = symbol_to_exchange_format("BTCUSDT", exchange, MarketType.SPOT)
 
         if should_run("tickers"):
@@ -122,7 +123,7 @@ async def test_exchange(exchange: Exchange) -> dict:
             results["single_open_interest"] = await safe_call(
                 exchange, client.open_interest, symbol=f_symbol
             )
-        if should_run("funding_rate") and exchange not in [Exchange.OKX]:
+        if should_run("funding_rate") and exchange not in [Exchange.OKX, Exchange.KUCOIN]:
             results["funding_rate"] = await safe_call(exchange, client.funding_rate)
         if should_run("single_funding_rate"):
             results["single_funding_rate"] = await safe_call(

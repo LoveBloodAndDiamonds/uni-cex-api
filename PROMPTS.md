@@ -81,9 +81,9 @@
       symbol: str,
       side: str,
       type: str,
-      quantity: str | None = None,
-      quote_order_quantity: str | None = None,
-      price: str | None = None,
+      quantity: NumberLike | None = None,
+      quote_order_quantity: NumberLike | None = None,
+      price: NumberLike | None = None,
       new_client_order_id: str | None = None,
       stp_mode: str | None = None,
   ) -> dict:

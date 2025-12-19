@@ -12,15 +12,21 @@ async def main() -> None:
 
     client = await UniClient.create()
 
-    result = await client.futures_ticker_24hr()
+    # result = await client.futures_ticker_24hr()
 
     # spot {'p': 0.54, 'v': 10157.76177903, 'q': 1267201908.88}
     # fut:{'p': -0.47000000000000003, 'v': 38058.7512, 'q': 4751342042.00293}
     #
 
     # pp(result)
+    #
+    k = await client.klines("BTCUSDT", "1m", limit=10)
 
-    pp(result["BAGWORK_USDT"])
+    from pprint import pp
+
+    pp(k)
+
+    # pp(result["BAGWORK_USDT"])
 
     await client.close_connection()
 

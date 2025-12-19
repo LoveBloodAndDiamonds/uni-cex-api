@@ -8,7 +8,7 @@ from typing import Any, Literal
 
 from unicex._base import BaseClient
 from unicex.exceptions import NotAuthorized
-from unicex.types import RequestMethod
+from unicex.types import NumberLike, RequestMethod
 from unicex.utils import dict_to_query_string, filter_params
 
 
@@ -328,8 +328,8 @@ class Client(BaseClient):
     async def cross_liquidate_orders(
         self,
         currency_pair: str,
-        amount: str,
-        price: str,
+        amount: NumberLike,
+        price: NumberLike,
         text: str | None = None,
         action_mode: str | None = None,
     ) -> dict:
@@ -353,11 +353,11 @@ class Client(BaseClient):
         self,
         currency_pair: str,
         side: str,
-        amount: str,
+        amount: NumberLike,
         text: str | None = None,
         type: str | None = None,
         account: str | None = None,
-        price: str | None = None,
+        price: NumberLike | None = None,
         time_in_force: str | None = None,
         iceberg: str | None = None,
         auto_borrow: bool | None = None,
@@ -479,8 +479,8 @@ class Client(BaseClient):
         order_id: str,
         currency_pair: str | None = None,
         account: str | None = None,
-        amount: str | None = None,
-        price: str | None = None,
+        amount: NumberLike | None = None,
+        price: NumberLike | None = None,
         amend_text: str | None = None,
         action_mode: str | None = None,
     ) -> dict:
@@ -1344,8 +1344,8 @@ class Client(BaseClient):
         self,
         settle: str,
         order_id: str,
-        size: int | None = None,
-        price: str | None = None,
+        size: NumberLike | None = None,
+        price: NumberLike | None = None,
         amend_text: str | None = None,
         text: str | None = None,
     ) -> dict:

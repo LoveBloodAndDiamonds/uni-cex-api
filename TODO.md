@@ -7,5 +7,8 @@
 - добавить ликвидации в вебсокет юни менеджер
 - добавить orderbook в вебсокет юни менеджер
 - добавить min_order_size,max_order_size в ExchangeInfo
-- передавать ws_kwargs через uniwebsocketmanager
 - Какая то путаница в OCO ордерах на бинансе: https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-list---oco-trade
+- На Hyperliquid неправильно работает лимит (добавляет + 1 свечу при запросе свечей через UniClient)
+- на KuCoin фандинг рейт работает странно, возвращает неверное значение
+
++ передавать ws_kwargs через uniwebsocketmanager

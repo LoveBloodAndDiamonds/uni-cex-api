@@ -21,7 +21,6 @@ __all__ = [
     "AggTradeDict",
     "RequestMethod",
     "LoggerLike",
-    "AccountType",
     "OpenInterestDict",
     "OpenInterestItem",
     "TickerInfoItem",
@@ -82,6 +81,13 @@ __all__ = [
     "GateioWebsocketManager",
     "GateioUserWebsocket",
     "GateioExchangeInfo",
+    # Kucoin
+    "KucoinClient",
+    "KucoinUniClient",
+    "KucoinUniWebsocketManager",
+    "KucoinWebsocketManager",
+    "KucoinUserWebsocket",
+    "KucoinExchangeInfo",
 ]
 
 # ruff: noqa
@@ -102,7 +108,6 @@ from .types import (
     AggTradeDict,
     RequestMethod,
     LoggerLike,
-    AccountType,
     OpenInterestDict,
     OpenInterestItem,
     TickerInfoItem,
@@ -175,6 +180,15 @@ from .okx import (
     ExchangeInfo as OkxExchangeInfo,
 )
 
+from .kucoin import (
+    Client as KucoinClient,
+    UniClient as KucoinUniClient,
+    UniWebsocketManager as KucoinUniWebsocketManager,
+    UserWebsocket as KucoinUserWebsocket,
+    WebsocketManager as KucoinWebsocketManager,
+    ExchangeInfo as KucoinExchangeInfo,
+)
+
 
 async def load_exchanges_info() -> None:
     """Единожды загружает информацию о тикерах на всех биржах."""
@@ -186,6 +200,7 @@ async def load_exchanges_info() -> None:
         HyperliquidExchangeInfo.load_exchange_info(),
         MexcExchangeInfo.load_exchange_info(),
         OkxExchangeInfo.load_exchange_info(),
+        KucoinExchangeInfo.load_exchange_info(),
     )
 
 
@@ -199,4 +214,5 @@ async def start_exchanges_info(parse_interval_seconds: int = 60 * 60) -> None:
         HyperliquidExchangeInfo.start(parse_interval_seconds),
         MexcExchangeInfo.start(parse_interval_seconds),
         OkxExchangeInfo.start(parse_interval_seconds),
+        KucoinExchangeInfo.start(parse_interval_seconds),
     )

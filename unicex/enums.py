@@ -26,14 +26,12 @@ class Exchange(StrEnum):
 
     BINANCE = "BINANCE"
     BITGET = "BITGET"
-    BITUNIX = "BITUNIX"
     BYBIT = "BYBIT"
     GATE = "GATE"
     HYPERLIQUID = "HYPERLIQUID"
-    KCEX = "KCEX"
     MEXC = "MEXC"
     OKX = "OKX"
-    XT = "XT"
+    KUCOIN = "KUCOIN"
 
     def __add__(self, market_type: "MarketType") -> tuple["Exchange", "MarketType"]:
         """Возвращает кортеж из биржи и типа рынка."""
@@ -177,6 +175,23 @@ class Timeframe(StrEnum):
                 Timeframe.DAY_1: "Day1",
                 Timeframe.WEEK_1: "Week1",
                 Timeframe.MONTH_1: "Month1",
+            },
+            Exchange.KUCOIN: {
+                Timeframe.MIN_1: "1min",
+                Timeframe.MIN_3: "3min",
+                Timeframe.MIN_5: "5min",
+                Timeframe.MIN_15: "15min",
+                Timeframe.MIN_30: "30min",
+                Timeframe.HOUR_1: "1hour",
+                Timeframe.HOUR_2: "2hour",
+                Timeframe.HOUR_4: "4hour",
+                Timeframe.HOUR_6: "6hour",
+                Timeframe.HOUR_8: "8hour",
+                Timeframe.HOUR_12: "12hour",
+                Timeframe.DAY_1: "1day",
+                Timeframe.DAY_3: "3day",
+                Timeframe.WEEK_1: "1week",
+                Timeframe.MONTH_1: "1month",
             },
             Exchange.OKX: {
                 Timeframe.MIN_1: "1m",
