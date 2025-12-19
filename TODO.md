@@ -1,9 +1,7 @@
-- Как реализовать типы (quantity, price и т.д.) в сырых клиентах? str | int | float?
 - На фьючерсах WS OKX возвращают объем в контрактах
 - Способы авторизации слишком сильно отличаются на каждой бирже
 - Отрефакторить Okx Websocket Manager
 - NotSupported вместо NotImplementedError
-- там где нет futures_trades возвращать trades вебсокет и наоборот
 - добавить ликвидации в вебсокет юни менеджер
 - добавить orderbook в вебсокет юни менеджер
 - добавить min_order_size,max_order_size в ExchangeInfo
@@ -11,4 +9,6 @@
 - На Hyperliquid неправильно работает лимит (добавляет + 1 свечу при запросе свечей через UniClient)
 - на KuCoin фандинг рейт работает странно, возвращает неверное значение
 
++ там где нет aggtrades возвращать trades вебсокет и наоборот
++ Как реализовать типы (quantity, price и т.д.) в сырых клиентах? str | int | float?
 + передавать ws_kwargs через uniwebsocketmanager
