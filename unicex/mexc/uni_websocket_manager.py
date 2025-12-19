@@ -20,16 +20,20 @@ class UniWebsocketManager(IUniWebsocketManager):
     """Реализация менеджера асинхронных унифицированных вебсокетов."""
 
     def __init__(
-        self, client: Client | UniClient | None = None, logger: LoggerLike | None = None
+        self,
+        client: Client | UniClient | None = None,
+        logger: LoggerLike | None = None,
+        **ws_kwargs: Any,
     ) -> None:
         """Инициализирует унифицированный менеджер вебсокетов.
 
         Параметры:
             client (`Client | UniClient | None`): Клиент Mexc или унифицированный клиент. Нужен для подключения к приватным топикам.
             logger (`LoggerLike | None`): Логгер для записи логов.
+            ws_kwargs (`dict[str, Any]`): Дополнительные параметры инициализации, которые будут переданы WebsocketManager/Websocket.
         """
         super().__init__(client=client, logger=logger)
-        self._websocket_manager = WebsocketManager(self._client)  # type: ignore
+        self._websocket_manager = WebsocketManager(self._client, **ws_kwargs)  # type: ignore
         self._adapter = Adapter()
 
     @overload
