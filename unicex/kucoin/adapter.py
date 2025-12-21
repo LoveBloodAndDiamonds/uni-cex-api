@@ -62,18 +62,39 @@ class Adapter:
         Возвращает:
             TickerDailyDict: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
         """
-        return {
-            item["symbol"]: TickerDailyItem(
-                p=(
-                    round((float(item["lastPrice"]) / float(item["open"]) - 1) * 100, 2)
-                    if float(item["open"]) != 0
-                    else 0.0
-                ),
-                v=float(item["baseVolume"]),
-                q=float(item["quoteVolume"]),
+
+        def safe_float(value: object, default: float = 0.0) -> float:
+            try:
+                if value is None:
+                    return default
+                return float(value)  # type: ignore
+            except (TypeError, ValueError):
+                return default
+
+        result: dict[str, TickerDailyItem] = {}
+
+        for item in raw_data["data"]["list"]:
+            symbol = item.get("symbol")
+            if not symbol:
+                continue
+
+            last_price = safe_float(item.get("lastPrice"))
+            open_price = safe_float(item.get("open"))
+            base_volume = safe_float(item.get("baseVolume"))
+            quote_volume = safe_float(item.get("quoteVolume"))
+
+            if open_price > 0:
+                p = round((last_price / open_price - 1) * 100, 2)
+            else:
+                p = 0.0
+
+            result[symbol] = TickerDailyItem(
+                p=p,
+                v=base_volume,
+                q=quote_volume,
             )
-            for item in raw_data["data"]["list"]
-        }
+
+        return result
 
     @staticmethod
     def last_price(raw_data: dict) -> dict[str, float]:
