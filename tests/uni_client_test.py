@@ -46,6 +46,7 @@ exchanges = [
     Exchange.OKX,
     Exchange.GATE,
     Exchange.KUCOIN,
+    # Exchange.BINGX,
 ]
 
 # Сколько символов показывать в превью вывода

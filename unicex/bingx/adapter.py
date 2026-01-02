@@ -2,13 +2,92 @@ __all__ = ["Adapter"]
 
 from typing import Any
 
-from unicex.types import KlineDict, TradeDict
+from unicex.types import (
+    KlineDict,
+    LiquidationDict,
+    OpenInterestDict,
+    TickerDailyDict,
+    TradeDict,
+)
 from unicex.utils import catch_adapter_errors, decorate_all_methods
 
 
 @decorate_all_methods(catch_adapter_errors)
 class Adapter:
     """Адаптер для унификации данных с BingX API."""
+
+    @staticmethod
+    def tickers(raw_data: dict, only_usdt: bool) -> list[str]:
+        """Преобразует сырой ответ, в котором содержатся данные о тикерах в список тикеров.
+
+        Параметры:
+            raw_data (dict): Сырой ответ с биржи.
+            only_usdt (bool): Флаг, указывающий, нужно ли включать только тикеры в паре к USDT.
+
+        Возвращает:
+            list[str]: Список тикеров.
+        """
+        ...
+
+    @staticmethod
+    def ticker_24hr(raw_data: dict) -> TickerDailyDict:
+        """Преобразует сырой ответ, в котором содержатся данные о тикере за последние 24 часа в унифицированный формат.
+
+        Параметры:
+            raw_data (dict): Сырой ответ с биржи.
+
+        Возвращает:
+            TickerDailyDict: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
+        """
+        ...
+
+    @staticmethod
+    def open_interest(raw_data: dict) -> OpenInterestDict:
+        """Преобразует сырой ответ, в котором содержатся данные об открытом интересе, в унифицированный формат.
+
+        Параметры:
+            raw_data (dict): Сырой ответ с биржи.
+
+        Возвращает:
+            OpenInterestDict: Словарь, где ключ - тикер, а значение - агрегированные данные открытого интереса.
+        """
+        ...
+
+    @staticmethod
+    def funding_rate(raw_data: dict) -> dict[str, float]:
+        """Преобразует сырой ответ, в котором содержатся данные о ставках финансирования, в унифицированный формат.
+
+        Параметры:
+            raw_data (dict): Сырой ответ с биржи.
+
+        Возвращает:
+            dict[str, float]: Словарь, где ключ - тикер, а значение - ставка финансирования.
+        """
+        ...
+
+    @staticmethod
+    def last_price(raw_data: dict) -> dict[str, float]:
+        """Преобразует сырой ответ, в котором содержатся данные о последней цене, в унифицированный формат.
+
+        Параметры:
+            raw_data (dict): Сырой ответ с биржи.
+
+        Возвращает:
+            dict[str, float]: Словарь, где ключ - тикер, а значение - последняя цена.
+        """
+        ...
+
+    @staticmethod
+    def klines(raw_data: dict) -> list[KlineDict]:
+        """Преобразует сырой ответ, в котором содержатся данные о свечах, в унифицированный формат.
+
+        Параметры:
+            raw_data (dict): Сырой ответ с биржи.
+
+        Возвращает:
+            list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
+        """
+        ...
 
     @staticmethod
     def Klines_message(msg: Any) -> list[KlineDict]:
@@ -85,5 +164,18 @@ class Adapter:
 
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
+        """
+        ...
+
+    @staticmethod
+    def liquidations_message(msg: Any) -> list[LiquidationDict]:
+        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
+        ликвидации/ликвидациях в унифицированный вид.
+
+        Параметры:
+            msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[LiquidationDict]: Список словарей, где каждый словарь содержит данные о ликвидации.
         """
         ...

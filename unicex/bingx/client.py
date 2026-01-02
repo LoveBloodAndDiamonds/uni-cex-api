@@ -170,7 +170,7 @@ class Client(BaseClient):
 
         return await self._make_request("GET", "/openApi/swap/v3/quote/klines", params=params)
 
-    async def futures_open_interest(
+    async def open_interest(
         self,
         symbol: str,
         timestamp: int | None = None,
