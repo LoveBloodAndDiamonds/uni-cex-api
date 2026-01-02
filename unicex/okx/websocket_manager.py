@@ -15,13 +15,13 @@ type CallbackType = Callable[[Any], Awaitable[None]]
 class WebsocketManager:
     """Менеджер асинхронных вебсокетов для Okx."""
 
-    _BASE_URL = "wss://ws.okx.com:8443/ws"
+    _BASE_URL: str = "wss://ws.okx.com:8443/ws"
     """Базовый URL вебсокетов на Okx."""
 
-    _PUBLIC_URL = _BASE_URL + "/v5/public"
+    _PUBLIC_URL: str = _BASE_URL + "/v5/public"
     """Публичный URL вебсокетов на Okx."""
 
-    _BUSINESS_URL = _BASE_URL + "/v5/business"
+    _BUSINESS_URL: str = _BASE_URL + "/v5/business"
     """Бизнес-URL вебсокетов на Okx. (для топиков trades-all и candle)"""
 
     def __init__(self, client: Client | None = None, **ws_kwargs: Any) -> None:
