@@ -221,6 +221,11 @@ def generate_ex_link(exchange: Exchange, market_type: MarketType, symbol: str):
             return f"https://www.kucoin.com/trade/futures/{symbol}M"
         else:
             return f"https://www.kucoin.com/trade/{ticker}-USDT"
+    elif exchange == Exchange.BINGX:
+        if market_type == MarketType.FUTURES:
+            return f"https://bingx.com/en/spot/{symbol}"
+        else:
+            return f"https://bingx.com/en/perpetual/{ticker}-USDT"
     else:
         raise NotSupported(f"Exchange {exchange} is not supported")
 
@@ -273,6 +278,8 @@ def generate_cg_link(exchange: Exchange, market_type: MarketType, symbol: str) -
                 return f"{base_url}/Hyperliquid_{symbol.replace('USDT', '-USD')}"
             case Exchange.KUCOIN:
                 return f"https://www.coinglass.com/tv/ru/KuCoin_{symbol}M"
+            case Exchange.BINGX:
+                return f"https://www.coinglass.com/tv/ru/BingX_{symbol.replace('USDT', '-USDT')}"
             case _:
                 return f"{base_url}/{exchange.capitalize()}_{symbol}"
     else:

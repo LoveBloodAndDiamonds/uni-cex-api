@@ -8,6 +8,10 @@
 - Какая то путаница в OCO ордерах на бинансе: https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-list---oco-trade
 - На Hyperliquid неправильно работает лимит (добавляет + 1 свечу при запросе свечей через UniClient)
 - на KuCoin фандинг рейт работает странно, возвращает неверное значение
+- generate_cg_link - для спота есть корректная ссылка не только для OKX и переделать под ticker
+- generate_ex_link - переделать под ticker
+- generatte_tv_link - переделать под ticker
+- symbol_to_exchange_format скорее всего перенести в extra.py
 
 + там где нет aggtrades возвращать trades вебсокет и наоборот
 + Как реализовать типы (quantity, price и т.д.) в сырых клиентах? str | int | float?
