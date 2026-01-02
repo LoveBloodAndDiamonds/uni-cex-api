@@ -5,7 +5,7 @@ from typing import Any
 
 from unicex._base import BaseClient
 from unicex.types import RequestMethod
-from unicex.utils import filter_params
+from unicex.utils import filter_params, get_timestamp
 
 
 class Client(BaseClient):
@@ -33,6 +33,10 @@ class Client(BaseClient):
         """
         # Составляем URL для запроса
         url = self._BASE_URL + endpoint
+
+        # Добавляем timestap в параметры, если он не указан
+        if params and "timestamp" in params and not params["timestamp"]:
+            params["timestamp"] = get_timestamp()
 
         # Фильтруем параметры от None значений
         params = filter_params(params) if params else {}
@@ -156,7 +160,7 @@ class Client(BaseClient):
     ) -> dict[str, Any]:
         """Получение свечей.
 
-        https://bingx-api.github.io/docs-v3/#/en/Swap/Market%20Data/Kline-Candlestick%20Data
+        https://bingx-api.github.io/docs-v3/#/en/Swap/Market%20Data/Kline%2FCandlestick%20Data
         """
         params = {
             "symbol": symbol,

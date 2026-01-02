@@ -38,15 +38,15 @@ test_all_timeframes = False
 
 # Какие биржи тестировать
 exchanges = [
-    Exchange.HYPERLIQUID,
-    Exchange.MEXC,
-    Exchange.BYBIT,
-    Exchange.BINANCE,
-    Exchange.BITGET,
-    Exchange.OKX,
-    Exchange.GATE,
-    Exchange.KUCOIN,
-    # Exchange.BINGX,
+    # Exchange.HYPERLIQUID,
+    # Exchange.MEXC,
+    # Exchange.BYBIT,
+    # Exchange.BINANCE,
+    # Exchange.BITGET,
+    # Exchange.OKX,
+    # Exchange.GATE,
+    # Exchange.KUCOIN,
+    Exchange.BINGX,
 ]
 
 # Сколько символов показывать в превью вывода
@@ -118,7 +118,7 @@ async def test_exchange(exchange: Exchange) -> dict:
                     exchange, client.futures_klines, symbol=f_symbol, interval=interval, limit=10
                 )
 
-        if should_run("open_interest") and exchange not in [Exchange.BINANCE]:
+        if should_run("open_interest") and exchange not in [Exchange.BINANCE, Exchange.BINGX]:
             results["open_interest"] = await safe_call(exchange, client.open_interest)
         if should_run("single_open_interest"):
             results["single_open_interest"] = await safe_call(

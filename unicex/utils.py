@@ -1,6 +1,7 @@
 """Модуль, который предоставляет дополнительные функции, которые нужны для внутренного использования в библиотеке."""
 
 __all__ = [
+    "get_timestamp",
     "dict_to_query_string",
     "generate_hmac_sha256_signature",
     "sort_params_by_alphabetical_order",
@@ -15,6 +16,7 @@ import base64
 import hashlib
 import hmac
 import json
+import time
 from collections.abc import Callable, Iterable
 from functools import wraps
 from typing import Any, Literal
@@ -22,6 +24,19 @@ from urllib.parse import urlencode
 
 from unicex.enums import Exchange, MarketType
 from unicex.exceptions import AdapterError
+
+
+def get_timestamp(milliseconds: bool = False) -> int:
+    """Возвращает текущее время в миллисекундах или секундах.
+
+    Параметры:
+        milliseconds (`bool`, опционально): Если True, возвращает время в миллисекундах.
+                                          Если False, возвращает время в секундах.
+
+    Возвращает:
+        `int`: Текущее время в миллисекундах или секундах.
+    """
+    return int(time.time() * 1000) if milliseconds else int(time.time())
 
 
 def filter_params(params: dict) -> dict:
@@ -220,4 +235,6 @@ def symbol_to_exchange_format(
             return symbol_upper + "M"
         else:
             return symbol_upper.replace("USDT", "-USDT")
+    elif exchange == Exchange.BINGX:
+        return symbol_upper.replace("USDT", "-USDT")
     return symbol_upper
