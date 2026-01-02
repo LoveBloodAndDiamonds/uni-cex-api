@@ -88,6 +88,13 @@ __all__ = [
     "KucoinWebsocketManager",
     "KucoinUserWebsocket",
     "KucoinExchangeInfo",
+    # BingX
+    "BingXClient",
+    "BingXUniClient",
+    "BingXUniWebsocketManager",
+    "BingXWebsocketManager",
+    "BingXUserWebsocket",
+    "BingXExchangeInfo",
 ]
 
 # ruff: noqa
@@ -189,6 +196,15 @@ from .kucoin import (
     ExchangeInfo as KucoinExchangeInfo,
 )
 
+from .bingx import (
+    Client as BingXClient,
+    UniClient as BingXUniClient,
+    UniWebsocketManager as BingXUniWebsocketManager,
+    UserWebsocket as BingXUserWebsocket,
+    WebsocketManager as BingXWebsocketManager,
+    ExchangeInfo as BingXExchangeInfo,
+)
+
 
 async def load_exchanges_info() -> None:
     """Единожды загружает информацию о тикерах на всех биржах."""
@@ -201,6 +217,7 @@ async def load_exchanges_info() -> None:
         MexcExchangeInfo.load_exchange_info(),
         OkxExchangeInfo.load_exchange_info(),
         KucoinExchangeInfo.load_exchange_info(),
+        BingXExchangeInfo.load_exchange_info(),
     )
 
 
@@ -215,4 +232,5 @@ async def start_exchanges_info(parse_interval_seconds: int = 60 * 60) -> None:
         MexcExchangeInfo.start(parse_interval_seconds),
         OkxExchangeInfo.start(parse_interval_seconds),
         KucoinExchangeInfo.start(parse_interval_seconds),
+        BingXExchangeInfo.start(parse_interval_seconds),
     )
