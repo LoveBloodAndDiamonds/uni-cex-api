@@ -13,6 +13,11 @@
 - generatte_tv_link - переделать под ticker
 - symbol_to_exchange_format скорее всего перенести в extra.py
 - bingx: сделать что-то с recvwindow, а так же проверить ссылки на докуменьацию, адаптер в свечах проверить 
+- bingx: 
+            if message == "Ping":
+                raise ValueError("Ping message received")
+              
+
 
 + там где нет aggtrades возвращать trades вебсокет и наоборот
 + Как реализовать типы (quantity, price и т.д.) в сырых клиентах? str | int | float?

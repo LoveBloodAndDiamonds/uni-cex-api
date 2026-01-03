@@ -5,7 +5,7 @@ from typing import Any
 from unicex.types import (
     KlineDict,
     LiquidationDict,
-    OpenInterestDict,
+    OpenInterestItem,
     TickerDailyDict,
     TradeDict,
 )
@@ -58,23 +58,17 @@ class Adapter:
         return result
 
     @staticmethod
-    def open_interest(raw_data: dict) -> OpenInterestDict:
+    def open_interest(raw_data: dict) -> OpenInterestItem:
         """Преобразует сырой ответ, в котором содержатся данные об открытом интересе, в унифицированный формат.
 
         Параметры:
             raw_data (dict): Сырой ответ с биржи.
 
         Возвращает:
-            OpenInterestDict: Словарь, где ключ - тикер, а значение - агрегированные данные открытого интереса.
+            OpenInterestItem: Словарь со временем и объемом открытого интереса в монетах.
         """
         item = raw_data["data"]
-        symbol = item["symbol"]
-        return {
-            symbol: {
-                "t": int(item["time"]),
-                "v": float(item["openInterest"]),
-            }
-        }
+        return OpenInterestItem(t=int(item["time"]), v=float(item["openInterest"]))
 
     @staticmethod
     def funding_rate(raw_data: dict) -> dict[str, float]:
@@ -237,7 +231,19 @@ class Adapter:
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
         """
-        ...
+        return [
+            TradeDict(
+                t=int(trade["T"]),
+                s=str(trade["s"]),
+                S="SELL" if bool(trade["m"]) else "BUY",
+                p=float(trade["p"]),
+                v=float(trade["q"]),
+            )
+            for trade in sorted(
+                msg["data"],
+                key=lambda x: int(x["T"]),
+            )
+        ]
 
     @staticmethod
     def futures_trades_message(msg: Any) -> list[TradeDict]:
@@ -250,7 +256,19 @@ class Adapter:
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
         """
-        ...
+        return [
+            TradeDict(
+                t=int(trade["T"]),
+                s=str(trade["s"]),
+                S="SELL" if bool(trade["m"]) else "BUY",
+                p=float(trade["p"]),
+                v=float(trade["q"]),
+            )
+            for trade in sorted(
+                msg["data"],
+                key=lambda x: int(x["T"]),
+            )
+        ]
 
     @staticmethod
     def liquidations_message(msg: Any) -> list[LiquidationDict]:

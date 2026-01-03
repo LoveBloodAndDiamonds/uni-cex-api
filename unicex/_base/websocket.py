@@ -146,7 +146,7 @@ class Websocket:
             if message in ["ping", "pong"]:
                 self._logger.debug(f"Received ping message: {message}")
             else:
-                self._logger.error(f"Failed to decode JSON message: {message}, error: {e}")
+                self._logger.error(f"Failed to decode message: {message}, error: {e}")
         except Exception as e:
             self._logger.error(f"Unexpected error: {e}")
 

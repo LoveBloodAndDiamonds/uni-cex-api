@@ -9,8 +9,8 @@ async def main() -> None:
     client = await UniClient.create()
 
     async with client as conn:
-        r = await conn.tickers()
-        print(len(r))
+        r = await conn.open_interest(symbol="ETH-USDT")
+        print(r)
 
 
 if __name__ == "__main__":

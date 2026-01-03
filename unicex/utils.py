@@ -26,7 +26,7 @@ from unicex.enums import Exchange, MarketType
 from unicex.exceptions import AdapterError
 
 
-def get_timestamp(milliseconds: bool = False) -> int:
+def get_timestamp(milliseconds: bool = True) -> int:
     """Возвращает текущее время в миллисекундах или секундах.
 
     Параметры:
