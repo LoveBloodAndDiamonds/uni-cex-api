@@ -16,7 +16,7 @@ async def main() -> None:
 
     kwargs = dict(callback=callback, market_type="FUTURES", symbols=symbols)
 
-    ws = manager.trade(**kwargs)
+    ws = manager.trade(**kwargs)  # type: ignore
     # ws = manager.all_liquidation(**kwargs)
     # ws = manager.orderbook(**kwargs)
     # ws = manager.klines(**kwargs, interval="1")

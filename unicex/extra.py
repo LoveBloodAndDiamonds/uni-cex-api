@@ -223,9 +223,9 @@ def generate_ex_link(exchange: Exchange, market_type: MarketType, symbol: str):
             return f"https://www.kucoin.com/trade/{ticker}-USDT"
     elif exchange == Exchange.BINGX:
         if market_type == MarketType.FUTURES:
-            return f"https://bingx.com/en/spot/{symbol}"
-        else:
             return f"https://bingx.com/en/perpetual/{ticker}-USDT"
+        else:
+            return f"https://bingx.com/en/spot/{symbol}"
     else:
         raise NotSupported(f"Exchange {exchange} is not supported")
 
