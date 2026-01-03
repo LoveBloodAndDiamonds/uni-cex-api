@@ -3,7 +3,7 @@ __all__ = ["Websocket"]
 import asyncio
 import time
 from collections.abc import Awaitable, Callable
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol
 
 import orjson
 import websockets
@@ -23,12 +23,12 @@ class Websocket:
     class _DecoderProtocol(Protocol):
         """Протокол декодирования сообщений."""
 
-        def decode(self, message: Any) -> dict: ...
+        def decode(self, message: Any) -> dict | Literal["ping"]: ...
 
     class _JsonDecoder:
         """Протокол декодирования сообщений в формате JSON."""
 
-        def decode(self, message: Any) -> dict:
+        def decode(self, message: Any) -> dict | Literal["ping"]:
             return orjson.loads(message)
 
     def __init__(
@@ -114,7 +114,7 @@ class Websocket:
                 # Цикл получения сообщений
                 while self._running:
                     message = await conn.recv()
-                    await self._handle_message(message)
+                    await self._handle_message(message, conn)
 
             except websockets.exceptions.ConnectionClosed as e:
                 self._logger.error(f"Websocket connection was closed unexpectedly: {e}")
@@ -128,7 +128,7 @@ class Websocket:
                 else:
                     return  # Выходим из итератора, если вебсокет уже выключен
 
-    async def _handle_message(self, message: str | bytes) -> None:
+    async def _handle_message(self, message: str | bytes, conn: ClientConnection) -> None:
         """Обрабатывает входящее сообщение вебсокета."""
         try:
             # Обновленяем время последнего сообщения
@@ -136,10 +136,15 @@ class Websocket:
 
             # Ложим сообщение в очередь, предварительно его сериализуя
             decoded_message = self._decoder.decode(message)
-            await self._queue.put(decoded_message)
 
-            # Проверяем размер очереди сообщений и выбрасываем ошибку, если он превышает максимальный размер
-            self._check_queue_size()
+            # Проверяем - вдруг декордер вернул "ping"
+            if decoded_message == "ping":
+                await self._send_pong(conn)
+            else:
+                await self._queue.put(decoded_message)
+
+                # Проверяем размер очереди сообщений и выбрасываем ошибку, если он превышает максимальный размер
+                self._check_queue_size()
         except QueueOverflowError:
             self._logger.error("Message queue is overflow")
         except orjson.JSONDecodeError as e:
@@ -255,6 +260,18 @@ class Websocket:
                 await self.restart()
                 return
             await asyncio.sleep(1)
+
+    async def _send_pong(self, conn: ClientConnection) -> None:
+        """Отправляет pong сообщение."""
+        if self._pong_message:
+            if isinstance(self._pong_message, Callable):
+                pong_message = self._pong_message()
+            else:
+                pong_message = self._pong_message
+            await conn.send(pong_message)
+        else:
+            await conn.pong()
+        self._logger.debug("Sent pong message")
 
     def __repr__(self) -> str:
         """Репрезентация вебсокета."""

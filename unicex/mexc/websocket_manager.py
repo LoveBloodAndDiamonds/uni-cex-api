@@ -27,7 +27,7 @@ class WebsocketManager:
     class _MexcProtobufDecoder:
         """Класс для декодирования сообщений в формате Protobuf со спотового рынка Mexc."""
 
-        def decode(self, message: Any) -> dict:
+        def decode(self, message: Any) -> dict | Literal["ping"]:
             if isinstance(message, bytes):
                 wrapper = PushDataV3ApiWrapper()  # noqa
                 wrapper.ParseFromString(message)

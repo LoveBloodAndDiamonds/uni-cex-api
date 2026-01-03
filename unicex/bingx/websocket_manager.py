@@ -27,7 +27,7 @@ class WebsocketManager:
     class _BingXGzipDecoder:
         """Класс для декодирования gzip-сообщений WebSocket от BingX."""
 
-        def decode(self, message: Any) -> dict:
+        def decode(self, message: Any) -> dict | Literal["ping"]:
             if isinstance(message, bytes):
                 try:
                     message = gzip.decompress(message).decode("utf-8")
@@ -35,7 +35,7 @@ class WebsocketManager:
                     message = message.decode("utf-8")
 
             if message == "Ping":
-                raise ValueError("Ping message received")
+                return "ping"
 
             return orjson.loads(message)
 
@@ -115,5 +115,6 @@ class WebsocketManager:
             url=self._get_url(market_type),
             subscription_messages=subscription_messages,
             decoder=self._BingXGzipDecoder,
+            pong_message="Pong",
             **self._ws_kwargs,
         )

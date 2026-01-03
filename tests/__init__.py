@@ -12,5 +12,12 @@ async def main() -> None:
         print("len spot tickers: ", len(t))
 
 
+from typing import Literal
+
+
+def test() -> dict | Literal["ping"]:
+    return "ping"
+
+
 if __name__ == "__main__":
     asyncio.run(main())
