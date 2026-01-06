@@ -16,7 +16,7 @@ type CallbackType = Callable[[Any], Awaitable[None]]
 
 
 class IUniWebsocketManager(ABC):
-    """Интерфейс менеджера асинхронных унифицированных вебсокетов."""
+    """Интерфейс менеджера унифицированных вебсокетов."""
 
     def __init__(
         self, client: BaseClient | IUniClient | None = None, logger: LoggerLike | None = None
