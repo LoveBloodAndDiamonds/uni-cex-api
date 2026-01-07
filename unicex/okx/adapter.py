@@ -135,6 +135,7 @@ class Adapter:
             item["instId"]: OpenInterestItem(
                 t=int(item["ts"]),
                 v=float(item["oiCcy"]),
+                u="coins",
             )
             for item in raw_data["data"]
         }

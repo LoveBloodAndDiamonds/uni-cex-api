@@ -115,7 +115,11 @@ class Adapter:
         Возвращает:
             OpenInterestItem: Словарь со временем и объемом открытого интереса в монетах.
         """
-        return OpenInterestItem(t=raw_data["time"], v=float(raw_data["openInterest"]))
+        return OpenInterestItem(
+            t=raw_data["time"],
+            v=float(raw_data["openInterest"]),
+            u="coins",
+        )
 
     @staticmethod
     def klines_message(raw_msg: dict) -> list[KlineDict]:

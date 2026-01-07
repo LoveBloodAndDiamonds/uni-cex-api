@@ -68,7 +68,7 @@ class Adapter:
             OpenInterestItem: Словарь со временем и объемом открытого интереса в монетах.
         """
         item = raw_data["data"]
-        return OpenInterestItem(t=int(item["time"]), v=float(item["openInterest"]))
+        return OpenInterestItem(t=int(item["time"]), v=float(item["openInterest"]), u="usd")
 
     @staticmethod
     def funding_rate(raw_data: dict) -> dict[str, float]:

@@ -126,6 +126,7 @@ class Adapter:
             item["symbol"]: OpenInterestItem(
                 t=item["ts"],
                 v=float(item["openInterest"]) * Adapter._get_contract_size(item["symbol"]),
+                u="coins",
             )
             for item in raw_data["data"]
         }

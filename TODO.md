@@ -16,7 +16,7 @@
 - bingx: 
             if message == "Ping":
                 raise ValueError("Ping message received")
-              
+- проверить ключ "u" во всех унифицированных open interest (особенно на мексе)        
 
 
 + там где нет aggtrades возвращать trades вебсокет и наоборот
