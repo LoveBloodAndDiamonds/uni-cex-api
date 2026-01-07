@@ -9,6 +9,7 @@ from typing import Any, Literal
 import orjson
 
 from unicex._base import Websocket
+from unicex.utils import validate_single_symbol_args
 
 from .client import Client
 
@@ -101,10 +102,7 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        if symbol and symbols:
-            raise ValueError("Parameters symbol and symbols cannot be used together")
-        if not (symbol or symbols):
-            raise ValueError("Either symbol or symbols must be provided")
+        validate_single_symbol_args(symbol, symbols)
 
         tickers = [symbol] if symbol else symbols
         data_types = [f"{ticker.upper()}@trade" for ticker in tickers]  # type: ignore[arg-type]

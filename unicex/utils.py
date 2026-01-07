@@ -10,6 +10,7 @@ __all__ = [
     "catch_adapter_errors",
     "decorate_all_methods",
     "symbol_to_exchange_format",
+    "validate_single_symbol_args",
 ]
 
 import base64
@@ -17,7 +18,7 @@ import hashlib
 import hmac
 import json
 import time
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Sequence
 from functools import wraps
 from typing import Any, Literal
 from urllib.parse import urlencode
@@ -240,3 +241,21 @@ def symbol_to_exchange_format(
     elif exchange == Exchange.BINGX:
         return symbol_upper.replace("USDT", "-USDT")
     return symbol_upper
+
+
+def validate_single_symbol_args(
+    symbol: str | None = None, symbols: Sequence[str] | None = None
+) -> None:
+    """Проверяет, что передан ровно один из аргументов symbol/symbols.
+
+    Параметры:
+      symbol (`str | None`, опционально): Одиночный торговый символ.
+      symbols (`Sequence[str] | None`, опционально): Список торговых символов.
+
+    Возвращает:
+      `None`: Ничего не возвращает, выбрасывает ValueError при нарушении условий.
+    """
+    if symbol and symbols:
+        raise ValueError("Parameters symbol and symbols cannot be used together")
+    if not (symbol or symbols):
+        raise ValueError("Either symbol or symbols must be provided")

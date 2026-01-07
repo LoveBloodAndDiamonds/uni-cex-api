@@ -6,6 +6,7 @@ from collections.abc import Awaitable, Callable, Sequence
 from typing import Any, Literal
 
 from unicex._base import Websocket
+from unicex.utils import validate_single_symbol_args
 
 from .client import Client
 
@@ -108,10 +109,7 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        if symbol and symbols:
-            raise ValueError("Parameters symbol and symbols cannot be used together")
-        if not (symbol or symbols):
-            raise ValueError("Either symbol or symbols must be provided")
+        validate_single_symbol_args(symbol, symbols)
 
         tickers = [symbol] if symbol else symbols
         topics = [f"orderbook.{depth}.{ticker.upper()}" for ticker in tickers]  # type: ignore
@@ -152,10 +150,7 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        if symbol and symbols:
-            raise ValueError("Parameters symbol and symbols cannot be used together")
-        if not (symbol or symbols):
-            raise ValueError("Either symbol or symbols must be provided")
+        validate_single_symbol_args(symbol, symbols)
 
         tickers = [symbol] if symbol else symbols
         topics = [f"kline.{interval}.{ticker.upper()}" for ticker in tickers]  # type: ignore
@@ -192,10 +187,7 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        if symbol and symbols:
-            raise ValueError("Parameters symbol and symbols cannot be used together")
-        if not (symbol or symbols):
-            raise ValueError("Either symbol or symbols must be provided")
+        validate_single_symbol_args(symbol, symbols)
 
         tickers = [symbol] if symbol else symbols
         topics = [f"publicTrade.{ticker.upper()}" for ticker in tickers]  # type: ignore
@@ -232,10 +224,7 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        if symbol and symbols:
-            raise ValueError("Parameters symbol and symbols cannot be used together")
-        if not (symbol or symbols):
-            raise ValueError("Either symbol or symbols must be provided")
+        validate_single_symbol_args(symbol, symbols)
 
         tickers = [symbol] if symbol else symbols
         topics = [f"tickers.{ticker.upper()}" for ticker in tickers]  # type: ignore
@@ -280,10 +269,7 @@ class WebsocketManager:
             stacklevel=2,
         )
 
-        if symbol and symbols:
-            raise ValueError("Parameters symbol and symbols cannot be used together")
-        if not (symbol or symbols):
-            raise ValueError("Either symbol or symbols must be provided")
+        validate_single_symbol_args(symbol, symbols)
 
         tickers = [symbol] if symbol else symbols
         topics = [f"liquidation.{ticker.upper()}" for ticker in tickers]  # type: ignore
@@ -320,10 +306,7 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        if symbol and symbols:
-            raise ValueError("Parameters symbol and symbols cannot be used together")
-        if not (symbol or symbols):
-            raise ValueError("Either symbol or symbols must be provided")
+        validate_single_symbol_args(symbol, symbols)
 
         tickers = [symbol] if symbol else symbols
         topics = [f"allLiquidation.{ticker.upper()}" for ticker in tickers]  # type: ignore
