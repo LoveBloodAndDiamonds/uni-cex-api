@@ -183,6 +183,7 @@ class Adapter:
             i["symbol"]: OpenInterestItem(
                 t=int(i["ts"]),
                 v=float(i["holdingAmount"]),
+                u="coins",
             )
             for i in raw_data["data"]
         }

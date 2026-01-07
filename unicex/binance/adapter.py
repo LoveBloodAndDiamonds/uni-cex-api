@@ -63,18 +63,6 @@ class Adapter:
         return {item["symbol"]: float(item["price"]) for item in raw_data}
 
     @staticmethod
-    def futures_last_price(raw_data: list[dict]) -> dict[str, float]:
-        """Преобразует сырой ответ, в котором содержатся данные о тикере за последние 24 часа в унифицированный формат.
-
-        Параметры:
-            raw_data (list[dict]): Сырой ответ с биржи.
-
-        Возвращает:
-            dict[str, float]: Словарь, где ключ - тикер, а значение - последняя цена.
-        """
-        return Adapter.last_price(raw_data)
-
-    @staticmethod
     def klines(raw_data: list[list], symbol: str) -> list[KlineDict]:
         """Преобразует сырой ответ, в котором содержатся данные о котировках тикеров в унифицированный формат.
 
@@ -127,7 +115,11 @@ class Adapter:
         Возвращает:
             OpenInterestItem: Словарь со временем и объемом открытого интереса в монетах.
         """
-        return OpenInterestItem(t=raw_data["time"], v=float(raw_data["openInterest"]))
+        return OpenInterestItem(
+            t=raw_data["time"],
+            v=float(raw_data["openInterest"]),
+            u="coins",
+        )
 
     @staticmethod
     def klines_message(raw_msg: dict) -> list[KlineDict]:

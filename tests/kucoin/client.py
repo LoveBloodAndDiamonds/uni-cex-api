@@ -10,11 +10,10 @@ async def main() -> None:
     # r = await c.ticker("FUTURES", symbol="ETHUSDTM")
     import time
 
-    r = await c.funding_rate_history(
-        symbol="ETHUSDTM",
-        start_at=int(time.time() * 1000 - 100 * 100000),
-        end_at=int(time.time() * 1000),
-    )
+    r = await c.funding_rate("XRP" + "USDTM")
+
+    print(type(r["data"]["nextFundingRate"]))
+    print(str(r["data"]["nextFundingRate"] * 100))
 
     from pprint import pp
 

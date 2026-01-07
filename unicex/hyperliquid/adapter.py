@@ -256,6 +256,7 @@ class Adapter:
             universe[i]["name"]: OpenInterestItem(
                 t=int(time.time() * 1000),
                 v=float(item["openInterest"]),
+                u="coins",
             )
             for i, item in enumerate(metrics)
         }

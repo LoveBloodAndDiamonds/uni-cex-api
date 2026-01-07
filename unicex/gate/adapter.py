@@ -173,6 +173,7 @@ class Adapter:
             item["contract"]: OpenInterestItem(
                 t=int(time.time() * 1000),
                 v=float(item["total_size"]) * float(item["quanto_multiplier"]),
+                u="coins",
             )
             for item in raw_data
         }

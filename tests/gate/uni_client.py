@@ -9,7 +9,8 @@ async def main() -> None:
     client = await UniClient.create()
 
     async with client as conn:
-        k = await conn.klines("BTC_USDT", "1m", limit=10)
+        k = await conn.tickers()
+        # k = await conn.klines("BTC_USDT", "1m", limit=10)
         # k = await conn.futures_klines("BTC_USDT", "1m", limit=10)
         from pprint import pp
 

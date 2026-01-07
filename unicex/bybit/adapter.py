@@ -68,6 +68,7 @@ class Adapter:
             item["symbol"]: OpenInterestItem(
                 t=raw_data["time"],
                 v=float(item["openInterest"]),
+                u="coins",
             )
             for item in raw_data["result"]["list"]
         }

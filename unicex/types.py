@@ -118,7 +118,10 @@ class OpenInterestItem(TypedDict):
     """Время. В миллисекундах."""
 
     v: float
-    """Открытый интерес. В монетах."""
+    """Открытый интерес."""
+
+    u: Literal["coins", "usd"]
+    """Единица измерения открытого интереса."""
 
 
 type OpenInterestDict = dict[str, OpenInterestItem]

@@ -203,6 +203,9 @@ class BaseClient:
                 response_json=response_json,
             ) from None
 
+        # Валидирование ответа в конерктной реализации клиента
+        self._validate_response(response_json)
+
         # Логирование ответа
         try:
             self._logger.debug(
@@ -212,3 +215,7 @@ class BaseClient:
             self._logger.error(f"Error while logging response: {e}")
 
         return response_json
+
+    def _validate_response(self, response_json: dict[str, Any]) -> None:
+        """Проверка ответа API на ошибки биржи. Переопределяется в клиентах конкретных бирж."""
+        return None

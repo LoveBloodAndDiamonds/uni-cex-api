@@ -6,6 +6,7 @@ from collections.abc import Awaitable, Callable, Sequence
 from typing import Any, Literal
 
 from unicex._base import Websocket
+from unicex.utils import validate_single_symbol_args
 
 from .client import Client
 
@@ -46,10 +47,7 @@ class WebsocketManager:
         Возвращает:
             `str`: JSON-строка с сообщением для подписки на вебсокет.
         """
-        if symbol and symbols:
-            raise ValueError("Parameters symbol and symbols cannot be used together")
-        if not (symbol or symbols):
-            raise ValueError("Either symbol or symbols must be provided")
+        validate_single_symbol_args(symbol, symbols)
 
         tickers = [symbol] if symbol else symbols
         streams: list[dict] = [

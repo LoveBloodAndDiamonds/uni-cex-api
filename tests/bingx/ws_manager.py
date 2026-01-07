@@ -1,6 +1,6 @@
 import asyncio
 
-from unicex.bybit.websocket_manager import WebsocketManager
+from unicex.bingx.websocket_manager import WebsocketManager
 
 
 async def callback(msg):
@@ -12,13 +12,14 @@ async def main() -> None:
 
     manager = WebsocketManager()
 
-    symbols = ["DOGEUSDT"]
+    symbols = ["BTC-USDT", "ETH-USDT"]
 
-    kwargs = dict(callback=callback, category="spot", symbols=symbols)
+    kwargs = dict(callback=callback, market_type="FUTURES", symbols=symbols)
 
+    ws = manager.trade(**kwargs)  # type: ignore
     # ws = manager.all_liquidation(**kwargs)
     # ws = manager.orderbook(**kwargs)
-    ws = manager.klines(**kwargs, interval="1")  # type: ignore
+    # ws = manager.klines(**kwargs, interval="1")
     # ws = manager.public_trade(**kwargs)
     # ws = manager.ticker(**kwargs)  # type: ignore
     # ws = manager.liquidation(**kwargs)

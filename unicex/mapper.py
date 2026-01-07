@@ -6,34 +6,66 @@ __all__ = [
     "get_exchange_info",
 ]
 
+# ruff: noqa
 
 from ._abc import IExchangeInfo, IUniClient, IUniWebsocketManager
-from .binance import ExchangeInfo as BinanceExchangeInfo
-from .binance import UniClient as BinanceUniClient
-from .binance import UniWebsocketManager as BinanceUniWebsocketManager
-from .bitget import ExchangeInfo as BitgetExchangeInfo
-from .bitget import UniClient as BitgetUniClient
-from .bitget import UniWebsocketManager as BitgetUniWebsocketManager
-from .bybit import ExchangeInfo as BybitExchangeInfo
-from .bybit import UniClient as BybitUniClient
-from .bybit import UniWebsocketManager as BybitUniWebsocketManager
 from .enums import Exchange
 from .exceptions import NotSupported
-from .gate import ExchangeInfo as GateioExchangeInfo
-from .gate import UniClient as GateioUniClient
-from .gate import UniWebsocketManager as GateioUniWebsocketManager
-from .hyperliquid import ExchangeInfo as HyperliquidExchangeInfo
-from .hyperliquid import UniClient as HyperliquidUniClient
-from .hyperliquid import UniWebsocketManager as HyperliquidUniWebsocketManager
-from .kucoin import ExchangeInfo as KucoinExchangeInfo
-from .kucoin import UniClient as KucoinUniClient
-from .kucoin import UniWebsocketManager as KucoinUniWebsocketManager
-from .mexc import ExchangeInfo as MexcExchangeInfo
-from .mexc import UniClient as MexcUniClient
-from .mexc import UniWebsocketManager as MexcUniWebsocketManager
-from .okx import ExchangeInfo as OkxExchangeInfo
-from .okx import UniClient as OkxUniClient
-from .okx import UniWebsocketManager as OkxUniWebsocketManager
+
+from .binance import (
+    UniClient as BinanceUniClient,
+    UniWebsocketManager as BinanceUniWebsocketManager,
+    ExchangeInfo as BinanceExchangeInfo,
+)
+
+from .bitget import (
+    UniClient as BitgetUniClient,
+    UniWebsocketManager as BitgetUniWebsocketManager,
+    ExchangeInfo as BitgetExchangeInfo,
+)
+
+from .bybit import (
+    UniClient as BybitUniClient,
+    UniWebsocketManager as BybitUniWebsocketManager,
+    ExchangeInfo as BybitExchangeInfo,
+)
+
+from .gate import (
+    UniClient as GateioUniClient,
+    UniWebsocketManager as GateioUniWebsocketManager,
+    ExchangeInfo as GateioExchangeInfo,
+)
+
+from .hyperliquid import (
+    UniClient as HyperliquidUniClient,
+    UniWebsocketManager as HyperliquidUniWebsocketManager,
+    ExchangeInfo as HyperliquidExchangeInfo,
+)
+
+from .mexc import (
+    UniClient as MexcUniClient,
+    UniWebsocketManager as MexcUniWebsocketManager,
+    ExchangeInfo as MexcExchangeInfo,
+)
+
+from .okx import (
+    UniClient as OkxUniClient,
+    UniWebsocketManager as OkxUniWebsocketManager,
+    ExchangeInfo as OkxExchangeInfo,
+)
+
+from .kucoin import (
+    UniClient as KucoinUniClient,
+    UniWebsocketManager as KucoinUniWebsocketManager,
+    ExchangeInfo as KucoinExchangeInfo,
+)
+
+from .bingx import (
+    UniClient as BingXUniClient,
+    UniWebsocketManager as BingXUniWebsocketManager,
+    ExchangeInfo as BingXExchangeInfo,
+)
+
 
 _UNI_CLIENT_MAPPER: dict[Exchange, type[IUniClient]] = {
     Exchange.BINANCE: BinanceUniClient,
@@ -44,6 +76,7 @@ _UNI_CLIENT_MAPPER: dict[Exchange, type[IUniClient]] = {
     Exchange.MEXC: MexcUniClient,
     Exchange.OKX: OkxUniClient,
     Exchange.KUCOIN: KucoinUniClient,
+    Exchange.BINGX: BingXUniClient,
 }
 """Маппер, который связывает биржу и реализацию унифицированного клиента."""
 
@@ -56,6 +89,7 @@ _UNI_WS_MANAGER_MAPPER: dict[Exchange, type[IUniWebsocketManager]] = {
     Exchange.MEXC: MexcUniWebsocketManager,
     Exchange.OKX: OkxUniWebsocketManager,
     Exchange.KUCOIN: KucoinUniWebsocketManager,
+    Exchange.BINGX: BingXUniWebsocketManager,
 }
 """Маппер, который связывает биржу и реализацию унифицированного вебсокет-менеджера."""
 
@@ -68,6 +102,7 @@ _EXCHANGE_INFO_MAPPER: dict[Exchange, type[IExchangeInfo]] = {
     Exchange.MEXC: MexcExchangeInfo,
     Exchange.OKX: OkxExchangeInfo,
     Exchange.KUCOIN: KucoinExchangeInfo,
+    Exchange.BINGX: BingXExchangeInfo,
 }
 """Маппер, который связывает биржу и реализацию сборщика информации о тикерах на бирже."""
 

@@ -127,6 +127,7 @@ class Adapter:
             result[symbol] = OpenInterestItem(
                 t=item["timestamp"],
                 v=float(item["holdVol"]) * Adapter._get_contract_size(symbol),
+                u="coins",
             )
         return result
 

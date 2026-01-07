@@ -4,7 +4,7 @@ __all__ = ["UniClient"]
 from typing import overload
 
 from unicex._abc import IUniClient
-from unicex.enums import Exchange, Timeframe
+from unicex.enums import Timeframe
 from unicex.types import KlineDict, OpenInterestDict, OpenInterestItem, TickerDailyDict
 
 from .adapter import Adapter
@@ -12,14 +12,14 @@ from .client import Client
 
 
 class UniClient(IUniClient[Client]):
-    """Унифицированный клиент для работы с Kucoin API."""
+    """Унифицированный клиент для работы с BingX API."""
 
     @property
     def _client_cls(self) -> type[Client]:
-        """Возвращает класс клиента для Kucoin.
+        """Возвращает класс клиента для BingX.
 
         Возвращает:
-            type[Client]: Класс клиента для Kucoin.
+            type[Client]: Класс клиента для BingX.
         """
         return Client
 
@@ -32,7 +32,7 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             list[str]: Список тикеров.
         """
-        raw_data = await self._client.ticker("SPOT")
+        raw_data = await self._client.symbols()
         return Adapter.tickers(raw_data, only_usdt)
 
     async def futures_tickers(self, only_usdt: bool = True) -> list[str]:
@@ -44,8 +44,8 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             list[str]: Список тикеров.
         """
-        raw_data = await self._client.ticker("FUTURES")
-        return Adapter.futures_tickers(raw_data, only_usdt)
+        raw_data = await self._client.futures_contracts()
+        return Adapter.tickers(raw_data, only_usdt)
 
     async def last_price(self) -> dict[str, float]:
         """Возвращает последнюю цену для каждого тикера.
@@ -53,7 +53,7 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             dict[str, float]: Словарь с последними ценами для каждого тикера.
         """
-        raw_data = await self._client.ticker("SPOT")
+        raw_data = await self._client.ticker_24hr()
         return Adapter.last_price(raw_data)
 
     async def futures_last_price(self) -> dict[str, float]:
@@ -62,7 +62,7 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             dict[str, float]: Словарь с последними ценами для каждого тикера.
         """
-        raw_data = await self._client.ticker("FUTURES")
+        raw_data = await self._client.futures_ticker_price()
         return Adapter.last_price(raw_data)
 
     async def ticker_24hr(self) -> TickerDailyDict:
@@ -71,7 +71,7 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             TickerDailyDict: Словарь с статистикой за последние 24 часа для каждого тикера.
         """
-        raw_data = await self._client.ticker("SPOT")
+        raw_data = await self._client.ticker_24hr()
         return Adapter.ticker_24hr(raw_data)
 
     async def futures_ticker_24hr(self) -> TickerDailyDict:
@@ -80,7 +80,7 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             TickerDailyDict: Словарь с статистикой за последние 24 часа для каждого тикера.
         """
-        raw_data = await self._client.ticker("FUTURES")
+        raw_data = await self._client.futures_ticker_24hr()
         return Adapter.ticker_24hr(raw_data)
 
     async def klines(
@@ -103,28 +103,15 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             list[KlineDict]: Список свечей для тикера.
         """
-        if not limit and not all([start_time, end_time]):
-            raise ValueError("limit or (start_time and end_time) must be provided")
-
-        if limit:  # Перезаписываем start_time и end_time если указан limit, т.к. по умолчанию HyperLiquid не принимают этот параметр
-            if not isinstance(interval, Timeframe):
-                raise ValueError("interval must be a Timeframe if limit param provided")
-            start_time, end_time = self.limit_to_start_and_end_time(
-                interval, limit, use_milliseconds=False
-            )
-        interval = (
-            interval.to_exchange_format(Exchange.KUCOIN)
-            if isinstance(interval, Timeframe)
-            else interval
-        )
-        raw_data = await self._client.kline(
-            trade_type="SPOT",
+        interval = interval.value if isinstance(interval, Timeframe) else interval
+        raw_data = await self._client.klines(
             symbol=symbol,
             interval=interval,
-            start_at=self.to_seconds(start_time),
-            end_at=self.to_seconds(end_time),
+            limit=limit,
+            start_time=start_time,
+            end_time=end_time,
         )
-        return Adapter.klines(raw_data=raw_data, symbol=symbol)
+        return Adapter.klines(raw_data)
 
     async def futures_klines(
         self,
@@ -146,42 +133,37 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             list[KlineDict]: Список свечей для тикера.
         """
-        if not limit and not all([start_time, end_time]):
-            raise ValueError("limit or (start_time and end_time) must be provided")
-
-        if limit:  # Перезаписываем start_time и end_time если указан limit, т.к. по умолчанию HyperLiquid не принимают этот параметр
-            if not isinstance(interval, Timeframe):
-                raise ValueError("interval must be a Timeframe if limit param provided")
-            start_time, end_time = self.limit_to_start_and_end_time(
-                interval, limit, use_milliseconds=False
-            )
-        interval = (
-            interval.to_exchange_format(Exchange.KUCOIN)
-            if isinstance(interval, Timeframe)
-            else interval
-        )
-        raw_data = await self._client.kline(
-            trade_type="FUTURES",
+        interval = interval.value if isinstance(interval, Timeframe) else interval
+        raw_data = await self._client.futures_klines(
             symbol=symbol,
             interval=interval,
-            start_at=self.to_seconds(start_time),
-            end_at=self.to_seconds(end_time),
+            limit=limit,
+            start_time=start_time,
+            end_time=end_time,
         )
-        return Adapter.klines(raw_data=raw_data, symbol=symbol)
+        return Adapter.klines(raw_data)
+
+    @overload
+    async def funding_rate(self, symbol: str) -> float: ...
+
+    @overload
+    async def funding_rate(self, symbol: None) -> dict[str, float]: ...
+
+    @overload
+    async def funding_rate(self) -> dict[str, float]: ...
 
     async def funding_rate(self, symbol: str | None = None) -> dict[str, float] | float:
-        """Возвращает ставку финансирования для тикера.
+        """Возвращает ставку финансирования для тикера или всех тикеров, если тикер не указан.
 
         Параметры:
-            symbol (`str | None`): Название тикера. На Kucoin параметр обязателен.
+            symbol (`str | None`): Название тикера (Опционально).
 
         Возвращает:
-            `dict[str, float] | float`: Ставка финансирования в процентах.
+            dict[str, float] | float: Ставка финансирования для тикера или словарь со ставками.
         """
-        if not symbol:
-            raise ValueError("Symbol is required to fetch Kucoin funding rate")
-        raw_data = await self._client.funding_rate(symbol=symbol)
-        return Adapter.funding_rate(raw_data)
+        raw_data = await self._client.futures_mark_price(symbol=symbol)
+        adapted_data = Adapter.funding_rate(raw_data)
+        return adapted_data[symbol] if symbol else adapted_data
 
     @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...
@@ -203,6 +185,7 @@ class UniClient(IUniClient[Client]):
                 открытого интереса в монетах. Если нет передан - то словарь, в котором ключ - тикер,
                 а значение - словарь с временем и объемом открытого интереса в монетах.
         """
-        raw_data = await self._client.open_interest()
-        adapted_data = Adapter.open_interest(raw_data)
-        return adapted_data[symbol] if symbol else adapted_data
+        if not symbol:
+            raise ValueError("Symbol is required for bingx open interest")
+        raw_data = await self._client.open_interest(symbol=symbol)
+        return Adapter.open_interest(raw_data)

@@ -1,6 +1,7 @@
 """Модуль, который предоставляет дополнительные функции, которые нужны для внутренного использования в библиотеке."""
 
 __all__ = [
+    "get_timestamp",
     "dict_to_query_string",
     "generate_hmac_sha256_signature",
     "sort_params_by_alphabetical_order",
@@ -9,19 +10,34 @@ __all__ = [
     "catch_adapter_errors",
     "decorate_all_methods",
     "symbol_to_exchange_format",
+    "validate_single_symbol_args",
 ]
 
 import base64
 import hashlib
 import hmac
 import json
-from collections.abc import Callable, Iterable
+import time
+from collections.abc import Callable, Iterable, Sequence
 from functools import wraps
 from typing import Any, Literal
 from urllib.parse import urlencode
 
 from unicex.enums import Exchange, MarketType
 from unicex.exceptions import AdapterError
+
+
+def get_timestamp(milliseconds: bool = True) -> int:
+    """Возвращает текущее время в миллисекундах или секундах.
+
+    Параметры:
+        milliseconds (`bool`, опционально): Если True, возвращает время в миллисекундах.
+                                          Если False, возвращает время в секундах.
+
+    Возвращает:
+        `int`: Текущее время в миллисекундах или секундах.
+    """
+    return int(time.time() * 1000) if milliseconds else int(time.time())
 
 
 def filter_params(params: dict) -> dict:
@@ -217,7 +233,29 @@ def symbol_to_exchange_format(
             return symbol.removesuffix("USDT")  # Вот тут мб и не так, там вроде что-то к USDC
     elif exchange == Exchange.KUCOIN:
         if market_type == MarketType.FUTURES:
+            if symbol_upper == "BTCUSDT":
+                return "XBTUSDTM"
             return symbol_upper + "M"
         else:
             return symbol_upper.replace("USDT", "-USDT")
+    elif exchange == Exchange.BINGX:
+        return symbol_upper.replace("USDT", "-USDT")
     return symbol_upper
+
+
+def validate_single_symbol_args(
+    symbol: str | None = None, symbols: Sequence[str] | None = None
+) -> None:
+    """Проверяет, что передан ровно один из аргументов symbol/symbols.
+
+    Параметры:
+      symbol (`str | None`, опционально): Одиночный торговый символ.
+      symbols (`Sequence[str] | None`, опционально): Список торговых символов.
+
+    Возвращает:
+      `None`: Ничего не возвращает, выбрасывает ValueError при нарушении условий.
+    """
+    if symbol and symbols:
+        raise ValueError("Parameters symbol and symbols cannot be used together")
+    if not (symbol or symbols):
+        raise ValueError("Either symbol or symbols must be provided")

@@ -8,6 +8,7 @@ import orjson
 from google.protobuf.json_format import MessageToDict
 
 from unicex._base import Websocket
+from unicex.utils import validate_single_symbol_args
 
 from ._spot_ws_proto import PushDataV3ApiWrapper
 from .client import Client
@@ -27,7 +28,7 @@ class WebsocketManager:
     class _MexcProtobufDecoder:
         """Класс для декодирования сообщений в формате Protobuf со спотового рынка Mexc."""
 
-        def decode(self, message: Any) -> dict:
+        def decode(self, message: Any) -> dict | Literal["ping"]:
             if isinstance(message, bytes):
                 wrapper = PushDataV3ApiWrapper()  # noqa
                 wrapper.ParseFromString(message)
@@ -55,10 +56,7 @@ class WebsocketManager:
         **template_kwargs: Any,
     ) -> list[str]:
         """Сформировать сообщение для подписки на вебсокет."""
-        if symbol and symbols:
-            raise ValueError("Parameters symbol and symbols cannot be used together")
-        if not (symbol or symbols):
-            raise ValueError("Either symbol or symbols must be provided")
+        validate_single_symbol_args(symbol, symbols)
 
         if symbol:
             params = [channel_template.format(symbol=symbol, **template_kwargs)]

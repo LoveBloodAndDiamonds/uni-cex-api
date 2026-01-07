@@ -10,19 +10,79 @@ class Adapter:
     """Адаптер для унификации данных с <Exchange> API."""
 
     @staticmethod
-    def Klines_message(msg: Any) -> list[KlineDict]: ...
+    def Klines_message(msg: Any) -> list[KlineDict]:
+        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
+        свече/свечах в унифицированный вид.
+
+        Параметры:
+            msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
+        """
+        ...
 
     @staticmethod
-    def futures_klines_message(msg: Any) -> list[KlineDict]: ...
+    def futures_klines_message(msg: Any) -> list[KlineDict]:
+        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
+        свече/свечах в унифицированный вид.
+
+        Параметры:
+            msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
+        """
+        ...
 
     @staticmethod
-    def aggtrades_message(msg: Any) -> list[TradeDict]: ...
+    def aggtrades_message(msg: Any) -> list[TradeDict]:
+        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
+        аггрегированных сделке/сделках в унифицированный вид.
+
+        Параметры:
+            msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
+        """
+        ...
 
     @staticmethod
-    def futures_aggtrades_message(msg: Any) -> list[TradeDict]: ...
+    def futures_aggtrades_message(msg: Any) -> list[TradeDict]:
+        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
+        аггрегированных сделке/сделках в унифицированный вид.
+
+        Параметры:
+            msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
+        """
+        ...
 
     @staticmethod
-    def trades_message(msg: Any) -> list[TradeDict]: ...
+    def trades_message(msg: Any) -> list[TradeDict]:
+        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
+        сделке/сделках в унифицированный вид.
+
+        Параметры:
+            msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
+        """
+        ...
 
     @staticmethod
-    def futures_trades_message(msg: Any) -> list[TradeDict]: ...
+    def futures_trades_message(msg: Any) -> list[TradeDict]:
+        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
+        сделке/сделках в унифицированный вид.
+
+        Параметры:
+            msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
+        """
+        ...

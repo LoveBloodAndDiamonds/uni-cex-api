@@ -15,7 +15,7 @@ TClient = TypeVar("TClient", bound="BaseClient")
 
 
 class IUniClient(ABC, Generic[TClient]):
-    """Интерфейс для реализации асинхронного унифицированного клиента."""
+    """Интерфейс для унифицированного клиента."""
 
     def __init__(
         self,

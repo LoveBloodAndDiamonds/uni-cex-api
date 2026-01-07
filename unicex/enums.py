@@ -32,6 +32,7 @@ class Exchange(StrEnum):
     MEXC = "MEXC"
     OKX = "OKX"
     KUCOIN = "KUCOIN"
+    BINGX = "BINGX"
 
     def __add__(self, market_type: "MarketType") -> tuple["Exchange", "MarketType"]:
         """Возвращает кортеж из биржи и типа рынка."""
