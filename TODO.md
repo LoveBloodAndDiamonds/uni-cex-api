@@ -13,9 +13,9 @@
 - bingx: 
             if message == "Ping":
                 raise ValueError("Ping message received")
-- проверить ключ "u" во всех унифицированных open interest (особенно на мексе)        
-
-
+              
+            
++ проверить ключ "u" во всех унифицированных open interest (особенно на мексе)        
 + generate_cg_link - для спота есть корректная ссылка не только для OKX и переделать под ticker
 + generate_ex_link - переделать под ticker
 + generate_tv_link - переделать под ticker
