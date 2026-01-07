@@ -199,7 +199,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        return self.trades(callback, symbol=symbol, symbols=symbols)  # type: ignore
 
     @overload
     def futures_trades(
@@ -280,4 +280,4 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        return self.futures_trades(callback, symbol=symbol, symbols=symbols)  # type: ignore
