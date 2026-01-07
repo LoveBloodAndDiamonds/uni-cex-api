@@ -7,7 +7,7 @@
 | Exchange        | Client | Auth | WS Manager | User WS | Uni Client | Uni WS Manager | ExchangeInfo |
 |-----------------|--------|------|------------|---------|------------|----------------|--------------|
 | **Binance**     | ✓      | ✓    | ✓          | ✓       | ✓          | ✓              | ✓            |
-| **Bitget**      | ✓      | ✓    | ✓          |         | ✓          |                | ✓            |
+| **Bitget**      | ✓      | ✓    | ✓          |         | ✓          | ✓              | ✓            |
 | **Bybit**       | ✓      | ✓    | ✓          |         | ✓          | ✓              | ✓            |
 | **Gateio**      | ✓      | ✓    | ✓          |         | ✓          |                | ✓            |
 | **Hyperliquid** | ✓      | ✓    | ✓          | ✓       | ✓          |                |              |

@@ -12,7 +12,11 @@ async def main() -> None:
         api_passphrase=getenv("BITGET_API_PASSPHRASE"),
     )
 
-    r = await client.get_current_orders()
+    r = await client.get_candlestick_data(
+        symbol="ETHUSDT",
+        granularity="1m",
+        start_time=
+    )
 
     print(r)
 
