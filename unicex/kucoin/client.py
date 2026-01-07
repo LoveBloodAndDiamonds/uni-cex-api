@@ -120,3 +120,16 @@ class Client(BaseClient):
             "/api/ua/v1/market/funding-rate-history",
             params=params,
         )
+
+    async def funding_rate(self, symbol: str) -> dict[str, Any]:
+        """Получение текущей ставки финансирования.
+
+        https://www.kucoin.com/docs-new/rest/ua/get-current-funding-rate
+        """
+        params = {"symbol": symbol}
+
+        return await self._make_request(
+            "GET",
+            "/api/ua/v1/market/funding-rate",
+            params=params,
+        )

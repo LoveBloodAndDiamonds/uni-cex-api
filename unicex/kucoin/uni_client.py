@@ -1,7 +1,6 @@
 __all__ = ["UniClient"]
 
 
-import time
 from typing import overload
 
 from unicex._abc import IUniClient
@@ -181,19 +180,8 @@ class UniClient(IUniClient[Client]):
         """
         if not symbol:
             raise ValueError("Symbol is required to fetch Kucoin funding rate")
-
-        end_time = int(time.time() * 1000)
-        # Kucoin публикует ставку каждые 8 часов, берем окно в 24 часа для гарантии наличия записи.
-        start_time = end_time - 24 * 60 * 60 * 1000
-        raw_data = await self._client.funding_rate_history(
-            symbol=symbol,
-            start_at=start_time,
-            end_at=end_time,
-        )
-        adapted_data = Adapter.funding_rate(raw_data)
-        if symbol not in adapted_data:
-            raise ValueError(f"Kucoin funding rate history is empty for {symbol}")
-        return adapted_data[symbol]
+        raw_data = await self._client.funding_rate(symbol=symbol)
+        return Adapter.funding_rate(raw_data)
 
     @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...
