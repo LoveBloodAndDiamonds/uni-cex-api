@@ -52,7 +52,7 @@ async def main() -> None:
         )
         print_result(
             "futures_open_interest",
-            await client.futures_open_interest(symbol="BTC-USDT", timestamp=timestamp),
+            await client.open_interest(symbol="BTC-USDT", timestamp=timestamp),
         )
         print_result(
             "futures_ticker_24hr",

@@ -6,12 +6,10 @@
 - добавить min_order_size,max_order_size в ExchangeInfo
 - Какая то путаница в OCO ордерах на бинансе: https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-list---oco-trade
 - На Hyperliquid неправильно работает лимит (добавляет + 1 свечу при запросе свечей через UniClient)
-- bingx: сделать что-то с recvwindow, а так же проверить ссылки на докуменьацию, адаптер в свечах проверить 
-- bingx: 
-            if message == "Ping":
-                raise ValueError("Ping message received")
+- bingx: if message == "Ping": raise ValueError("Ping message received")
 - NotSupported вместо NotImplementedError
 
++ bingx: сделать что-то с recvwindow, а так же проверить ссылки на докуменьацию, адаптер в свечах проверить 
 + на KuCoin фандинг рейт работает странно, возвращает неверное значение
 + symbol_to_exchange_format скорее всего перенести в extra.py            
 + проверить ключ "u" во всех унифицированных open interest (особенно на мексе)        
