@@ -8,7 +8,11 @@
 - добавить min_order_size,max_order_size в ExchangeInfo
 - Возможно во всех WebsocketManager принимать symbols: list[str] а не (symbol и symbols)
 - gate вебсокеты возвращают контракты?
+- bingx adapter отрефакторить
+- mexc.adapter.futures_aggtrades - возвращает контракты
+- AggTradeDict удалить 
 
++ mexc.adapter.futures_klines отрефакторить
 + gate adapter.py trades_message Отрефакторить
 + bingx: if message == "Ping": raise ValueError("Ping message received")
 + bingx: сделать что-то с recvwindow, а так же проверить ссылки на докуменьацию, адаптер в свечах проверить 
