@@ -34,6 +34,15 @@ class WebsocketManager:
         self.client = client
         self._ws_kwargs = {"ping_message": "ping", **ws_kwargs}
 
+    def _build_subscription_message(self, args: list[dict[str, Any]]) -> str:
+        """Формирует JSON-сообщение подписки."""
+        return json.dumps(
+            {
+                "op": "subscribe",
+                "args": args,
+            }
+        )
+
     def instruments(
         self,
         callback: CallbackType,
@@ -50,16 +59,13 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = json.dumps(
-            {
-                "op": "subscribe",
-                "args": [
-                    {
-                        "channel": "instruments",
-                        "instType": inst_type,
-                    }
-                ],
-            }
+        subscription_message = self._build_subscription_message(
+            [
+                {
+                    "channel": "instruments",
+                    "instType": inst_type,
+                }
+            ]
         )
 
         return Websocket(
@@ -85,16 +91,13 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = json.dumps(
-            {
-                "op": "subscribe",
-                "args": [
-                    {
-                        "channel": "open-interest",
-                        "instId": inst_id,
-                    }
-                ],
-            }
+        subscription_message = self._build_subscription_message(
+            [
+                {
+                    "channel": "open-interest",
+                    "instId": inst_id,
+                }
+            ]
         )
 
         return Websocket(
@@ -120,16 +123,13 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = json.dumps(
-            {
-                "op": "subscribe",
-                "args": [
-                    {
-                        "channel": "funding-rate",
-                        "instId": inst_id,
-                    }
-                ],
-            }
+        subscription_message = self._build_subscription_message(
+            [
+                {
+                    "channel": "funding-rate",
+                    "instId": inst_id,
+                }
+            ]
         )
 
         return Websocket(
@@ -155,16 +155,13 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = json.dumps(
-            {
-                "op": "subscribe",
-                "args": [
-                    {
-                        "channel": "price-limit",
-                        "instId": inst_id,
-                    }
-                ],
-            }
+        subscription_message = self._build_subscription_message(
+            [
+                {
+                    "channel": "price-limit",
+                    "instId": inst_id,
+                }
+            ]
         )
 
         return Websocket(
@@ -190,16 +187,13 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = json.dumps(
-            {
-                "op": "subscribe",
-                "args": [
-                    {
-                        "channel": "opt-summary",
-                        "instFamily": inst_family,
-                    }
-                ],
-            }
+        subscription_message = self._build_subscription_message(
+            [
+                {
+                    "channel": "opt-summary",
+                    "instFamily": inst_family,
+                }
+            ]
         )
 
         return Websocket(
@@ -244,12 +238,7 @@ class WebsocketManager:
         if inst_id:
             args["instId"] = inst_id
 
-        subscription_message = json.dumps(
-            {
-                "op": "subscribe",
-                "args": [args],
-            }
-        )
+        subscription_message = self._build_subscription_message([args])
 
         return Websocket(
             callback=callback,
@@ -274,16 +263,13 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = json.dumps(
-            {
-                "op": "subscribe",
-                "args": [
-                    {
-                        "channel": "mark-price",
-                        "instId": inst_id,
-                    }
-                ],
-            }
+        subscription_message = self._build_subscription_message(
+            [
+                {
+                    "channel": "mark-price",
+                    "instId": inst_id,
+                }
+            ]
         )
 
         return Websocket(
@@ -309,16 +295,13 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = json.dumps(
-            {
-                "op": "subscribe",
-                "args": [
-                    {
-                        "channel": "index-tickers",
-                        "instId": inst_id,
-                    }
-                ],
-            }
+        subscription_message = self._build_subscription_message(
+            [
+                {
+                    "channel": "index-tickers",
+                    "instId": inst_id,
+                }
+            ]
         )
 
         return Websocket(
@@ -375,16 +358,13 @@ class WebsocketManager:
             `Websocket`: Объект для управления вебсокет соединением.
         """
         channel = f"mark-price-candle{interval}"
-        subscription_message = json.dumps(
-            {
-                "op": "subscribe",
-                "args": [
-                    {
-                        "channel": channel,
-                        "instId": inst_id,
-                    }
-                ],
-            }
+        subscription_message = self._build_subscription_message(
+            [
+                {
+                    "channel": channel,
+                    "instId": inst_id,
+                }
+            ]
         )
 
         return Websocket(
@@ -440,16 +420,13 @@ class WebsocketManager:
             `Websocket`: Объект для управления вебсокет соединением.
         """
         channel = f"index-candle{interval}"
-        subscription_message = json.dumps(
-            {
-                "op": "subscribe",
-                "args": [
-                    {
-                        "channel": channel,
-                        "instId": inst_id,
-                    }
-                ],
-            }
+        subscription_message = self._build_subscription_message(
+            [
+                {
+                    "channel": channel,
+                    "instId": inst_id,
+                }
+            ]
         )
 
         return Websocket(
@@ -475,16 +452,13 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = json.dumps(
-            {
-                "op": "subscribe",
-                "args": [
-                    {
-                        "channel": "liquidation-orders",
-                        "instType": inst_type,
-                    }
-                ],
-            }
+        subscription_message = self._build_subscription_message(
+            [
+                {
+                    "channel": "liquidation-orders",
+                    "instType": inst_type,
+                }
+            ]
         )
 
         return Websocket(
@@ -520,12 +494,7 @@ class WebsocketManager:
         if inst_family:
             args["instFamily"] = inst_family
 
-        subscription_message = json.dumps(
-            {
-                "op": "subscribe",
-                "args": [args],
-            }
-        )
+        subscription_message = self._build_subscription_message([args])
 
         return Websocket(
             callback=callback,
@@ -550,16 +519,13 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = json.dumps(
-            {
-                "op": "subscribe",
-                "args": [
-                    {
-                        "channel": "tickers",
-                        "instId": inst_id,
-                    }
-                ],
-            }
+        subscription_message = self._build_subscription_message(
+            [
+                {
+                    "channel": "tickers",
+                    "instId": inst_id,
+                }
+            ]
         )
 
         return Websocket(
@@ -615,17 +581,13 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        channel = f"candle{interval}"
-        subscription_message = json.dumps(
-            {
-                "op": "subscribe",
-                "args": [
-                    {
-                        "channel": channel,
-                        "instId": inst_id,
-                    }
-                ],
-            }
+        subscription_message = self._build_subscription_message(
+            [
+                {
+                    "channel": f"candle{interval}",
+                    "instId": inst_id,
+                }
+            ]
         )
 
         return Websocket(
@@ -651,16 +613,13 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = json.dumps(
-            {
-                "op": "subscribe",
-                "args": [
-                    {
-                        "channel": "trades",
-                        "instId": inst_id,
-                    }
-                ],
-            }
+        subscription_message = self._build_subscription_message(
+            [
+                {
+                    "channel": "trades",
+                    "instId": inst_id,
+                }
+            ]
         )
 
         return Websocket(
@@ -686,16 +645,13 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = json.dumps(
-            {
-                "op": "subscribe",
-                "args": [
-                    {
-                        "channel": "trades-all",
-                        "instId": inst_id,
-                    }
-                ],
-            }
+        subscription_message = self._build_subscription_message(
+            [
+                {
+                    "channel": "trades-all",
+                    "instId": inst_id,
+                }
+            ]
         )
 
         return Websocket(
@@ -723,16 +679,13 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = json.dumps(
-            {
-                "op": "subscribe",
-                "args": [
-                    {
-                        "channel": channel,
-                        "instId": inst_id,
-                    }
-                ],
-            }
+        subscription_message = self._build_subscription_message(
+            [
+                {
+                    "channel": channel,
+                    "instId": inst_id,
+                }
+            ]
         )
 
         return Websocket(

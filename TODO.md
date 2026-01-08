@@ -1,15 +1,15 @@
 ** Пофиксить: **
-- На фьючерсах WS OKX возвращают объем в контрактах (В UniWebsocketManager 'sz' надо умножать на количество контрактов)
 - Способы авторизации слишком сильно отличаются на каждой бирже
-- Отрефакторить Okx Websocket Manager 
 - Какая то путаница в OCO ордерах на бинансе: https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-list---oco-trade
 - На Hyperliquid неправильно работает лимит (добавляет + 1 свечу при запросе свечей через UniClient)
-- добавить min_order_size,max_order_size в ExchangeInfo
+
+- На фьючерсах WS OKX возвращают объем в контрактах (В UniWebsocketManager 'sz' надо умножать на количество контрактов)
 - gate вебсокеты возвращают контракты?
 - bingx adapter отрефакторить
 - mexc.adapter.futures_aggtrades - возвращает контракты
 
 ** Сделано: **
++ Отрефакторить Okx Websocket Manager 
 + AggTradeDict удалить 
 + Почистить тесты
 + mexc.adapter.futures_klines отрефакторить
@@ -33,3 +33,4 @@
 ** Улучшения на будущее: **
 - добавить ликвидации в вебсокет юни менеджер
 - добавить orderbook в вебсокет юни менеджер
+- добавить min_order_size,max_order_size в ExchangeInfo
