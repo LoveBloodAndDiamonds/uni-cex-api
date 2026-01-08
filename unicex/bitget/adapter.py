@@ -1,7 +1,6 @@
 from typing import Any
 
 from unicex.types import (
-    AggTradeDict,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
@@ -155,7 +154,7 @@ class Adapter:
         symbol = raw_msg["arg"]["instId"]
 
         return [
-            AggTradeDict(
+            TradeDict(
                 t=int(trade["ts"]),
                 s=symbol,
                 S=trade["side"].upper(),

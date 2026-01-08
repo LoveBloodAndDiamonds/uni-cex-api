@@ -2,7 +2,6 @@ __all__ = ["Adapter"]
 
 
 from unicex.types import (
-    AggTradeDict,
     KlineDict,
     OpenInterestItem,
     TickerDailyDict,
@@ -150,7 +149,7 @@ class Adapter:
         ]
 
     @staticmethod
-    def aggtrades_message(raw_msg: dict) -> list[AggTradeDict]:
+    def aggtrades_message(raw_msg: dict) -> list[TradeDict]:
         """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
         аггрегированных сделке/сделках в унифицированный вид.
 
@@ -162,7 +161,7 @@ class Adapter:
         """
         msg = raw_msg.get("data", raw_msg)
         return [
-            AggTradeDict(
+            TradeDict(
                 t=int(msg["T"]),
                 s=str(msg["s"]),
                 S="SELL" if bool(msg["m"]) else "BUY",

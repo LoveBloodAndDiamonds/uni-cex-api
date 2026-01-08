@@ -5,7 +5,6 @@ __all__ = [
     "TickerDailyItem",
     "KlineDict",
     "TradeDict",
-    "AggTradeDict",
     "RequestMethod",
     "LoggerLike",
     "NumberLike",
@@ -103,12 +102,6 @@ class TradeDict(TypedDict):
 
     v: float
     """Объем сделки. В монетах."""
-
-
-class AggTradeDict(TradeDict):
-    """Модель агрегированной сделки."""
-
-    pass
 
 
 class OpenInterestItem(TypedDict):
