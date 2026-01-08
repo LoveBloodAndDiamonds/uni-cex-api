@@ -5,7 +5,7 @@ from typing import Any, overload
 
 from unicex._abc import IUniWebsocketManager
 from unicex._base import Websocket
-from unicex.enums import Timeframe
+from unicex.enums import Exchange, MarketType, Timeframe
 from unicex.types import LoggerLike
 
 from .adapter import Adapter
@@ -76,7 +76,17 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета для управления соединением.
         """
-        raise NotImplementedError()
+        wrapper = self._make_wrapper(self._adapter.klines_message, callback)
+        return self._websocket_manager.candlestick(
+            callback=wrapper,
+            market_type="SPOT",
+            symbol=symbol,
+            symbols=symbols,
+            interval=timeframe.to_exchange_format(
+                Exchange.BITGET,
+                MarketType.FUTURES,  # Тут пришлось поставить Futures, потому что:
+            ),  # кто бы мог подумать, что у Bitget на споте для вебсокетов и HTTP запросов совершенно разные перечисления. Тупые ублюдки.
+        )
 
     @overload
     def futures_klines(
@@ -118,7 +128,14 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        wrapper = self._make_wrapper(self._adapter.klines_message, callback)
+        return self._websocket_manager.candlestick(
+            callback=wrapper,
+            market_type="USDT-FUTURES",
+            symbol=symbol,
+            symbols=symbols,
+            interval=timeframe.to_exchange_format(Exchange.BITGET, MarketType.FUTURES),
+        )
 
     @overload
     def trades(
@@ -276,4 +293,4 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        return self.futures_trades(callback=callback, symbol=symbol, symbols=symbols)  # type: ignore[reportCallIssue]

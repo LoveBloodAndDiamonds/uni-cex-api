@@ -380,7 +380,30 @@ class WebsocketManager:
             `Websocket`: Объект для управления вебсокет соединением.
         """
         subscription_messages = self._generate_futures_subscription_message(
-            topic="sub.deal", symbol=symbol, symbols=symbols, interval=interval
+            topic="sub.kline", symbol=symbol, symbols=symbols, interval=interval
+        )
+        return self._create_futures_websocket(callback, subscription_messages)
+
+    def futures_trade(
+        self,
+        callback: CallbackType,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для получения сделок по фьючерсным контрактам.
+
+        https://mexcdevelop.github.io/apidocs/contract_v1_en/#public-channels
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            symbol (`str | None`): Символ фьючерсного контракта.
+            symbols (`Sequence[str] | None`): Последовательность символов фьючерсных контрактов.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        subscription_messages = self._generate_futures_subscription_message(
+            topic="sub.deal", symbol=symbol, symbols=symbols
         )
         return self._create_futures_websocket(callback, subscription_messages)
 

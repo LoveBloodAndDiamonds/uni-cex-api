@@ -5,7 +5,7 @@ from typing import Any, overload
 
 from unicex._abc import IUniWebsocketManager
 from unicex._base import Websocket
-from unicex.enums import Timeframe
+from unicex.enums import Exchange, MarketType, Timeframe
 from unicex.types import LoggerLike
 
 from .adapter import Adapter
@@ -76,7 +76,15 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета для управления соединением.
         """
-        raise NotImplementedError()
+        wrapper = self._make_wrapper(self._adapter.klines_message, callback)
+        return self._websocket_manager.klines(
+            callback=wrapper,
+            symbol=symbol,
+            symbols=symbols,
+            interval=timeframe.to_exchange_format(
+                Exchange.MEXC, MarketType.FUTURES
+            ),  # Тут фьючерсный интервал, потому что для вебсокета MEXC решили что сделают так (идиоты)
+        )
 
     @overload
     def futures_klines(
@@ -118,7 +126,13 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        wrapper = self._make_wrapper(self._adapter.futures_klines_message, callback)
+        return self._websocket_manager.futures_kline(
+            callback=wrapper,
+            symbol=symbol,
+            symbols=symbols,
+            interval=timeframe.to_exchange_format(Exchange.MEXC, MarketType.FUTURES),
+        )
 
     @overload
     def trades(
@@ -156,7 +170,8 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        wrapper = self._make_wrapper(self._adapter.trades_message, callback)
+        return self._websocket_manager.trade(callback=wrapper, symbol=symbol, symbols=symbols)
 
     @overload
     def aggtrades(
@@ -194,7 +209,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        return self.trades(callback=callback, symbol=symbol, symbols=symbols)  # type: ignore[reportCallIssue]
 
     @overload
     def futures_trades(
@@ -232,7 +247,10 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        wrapper = self._make_wrapper(self._adapter.futures_trades_message, callback)
+        return self._websocket_manager.futures_trade(
+            callback=wrapper, symbol=symbol, symbols=symbols
+        )
 
     @overload
     def futures_aggtrades(
@@ -270,4 +288,4 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        return self.futures_trades(callback=callback, symbol=symbol, symbols=symbols)  # type: ignore[reportCallIssue]

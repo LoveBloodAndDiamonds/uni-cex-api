@@ -5,7 +5,6 @@ __all__ = [
     "TickerDailyItem",
     "KlineDict",
     "TradeDict",
-    "AggTradeDict",
     "RequestMethod",
     "LoggerLike",
     "NumberLike",
@@ -79,10 +78,10 @@ class KlineDict(TypedDict):
     q: float
     """Объем свечи. В долларах."""
 
-    T: int | None
+    T: int | None  # `None` means untrackable
     """Время закрытия. В миллисекундах."""
 
-    x: bool | None
+    x: bool | None  # `None` means untrackable
     """Флаг закрыта ли свеча."""
 
 
@@ -103,12 +102,6 @@ class TradeDict(TypedDict):
 
     v: float
     """Объем сделки. В монетах."""
-
-
-class AggTradeDict(TradeDict):
-    """Модель агрегированной сделки."""
-
-    pass
 
 
 class OpenInterestItem(TypedDict):

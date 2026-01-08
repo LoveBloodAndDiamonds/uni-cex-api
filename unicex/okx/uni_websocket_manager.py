@@ -5,7 +5,7 @@ from typing import Any, overload
 
 from unicex._abc import IUniWebsocketManager
 from unicex._base import Websocket
-from unicex.enums import Timeframe
+from unicex.enums import Exchange, Timeframe
 from unicex.types import LoggerLike
 
 from .adapter import Adapter
@@ -35,6 +35,23 @@ class UniWebsocketManager(IUniWebsocketManager):
         super().__init__(client=client, logger=logger)
         self._websocket_manager = WebsocketManager(self._client, **ws_kwargs)  # type: ignore
         self._adapter = Adapter()
+
+    def _normalize_symbol(
+        self,
+        symbol: str | None,
+        symbols: Sequence[str] | None,
+    ) -> str:
+        """Преобразует параметры symbol/symbols в один тикер."""
+        if symbol and symbols:
+            raise ValueError("Parameters symbol and symbols cannot be used together")
+        if symbol:
+            return symbol
+        if symbols:
+            normalized = list(symbols)
+            if len(normalized) != 1:
+                raise ValueError("OKX websocket поддерживает только один тикер на соединение")
+            return normalized[0]
+        raise ValueError("Either symbol or symbols must be provided")
 
     @overload
     def klines(
@@ -76,7 +93,13 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета для управления соединением.
         """
-        raise NotImplementedError()
+        inst_id = self._normalize_symbol(symbol, symbols)
+        wrapper = self._make_wrapper(self._adapter.klines_message, callback)
+        return self._websocket_manager.candlesticks(
+            callback=wrapper,
+            interval=timeframe.to_exchange_format(Exchange.OKX),  # type: ignore
+            inst_id=inst_id,
+        )
 
     @overload
     def futures_klines(
@@ -118,7 +141,13 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        inst_id = self._normalize_symbol(symbol, symbols)
+        wrapper = self._make_wrapper(self._adapter.klines_message, callback)
+        return self._websocket_manager.candlesticks(
+            callback=wrapper,
+            interval=timeframe.to_exchange_format(Exchange.OKX),  # type: ignore
+            inst_id=inst_id,
+        )
 
     @overload
     def trades(
@@ -156,7 +185,9 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        inst_id = self._normalize_symbol(symbol, symbols)
+        wrapper = self._make_wrapper(self._adapter.trades_message, callback)
+        return self._websocket_manager.all_trades(callback=wrapper, inst_id=inst_id)
 
     @overload
     def aggtrades(
@@ -194,7 +225,9 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        inst_id = self._normalize_symbol(symbol, symbols)
+        wrapper = self._make_wrapper(self._adapter.trades_message, callback)
+        return self._websocket_manager.trades(callback=wrapper, inst_id=inst_id)
 
     @overload
     def futures_trades(
@@ -232,7 +265,9 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        inst_id = self._normalize_symbol(symbol, symbols)
+        wrapper = self._make_wrapper(self._adapter.trades_message, callback)
+        return self._websocket_manager.all_trades(callback=wrapper, inst_id=inst_id)
 
     @overload
     def futures_aggtrades(
@@ -270,4 +305,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        inst_id = self._normalize_symbol(symbol, symbols)
+        wrapper = self._make_wrapper(self._adapter.trades_message, callback)
+        return self._websocket_manager.trades(callback=wrapper, inst_id=inst_id)

@@ -1,11 +1,14 @@
 __all__ = ["Adapter"]
 
+from typing import Any
+
 from unicex.types import (
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
     TickerDailyDict,
     TickerDailyItem,
+    TradeDict,
 )
 from unicex.utils import catch_adapter_errors, decorate_all_methods
 
@@ -230,6 +233,106 @@ class Adapter:
             )
 
         return sorted(klines, key=lambda kline_item: kline_item["t"])
+
+    @staticmethod
+    def klines_message(raw_msg: Any) -> list[KlineDict]:
+        """Преобразует вебсокет-сообщение со свечами в унифицированный формат.
+
+        Параметры:
+            raw_msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[KlineDict]: Список свечей в унифицированном формате.
+        """
+        kline = raw_msg["publicSpotKline"]
+        return [
+            KlineDict(
+                s=raw_msg["symbol"],
+                t=int(kline["windowStart"]) * 1000,
+                o=float(kline["openingPrice"]),
+                h=float(kline["highestPrice"]),
+                l=float(kline["lowestPrice"]),
+                c=float(kline["closingPrice"]),
+                v=float(kline["volume"]),
+                T=int(kline["windowEnd"]) * 1000,
+                x=None,
+                q=float(kline["amount"]),
+            )
+        ]
+
+    @staticmethod
+    def futures_klines_message(raw_msg: Any) -> list[KlineDict]:
+        """Преобразует вебсокет-сообщение со свечами в унифицированный формат.
+
+        Параметры:
+            raw_msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[KlineDict]: Список свечей в унифицированном формате.
+        """
+        data = raw_msg["data"]
+        return [
+            KlineDict(
+                s=data["symbol"],
+                t=data["t"] * 1000,
+                o=data["o"],
+                h=data["h"],
+                l=data["l"],
+                c=data["c"],
+                v=data["q"],  # Контракты
+                q=data["a"],
+                T=None,
+                x=None,
+            )
+        ]
+
+    @staticmethod
+    def trades_message(raw_msg: Any) -> list[TradeDict]:
+        """Преобразует вебсокет-сообщение со сделками в унифицированный формат.
+
+        Параметры:
+            raw_msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[TradeDict]: Список сделок в унифицированном формате.
+        """
+        return [
+            TradeDict(
+                t=trade["time"],
+                s=raw_msg["symbol"],
+                S="BUY" if trade["tradeType"] == 1 else "SELL",
+                p=float(trade["price"]),
+                v=float(trade["quantity"]),
+            )
+            for trade in sorted(
+                raw_msg["publicAggreDeals"]["deals"],
+                key=lambda item: item["time"],
+            )
+        ]
+
+    @staticmethod
+    def futures_trades_message(raw_msg: Any) -> list[TradeDict]:
+        """Преобразует вебсокет-сообщение со сделками в унифицированный формат.
+
+        Параметры:
+            raw_msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[TradeDict]: Список сделок в унифицированном формате.
+        """
+        return [
+            TradeDict(
+                t=item["t"],
+                s=raw_msg["symbol"],
+                S="BUY" if item["T"] == 1 else "SELL",
+                p=item["p"],
+                v=item["v"],
+            )
+            for item in sorted(
+                raw_msg["data"],
+                key=lambda item: item["t"],
+            )
+        ]
 
     @staticmethod
     def _get_contract_size(symbol: str) -> float:

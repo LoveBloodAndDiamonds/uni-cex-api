@@ -5,7 +5,7 @@ from typing import Any, overload
 
 from unicex._abc import IUniWebsocketManager
 from unicex._base import Websocket
-from unicex.enums import Timeframe
+from unicex.enums import Exchange, MarketType, Timeframe
 from unicex.types import LoggerLike
 
 from .adapter import Adapter
@@ -35,6 +35,20 @@ class UniWebsocketManager(IUniWebsocketManager):
         super().__init__(client=client, logger=logger)
         self._websocket_manager = WebsocketManager(self._client, **ws_kwargs)  # type: ignore
         self._adapter = Adapter()
+
+    def _normalize_symbols(
+        self,
+        symbol: str | None,
+        symbols: Sequence[str] | None,
+    ) -> list[str]:
+        """Преобразует параметры symbol/symbols в список тикеров."""
+        if symbol and symbols:
+            raise ValueError("Parameters symbol and symbols cannot be used together")
+        if symbol:
+            return [symbol]
+        if symbols:
+            return list(symbols)
+        raise ValueError("Either symbol or symbols must be provided")
 
     @overload
     def klines(
@@ -76,7 +90,14 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета для управления соединением.
         """
-        raise NotImplementedError()
+        tickers = self._normalize_symbols(symbol, symbols)
+
+        wrapper = self._make_wrapper(self._adapter.klines_message, callback)
+        return self._websocket_manager.candlesticks(
+            callback=wrapper,
+            interval=timeframe.to_exchange_format(Exchange.GATE, MarketType.SPOT),
+            symbols=tickers,
+        )
 
     @overload
     def futures_klines(
@@ -118,7 +139,14 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        tickers = self._normalize_symbols(symbol, symbols)
+
+        wrapper = self._make_wrapper(self._adapter.futures_klines_message, callback)
+        return self._websocket_manager.futures_candlesticks(
+            callback=wrapper,
+            interval=timeframe.to_exchange_format(Exchange.GATE, MarketType.FUTURES),
+            symbols=tickers,
+        )
 
     @overload
     def trades(
@@ -156,7 +184,10 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        tickers = self._normalize_symbols(symbol, symbols)
+
+        wrapper = self._make_wrapper(self._adapter.trades_message, callback)
+        return self._websocket_manager.trades(callback=wrapper, symbols=tickers)
 
     @overload
     def aggtrades(
@@ -194,7 +225,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        return self.trades(callback=callback, symbol=symbol, symbols=symbols)  # type: ignore[reportCallIssue]
 
     @overload
     def futures_trades(
@@ -232,7 +263,10 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        tickers = self._normalize_symbols(symbol, symbols)
+
+        wrapper = self._make_wrapper(self._adapter.futures_trades_message, callback)
+        return self._websocket_manager.futures_trades(callback=wrapper, symbols=tickers)
 
     @overload
     def futures_aggtrades(
@@ -270,4 +304,4 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        return self.futures_trades(callback=callback, symbol=symbol, symbols=symbols)  # type: ignore[reportCallIssue]
