@@ -79,10 +79,10 @@ class KlineDict(TypedDict):
     q: float
     """Объем свечи. В долларах."""
 
-    T: int | None
+    T: int | None  # `None` means untrackable
     """Время закрытия. В миллисекундах."""
 
-    x: bool | None
+    x: bool | None  # `None` means untrackable
     """Флаг закрыта ли свеча."""
 
 

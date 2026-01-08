@@ -17,20 +17,20 @@ test_all = False
 
 # Индивидуальные флаги: если test_all=False, берём отсюда
 tests_config = {
-    "tickers": False,
-    "tickers_batched": False,
-    "futures_tickers": False,
-    "futures_tickers_batched": False,
-    "last_price": False,
-    "futures_last_price": False,
-    "ticker_24hr": False,
-    "futures_ticker_24hr": False,
-    "klines": False,
-    "futures_klines": False,
+    "tickers": True,
+    "tickers_batched": True,
+    "futures_tickers": True,
+    "futures_tickers_batched": True,
+    "last_price": True,
+    "futures_last_price": True,
+    "ticker_24hr": True,
+    "futures_ticker_24hr": True,
+    "klines": True,
+    "futures_klines": True,
     "open_interest": True,
     "single_open_interest": True,
-    "funding_rate": False,
-    "single_funding_rate": False,
+    "funding_rate": True,
+    "single_funding_rate": True,
 }
 
 # Тестировать ли все таймфреймы?
