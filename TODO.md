@@ -12,6 +12,7 @@
 - mexc.adapter.futures_aggtrades - возвращает контракты
 - AggTradeDict удалить 
 
++ Почистить тесты
 + mexc.adapter.futures_klines отрефакторить
 + gate adapter.py trades_message Отрефакторить
 + bingx: if message == "Ping": raise ValueError("Ping message received")
