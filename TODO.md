@@ -1,17 +1,16 @@
+** Пофиксить: **
 - На фьючерсах WS OKX возвращают объем в контрактах (В UniWebsocketManager 'sz' надо умножать на количество контрактов)
 - Способы авторизации слишком сильно отличаются на каждой бирже
 - Отрефакторить Okx Websocket Manager 
-- добавить ликвидации в вебсокет юни менеджер
-- добавить orderbook в вебсокет юни менеджер
 - Какая то путаница в OCO ордерах на бинансе: https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-list---oco-trade
 - На Hyperliquid неправильно работает лимит (добавляет + 1 свечу при запросе свечей через UniClient)
 - добавить min_order_size,max_order_size в ExchangeInfo
-- Возможно во всех WebsocketManager принимать symbols: list[str] а не (symbol и symbols)
 - gate вебсокеты возвращают контракты?
 - bingx adapter отрефакторить
 - mexc.adapter.futures_aggtrades - возвращает контракты
-- AggTradeDict удалить 
 
+** Сделано: **
++ AggTradeDict удалить 
 + Почистить тесты
 + mexc.adapter.futures_klines отрефакторить
 + gate adapter.py trades_message Отрефакторить
@@ -27,4 +26,10 @@
 + Как реализовать типы (quantity, price и т.д.) в сырых клиентах? str | int | float?
 + передавать ws_kwargs через uniwebsocketmanager
 
-? NotSupported вместо NotImplementedError
+** Под вопросом: **
+- NotSupported вместо NotImplementedError
+- Возможно во всех WebsocketManager принимать symbols: list[str] а не (symbol и symbols)
+
+** Улучшения на будущее: **
+- добавить ликвидации в вебсокет юни менеджер
+- добавить orderbook в вебсокет юни менеджер
