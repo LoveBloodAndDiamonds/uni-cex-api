@@ -245,39 +245,37 @@ class Adapter:
         Возвращает:
             list[TradeDict]: Список сделок в унифицированном формате.
         """
-        channel = raw_msg.get("channel")
-        if channel not in {"spot.trades", "futures.trades"}:
-            return []
+        trade = raw_msg["result"]
+        return [
+            TradeDict(
+                t=trade["create_time_ms"],
+                s=trade["currency_pair"],
+                S=trade["side"].upper(),
+                p=float(trade["price"]),
+                v=float(trade["amount"]),
+            )
+        ]
 
-        result = raw_msg.get("result")
-        if not result:
-            return []
+    @staticmethod
+    def futures_trades_message(raw_msg: Any) -> list[TradeDict]:
+        """Преобразует вебсокет-сообщение со сделками в унифицированный формат.
 
-        items = result if isinstance(result, list) else [result]
-        trades: list[TradeDict] = []
+        Параметры:
+            raw_msg (Any): Сырое сообщение с вебсокета.
 
-        for item in items:
-            if channel == "spot.trades":
-                trades.append(
-                    TradeDict(
-                        t=int(float(item["create_time_ms"])),
-                        s=item["currency_pair"],
-                        S=item["side"].upper(),
-                        p=float(item["price"]),
-                        v=float(item["amount"]),
-                    )
-                )
-            else:
-                # На Gate знак размера показывает сторону сделки.
-                size_value = float(item["size"])
-                trades.append(
-                    TradeDict(
-                        t=int(float(item["create_time_ms"])),
-                        s=item["contract"],
-                        S="BUY" if size_value >= 0 else "SELL",
-                        p=float(item["price"]),
-                        v=abs(size_value),
-                    )
-                )
-
-        return sorted(trades, key=lambda trade_item: trade_item["t"])
+        Возвращает:
+            list[TradeDict]: Список сделок в унифицированном формате.
+        """
+        return [
+            TradeDict(
+                t=item["create_time_ms"],
+                s=item["contract"],
+                S="BUY" if float(item["size"]) > 0 else "SELL",
+                p=float(item["price"]),
+                v=abs(float(item["size"])),
+            )
+            for item in sorted(
+                raw_msg["result"],
+                key=lambda x: x["create_time_ms"],
+            )
+        ]

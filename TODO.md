@@ -7,7 +7,9 @@
 - На Hyperliquid неправильно работает лимит (добавляет + 1 свечу при запросе свечей через UniClient)
 - добавить min_order_size,max_order_size в ExchangeInfo
 - Возможно во всех WebsocketManager принимать symbols: list[str] а не (symbol и symbols)
+- gate вебсокеты возвращают контракты?
 
++ gate adapter.py trades_message Отрефакторить
 + bingx: if message == "Ping": raise ValueError("Ping message received")
 + bingx: сделать что-то с recvwindow, а так же проверить ссылки на докуменьацию, адаптер в свечах проверить 
 + на KuCoin фандинг рейт работает странно, возвращает неверное значение

@@ -265,7 +265,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         """
         tickers = self._normalize_symbols(symbol, symbols)
 
-        wrapper = self._make_wrapper(self._adapter.trades_message, callback)
+        wrapper = self._make_wrapper(self._adapter.futures_trades_message, callback)
         return self._websocket_manager.futures_trades(callback=wrapper, symbols=tickers)
 
     @overload
