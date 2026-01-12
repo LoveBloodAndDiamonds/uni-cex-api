@@ -326,7 +326,7 @@ class Adapter:
                 s=raw_msg["symbol"],
                 S="BUY" if item["T"] == 1 else "SELL",
                 p=item["p"],
-                v=item["v"],
+                v=item["v"] * Adapter._get_contract_size(raw_msg["symbol"]),
             )
             for item in sorted(
                 raw_msg["data"],

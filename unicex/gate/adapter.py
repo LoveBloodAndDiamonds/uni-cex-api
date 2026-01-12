@@ -15,6 +15,8 @@ from unicex.types import (
 )
 from unicex.utils import catch_adapter_errors, decorate_all_methods
 
+from .exchange_info import ExchangeInfo
+
 
 @decorate_all_methods(catch_adapter_errors)
 class Adapter:
@@ -272,10 +274,18 @@ class Adapter:
                 s=item["contract"],
                 S="BUY" if float(item["size"]) > 0 else "SELL",
                 p=float(item["price"]),
-                v=abs(float(item["size"])),
+                v=abs(float(item["size"])) * Adapter._get_contract_size(item["contract"]),
             )
             for item in sorted(
                 raw_msg["result"],
                 key=lambda x: x["create_time_ms"],
             )
         ]
+
+    @staticmethod
+    def _get_contract_size(symbol: str) -> float:
+        """Возвращает размер контракта для указанного символа тикера."""
+        try:
+            return ExchangeInfo.get_futures_ticker_info(symbol)["contract_size"] or 1
+        except:  # noqa
+            return 1

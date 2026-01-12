@@ -22,9 +22,9 @@ class ExchangeInfo(IExchangeInfo):
         for el in exchange_info["data"]:
             tickers_info[el["instId"]] = TickerInfoItem(
                 tick_precision=None,
-                tick_step=float(el["tickSz"]),
+                tick_step=float(el["tickSz"] or "0"),
                 size_precision=None,
-                size_step=float(el["lotSz"]),
+                size_step=float(el["lotSz"] or "0"),
                 contract_size=1,
             )
 
