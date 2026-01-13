@@ -103,6 +103,11 @@ class Websocket:
         await asyncio.sleep(self._reconnect_timeout)
         await self.start()
 
+    @property
+    def running(self) -> bool:
+        """Возвращает статус вебсокета."""
+        return self._running
+
     async def _connect(self) -> None:
         """Подключается к вебсокету и настраивает соединение."""
         self._logger.debug(f"Establishing connection with {self._url}")
