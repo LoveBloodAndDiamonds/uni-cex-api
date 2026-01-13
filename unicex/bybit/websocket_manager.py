@@ -318,5 +318,6 @@ class WebsocketManager:
             callback=callback,
             url=url,
             subscription_messages=subscription_messages,
+            no_message_reconnect_timeout=60 * 10,
             **self._ws_kwargs,
         )

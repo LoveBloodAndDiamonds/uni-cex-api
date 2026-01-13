@@ -181,7 +181,6 @@ class UniClient(IUniClient[Client]):
         raw_data = await self._client.futures_ticker()
         adapted_data = Adapter.funding_rate(raw_data=raw_data)  # type: ignore[reportArgumentType]
         return adapted_data[symbol] if symbol else adapted_data
-        return adapted_data
 
     @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...

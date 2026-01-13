@@ -36,6 +36,12 @@ class UniWebsocketManager(IUniWebsocketManager):
         self._websocket_manager = WebsocketManager(self._client, **ws_kwargs)  # type: ignore
         self._adapter = Adapter()
 
+    def _is_service_message(self, raw_msg: Any) -> bool:
+        """Дополнительно обрабатывает ошибку адаптации сообщения с вебсокета Bybit."""
+        if raw_msg.get("op") == "subscribe":
+            return True
+        return False
+
     @overload
     def klines(
         self,
@@ -293,3 +299,28 @@ class UniWebsocketManager(IUniWebsocketManager):
             `Websocket`: Экземпляр вебсокета.
         """
         return self.futures_trades(callback=callback, symbol=symbol, symbols=symbols)  # type: ignore
+
+    def liquidations(
+        self,
+        callback: CallbackType,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+    ) -> Websocket:
+        """Открывает стрим ликвидаций (futures) с унификацией сообщений.
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Должен быть указан либо `symbol`, либо `symbols`.
+
+        Возвращает:
+            `Websocket`: Экземпляр вебсокета.
+        """
+        return self._websocket_manager.all_liquidation(
+            callback=self._make_wrapper(self._adapter.liquidations_message, callback),
+            category="linear",
+            symbol=symbol,
+            symbols=symbols,
+        )
