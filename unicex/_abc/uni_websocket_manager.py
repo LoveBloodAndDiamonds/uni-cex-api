@@ -8,6 +8,7 @@ from loguru import logger as _logger
 
 from unicex._base import BaseClient, Websocket
 from unicex.enums import Timeframe
+from unicex.exceptions import AdapterError
 from unicex.types import LoggerLike
 
 from .uni_client import IUniClient
@@ -41,6 +42,13 @@ class IUniWebsocketManager(ABC):
             try:
                 adapted = adapter_func(raw_msg)
             except Exception as e:
+                if isinstance(e, AdapterError):
+                    try:
+                        if self._is_service_message(raw_msg):
+                            return
+                    except Exception as err:
+                        self._logger.error(f"Failed to handle adapter error: {e}")
+                        raise err from e
                 self._logger.warning(f"Failed to adapt message: {e}")
                 return
             if isinstance(adapted, list):
@@ -50,6 +58,13 @@ class IUniWebsocketManager(ABC):
                 await callback(adapted)
 
         return _wrapper
+
+    def _is_service_message(self, raw_msg: Any) -> bool:
+        """Дополнительно обрабатывает ошибку адаптации сообщения на случай, если это сервисное сообщение, например `ping` или `subscribe`.
+
+        Переопределяется в каждом наследнике в связи с разным форматом входящих данных.
+        """
+        return False
 
     @overload
     def klines(

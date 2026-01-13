@@ -36,6 +36,12 @@ class UniWebsocketManager(IUniWebsocketManager):
         self._websocket_manager = WebsocketManager(self._client, **ws_kwargs)  # type: ignore
         self._adapter = Adapter()
 
+    def _is_service_message(self, raw_msg: Any) -> bool:
+        """Дополнительно обрабатывает ошибку адаптации сообщения с вебсокета Bybit."""
+        if raw_msg.get("op") == "subscribe":
+            return True
+        return False
+
     @overload
     def klines(
         self,
