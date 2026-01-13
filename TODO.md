@@ -1,11 +1,11 @@
 ** Пофиксить: **
-- okx.exchange_info ошибка
 - Способы авторизации слишком сильно отличаются на каждой бирже
 - Какая то путаница в OCO ордерах на бинансе: https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-list---oco-trade
 - На Hyperliquid неправильно работает лимит (добавляет + 1 свечу при запросе свечей через UniClient)
 - bingx adapter отрефакторить
 
 ** Сделано: **
++ okx.exchange_info ошибка
 + mexc.adapter.futures_aggtrades - возвращает контракты
 + gate вебсокеты возвращают контракты?
 + На фьючерсах WS OKX возвращают объем в контрактах (В UniWebsocketManager 'sz' надо умножать на количество контрактов)
