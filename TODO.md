@@ -3,6 +3,11 @@
 - Какая то путаница в OCO ордерах на бинансе: https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-list---oco-trade
 - На Hyperliquid неправильно работает лимит (добавляет + 1 свечу при запросе свечей через UniClient)
 - bingx adapter отрефакторить
+- зачем нужна функция _client_cls
+- может быть deprecate Client и WebsocketManager
+- self._logger = logger or _logger ничего не делает
+- ключ "х" в KlineDict обрабатывать при HTTP запросах а не просто
+- start_exchanges_info должна возвращать список задач
 
 ** Сделано: **
 + okx.exchange_info ошибка
