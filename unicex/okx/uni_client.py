@@ -173,7 +173,7 @@ class UniClient(IUniClient[Client]):
             raise ValueError("Symbol is required to okx funding rate")
         raw_data = await self._client.get_funding_rate(inst_id=symbol)
         adapted_data = Adapter.funding_rate(raw_data)
-        return adapted_data
+        return adapted_data[symbol]
 
     @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...
