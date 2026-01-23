@@ -1,11 +1,12 @@
-__all__ = ["IUniWebsocketManager"]
+__all__ = ["UniWebsocketManager"]
 
 from collections.abc import Awaitable, Callable, Sequence
 from typing import Any, overload
 
 from unicex._abc import IUniWebsocketManager
 from unicex._base import Websocket
-from unicex.enums import Timeframe
+from unicex.enums import Exchange, Timeframe
+from unicex.exceptions import NotSupported
 from unicex.types import LoggerLike
 
 from .adapter import Adapter
@@ -76,7 +77,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета для управления соединением.
         """
-        raise NotImplementedError()
+        raise NotSupported("Spot market data is not supported for Aster")
 
     @overload
     def futures_klines(
@@ -118,7 +119,13 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        wrapper = self._make_wrapper(self._adapter.Klines_message, callback)
+        return self._websocket_manager.futures_klines(
+            callback=wrapper,
+            symbol=symbol,
+            symbols=symbols,
+            interval=timeframe.to_exchange_format(Exchange.ASTER),
+        )
 
     @overload
     def trades(
@@ -156,7 +163,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        raise NotSupported("Spot market data is not supported for Aster")
 
     @overload
     def aggtrades(
@@ -194,7 +201,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        raise NotSupported("Spot market data is not supported for Aster")
 
     @overload
     def futures_trades(
@@ -229,10 +236,12 @@ class UniWebsocketManager(IUniWebsocketManager):
 
         Должен быть указан либо `symbol`, либо `symbols`.
 
+        В Aster доступен только поток агрегированных сделок, поэтому используйте `futures_aggtrades`.
+
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        return self.futures_aggtrades(callback, symbol, symbols)  # type: ignore
 
     @overload
     def futures_aggtrades(
@@ -270,4 +279,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        wrapper = self._make_wrapper(self._adapter.trades_message, callback)
+        return self._websocket_manager.futures_agg_trade(
+            callback=wrapper, symbol=symbol, symbols=symbols
+        )

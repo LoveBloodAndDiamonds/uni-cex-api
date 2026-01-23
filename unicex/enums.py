@@ -77,6 +77,7 @@ class Timeframe(StrEnum):
         """Возвращает словарь с маппингом таймфреймов для каждой биржи."""
         return {
             Exchange.ASTER: {
+                Timeframe.MIN_1: "1m",
                 Timeframe.MIN_3: "3m",
                 Timeframe.MIN_5: "5m",
                 Timeframe.MIN_15: "15m",

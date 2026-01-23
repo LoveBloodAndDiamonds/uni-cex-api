@@ -124,17 +124,17 @@ class Adapter:
         }
 
     @staticmethod
-    def Klines_message(msg: Any) -> list[KlineDict]:
+    def Klines_message(raw_msg: Any) -> list[KlineDict]:
         """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
         свече/свечах в унифицированный вид.
 
         Параметры:
-            msg (Any): Сырое сообщение с вебсокета.
+            raw_msg (Any): Сырое сообщение с вебсокета.
 
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
         """
-        kline = msg.get("data", msg)["k"]
+        kline = raw_msg.get("data", raw_msg)["k"]  # Чтобы корректно обрабатывать multiplex стримы
         return [
             KlineDict(
                 s=kline["s"],
@@ -151,84 +151,23 @@ class Adapter:
         ]
 
     @staticmethod
-    def futures_klines_message(msg: Any) -> list[KlineDict]:
-        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
-        свече/свечах в унифицированный вид.
-
-        Параметры:
-            msg (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
-        """
-        return Adapter.Klines_message(msg)
-
-    @staticmethod
-    def aggtrades_message(msg: Any) -> list[TradeDict]:
-        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
-        аггрегированных сделке/сделках в унифицированный вид.
-
-        Параметры:
-            msg (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
-        """
-        data = msg.get("data", msg)
-        return [
-            TradeDict(
-                t=int(data["T"]),
-                s=str(data["s"]),
-                S="SELL" if bool(data["m"]) else "BUY",
-                p=float(data["p"]),
-                v=float(data["q"]),
-            )
-        ]
-
-    @staticmethod
-    def futures_aggtrades_message(msg: Any) -> list[TradeDict]:
-        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
-        аггрегированных сделке/сделках в унифицированный вид.
-
-        Параметры:
-            msg (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
-        """
-        return Adapter.aggtrades_message(msg)
-
-    @staticmethod
-    def trades_message(msg: Any) -> list[TradeDict]:
+    def trades_message(raw_msg: Any) -> list[TradeDict]:
         """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
         сделке/сделках в унифицированный вид.
 
         Параметры:
-            msg (Any): Сырое сообщение с вебсокета.
+            raw_msg (Any): Сырое сообщение с вебсокета.
 
         Возвращает:
-            list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
+            list[TradeDict]: Список словарей, где каждый словарь содержит данные о сделке.
         """
-        data = msg.get("data", msg)
+        data = raw_msg.get("data", raw_msg)  # Чтобы корректно обрабатывать multiplex стримы
         return [
             TradeDict(
-                t=int(data["T"]),
-                s=str(data["s"]),
-                S="SELL" if bool(data["m"]) else "BUY",
+                t=data["E"],
+                s=data["s"],
+                S="SELL" if data["m"] else "BUY",
                 p=float(data["p"]),
                 v=float(data["q"]),
             )
         ]
-
-    @staticmethod
-    def futures_trades_message(msg: Any) -> list[TradeDict]:
-        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
-        сделке/сделках в унифицированный вид.
-
-        Параметры:
-            msg (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
-        """
-        return Adapter.trades_message(msg)
