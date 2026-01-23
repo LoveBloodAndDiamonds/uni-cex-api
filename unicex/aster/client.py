@@ -764,3 +764,31 @@ class Client(BaseClient):
         url = self._BASE_FUTURES_URL + "/fapi/v1/listenKey"
 
         return await super()._make_request("DELETE", url, headers=self._get_headers("DELETE"))
+
+    async def open_interest(self) -> dict:
+        """Секретный эндпоинт откопанный в недрах фронтенда asterdex.com разработчиком @RushanDev.
+
+        Формат возвращаемых данных:
+            ```python
+            {'code': '000000',
+             'message': None,
+             'messageDetail': None,
+             'data': [
+                {
+                'symbol': 'TRUTHUSDT',
+                'baseAsset': 'TRUTH',
+                'quoteAsset': 'USDT',
+                'lastPrice': 0.0126301,
+                'highPrice': 0.0138825,
+                'lowPrice': 0.012459,
+                'baseVolume': 2011775,
+                'quoteVolume': 26613.48,
+                'openInterest': 85333.69964392  // В USDT
+                }, ...
+            ]
+        ]
+        ```
+        """
+        url = "https://www.asterdex.com/bapi/future/v1/public/future/aster/ticker/pair"
+
+        return await super()._make_request("GET", url, headers=self._get_headers("GET"))

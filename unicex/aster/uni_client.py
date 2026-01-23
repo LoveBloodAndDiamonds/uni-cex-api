@@ -176,7 +176,9 @@ class UniClient(IUniClient[Client]):
 
         Возвращает:
             `OpenInterestItem | OpenInterestDict`: Если тикер передан - словарь со временем и объемом
-                открытого интереса в монетах. Если нет передан - то словарь, в котором ключ - тикер,
-                а значение - словарь с временем и объемом открытого интереса в монетах.
+                открытого интереса в USDT. Если нет передан - то словарь, в котором ключ - тикер,
+                а значение - словарь с временем и объемом открытого интереса в USDT.
         """
-        raise NotSupported("Open interest is not supported for Aster")
+        raw_data = await self._client.open_interest()
+        adapted_data = Adapter.open_interest(raw_data)
+        return adapted_data[symbol] if symbol else adapted_data

@@ -2,8 +2,15 @@ __all__ = ["Adapter"]
 
 from typing import Any
 
-from unicex.types import KlineDict, TickerDailyDict, TickerDailyItem, TradeDict
-from unicex.utils import catch_adapter_errors, decorate_all_methods
+from unicex.types import (
+    KlineDict,
+    OpenInterestDict,
+    OpenInterestItem,
+    TickerDailyDict,
+    TickerDailyItem,
+    TradeDict,
+)
+from unicex.utils import catch_adapter_errors, decorate_all_methods, get_timestamp
 
 
 @decorate_all_methods(catch_adapter_errors)
@@ -94,6 +101,27 @@ class Adapter:
             dict[str, float]: Словарь, где ключ - тикер, а значение - ставка финансирования.
         """
         return {item["symbol"]: float(item["lastFundingRate"]) * 100 for item in raw_data}
+
+    @staticmethod
+    def open_interest(raw_data: dict) -> OpenInterestDict:
+        """Преобразует сырой ответ, в котором содержатся данные об открытом интересе, в унифицированный формат.
+
+        Параметры:
+            raw_data (dict): Сырой ответ с биржи.
+
+        Возвращает:
+            OpenInterestDict: Словарь, где ключ - тикер, а значение - открытый интерес в USDT.
+        """
+        # В ответе нет времени, поэтому используем текущее.
+        timestamp = get_timestamp()
+        return {
+            item["symbol"]: OpenInterestItem(
+                t=timestamp,
+                v=float(item["openInterest"]),
+                u="usd",
+            )
+            for item in raw_data.get("data", [])
+        }
 
     @staticmethod
     def Klines_message(msg: Any) -> list[KlineDict]:
