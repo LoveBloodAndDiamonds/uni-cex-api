@@ -4,9 +4,11 @@ __all__ = ["UniClient"]
 from typing import overload
 
 from unicex._abc import IUniClient
-from unicex.enums import Timeframe
+from unicex.enums import Exchange, Timeframe
+from unicex.exceptions import NotSupported
 from unicex.types import KlineDict, OpenInterestDict, OpenInterestItem, TickerDailyDict
 
+from .adapter import Adapter
 from .client import Client
 
 
@@ -31,7 +33,7 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             list[str]: Список тикеров.
         """
-        raise NotImplementedError()
+        raise NotSupported("Spot market data is not supported for Aster")
 
     async def futures_tickers(self, only_usdt: bool = True) -> list[str]:
         """Возвращает список тикеров.
@@ -42,7 +44,8 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             list[str]: Список тикеров.
         """
-        raise NotImplementedError()
+        raw_data = await self._client.futures_ticker_price()
+        return Adapter.tickers(raw_data=raw_data, only_usdt=only_usdt)  # type: ignore[arg-type] | raw_data is list[dict] if symbol param is not ommited
 
     async def last_price(self) -> dict[str, float]:
         """Возвращает последнюю цену для каждого тикера.
@@ -50,7 +53,7 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             dict[str, float]: Словарь с последними ценами для каждого тикера.
         """
-        raise NotImplementedError()
+        raise NotSupported("Spot market data is not supported for Aster")
 
     async def futures_last_price(self) -> dict[str, float]:
         """Возвращает последнюю цену для каждого тикера.
@@ -58,7 +61,8 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             dict[str, float]: Словарь с последними ценами для каждого тикера.
         """
-        raise NotImplementedError()
+        raw_data = await self._client.futures_ticker_price()
+        return Adapter.last_price(raw_data)  # type: ignore[arg-type] | raw_data is list[dict] if symbol param is not ommited
 
     async def ticker_24hr(self) -> TickerDailyDict:
         """Возвращает статистику за последние 24 часа для каждого тикера.
@@ -66,7 +70,7 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             TickerDailyDict: Словарь с статистикой за последние 24 часа для каждого тикера.
         """
-        raise NotImplementedError()
+        raise NotSupported("Spot market data is not supported for Aster")
 
     async def futures_ticker_24hr(self) -> TickerDailyDict:
         """Возвращает статистику за последние 24 часа для каждого тикера.
@@ -74,7 +78,8 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             TickerDailyDict: Словарь с статистикой за последние 24 часа для каждого тикера.
         """
-        raise NotImplementedError()
+        raw_data = await self._client.futures_ticker_24hr()
+        return Adapter.ticker_24hr(raw_data=raw_data)  # type: ignore[arg-type] | raw_data is list[dict] if symbol param is not ommited
 
     async def klines(
         self,
@@ -96,7 +101,7 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             list[KlineDict]: Список свечей для тикера.
         """
-        raise NotImplementedError()
+        raise NotSupported("Spot market data is not supported for Aster")
 
     async def futures_klines(
         self,
@@ -118,15 +123,41 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             list[KlineDict]: Список свечей для тикера.
         """
-        raise NotImplementedError()
+        interval = (
+            interval.to_exchange_format(Exchange.ASTER)
+            if isinstance(interval, Timeframe)
+            else interval
+        )
+        raw_data = await self._client.futures_klines(
+            symbol=symbol,
+            interval=interval,
+            limit=limit,
+            start_time=start_time,
+            end_time=end_time,
+        )
+        return Adapter.klines(raw_data=raw_data, symbol=symbol)
 
-    async def funding_rate(self) -> dict[str, float]:
+    @overload
+    async def funding_rate(self, symbol: str) -> float: ...
+
+    @overload
+    async def funding_rate(self, symbol: None) -> dict[str, float]: ...
+
+    @overload
+    async def funding_rate(self) -> dict[str, float]: ...
+
+    async def funding_rate(self, symbol: str | None = None) -> dict[str, float] | float:
         """Возвращает ставку финансирования для всех тикеров.
+
+        Параметры:
+          symbol (`str | None`): Название тикера (Опционально).
 
         Возвращает:
             dict[str, float]: Ставка финансирования для каждого тикера.
         """
-        raise NotImplementedError()
+        raw_data = await self._client.futures_mark_price()
+        adapted_data = Adapter.funding_rate(raw_data if isinstance(raw_data, list) else [raw_data])  # type: ignore[arg-type]
+        return adapted_data[symbol] if symbol else adapted_data
 
     @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...
@@ -148,4 +179,4 @@ class UniClient(IUniClient[Client]):
                 открытого интереса в монетах. Если нет передан - то словарь, в котором ключ - тикер,
                 а значение - словарь с временем и объемом открытого интереса в монетах.
         """
-        raise NotImplementedError()
+        raise NotSupported("Open interest is not supported for Aster")

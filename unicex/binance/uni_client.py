@@ -163,8 +163,8 @@ class UniClient(IUniClient[Client]):
     async def funding_rate(self, symbol: str | None = None) -> dict[str, float] | float:
         """Возвращает ставку финансирования для тикера или всех тикеров, если тикер не указан.
 
-        - Параметры:
-        symbol (`str | None`): Название тикера (Опционально).
+        Параметры:
+          symbol (`str | None`): Название тикера (Опционально).
 
         Возвращает:
           `dict[str, float] | float`: Ставка финансирования для тикера или словарь со ставками для всех тикеров.
