@@ -7,10 +7,10 @@
 - может быть deprecate Client и WebsocketManager
 - self._logger = logger or _logger ничего не делает
 - ключ "х" в KlineDict обрабатывать при HTTP запросах а не просто
-- start_exchanges_info должна возвращать список задач
 - починить докстринги в aster.client
 
 ** Сделано: **
++ start_exchanges_info должна возвращать список задач
 + aster.adapter куча лишних преобразований, когда и так все приходит float|int
 + убрать все bool из aster.client, вроде как они не поддерживаются
 + okx.exchange_info ошибка
