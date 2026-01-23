@@ -9,9 +9,9 @@
 - ключ "х" в KlineDict обрабатывать при HTTP запросах а не просто
 - start_exchanges_info должна возвращать список задач
 - починить докстринги в aster.client
-- aster.adapter куча лишних преобразований, когда и так все приходит float|int
 
 ** Сделано: **
++ aster.adapter куча лишних преобразований, когда и так все приходит float|int
 + убрать все bool из aster.client, вроде как они не поддерживаются
 + okx.exchange_info ошибка
 + mexc.adapter.futures_aggtrades - возвращает контракты
