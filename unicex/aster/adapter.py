@@ -164,7 +164,7 @@ class Adapter:
         data = raw_msg.get("data", raw_msg)  # Чтобы корректно обрабатывать multiplex стримы
         return [
             TradeDict(
-                t=data["E"],
+                t=data["T"],
                 s=data["s"],
                 S="SELL" if data["m"] else "BUY",
                 p=float(data["p"]),

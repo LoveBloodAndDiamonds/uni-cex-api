@@ -227,7 +227,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Открывает стрим сделок (futures) с унификацией сообщений.
+        """Открывает стрим агрегированных сделок (futures) с унификацией сообщений.
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
@@ -236,7 +236,8 @@ class UniWebsocketManager(IUniWebsocketManager):
 
         Должен быть указан либо `symbol`, либо `symbols`.
 
-        В Aster доступен только поток агрегированных сделок, поэтому используйте `futures_aggtrades`.
+        В Aster доступен только поток агрегированных сделок, поэтому `futures_aggtrades`
+        будет использован автоматически.
 
         Возвращает:
             `Websocket`: Экземпляр вебсокета.

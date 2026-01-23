@@ -118,10 +118,10 @@ class UserWebsocket:
     async def _start_ws(self, listen_key: str) -> None:
         """Запускает WebSocket соединение."""
         ws_url = f"{self._BASE_FUTURES_URL}/ws/{listen_key}"
+        self._ws_kwargs["no_message_reconnect_timeout"] = None
         self._ws = Websocket(
             callback=self._callback,
             url=ws_url,
-            no_message_reconnect_timeout=None,
             **self._ws_kwargs,
         )
         await self._ws.start()
