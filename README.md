@@ -6,6 +6,7 @@
 
 | Exchange        | Client | Auth | WS Manager | User WS | Uni Client | Uni WS Manager | ExchangeInfo |
 |-----------------|--------|------|------------|---------|------------|----------------|--------------|
+| **Aster**       | ✓      | ✓    | ✓          | ✓       | ✓          | ✓              | ✓            |
 | **Binance**     | ✓      | ✓    | ✓          | ✓       | ✓          | ✓              | ✓            |
 | **Bitget**      | ✓      | ✓    | ✓          |         | ✓          | ✓              | ✓            |
 | **Bybit**       | ✓      | ✓    | ✓          |         | ✓          | ✓              | ✓            |

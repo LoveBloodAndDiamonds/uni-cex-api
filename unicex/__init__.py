@@ -100,6 +100,7 @@ __all__ = [
 
 # abstract & base
 import asyncio
+from typing import Awaitable
 from ._abc import IUniClient, IUniWebsocketManager
 from ._base import BaseClient, Websocket
 
@@ -204,9 +205,9 @@ from .bingx import (
 )
 
 
-async def load_exchanges_info() -> None:
+async def load_exchanges_info() -> list:
     """Единожды загружает информацию о тикерах на всех биржах."""
-    await asyncio.gather(
+    return await asyncio.gather(
         BinanceExchangeInfo.load_exchange_info(),
         BitgetExchangeInfo.load_exchange_info(),
         BybitExchangeInfo.load_exchange_info(),
@@ -219,9 +220,9 @@ async def load_exchanges_info() -> None:
     )
 
 
-async def start_exchanges_info(parse_interval_seconds: int = 60 * 60) -> None:
+async def start_exchanges_info(parse_interval_seconds: int = 60 * 60) -> Awaitable:
     """Запускает цикл обновления информации о тикерах на всех биржах."""
-    asyncio.gather(
+    return asyncio.gather(
         BinanceExchangeInfo.start(parse_interval_seconds),
         BitgetExchangeInfo.start(parse_interval_seconds),
         BybitExchangeInfo.start(parse_interval_seconds),

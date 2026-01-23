@@ -12,6 +12,11 @@ from ._abc import IExchangeInfo, IUniClient, IUniWebsocketManager
 from .enums import Exchange
 from .exceptions import NotSupported
 
+from .aster import (
+    UniClient as AsterUniClient,
+    UniWebsocketManager as AsterUniWebsocketManager,
+    ExchangeInfo as AsterExchangeInfo,
+)
 from .binance import (
     UniClient as BinanceUniClient,
     UniWebsocketManager as BinanceUniWebsocketManager,
@@ -68,6 +73,7 @@ from .bingx import (
 
 
 _UNI_CLIENT_MAPPER: dict[Exchange, type[IUniClient]] = {
+    Exchange.ASTER: AsterUniClient,
     Exchange.BINANCE: BinanceUniClient,
     Exchange.BITGET: BitgetUniClient,
     Exchange.BYBIT: BybitUniClient,
@@ -81,6 +87,7 @@ _UNI_CLIENT_MAPPER: dict[Exchange, type[IUniClient]] = {
 """Маппер, который связывает биржу и реализацию унифицированного клиента."""
 
 _UNI_WS_MANAGER_MAPPER: dict[Exchange, type[IUniWebsocketManager]] = {
+    Exchange.ASTER: AsterUniWebsocketManager,
     Exchange.BINANCE: BinanceUniWebsocketManager,
     Exchange.BITGET: BitgetUniWebsocketManager,
     Exchange.BYBIT: BybitUniWebsocketManager,
@@ -94,6 +101,7 @@ _UNI_WS_MANAGER_MAPPER: dict[Exchange, type[IUniWebsocketManager]] = {
 """Маппер, который связывает биржу и реализацию унифицированного вебсокет-менеджера."""
 
 _EXCHANGE_INFO_MAPPER: dict[Exchange, type[IExchangeInfo]] = {
+    Exchange.ASTER: AsterExchangeInfo,
     Exchange.BINANCE: BinanceExchangeInfo,
     Exchange.BITGET: BitgetExchangeInfo,
     Exchange.BYBIT: BybitExchangeInfo,

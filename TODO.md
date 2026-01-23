@@ -3,8 +3,16 @@
 - Какая то путаница в OCO ордерах на бинансе: https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-list---oco-trade
 - На Hyperliquid неправильно работает лимит (добавляет + 1 свечу при запросе свечей через UniClient)
 - bingx adapter отрефакторить
+- зачем нужна функция _client_cls
+- может быть deprecate Client и WebsocketManager
+- self._logger = logger or _logger ничего не делает
+- ключ "х" в KlineDict обрабатывать при HTTP запросах а не просто
+- починить докстринги в aster.client
 
 ** Сделано: **
++ start_exchanges_info должна возвращать список задач
++ aster.adapter куча лишних преобразований, когда и так все приходит float|int
++ убрать все bool из aster.client, вроде как они не поддерживаются
 + okx.exchange_info ошибка
 + mexc.adapter.futures_aggtrades - возвращает контракты
 + gate вебсокеты возвращают контракты?

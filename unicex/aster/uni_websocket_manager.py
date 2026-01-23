@@ -1,11 +1,12 @@
-__all__ = ["IUniWebsocketManager"]
+__all__ = ["UniWebsocketManager"]
 
 from collections.abc import Awaitable, Callable, Sequence
 from typing import Any, overload
 
 from unicex._abc import IUniWebsocketManager
 from unicex._base import Websocket
-from unicex.enums import Exchange, MarketType, Timeframe
+from unicex.enums import Exchange, Timeframe
+from unicex.exceptions import NotSupported
 from unicex.types import LoggerLike
 
 from .adapter import Adapter
@@ -28,20 +29,13 @@ class UniWebsocketManager(IUniWebsocketManager):
         """Инициализирует унифицированный менеджер вебсокетов.
 
         Параметры:
-            client (`Client | UniClient | None`): Клиент Mexc или унифицированный клиент. Нужен для подключения к приватным топикам.
+            client (`Client | UniClient | None`): Клиент Aster или унифицированный клиент. Нужен для подключения к приватным топикам.
             logger (`LoggerLike | None`): Логгер для записи логов.
             ws_kwargs (`dict[str, Any]`): Дополнительные параметры инициализации, которые будут переданы WebsocketManager/Websocket.
         """
         super().__init__(client=client, logger=logger)
         self._websocket_manager = WebsocketManager(self._client, **ws_kwargs)  # type: ignore
         self._adapter = Adapter()
-
-    def _is_service_message(self, raw_msg: Any) -> bool:
-        """Дополнительно обрабатывает ошибку адаптации сообщения на случай, если это сервисное сообщение, например `ping` или `subscribe`.
-
-        Переопределяется в каждом наследнике в связи с разным форматом входящих данных.
-        """
-        return raw_msg.get("msg") == "PONG"
 
     @overload
     def klines(
@@ -83,15 +77,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета для управления соединением.
         """
-        wrapper = self._make_wrapper(self._adapter.klines_message, callback)
-        return self._websocket_manager.klines(
-            callback=wrapper,
-            symbol=symbol,
-            symbols=symbols,
-            interval=timeframe.to_exchange_format(
-                Exchange.MEXC, MarketType.FUTURES
-            ),  # Тут фьючерсный интервал, потому что для вебсокета MEXC решили что сделают так (идиоты)
-        )
+        raise NotSupported("Spot market data is not supported for Aster")
 
     @overload
     def futures_klines(
@@ -133,12 +119,12 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        wrapper = self._make_wrapper(self._adapter.futures_klines_message, callback)
-        return self._websocket_manager.futures_kline(
+        wrapper = self._make_wrapper(self._adapter.Klines_message, callback)
+        return self._websocket_manager.futures_klines(
             callback=wrapper,
             symbol=symbol,
             symbols=symbols,
-            interval=timeframe.to_exchange_format(Exchange.MEXC, MarketType.FUTURES),
+            interval=timeframe.to_exchange_format(Exchange.ASTER),
         )
 
     @overload
@@ -177,8 +163,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        wrapper = self._make_wrapper(self._adapter.trades_message, callback)
-        return self._websocket_manager.trade(callback=wrapper, symbol=symbol, symbols=symbols)
+        raise NotSupported("Spot market data is not supported for Aster")
 
     @overload
     def aggtrades(
@@ -216,7 +201,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        return self.trades(callback=callback, symbol=symbol, symbols=symbols)  # type: ignore[reportCallIssue]
+        raise NotSupported("Spot market data is not supported for Aster")
 
     @overload
     def futures_trades(
@@ -242,7 +227,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Открывает стрим сделок (futures) с унификацией сообщений.
+        """Открывает стрим агрегированных сделок (futures) с унификацией сообщений.
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
@@ -251,13 +236,13 @@ class UniWebsocketManager(IUniWebsocketManager):
 
         Должен быть указан либо `symbol`, либо `symbols`.
 
+        В Aster доступен только поток агрегированных сделок, поэтому `futures_aggtrades`
+        будет использован автоматически.
+
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        wrapper = self._make_wrapper(self._adapter.futures_trades_message, callback)
-        return self._websocket_manager.futures_trade(
-            callback=wrapper, symbol=symbol, symbols=symbols
-        )
+        return self.futures_aggtrades(callback, symbol, symbols)  # type: ignore
 
     @overload
     def futures_aggtrades(
@@ -295,4 +280,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        return self.futures_trades(callback=callback, symbol=symbol, symbols=symbols)  # type: ignore[reportCallIssue]
+        wrapper = self._make_wrapper(self._adapter.trades_message, callback)
+        return self._websocket_manager.futures_agg_trade(
+            callback=wrapper, symbol=symbol, symbols=symbols
+        )
