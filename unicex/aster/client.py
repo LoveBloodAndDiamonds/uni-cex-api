@@ -766,7 +766,7 @@ class Client(BaseClient):
         return await super()._make_request("DELETE", url, headers=self._get_headers("DELETE"))
 
     async def open_interest(self) -> dict:
-        """Секретный эндпоинт откопанный в недрах фронтенда asterdex.com разработчиком @RushanDev.
+        """Секретный эндпоинт откопанный в недрах фронтенда asterdex.com разработчиком @RushanWork.
 
         Формат возвращаемых данных:
             ```python
