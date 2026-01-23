@@ -225,6 +225,11 @@ def generate_ex_link(exchange: Exchange, market_type: MarketType, symbol: str):
             return f"https://bingx.com/en/perpetual/{ticker}-USDT"
         else:
             return f"https://bingx.com/en/spot/{ticker}USDT"
+    elif exchange == Exchange.ASTER:
+        if market_type == MarketType.FUTURES:
+            return f"https://www.asterdex.com/ru/trade/pro/futures/{symbol}"
+        else:
+            return f"https://www.asterdex.com/ru/trade/pro/spot/{symbol}"
     else:
         raise NotSupported(f"Exchange {exchange} is not supported")
 
