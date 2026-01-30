@@ -43,6 +43,23 @@ class WebsocketManager:
             }
         )
 
+    def _normalize_inst_ids(self, inst_id: str | list[str]) -> list[str]:
+        """Нормализует inst_id до списка."""
+        if isinstance(inst_id, str):
+            return [inst_id]
+        if not inst_id:
+            raise ValueError("inst_id list cannot be empty")
+        return list(inst_id)
+
+    def _build_inst_id_args(
+        self,
+        base_args: dict[str, str],
+        inst_id: str | list[str],
+    ) -> list[dict[str, str]]:
+        """Формирует args для списка inst_id."""
+        inst_ids = self._normalize_inst_ids(inst_id)
+        return [{**base_args, "instId": item} for item in inst_ids]
+
     def instruments(
         self,
         callback: CallbackType,
@@ -75,30 +92,23 @@ class WebsocketManager:
             **self._ws_kwargs,
         )
 
-    def open_interest(
-        self,
-        callback: CallbackType,
-        inst_id: str,
-    ) -> Websocket:
+    def open_interest(self, callback: CallbackType, inst_id: str | list[str]) -> Websocket:
         """Создает вебсокет для получения данных об открытом интересе.
 
         https://www.okx.com/docs-v5/en/#public-data-websocket-open-interest-channel
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            inst_id (`str`): ID инструмента (например, "LTC-USD-SWAP").
+            inst_id (`str | list[str]`): ID инструмента или список ID (например, "LTC-USD-SWAP").
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = self._build_subscription_message(
-            [
-                {
-                    "channel": "open-interest",
-                    "instId": inst_id,
-                }
-            ]
+        args = self._build_inst_id_args(
+            {"channel": "open-interest"},
+            inst_id,
         )
+        subscription_message = self._build_subscription_message(args)
 
         return Websocket(
             callback=callback,
@@ -110,7 +120,7 @@ class WebsocketManager:
     def funding_rate(
         self,
         callback: CallbackType,
-        inst_id: str,
+        inst_id: str | list[str],
     ) -> Websocket:
         """Создает вебсокет для получения данных о ставке финансирования.
 
@@ -118,19 +128,16 @@ class WebsocketManager:
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            inst_id (`str`): ID инструмента (например, "BTC-USD-SWAP").
+            inst_id (`str | list[str]`): ID инструмента или список ID (например, "BTC-USD-SWAP").
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = self._build_subscription_message(
-            [
-                {
-                    "channel": "funding-rate",
-                    "instId": inst_id,
-                }
-            ]
+        args = self._build_inst_id_args(
+            {"channel": "funding-rate"},
+            inst_id,
         )
+        subscription_message = self._build_subscription_message(args)
 
         return Websocket(
             callback=callback,
@@ -142,7 +149,7 @@ class WebsocketManager:
     def price_limit(
         self,
         callback: CallbackType,
-        inst_id: str,
+        inst_id: str | list[str],
     ) -> Websocket:
         """Создает вебсокет для получения максимальной цены покупки и минимальной цены продажи инструментов.
 
@@ -150,19 +157,16 @@ class WebsocketManager:
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            inst_id (`str`): ID инструмента (например, "LTC-USD-190628").
+            inst_id (`str | list[str]`): ID инструмента или список ID (например, "LTC-USD-190628").
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = self._build_subscription_message(
-            [
-                {
-                    "channel": "price-limit",
-                    "instId": inst_id,
-                }
-            ]
+        args = self._build_inst_id_args(
+            {"channel": "price-limit"},
+            inst_id,
         )
+        subscription_message = self._build_subscription_message(args)
 
         return Websocket(
             callback=callback,
@@ -208,7 +212,7 @@ class WebsocketManager:
         callback: CallbackType,
         inst_type: Literal["OPTION", "FUTURES"],
         inst_family: str | None = None,
-        inst_id: str | None = None,
+        inst_id: str | list[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения расчетной цены поставки/исполнения/расчета для FUTURES и OPTION контрактов.
 
@@ -218,7 +222,7 @@ class WebsocketManager:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             inst_type (`Literal["OPTION", "FUTURES"]`): Тип инструмента.
             inst_family (`str | None`): Семейство инструментов (например, "BTC-USD"). Обязателен либо inst_family, либо inst_id.
-            inst_id (`str | None`): ID инструмента. Обязателен либо inst_family, либо inst_id.
+            inst_id (`str | list[str] | None`): ID инструмента или список ID. Обязателен либо inst_family, либо inst_id.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
@@ -228,17 +232,18 @@ class WebsocketManager:
         if inst_family and inst_id:
             raise ValueError("Only one of inst_family or inst_id should be provided")
 
-        args: dict[str, str] = {
+        base_args: dict[str, str] = {
             "channel": "estimated-price",
             "instType": inst_type,
         }
 
         if inst_family:
-            args["instFamily"] = inst_family
-        if inst_id:
-            args["instId"] = inst_id
+            base_args["instFamily"] = inst_family
+            args = [base_args]
+        else:
+            args = self._build_inst_id_args(base_args, inst_id)  # type: ignore
 
-        subscription_message = self._build_subscription_message([args])
+        subscription_message = self._build_subscription_message(args)
 
         return Websocket(
             callback=callback,
@@ -250,7 +255,7 @@ class WebsocketManager:
     def mark_price(
         self,
         callback: CallbackType,
-        inst_id: str,
+        inst_id: str | list[str],
     ) -> Websocket:
         """Создает вебсокет для получения маркировочной цены.
 
@@ -258,19 +263,18 @@ class WebsocketManager:
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            inst_id (`str`): ID инструмента (например, "LTC-USD-190628").
+            inst_id (`str | list[str]`): ID инструмента или список ID (например, "LTC-USD-190628").
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = self._build_subscription_message(
-            [
-                {
-                    "channel": "mark-price",
-                    "instId": inst_id,
-                }
-            ]
+        args = self._build_inst_id_args(
+            {
+                "channel": "mark-price",
+            },
+            inst_id,
         )
+        subscription_message = self._build_subscription_message(args)
 
         return Websocket(
             callback=callback,
@@ -282,7 +286,7 @@ class WebsocketManager:
     def index_tickers(
         self,
         callback: CallbackType,
-        inst_id: str,
+        inst_id: str | list[str],
     ) -> Websocket:
         """Создает вебсокет для получения данных индексных тикеров.
 
@@ -290,19 +294,18 @@ class WebsocketManager:
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            inst_id (`str`): Индекс с USD, USDT, BTC, USDC в качестве котируемой валюты (например, "BTC-USDT").
+            inst_id (`str | list[str]`): Индекс или список индексов (например, "BTC-USDT").
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = self._build_subscription_message(
-            [
-                {
-                    "channel": "index-tickers",
-                    "instId": inst_id,
-                }
-            ]
+        args = self._build_inst_id_args(
+            {
+                "channel": "index-tickers",
+            },
+            inst_id,
         )
+        subscription_message = self._build_subscription_message(args)
 
         return Websocket(
             callback=callback,
@@ -343,7 +346,7 @@ class WebsocketManager:
             "12Hutc",
             "6Hutc",
         ],
-        inst_id: str,
+        inst_id: str | list[str],
     ) -> Websocket:
         """Создает вебсокет для получения данных свечей маркировочной цены.
 
@@ -352,20 +355,19 @@ class WebsocketManager:
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             interval (`Literal`): Интервал свечей.
-            inst_id (`str`): ID инструмента (например, "BTC-USD-190628").
+            inst_id (`str | list[str]`): ID инструмента или список ID (например, "BTC-USD-190628").
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
         channel = f"mark-price-candle{interval}"
-        subscription_message = self._build_subscription_message(
-            [
-                {
-                    "channel": channel,
-                    "instId": inst_id,
-                }
-            ]
+        args = self._build_inst_id_args(
+            {
+                "channel": channel,
+            },
+            inst_id,
         )
+        subscription_message = self._build_subscription_message(args)
 
         return Websocket(
             callback=callback,
@@ -405,7 +407,7 @@ class WebsocketManager:
             "12Hutc",
             "6Hutc",
         ],
-        inst_id: str,
+        inst_id: str | list[str],
     ) -> Websocket:
         """Создает вебсокет для получения данных свечей индекса.
 
@@ -414,20 +416,19 @@ class WebsocketManager:
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             interval (`Literal`): Интервал свечей.
-            inst_id (`str`): Индекс (например, "BTC-USD").
+            inst_id (`str | list[str]`): Индекс или список индексов (например, "BTC-USD").
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
         channel = f"index-candle{interval}"
-        subscription_message = self._build_subscription_message(
-            [
-                {
-                    "channel": channel,
-                    "instId": inst_id,
-                }
-            ]
+        args = self._build_inst_id_args(
+            {
+                "channel": channel,
+            },
+            inst_id,
         )
+        subscription_message = self._build_subscription_message(args)
 
         return Websocket(
             callback=callback,
@@ -506,7 +507,7 @@ class WebsocketManager:
     def tickers(
         self,
         callback: CallbackType,
-        inst_id: str,
+        inst_id: str | list[str],
     ) -> Websocket:
         """Создает вебсокет для получения последней цены сделки, цены bid, цены ask и 24-часового объема торгов.
 
@@ -514,19 +515,18 @@ class WebsocketManager:
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            inst_id (`str`): ID инструмента (например, "BTC-USDT").
+            inst_id (`str | list[str]`): ID инструмента или список ID (например, "BTC-USDT").
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = self._build_subscription_message(
-            [
-                {
-                    "channel": "tickers",
-                    "instId": inst_id,
-                }
-            ]
+        args = self._build_inst_id_args(
+            {
+                "channel": "tickers",
+            },
+            inst_id,
         )
+        subscription_message = self._build_subscription_message(args)
 
         return Websocket(
             callback=callback,
@@ -567,7 +567,7 @@ class WebsocketManager:
             "12Hutc",
             "6Hutc",
         ],
-        inst_id: str,
+        inst_id: str | list[str],
     ) -> Websocket:
         """Создает вебсокет для получения данных свечей инструмента.
 
@@ -576,19 +576,18 @@ class WebsocketManager:
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             interval (`Literal`): Интервал свечей.
-            inst_id (`str`): ID инструмента (например, "BTC-USDT").
+            inst_id (`str | list[str]`): ID инструмента или список ID (например, "BTC-USDT").
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = self._build_subscription_message(
-            [
-                {
-                    "channel": f"candle{interval}",
-                    "instId": inst_id,
-                }
-            ]
+        args = self._build_inst_id_args(
+            {
+                "channel": f"candle{interval}",
+            },
+            inst_id,
         )
+        subscription_message = self._build_subscription_message(args)
 
         return Websocket(
             callback=callback,
@@ -600,7 +599,7 @@ class WebsocketManager:
     def trades(
         self,
         callback: CallbackType,
-        inst_id: str,
+        inst_id: str | list[str],
     ) -> Websocket:
         """Создает вебсокет для получения данных о последних сделках.
 
@@ -608,19 +607,18 @@ class WebsocketManager:
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            inst_id (`str`): ID инструмента (например, "BTC-USDT").
+            inst_id (`str | list[str]`): ID инструмента или список ID (например, "BTC-USDT").
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = self._build_subscription_message(
-            [
-                {
-                    "channel": "trades",
-                    "instId": inst_id,
-                }
-            ]
+        args = self._build_inst_id_args(
+            {
+                "channel": "trades",
+            },
+            inst_id,
         )
+        subscription_message = self._build_subscription_message(args)
 
         return Websocket(
             callback=callback,
@@ -632,7 +630,7 @@ class WebsocketManager:
     def all_trades(
         self,
         callback: CallbackType,
-        inst_id: str,
+        inst_id: str | list[str],
     ) -> Websocket:
         """Создает вебсокет для получения данных о всех сделках (по одной сделке на обновление).
 
@@ -640,19 +638,18 @@ class WebsocketManager:
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            inst_id (`str`): ID инструмента (например, "BTC-USDT").
+            inst_id (`str | list[str]`): ID инструмента или список ID (например, "BTC-USDT").
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = self._build_subscription_message(
-            [
-                {
-                    "channel": "trades-all",
-                    "instId": inst_id,
-                }
-            ]
+        args = self._build_inst_id_args(
+            {
+                "channel": "trades-all",
+            },
+            inst_id,
         )
+        subscription_message = self._build_subscription_message(args)
 
         return Websocket(
             callback=callback,
@@ -665,7 +662,7 @@ class WebsocketManager:
         self,
         callback: CallbackType,
         channel: Literal["books", "books5", "bbo-tbt", "books50-l2-tbt", "books-l2-tbt"],
-        inst_id: str,
+        inst_id: str | list[str],
     ) -> Websocket:
         """Создает вебсокет для получения данных ордербука.
 
@@ -674,19 +671,18 @@ class WebsocketManager:
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             channel (`Literal["books", "books5", "bbo-tbt", "books50-l2-tbt", "books-l2-tbt"]`): Тип канала ордербука.
-            inst_id (`str`): ID инструмента (например, "BTC-USDT").
+            inst_id (`str | list[str]`): ID инструмента или список ID (например, "BTC-USDT").
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = self._build_subscription_message(
-            [
-                {
-                    "channel": channel,
-                    "instId": inst_id,
-                }
-            ]
+        args = self._build_inst_id_args(
+            {
+                "channel": channel,
+            },
+            inst_id,
         )
+        subscription_message = self._build_subscription_message(args)
 
         return Websocket(
             callback=callback,

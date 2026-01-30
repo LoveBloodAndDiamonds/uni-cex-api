@@ -49,7 +49,7 @@ class IUniWebsocketManager(ABC):
                     except Exception as err:
                         self._logger.error(f"Failed to handle adapter error: {e}")
                         raise err from e
-                self._logger.warning(f"Failed to adapt message: {e}")
+                self._logger.error(f"Failed to adapt message: {e}")
                 return
             if isinstance(adapted, list):
                 for item in adapted:
