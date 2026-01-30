@@ -41,7 +41,9 @@ class UniWebsocketManager(IUniWebsocketManager):
 
         Переопределяется в каждом наследнике в связи с разным форматом входящих данных.
         """
-        return raw_msg.get("channel") in ["futures.pong"]
+        is_sub_msg = raw_msg.get("event") == "subscribe"
+        is_pong_msg = raw_msg.get("event") == "pong"
+        return is_sub_msg or is_pong_msg
 
     def _normalize_symbols(
         self,
