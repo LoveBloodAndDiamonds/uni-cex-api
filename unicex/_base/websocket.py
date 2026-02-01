@@ -113,7 +113,7 @@ class Websocket:
         self._logger.debug(f"Establishing connection with {self._url}")
         async for conn in websockets.connect(uri=self._url, **self._generate_ws_kwargs()):
             try:
-                self._logger.info(f"Websocket connection was established to {self._url}")
+                self._logger.debug(f"Websocket connection was established to {self._url}")
                 await self._after_connect(conn)
 
                 # Цикл получения сообщений
