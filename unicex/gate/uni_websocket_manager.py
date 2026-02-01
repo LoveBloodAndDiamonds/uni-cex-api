@@ -43,7 +43,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         """
         is_sub_msg = raw_msg.get("event") == "subscribe"
         is_pong_msg = raw_msg.get("event") == "pong"
-        is_pong_msg_2 = raw_msg.get("channel") == "spot.pong"
+        is_pong_msg_2 = raw_msg.get("channel") in ["spot.pong", "futures.pong"]
         return is_sub_msg or is_pong_msg or is_pong_msg_2
 
     def _normalize_symbols(
