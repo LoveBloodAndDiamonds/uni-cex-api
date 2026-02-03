@@ -113,7 +113,7 @@ class Websocket:
         self._logger.debug(f"Establishing connection with {self._url}")
         async for conn in websockets.connect(uri=self._url, **self._generate_ws_kwargs()):
             try:
-                self._logger.debug(f"Websocket connection was established to {self._url}")
+                self._logger.info(f"Websocket connection was established to {self._url}")
                 await self._after_connect(conn)
 
                 # Цикл получения сообщений
@@ -151,7 +151,8 @@ class Websocket:
                 # Проверяем размер очереди сообщений и выбрасываем ошибку, если он превышает максимальный размер
                 self._check_queue_size()
         except QueueOverflowError:
-            self._logger.error("Message queue is overflow")
+            cleaned_messages = self._clear_queue()
+            self._logger.error(f"Message queue is overflow, cleaned {cleaned_messages} messages")
         except orjson.JSONDecodeError as e:
             if message in ["ping", "pong"]:
                 self._logger.debug(f"Received ping message: {message}")
@@ -165,6 +166,18 @@ class Websocket:
         qsize = self._queue.qsize()
         if qsize >= self.MAX_QUEUE_SIZE:
             raise QueueOverflowError(f"Message queue is overflow: {qsize}")
+
+    def _clear_queue(self) -> int:
+        """Очищает очередь сообщений."""
+        cleared = 0
+        while True:
+            try:
+                self._queue.get_nowait()
+                self._queue.task_done()
+                cleared += 1
+            except asyncio.QueueEmpty:
+                break
+        return cleared
 
     async def _after_connect(self, conn: ClientConnection) -> None:
         """Вызывается после установки соединения."""
@@ -261,7 +274,9 @@ class Websocket:
 
         while self._running:
             if time.monotonic() - self._last_message_time > self._no_message_reconnect_timeout:
-                self._logger.error("Websocket is not responding, restarting...")
+                self._logger.error(
+                    f"No messages in {self._no_message_reconnect_timeout} seconds, restarting..."
+                )
                 await self.restart()
                 return
             await asyncio.sleep(1)
