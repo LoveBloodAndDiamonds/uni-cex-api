@@ -20,13 +20,17 @@ class IUniWebsocketManager(ABC):
     """Интерфейс менеджера унифицированных вебсокетов."""
 
     def __init__(
-        self, client: BaseClient | IUniClient | None = None, logger: LoggerLike | None = None
+        self,
+        client: BaseClient | IUniClient | None = None,
+        logger: LoggerLike | None = None,
+        **ws_kwagrs: Any,
     ) -> None:
         """Инициализирует унифицированный менеджер вебсокетов.
 
         Параметры:
             client (`BaseClient | IUniClient | None`): Клиент или унифицированный клиент. Нужен для подключения к приватным топикам.
             logger (`LoggerLike | None`): Логгер для записи логов.
+            ws_kwagrs (`dict`): Параметры для создания вебсокета.
         """
         if isinstance(client, IUniClient):
             client = client.client
