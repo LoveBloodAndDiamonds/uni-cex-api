@@ -36,21 +36,25 @@ class UniWebsocketManager(IUniWebsocketManager):
         self._websocket_manager = WebsocketManager(self._client, **ws_kwargs)  # type: ignore
         self._adapter = Adapter()
 
+    def _is_service_message(self, raw_msg: Any) -> bool:
+        """Дополнительно обрабатывает ошибку адаптации сообщения на случай, если это сервисное сообщение, например `ping` или `subscribe`.
+
+        Переопределяется в каждом наследнике в связи с разным форматом входящих данных.
+        """
+        return raw_msg.get("event") == "subscribe"
+
     def _normalize_symbol(
         self,
         symbol: str | None,
         symbols: Sequence[str] | None,
-    ) -> str:
+    ) -> list[str]:
         """Преобразует параметры symbol/symbols в один тикер."""
         if symbol and symbols:
             raise ValueError("Parameters symbol and symbols cannot be used together")
         if symbol:
-            return symbol
+            return [symbol]
         if symbols:
-            normalized = list(symbols)
-            if len(normalized) != 1:
-                raise ValueError("OKX websocket поддерживает только один тикер на соединение")
-            return normalized[0]
+            return list(symbols)
         raise ValueError("Either symbol or symbols must be provided")
 
     @overload

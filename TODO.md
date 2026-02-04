@@ -8,6 +8,8 @@
 - self._logger = logger or _logger ничего не делает
 - ключ "х" в KlineDict обрабатывать при HTTP запросах а не просто
 - починить докстринги в aster.client
+- рефакторинг OKX Websocket Manager
+- в uniwebsocketmanager можно принимать symbol: str | list[str] а не возиться с overload который усложняет чтение и поддержку кодовой базы
 
 ** Сделано: **
 + start_exchanges_info должна возвращать список задач

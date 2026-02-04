@@ -41,7 +41,13 @@ class UniWebsocketManager(IUniWebsocketManager):
 
         Переопределяется в каждом наследнике в связи с разным форматом входящих данных.
         """
-        return raw_msg.get("msg") == "PONG"
+        is_sub_msg = raw_msg.get("channel") == "rs.sub.deal" and raw_msg.get("data") == "success"
+
+        is_pong_1 = raw_msg.get("channel") == "pong"
+
+        is_pont_2 = raw_msg.get("msg") == "PONG"
+
+        return any([is_sub_msg, is_pong_1, is_pont_2])
 
     @overload
     def klines(

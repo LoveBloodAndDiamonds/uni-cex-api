@@ -36,6 +36,16 @@ class UniWebsocketManager(IUniWebsocketManager):
         self._websocket_manager = WebsocketManager(self._client, **ws_kwargs)  # type: ignore
         self._adapter = Adapter()
 
+    def _is_service_message(self, raw_msg: Any) -> bool:
+        """Дополнительно обрабатывает ошибку адаптации сообщения на случай, если это сервисное сообщение, например `ping` или `subscribe`.
+
+        Переопределяется в каждом наследнике в связи с разным форматом входящих данных.
+        """
+        is_sub_msg = raw_msg.get("event") == "subscribe"
+        is_pong_msg = raw_msg.get("event") == "pong"
+        is_pong_msg_2 = raw_msg.get("channel") in ["spot.pong", "futures.pong"]
+        return is_sub_msg or is_pong_msg or is_pong_msg_2
+
     def _normalize_symbols(
         self,
         symbol: str | None,

@@ -31,6 +31,13 @@ __all__ = [
     # Base clients and websockets
     "Websocket",
     "BaseClient",
+    # Aster
+    "AsterClient",
+    "AsterUniClient",
+    "AsterUniWebsocketManager",
+    "AsterUserWebsocket",
+    "AsterWebsocketManager",
+    "AsterExchangeInfo",
     # Binance
     "BinanceClient",
     "BinanceUniClient",
@@ -123,6 +130,14 @@ from .types import (
 
 # exchanges
 
+from .aster import (
+    Client as AsterClient,
+    UniClient as AsterUniClient,
+    UniWebsocketManager as AsterUniWebsocketManager,
+    UserWebsocket as AsterUserWebsocket,
+    WebsocketManager as AsterWebsocketManager,
+    ExchangeInfo as AsterExchangeInfo,
+)
 from .binance import (
     Client as BinanceClient,
     UniClient as BinanceUniClient,
@@ -208,6 +223,7 @@ from .bingx import (
 async def load_exchanges_info() -> list:
     """Единожды загружает информацию о тикерах на всех биржах."""
     return await asyncio.gather(
+        AsterExchangeInfo.load_exchange_info(),
         BinanceExchangeInfo.load_exchange_info(),
         BitgetExchangeInfo.load_exchange_info(),
         BybitExchangeInfo.load_exchange_info(),
@@ -223,6 +239,7 @@ async def load_exchanges_info() -> list:
 async def start_exchanges_info(parse_interval_seconds: int = 60 * 60) -> Awaitable:
     """Запускает цикл обновления информации о тикерах на всех биржах."""
     return asyncio.gather(
+        AsterExchangeInfo.start(parse_interval_seconds),
         BinanceExchangeInfo.start(parse_interval_seconds),
         BitgetExchangeInfo.start(parse_interval_seconds),
         BybitExchangeInfo.start(parse_interval_seconds),

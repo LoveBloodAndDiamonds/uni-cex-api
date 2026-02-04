@@ -46,8 +46,8 @@ exchanges = [
     # Exchange.OKX,
     # Exchange.GATE,
     # Exchange.KUCOIN,
-    # Exchange.BINGX,
-    Exchange.ASTER,
+    Exchange.BINGX,
+    # Exchange.ASTER,
 ]
 
 # Сколько символов показывать в превью вывода

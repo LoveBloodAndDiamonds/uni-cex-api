@@ -117,8 +117,8 @@ class Adapter:
         return {
             item["symbol"]: OpenInterestItem(
                 t=timestamp,
-                v=float(item["openInterest"]),
-                u="usd",
+                v=float(item["openInterest"]) / float(item["lastPrice"]),
+                u="coins",
             )
             for item in raw_data.get("data", [])
         }

@@ -1,19 +1,17 @@
 import asyncio
 
-from unicex.aster import Client
+from unicex.aster import UniClient
 from pprint import pp
 import os
 
 
 async def main() -> None:
     """Main entry point for the application."""
-    client = await Client.create(
-        api_key=os.getenv("ASTER_API_KEY"), api_secret=os.getenv("ASTER_API_SECRET")
-    )
+    client = await UniClient.create()
 
     async with client as conn:
-        res = await conn.futures_renew_listen_key()
-        pp(res)
+        r = await conn.open_interest("BTCUSDT")
+        print(r)
 
 
 if __name__ == "__main__":
