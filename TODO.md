@@ -1,4 +1,5 @@
 ** Пофиксить: **
+- Добавить Workflow
 - Способы авторизации слишком сильно отличаются на каждой бирже
 - Какая то путаница в OCO ордерах на бинансе: https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-list---oco-trade
 - На Hyperliquid неправильно работает лимит (добавляет + 1 свечу при запросе свечей через UniClient)
