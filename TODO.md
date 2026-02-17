@@ -4,6 +4,8 @@
 - Какая то путаница в OCO ордерах на бинансе: https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-list---oco-trade
 - На Hyperliquid неправильно работает лимит (добавляет + 1 свечу при запросе свечей через UniClient)
 - bingx adapter отрефакторить
+- красивое округление
+- добавить в README примеры extra
 - зачем нужна функция _client_cls
 - может быть deprecate Client и WebsocketManager
 - self._logger = logger or _logger ничего не делает
