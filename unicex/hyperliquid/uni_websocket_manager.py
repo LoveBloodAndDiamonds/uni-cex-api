@@ -5,7 +5,7 @@ from typing import Any, overload
 
 from unicex._abc import IUniWebsocketManager
 from unicex._base import Websocket
-from unicex.enums import Timeframe
+from unicex.enums import Exchange, Timeframe
 from unicex.types import LoggerLike
 
 from .adapter import Adapter
@@ -35,6 +35,10 @@ class UniWebsocketManager(IUniWebsocketManager):
         super().__init__(client=client, logger=logger)
         self._websocket_manager = WebsocketManager(self._client, **ws_kwargs)  # type: ignore
         self._adapter = Adapter()
+
+    def _is_service_message(self, raw_msg: Any) -> bool:
+        """Проверяет, является ли сообщение служебным."""
+        return raw_msg.get("channel") in {"subscriptionResponse", "pong"}
 
     @overload
     def klines(
@@ -76,7 +80,13 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета для управления соединением.
         """
-        raise NotImplementedError()
+        wrapper = self._make_wrapper(self._adapter.klines_message, callback)
+        return self._websocket_manager.candle(
+            callback=wrapper,
+            interval=timeframe.to_exchange_format(Exchange.HYPERLIQUID),  # type: ignore
+            coin=symbol,
+            coins=list(symbols) if symbols else None,
+        )
 
     @overload
     def futures_klines(
@@ -118,7 +128,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        return self.klines(callback=callback, timeframe=timeframe, symbol=symbol, symbols=symbols)  # type: ignore
 
     @overload
     def trades(
@@ -156,7 +166,12 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        wrapper = self._make_wrapper(self._adapter.trades_message, callback)
+        return self._websocket_manager.trades(
+            callback=wrapper,
+            coin=symbol,
+            coins=list(symbols) if symbols else None,
+        )
 
     @overload
     def aggtrades(
@@ -194,7 +209,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        return self.trades(callback=callback, symbol=symbol, symbols=symbols)  # type: ignore
 
     @overload
     def futures_trades(
@@ -232,7 +247,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        return self.trades(callback=callback, symbol=symbol, symbols=symbols)  # type: ignore
 
     @overload
     def futures_aggtrades(
@@ -270,4 +285,4 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError()
+        return self.futures_trades(callback=callback, symbol=symbol, symbols=symbols)  # type: ignore

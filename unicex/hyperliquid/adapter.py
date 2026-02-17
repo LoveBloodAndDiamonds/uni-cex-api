@@ -8,35 +8,18 @@ from unicex.types import (
     OpenInterestItem,
     TickerDailyDict,
     TickerDailyItem,
+    TradeDict,
 )
-
-# from unicex.utils import catch_adapter_errors, decorate_all_methods
-from .exchange_info import ExchangeInfo
+from unicex.utils import catch_adapter_errors, decorate_all_methods
 
 
-# @decorate_all_methods(catch_adapter_errors)
+@decorate_all_methods(catch_adapter_errors)
 class Adapter:
     """Адаптер для унификации данных с Hyperliquid API."""
 
     @staticmethod
-    def tickers(raw_data: dict, resolve_symbols: bool) -> list[str]:
+    def tickers(raw_data: dict) -> list[str]:
         """Преобразует данные Hyperliquid в список спотовых тикеров.
-
-        Параметры:
-            raw_data (dict): Сырой ответ с биржи.
-            resolve_symbols (bool): Если True, тикеры маппятся из вида "@123" в "BTC".
-
-        Возвращает:
-            list[str]: Список тикеров (например, "@123").
-        """
-        if resolve_symbols:
-            return [ExchangeInfo.resolve_spot_symbol(item["name"]) for item in raw_data["universe"]]
-        else:
-            return [item["name"] for item in raw_data["universe"]]
-
-    @staticmethod
-    def futures_tickers(raw_data: dict) -> list[str]:
-        """Преобразует данные Hyperliquid в список фьючерсных тикеров.
 
         Параметры:
             raw_data (dict): Сырой ответ с биржи.
@@ -47,26 +30,28 @@ class Adapter:
         return [item["name"] for item in raw_data["universe"]]
 
     @staticmethod
-    def last_price(raw_data: dict, resolve_symbols: bool) -> dict[str, float]:
+    def futures_tickers(raw_data: dict) -> list[str]:
+        """Преобразует данные Hyperliquid в список фьючерсных тикеров.
+
+        Параметры:
+            raw_data (dict): Сырой ответ с биржи.
+
+        Возвращает:
+            list[str]: Список тикеров (например, "BTC, ETH").
+        """
+        return Adapter.tickers(raw_data)
+
+    @staticmethod
+    def last_price(raw_data: dict) -> dict[str, float]:
         """Преобразует данные о последних ценах (spot) в унифицированный формат.
 
         Параметры:
             raw_data (dict): Сырой ответ с биржи.
-            resolve_symbols (bool): Если True, тикеры маппятся из вида "@123" в "BTC".
 
         Возвращает:
             dict[str, float]: Словарь тикеров и последних цен.
         """
-        if resolve_symbols:
-            return {
-                ExchangeInfo.resolve_spot_symbol(token): float(price)
-                for token, price in raw_data.items()
-                if token.startswith("@")
-            }
-        else:
-            return {
-                token: float(price) for token, price in raw_data.items() if token.startswith("@")
-            }
+        return {token: float(price) for token, price in raw_data.items() if token.startswith("@")}
 
     @staticmethod
     def futures_last_price(raw_data: dict) -> dict[str, float]:
@@ -78,15 +63,16 @@ class Adapter:
         Возвращает:
             dict[str, float]: Словарь тикеров и последних цен.
         """
-        return {k: float(v) for k, v in raw_data.items() if not k.startswith("@")}
+        return {
+            token: float(price) for token, price in raw_data.items() if not token.startswith("@")
+        }
 
     @staticmethod
-    def ticker_24hr(raw_data: list, resolve_symbols: bool) -> TickerDailyDict:
+    def ticker_24hr(raw_data: list) -> TickerDailyDict:
         """Преобразует 24-часовую статистику (spot) в унифицированный формат.
 
         Параметры:
             raw_data (list): Сырой ответ с биржи.
-            resolve_symbols (bool): Если True, тикеры маппятся из вида "@123" в "BTC".
 
         Возвращает:
             TickerDailyDict: Словарь тикеров и их статистики.
@@ -98,9 +84,6 @@ class Adapter:
             try:
                 coin = item["coin"]
 
-                if resolve_symbols:
-                    coin = ExchangeInfo.resolve_spot_symbol(coin) or coin
-
                 prev_day_px = float(item.get("prevDayPx") or "0")
                 mid_px = float(item.get("midPx") or "0")
                 mark_px = float(item.get("markPx") or "0")
@@ -111,9 +94,7 @@ class Adapter:
                 q = day_ntl_vlm
 
                 if coin in result:
-                    # В случае с конфликтом оставляем ту монету, в которой больше дневного объема, т.к
-                    # для 6 монет (на 07.10.2025) встречаются пары к USDH, которые повторяют идентификатор.
-                    # Проблема не критичная - т.к. флаг resolve_symbols по идее использовать должен редко.
+                    # В случае конфликта оставляем запись с большим дневным объемом.
                     prev_ticker_daily = result[coin]
                     curr_ticker_daily = TickerDailyItem(p=p, v=v, q=q)
                     if prev_ticker_daily["q"] > curr_ticker_daily["q"]:
@@ -161,21 +142,18 @@ class Adapter:
         return result
 
     @staticmethod
-    def klines(raw_data: list[dict], resolve_symbols: bool) -> list[KlineDict]:
+    def klines(raw_data: list[dict]) -> list[KlineDict]:
         """Преобразует сырой ответ, в котором содержатся данные о свечах, в унифицированный формат.
 
         Параметры:
             raw_data (list[dict]): Сырой ответ с биржи.
-            resolve_symbols (bool): Если True, тикер маппится из вида "@123" в "BTC".
 
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
         """
         return [
             KlineDict(
-                s=kline["s"]
-                if not resolve_symbols
-                else ExchangeInfo.resolve_spot_symbol(kline["s"]),
+                s=kline["s"],
                 t=kline["t"],
                 o=float(kline["o"]),
                 h=float(kline["h"]),
@@ -203,24 +181,7 @@ class Adapter:
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
         """
-        return [
-            KlineDict(
-                s=kline["s"],
-                t=kline["t"],
-                o=float(kline["o"]),
-                h=float(kline["h"]),
-                l=float(kline["l"]),
-                c=float(kline["c"]),
-                v=float(kline["v"]),
-                q=float(kline["v"]) * float(kline["c"]),
-                T=kline["T"],
-                x=None,
-            )
-            for kline in sorted(
-                raw_data,
-                key=lambda x: int(x["t"]),
-            )
-        ]
+        return Adapter.klines(raw_data)
 
     @staticmethod
     def funding_rate(raw_data: list) -> dict[str, float]:
@@ -260,3 +221,43 @@ class Adapter:
             )
             for i, item in enumerate(metrics)
         }
+
+    @staticmethod
+    def klines_message(raw_msg: dict) -> list[KlineDict]:
+        """Преобразует сырое websocket-сообщение со свечой в унифицированный формат."""
+        candle = raw_msg["data"]
+        volume = float(candle["v"])
+        close_price = float(candle["c"])
+
+        return [
+            KlineDict(
+                s=str(candle["s"]),
+                t=int(candle["t"]),
+                o=float(candle["o"]),
+                h=float(candle["h"]),
+                l=float(candle["l"]),
+                c=close_price,
+                v=volume,
+                q=volume * close_price,
+                T=int(candle["T"]),
+                x=None,
+            )
+        ]
+
+    @staticmethod
+    def trades_message(raw_msg: dict) -> list[TradeDict]:
+        """Преобразует сырое websocket-сообщение со сделками в унифицированный формат."""
+        result: list[TradeDict] = []
+        for trade in sorted(raw_msg["data"], key=lambda item: int(item["time"])):
+            side = "BUY" if trade["side"] == "B" else "SELL"
+            result.append(
+                TradeDict(
+                    t=int(trade["time"]),
+                    s=str(trade["coin"]),
+                    S=side,
+                    p=float(trade["px"]),
+                    v=float(trade["sz"]),
+                )
+            )
+
+        return result
