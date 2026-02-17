@@ -28,4 +28,4 @@ jobs:
         run: uv run ruff check --exit-non-zero-on-fix .
 
       - name: BasedPyright
-        run: uv run basedpyright src
+        run: uv run basedpyright unicex
