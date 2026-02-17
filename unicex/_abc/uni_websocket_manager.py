@@ -47,12 +47,8 @@ class IUniWebsocketManager(ABC):
                 adapted = adapter_func(raw_msg)
             except Exception as e:
                 if isinstance(e, AdapterError):
-                    try:
-                        if self._is_service_message(raw_msg):
-                            return
-                    except Exception as err:
-                        self._logger.error(f"Failed to handle adapter error: {e}")
-                        raise err from e
+                    if self._is_service_message(raw_msg):
+                        return
                 self._logger.error(f"Failed to adapt message: {e}")
                 return
             if isinstance(adapted, list):
