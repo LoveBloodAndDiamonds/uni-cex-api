@@ -1,5 +1,5 @@
 import asyncio
-from unicex import HyperliquidUniClient, Aster
+from unicex import HyperliquidUniClient
 
 
 async def main() -> None:

@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip3 install uv ; uv sync
+
+      - name: Install linters
+        run: uv pip install --python .venv/bin/python ruff basedpyright
+
+      - name: Ruff
+        run: uv run ruff check --exit-non-zero-on-fix .
+
+      - name: BasedPyright
+        run: uv run basedpyright unicex

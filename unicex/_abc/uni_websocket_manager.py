@@ -20,13 +20,17 @@ class IUniWebsocketManager(ABC):
     """Интерфейс менеджера унифицированных вебсокетов."""
 
     def __init__(
-        self, client: BaseClient | IUniClient | None = None, logger: LoggerLike | None = None
+        self,
+        client: BaseClient | IUniClient | None = None,
+        logger: LoggerLike | None = None,
+        **ws_kwagrs: Any,
     ) -> None:
         """Инициализирует унифицированный менеджер вебсокетов.
 
         Параметры:
             client (`BaseClient | IUniClient | None`): Клиент или унифицированный клиент. Нужен для подключения к приватным топикам.
             logger (`LoggerLike | None`): Логгер для записи логов.
+            ws_kwagrs (`dict`): Параметры для создания вебсокета.
         """
         if isinstance(client, IUniClient):
             client = client.client
@@ -43,12 +47,8 @@ class IUniWebsocketManager(ABC):
                 adapted = adapter_func(raw_msg)
             except Exception as e:
                 if isinstance(e, AdapterError):
-                    try:
-                        if self._is_service_message(raw_msg):
-                            return
-                    except Exception as err:
-                        self._logger.error(f"Failed to handle adapter error: {e}")
-                        raise err from e
+                    if self._is_service_message(raw_msg):
+                        return
                 self._logger.error(f"Failed to adapt message: {e}")
                 return
             if isinstance(adapted, list):

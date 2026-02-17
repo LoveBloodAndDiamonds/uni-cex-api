@@ -275,7 +275,7 @@ class Websocket:
         while self._running:
             if time.monotonic() - self._last_message_time > self._no_message_reconnect_timeout:
                 self._logger.error(
-                    f"No messages in {self._no_message_reconnect_timeout} seconds, restarting..."
+                    f"No messages in {self._no_message_reconnect_timeout} seconds, restarting... Was connected to {self._url} with args {self._subscription_messages}"
                 )
                 await self.restart()
                 return
