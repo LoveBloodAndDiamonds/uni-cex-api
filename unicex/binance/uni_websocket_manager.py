@@ -168,3 +168,24 @@ class UniWebsocketManager(IUniWebsocketManager):
         return self._websocket_manager.futures_agg_trade(
             callback=wrapper, symbol=symbol, symbols=symbols
         )
+
+    def liquidations(
+        self, callback: CallbackType, symbol: str | None = None, symbols: list[str] | None = None
+    ) -> Websocket:
+        """Открывает стрим ликвидаций (futures) с унификацией сообщений.
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Должен быть указан либо `symbol`, либо `symbols`.
+
+        Возвращает:
+            `Websocket`: Экземпляр вебсокета.
+        """
+        return self._websocket_manager.liquidation_order(
+            callback=self._make_wrapper(self._adapter.liquidations_message, callback),
+            symbol=symbol,
+            symbols=symbols,
+        )
