@@ -48,6 +48,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         *,
         symbol: str,
         symbols: None = None,
+        resolve_symbols: bool = True,
     ) -> Websocket: ...
 
     @overload
@@ -58,6 +59,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         *,
         symbol: None = None,
         symbols: Sequence[str],
+        resolve_symbols: bool = True,
     ) -> Websocket: ...
 
     def klines(
@@ -66,6 +68,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         timeframe: Timeframe,
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
+        resolve_symbols: bool = True,
     ) -> Websocket:
         """Открывает стрим свечей (spot) с унификацией сообщений.
 
@@ -74,13 +77,20 @@ class UniWebsocketManager(IUniWebsocketManager):
             timeframe (`Timeframe`): Временной интервал свечей.
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+            resolve_symbols (`bool`): Если True, преобразует символы из вида `@123` в обычный тикер.
 
         Должен быть указан либо `symbol`, либо `symbols`.
 
         Возвращает:
             `Websocket`: Экземпляр вебсокета для управления соединением.
         """
-        wrapper = self._make_wrapper(self._adapter.klines_message, callback)
+        wrapper = self._make_wrapper(
+            lambda raw_msg: self._adapter.klines_message(
+                raw_msg=raw_msg,
+                resolve_symbols=resolve_symbols,
+            ),
+            callback,
+        )
         return self._websocket_manager.candle(
             callback=wrapper,
             interval=timeframe.to_exchange_format(Exchange.HYPERLIQUID),  # type: ignore
@@ -128,7 +138,13 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        return self.klines(callback=callback, timeframe=timeframe, symbol=symbol, symbols=symbols)  # type: ignore
+        return self.klines(
+            callback=callback,
+            timeframe=timeframe,
+            symbol=symbol,  # type: ignore
+            symbols=symbols,  # type: ignore
+            resolve_symbols=False,
+        )
 
     @overload
     def trades(
@@ -137,6 +153,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         *,
         symbol: str,
         symbols: None = None,
+        resolve_symbols: bool = True,
     ) -> Websocket: ...
 
     @overload
@@ -146,6 +163,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         *,
         symbol: None = None,
         symbols: Sequence[str],
+        resolve_symbols: bool = True,
     ) -> Websocket: ...
 
     def trades(
@@ -153,6 +171,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         callback: CallbackType,
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
+        resolve_symbols: bool = True,
     ) -> Websocket:
         """Открывает стрим сделок (spot) с унификацией сообщений.
 
@@ -160,13 +179,20 @@ class UniWebsocketManager(IUniWebsocketManager):
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+            resolve_symbols (`bool`): Если True, преобразует символы из вида `@123` в обычный тикер.
 
         Должен быть указан либо `symbol`, либо `symbols`.
 
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        wrapper = self._make_wrapper(self._adapter.trades_message, callback)
+        wrapper = self._make_wrapper(
+            lambda raw_msg: self._adapter.trades_message(
+                raw_msg=raw_msg,
+                resolve_symbols=resolve_symbols,
+            ),
+            callback,
+        )
         return self._websocket_manager.trades(
             callback=wrapper,
             coin=symbol,
@@ -180,6 +206,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         *,
         symbol: str,
         symbols: None = None,
+        resolve_symbols: bool = True,
     ) -> Websocket: ...
 
     @overload
@@ -189,6 +216,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         *,
         symbol: None = None,
         symbols: Sequence[str],
+        resolve_symbols: bool = True,
     ) -> Websocket: ...
 
     def aggtrades(
@@ -196,6 +224,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         callback: CallbackType,
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
+        resolve_symbols: bool = True,
     ) -> Websocket:
         """Открывает стрим агрегированных сделок (spot) с унификацией сообщений.
 
@@ -203,13 +232,19 @@ class UniWebsocketManager(IUniWebsocketManager):
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+            resolve_symbols (`bool`): Если True, преобразует символы из вида `@123` в обычный тикер.
 
         Должен быть указан либо `symbol`, либо `symbols`.
 
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        return self.trades(callback=callback, symbol=symbol, symbols=symbols)  # type: ignore
+        return self.trades(
+            callback=callback,
+            symbol=symbol,  # type: ignore
+            symbols=symbols,  # type: ignore
+            resolve_symbols=resolve_symbols,
+        )
 
     @overload
     def futures_trades(
@@ -247,7 +282,12 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        return self.trades(callback=callback, symbol=symbol, symbols=symbols)  # type: ignore
+        return self.trades(
+            callback=callback,
+            symbol=symbol,  # type: ignore
+            symbols=symbols,  # type: ignore
+            resolve_symbols=False,
+        )
 
     @overload
     def futures_aggtrades(

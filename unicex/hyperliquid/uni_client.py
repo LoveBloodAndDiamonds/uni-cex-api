@@ -103,25 +103,31 @@ class UniClient(IUniClient[Client]):
         """
         return Client
 
-    async def tickers(self) -> list[str]:
+    async def tickers(self, resolve_symbols: bool = True) -> list[str]:
         """Возвращает список тикеров.
+
+        Параметры:
+            resolve_symbols (bool): Если True, возвращает спотовые тикеры в обычном виде (например, `BTC`).
 
         Возвращает:
             list[str]: Список тикеров.
         """
         raw_data = await self._client.spot_metadata()
-        return Adapter.tickers(raw_data)
+        return Adapter.tickers(raw_data, resolve_symbols=resolve_symbols)
 
-    async def tickers_batched(self, batch_size: int = 20) -> list[list[str]]:
+    async def tickers_batched(
+        self, batch_size: int = 20, resolve_symbols: bool = True
+    ) -> list[list[str]]:
         """Возвращает список тикеров в чанках.
 
         Параметры:
             batch_size (`int`): Размер чанка.
+            resolve_symbols (bool): Если True, возвращает спотовые тикеры в обычном виде (например, `BTC`).
 
         Возвращает:
             `list[list[str]]`: Список тикеров в чанках.
         """
-        tickers = await self.tickers()
+        tickers = await self.tickers(resolve_symbols=resolve_symbols)
         return batched_list(tickers, batch_size)
 
     async def futures_tickers(self) -> list[str]:
@@ -145,14 +151,17 @@ class UniClient(IUniClient[Client]):
         tickers = await self.futures_tickers()
         return batched_list(tickers, batch_size)
 
-    async def last_price(self) -> dict[str, float]:
+    async def last_price(self, resolve_symbols: bool = True) -> dict[str, float]:
         """Возвращает последнюю цену для каждого тикера.
+
+        Параметры:
+            resolve_symbols (bool): Если True, возвращает спотовые тикеры в обычном виде (например, `BTC`).
 
         Возвращает:
             dict[str, float]: Словарь с последними ценами для каждого тикера.
         """
         raw_data = await self._client.all_mids()
-        return Adapter.last_price(raw_data)
+        return Adapter.last_price(raw_data, resolve_symbols=resolve_symbols)
 
     async def futures_last_price(self) -> dict[str, float]:
         """Возвращает последнюю цену для каждого тикера.
@@ -163,14 +172,17 @@ class UniClient(IUniClient[Client]):
         raw_data = await self._client.all_mids()
         return Adapter.futures_last_price(raw_data)
 
-    async def ticker_24hr(self) -> TickerDailyDict:
+    async def ticker_24hr(self, resolve_symbols: bool = True) -> TickerDailyDict:
         """Возвращает статистику за последние 24 часа для каждого тикера.
+
+        Параметры:
+            resolve_symbols (bool): Если True, возвращает спотовые тикеры в обычном виде (например, `BTC`).
 
         Возвращает:
             TickerDailyDict: Словарь с статистикой за последние 24 часа для каждого тикера.
         """
         raw_data = await self._client.spot_meta_and_asset_contexts()
-        return Adapter.ticker_24hr(raw_data)
+        return Adapter.ticker_24hr(raw_data, resolve_symbols=resolve_symbols)
 
     async def futures_ticker_24hr(self) -> TickerDailyDict:
         """Возвращает статистику за последние 24 часа для каждого тикера.
@@ -188,6 +200,7 @@ class UniClient(IUniClient[Client]):
         limit: int | None = None,
         start_time: int | None = None,
         end_time: int | None = None,
+        resolve_symbols: bool = True,
     ) -> list[KlineDict]:
         """Возвращает список свечей для тикера.
 
@@ -197,6 +210,7 @@ class UniClient(IUniClient[Client]):
             interval (Timeframe | str): Таймфрейм свечей.
             start_time (int | None): Время начала периода в миллисекундах.
             end_time (int | None): Время окончания периода в миллисекундах.
+            resolve_symbols (bool): Если True, возвращает спотовый тикер в обычном виде (например, `BTC`).
 
         Возвращает:
             list[KlineDict]: Список свечей для тикера.
@@ -219,7 +233,7 @@ class UniClient(IUniClient[Client]):
             start_time=start_time,  # type: ignore[reportArgumentType]
             end_time=end_time,  # type: ignore[reportArgumentType]
         )
-        return Adapter.klines(raw_data=raw_data)
+        return Adapter.klines(raw_data=raw_data, resolve_symbols=resolve_symbols)
 
     async def futures_klines(
         self,

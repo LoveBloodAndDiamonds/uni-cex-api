@@ -12,22 +12,39 @@ from unicex.types import (
 )
 from unicex.utils import catch_adapter_errors, decorate_all_methods
 
+from .exchange_info import ExchangeInfo
+
 
 @decorate_all_methods(catch_adapter_errors)
 class Adapter:
     """Адаптер для унификации данных с Hyperliquid API."""
 
     @staticmethod
-    def tickers(raw_data: dict) -> list[str]:
+    def _resolve_spot_symbol(symbol: str, resolve_symbols: bool) -> str:
+        """Преобразует внутренний спотовый идентификатор в тикер."""
+        if not resolve_symbols:
+            return symbol
+        try:
+            return ExchangeInfo.resolve_spot_symbol(symbol)
+        except ValueError:
+            # Если ExchangeInfo еще не загружен, возвращаем исходное значение.
+            return symbol
+
+    @staticmethod
+    def tickers(raw_data: dict, resolve_symbols: bool = True) -> list[str]:
         """Преобразует данные Hyperliquid в список спотовых тикеров.
 
         Параметры:
             raw_data (dict): Сырой ответ с биржи.
+            resolve_symbols (bool): Если True, преобразует "@123" в обычный тикер.
 
         Возвращает:
-            list[str]: Список тикеров (например, "@123").
+            list[str]: Список тикеров.
         """
-        return [item["name"] for item in raw_data["universe"]]
+        return [
+            Adapter._resolve_spot_symbol(item["name"], resolve_symbols)
+            for item in raw_data["universe"]
+        ]
 
     @staticmethod
     def futures_tickers(raw_data: dict) -> list[str]:
@@ -39,19 +56,24 @@ class Adapter:
         Возвращает:
             list[str]: Список тикеров (например, "BTC, ETH").
         """
-        return Adapter.tickers(raw_data)
+        return Adapter.tickers(raw_data, resolve_symbols=False)
 
     @staticmethod
-    def last_price(raw_data: dict) -> dict[str, float]:
+    def last_price(raw_data: dict, resolve_symbols: bool = True) -> dict[str, float]:
         """Преобразует данные о последних ценах (spot) в унифицированный формат.
 
         Параметры:
             raw_data (dict): Сырой ответ с биржи.
+            resolve_symbols (bool): Если True, преобразует "@123" в обычный тикер.
 
         Возвращает:
             dict[str, float]: Словарь тикеров и последних цен.
         """
-        return {token: float(price) for token, price in raw_data.items() if token.startswith("@")}
+        return {
+            Adapter._resolve_spot_symbol(token, resolve_symbols): float(price)
+            for token, price in raw_data.items()
+            if token.startswith("@")
+        }
 
     @staticmethod
     def futures_last_price(raw_data: dict) -> dict[str, float]:
@@ -68,11 +90,12 @@ class Adapter:
         }
 
     @staticmethod
-    def ticker_24hr(raw_data: list) -> TickerDailyDict:
+    def ticker_24hr(raw_data: list, resolve_symbols: bool = True) -> TickerDailyDict:
         """Преобразует 24-часовую статистику (spot) в унифицированный формат.
 
         Параметры:
             raw_data (list): Сырой ответ с биржи.
+            resolve_symbols (bool): Если True, преобразует "@123" в обычный тикер.
 
         Возвращает:
             TickerDailyDict: Словарь тикеров и их статистики.
@@ -82,7 +105,7 @@ class Adapter:
 
         for item in metrics:
             try:
-                coin = item["coin"]
+                coin = Adapter._resolve_spot_symbol(item["coin"], resolve_symbols)
 
                 prev_day_px = float(item.get("prevDayPx") or "0")
                 mid_px = float(item.get("midPx") or "0")
@@ -142,18 +165,19 @@ class Adapter:
         return result
 
     @staticmethod
-    def klines(raw_data: list[dict]) -> list[KlineDict]:
+    def klines(raw_data: list[dict], resolve_symbols: bool = True) -> list[KlineDict]:
         """Преобразует сырой ответ, в котором содержатся данные о свечах, в унифицированный формат.
 
         Параметры:
             raw_data (list[dict]): Сырой ответ с биржи.
+            resolve_symbols (bool): Если True, преобразует "@123" в обычный тикер.
 
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
         """
         return [
             KlineDict(
-                s=kline["s"],
+                s=Adapter._resolve_spot_symbol(str(kline["s"]), resolve_symbols),
                 t=kline["t"],
                 o=float(kline["o"]),
                 h=float(kline["h"]),
@@ -181,7 +205,7 @@ class Adapter:
         Возвращает:
             list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
         """
-        return Adapter.klines(raw_data)
+        return Adapter.klines(raw_data, resolve_symbols=False)
 
     @staticmethod
     def funding_rate(raw_data: list) -> dict[str, float]:
@@ -223,7 +247,7 @@ class Adapter:
         }
 
     @staticmethod
-    def klines_message(raw_msg: dict) -> list[KlineDict]:
+    def klines_message(raw_msg: dict, resolve_symbols: bool = True) -> list[KlineDict]:
         """Преобразует сырое websocket-сообщение со свечой в унифицированный формат."""
         candle = raw_msg["data"]
         volume = float(candle["v"])
@@ -231,7 +255,7 @@ class Adapter:
 
         return [
             KlineDict(
-                s=str(candle["s"]),
+                s=Adapter._resolve_spot_symbol(str(candle["s"]), resolve_symbols),
                 t=int(candle["t"]),
                 o=float(candle["o"]),
                 h=float(candle["h"]),
@@ -245,7 +269,7 @@ class Adapter:
         ]
 
     @staticmethod
-    def trades_message(raw_msg: dict) -> list[TradeDict]:
+    def trades_message(raw_msg: dict, resolve_symbols: bool = True) -> list[TradeDict]:
         """Преобразует сырое websocket-сообщение со сделками в унифицированный формат."""
         result: list[TradeDict] = []
         for trade in sorted(raw_msg["data"], key=lambda item: int(item["time"])):
@@ -253,7 +277,7 @@ class Adapter:
             result.append(
                 TradeDict(
                     t=int(trade["time"]),
-                    s=str(trade["coin"]),
+                    s=Adapter._resolve_spot_symbol(str(trade["coin"]), resolve_symbols),
                     S=side,
                     p=float(trade["px"]),
                     v=float(trade["sz"]),
