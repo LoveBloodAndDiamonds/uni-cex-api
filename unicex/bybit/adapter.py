@@ -198,7 +198,7 @@ class Adapter:
             LiquidationDict(
                 t=liquidation["T"],
                 s=liquidation["s"],
-                S=liquidation["S"].upper(),
+                S="SHORT" if str(liquidation["S"]) == "buy" else "LONG",
                 v=float(liquidation["v"]),
                 p=float(liquidation["p"]),
             )

@@ -6,9 +6,7 @@ from unicex.types import LiquidationDict
 
 async def callback(lq: list[LiquidationDict]) -> None:
     """Выводит ликвидации в консоль."""
-    print(type(lq))
     print(lq)
-    print()
 
 
 async def main() -> None:

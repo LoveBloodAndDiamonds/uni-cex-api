@@ -1,21 +1,21 @@
 import asyncio
 
-from unicex.bybit import UniWebsocketManager
+from unicex.bybit import UniWebsocketManager, UniClient
 from unicex.types import LiquidationDict
 
 
 async def callback(lq: list[LiquidationDict]) -> None:
-    print(type(lq))
+    """Выводит ликвидации в консоль."""
     print(lq)
-    print()
 
 
 async def main() -> None:
-    """Main entry point for the application."""
+    """Запусти пример подписки на ликвидации Binance."""
+    c = await UniClient.create()
+    async with c:
+        t = await c.futures_tickers()
     manager = UniWebsocketManager()
-    ws = manager.liquidations(
-        callback=callback, symbols=["BTCUSDT", "ETHUSDT", "TRXUSDT", "ADAUSDT", "DOGEUSDT"]
-    )
+    ws = manager.liquidations(callback=callback, symbols=t)
     await ws.start()
 
 

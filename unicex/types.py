@@ -130,8 +130,8 @@ class LiquidationDict(TypedDict):
     s: str
     """Символ."""
 
-    S: Literal["BUY", "SELL"]
-    """Сторона."""
+    S: Literal["LONG", "SHORT"]
+    """Сторона ликвидации."""
 
     v: float
     """Объем ликвидации. В монетах."""
