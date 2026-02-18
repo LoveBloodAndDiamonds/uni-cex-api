@@ -3,6 +3,7 @@ __all__ = ["Adapter"]
 
 from unicex.types import (
     KlineDict,
+    LiquidationDict,
     OpenInterestItem,
     TickerDailyDict,
     TickerDailyItem,
@@ -189,5 +190,28 @@ class Adapter:
                 S="SELL" if bool(msg["m"]) else "BUY",
                 p=float(msg["p"]),
                 v=float(msg["q"]),
+            )
+        ]
+
+    @staticmethod
+    def liquidations_message(raw_msg: dict) -> list[LiquidationDict]:
+        """Преобразует вебсокет-сообщение с данными о ликвидациях в унифицированный формат.
+
+        Параметры:
+        raw_msg (`dict`): Сырое сообщение из вебсокета Binance.
+
+        Возвращает:
+          `list[LiquidationDict]`: Список ликвидаций в унифицированном формате.
+        """
+        msg = raw_msg.get("data", raw_msg)
+        liquidation = msg["o"]
+
+        return [
+            LiquidationDict(
+                t=int(liquidation["T"]),
+                s=str(liquidation["s"]),
+                S=str(liquidation["S"]),  # type: ignore
+                v=float(liquidation["q"]),
+                p=float(liquidation["ap"]),
             )
         ]
