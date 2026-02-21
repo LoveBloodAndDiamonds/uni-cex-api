@@ -141,7 +141,8 @@ class WebsocketManager:
     def l2_book(
         self,
         callback: CallbackType,
-        coin: str,
+        coin: str | None = None,
+        coins: list[str] | None = None,
         n_sig_figs: int | None = None,
         mantissa: int | None = None,
     ) -> Websocket:
@@ -149,29 +150,43 @@ class WebsocketManager:
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            coin (`str`): Символ монеты.
+            coin (`str | None`): Символ монеты.
+            coins (`list[str] | None`): Список символов монет для мультиплекс подключения.
             n_sig_figs (`int | None`): Количество значащих цифр для округления цен.
             mantissa (`int | None`): Мантисса для округления цен.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        params = {"coin": coin}
+        if coin and coins:
+            raise ValueError("Parameters coin and coins cannot be used together")
+        if not (coin or coins):
+            raise ValueError("Either coin or coins must be provided")
+        if coin:
+            coins = [coin]
+
+        params = {}
         if n_sig_figs is not None:
             params["nSigFigs"] = n_sig_figs  # type: ignore
         if mantissa is not None:
             params["mantissa"] = mantissa  # type: ignore
 
-        subscription_message = self._create_subscription_message("l2Book", **params)
+        subscription_messages = [
+            self._create_subscription_message("l2Book", coin=coin, **params)
+            for coin in coins  # type: ignore
+        ]
         return Websocket(
             callback=callback,
             url=self._URL,
-            subscription_messages=[subscription_message],
+            subscription_messages=subscription_messages,
             **self._ws_kwargs,
         )
 
     def trades(
-        self, callback: CallbackType, coin: str | None = None, coins: list[str] | None = None
+        self,
+        callback: CallbackType,
+        coin: str | None = None,
+        coins: list[str] | None = None,
     ) -> Websocket:
         """Создает вебсокет для получения сделок.
 
