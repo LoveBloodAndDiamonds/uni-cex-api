@@ -12,7 +12,7 @@ async def main() -> None:
     """Main entry point for the application."""
     m = WebsocketManager()
 
-    s = m.l2_book(callback=callback, coins=["BTC", "ETH"])
+    s = m.bbo(callback=callback, coin="ETH")
 
     await s.start()
 
