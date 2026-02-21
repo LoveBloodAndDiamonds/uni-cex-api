@@ -64,7 +64,9 @@ class IUniWebsocketManager(ABC):
 
         Переопределяется в каждом наследнике в связи с разным форматом входящих данных.
         """
-        return False
+        is_pong = raw_msg.get("channel") == "pong"
+        is_subscribe = raw_msg.get("channel") == "subscriptionResponse"
+        return is_pong or is_subscribe
 
     @overload
     def klines(
