@@ -222,7 +222,10 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError("Method `futures_best_bid_ask` will be implemented later")
+        tickers = self._normalize_symbols(symbol, symbols)
+
+        wrapper = self._make_wrapper(self._adapter.futures_best_bid_ask_message, callback)
+        return self._websocket_manager.futures_book_ticker(callback=wrapper, symbols=tickers)
 
     def futures_partial_book_depth(
         self,
@@ -244,4 +247,16 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError("Method `futures_partial_book_depth` will be implemented later")
+        allowed_levels = {1, 5, 10, 20, 50, 100}
+        if limit not in allowed_levels:
+            raise ValueError("Parameter `limit` must be one of: 1, 5, 10, 20, 50, 100")
+
+        tickers = self._normalize_symbols(symbol, symbols)
+
+        wrapper = self._make_wrapper(self._adapter.futures_partial_book_depth_message, callback)
+        return self._websocket_manager.futures_order_book(
+            callback=wrapper,
+            symbols=tickers,
+            limit=str(limit),  # type: ignore[arg-type]
+            interval="0",
+        )

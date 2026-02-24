@@ -6,9 +6,11 @@ from typing import Any
 __all__ = ["Adapter"]
 
 from unicex.types import (
+    BestBidAskDict,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
+    PartialBookDepthDict,
     TickerDailyDict,
     TickerDailyItem,
     TradeDict,
@@ -289,3 +291,52 @@ class Adapter:
             return ExchangeInfo.get_futures_ticker_info(symbol)["contract_size"] or 1
         except:  # noqa
             return 1
+
+    @staticmethod
+    def futures_best_bid_ask_message(raw_msg: Any) -> list[BestBidAskDict]:
+        """Преобразует вебсокет-сообщение с лучшими бидом и аском в унифицированный формат.
+
+        Параметры:
+            raw_msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[BestBidAskDict]: Список обновлений лучших бидов и асков в унифицированном формате.
+        """
+        result = raw_msg["result"]
+        bid_price = float(result["b"]) if result["b"] != "" else 0.0
+        ask_price = float(result["a"]) if result["a"] != "" else 0.0
+        return [
+            BestBidAskDict(
+                t=int(result["t"]),
+                u=int(result["u"]),
+                b=bid_price,
+                B=float(result["B"]),
+                a=ask_price,
+                A=float(result["A"]),
+            )
+        ]
+
+    @staticmethod
+    def futures_partial_book_depth_message(raw_msg: Any) -> list[PartialBookDepthDict]:
+        """Преобразует вебсокет-сообщение с частичным стаканом в унифицированный формат.
+
+        Параметры:
+            raw_msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[PartialBookDepthDict]: Список обновлений стакана в унифицированном формате.
+        """
+        result = raw_msg["result"]
+        bids = result.get("bids", [])
+        asks = result.get("asks", [])
+        update_id = result.get("id", result.get("u"))
+        if update_id is None:
+            raise ValueError("Field `id` is missing in futures.order_book message")
+        return [
+            PartialBookDepthDict(
+                t=int(result["t"]),
+                u=int(update_id),
+                b=[(float(item["p"]), float(item["s"])) for item in bids],
+                a=[(float(item["p"]), float(item["s"])) for item in asks],
+            )
+        ]

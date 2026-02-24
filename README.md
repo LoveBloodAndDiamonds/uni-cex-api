@@ -22,10 +22,10 @@
 
 | Exchange        | Partial Book Depth | Best Bid Ask | Unified Trade API |
 |-----------------|--------------------|--------------|-------------------|
-| **Binance**     |                    |              |                   |
-| **Bitget**      |                    |              |                   |
-| **Bybit**       |                    |              |                   |
-| **Gateio**      |                    |              |                   |
+| **Binance**     | ✓                  | ✓            |                   |
+| **Bitget**      | ✓                  | ✓            |                   |
+| **Bybit**       | ✓                  | ✓            |                   |
+| **Gateio**      | ✓                  | ✓            |                   |
 | **Aster**       |                    |              |                   |
 | **Hyperliquid** |                    |              |                   |
 | **Mexc**        |                    |              |                   |
