@@ -3,9 +3,11 @@ __all__ = ["Adapter"]
 from typing import Any
 
 from unicex.types import (
+    BestBidAskDict,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
+    PartialBookDepthDict,
     TickerDailyDict,
     TickerDailyItem,
     TradeDict,
@@ -169,5 +171,47 @@ class Adapter:
                 S="SELL" if data["m"] else "BUY",
                 p=float(data["p"]),
                 v=float(data["q"]),
+            )
+        ]
+
+    @staticmethod
+    def futures_best_bid_ask_message(raw_msg: Any) -> list[BestBidAskDict]:
+        """Преобразует вебсокет-сообщение с лучшими бидом и аском в унифицированный формат.
+
+        Параметры:
+            raw_msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[BestBidAskDict]: Список обновлений лучших бидов и асков в унифицированном формате.
+        """
+        data = raw_msg.get("data", raw_msg)
+        return [
+            BestBidAskDict(
+                t=int(data["E"]),
+                u=int(data["u"]),
+                b=float(data["b"]),
+                B=float(data["B"]),
+                a=float(data["a"]),
+                A=float(data["A"]),
+            )
+        ]
+
+    @staticmethod
+    def futures_partial_book_depth_message(raw_msg: Any) -> list[PartialBookDepthDict]:
+        """Преобразует вебсокет-сообщение с частичным стаканом в унифицированный формат.
+
+        Параметры:
+            raw_msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[PartialBookDepthDict]: Список обновлений стакана в унифицированном формате.
+        """
+        data = raw_msg.get("data", raw_msg)
+        return [
+            PartialBookDepthDict(
+                t=int(data["E"]),
+                u=int(data["u"]),
+                b=[(float(price), float(quantity)) for price, quantity in data["b"]],
+                a=[(float(price), float(quantity)) for price, quantity in data["a"]],
             )
         ]
