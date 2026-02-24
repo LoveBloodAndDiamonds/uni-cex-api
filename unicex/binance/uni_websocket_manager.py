@@ -41,7 +41,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         callback: CallbackType,
         timeframe: Timeframe,
         symbol: str | None = None,
-        symbols: list[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создаёт вебсокет для получения свечей на споте с унификацией сообщений.
 
@@ -49,7 +49,7 @@ class UniWebsocketManager(IUniWebsocketManager):
             callback (`CallbackType`): Асинхронная функция обработки адаптированных сообщений.
             timeframe (`Timeframe`): Временной интервал свечей (унифицированный).
             symbol (`str | None`): Один символ для подписки.
-            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Должен быть указан либо `symbol`, либо `symbols`.
 
@@ -69,7 +69,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         callback: CallbackType,
         timeframe: Timeframe,
         symbol: str | None = None,
-        symbols: list[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создаёт вебсокет для получения свечей на фьючерсах с унификацией сообщений.
 
@@ -77,7 +77,7 @@ class UniWebsocketManager(IUniWebsocketManager):
             callback (`CallbackType`): Асинхронная функция обработки адаптированных сообщений.
             timeframe (`Timeframe`): Временной интервал свечей (унифицированный).
             symbol (`str | None`): Один символ для подписки.
-            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Должен быть указан либо `symbol`, либо `symbols`.
 
@@ -96,14 +96,14 @@ class UniWebsocketManager(IUniWebsocketManager):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: list[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создаёт вебсокет для получения сделок на споте с унификацией сообщений.
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обработки адаптированных сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Должен быть указан либо `symbol`, либо `symbols`.
 
@@ -117,14 +117,14 @@ class UniWebsocketManager(IUniWebsocketManager):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: list[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создаёт вебсокет для получения агрегированных сделок на споте с унификацией сообщений.
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обработки адаптированных сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Должен быть указан либо `symbol`, либо `symbols`.
 
@@ -138,7 +138,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: list[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создаёт вебсокет для получения сделок на фьючерсах с унификацией сообщений.
 
@@ -146,7 +146,7 @@ class UniWebsocketManager(IUniWebsocketManager):
             callback (`CallbackType`): Асинхронная функция обработки
                 адаптированных сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Должен быть указан либо `symbol`, либо `symbols`.
 
@@ -162,14 +162,14 @@ class UniWebsocketManager(IUniWebsocketManager):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: list[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Создаёт вебсокет для получения агрегированных сделок на фьючерсах с унификацией сообщений.
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обработки адаптированных сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Должен быть указан либо `symbol`, либо `symbols`.
 
@@ -185,14 +185,14 @@ class UniWebsocketManager(IUniWebsocketManager):
         self,
         callback: CallbackType,
         symbol: str | None = None,
-        symbols: list[str] | None = None,
+        symbols: Sequence[str] | None = None,
     ) -> Websocket:
         """Открывает стрим ликвидаций (futures) с унификацией сообщений.
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
-            symbols (`list[str] | None`): Список символов для мультиплекс‑подключения.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Должен быть указан либо `symbol`, либо `symbols`.
 
