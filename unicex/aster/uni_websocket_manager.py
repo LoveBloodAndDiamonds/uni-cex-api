@@ -1,7 +1,7 @@
 __all__ = ["UniWebsocketManager"]
 
 from collections.abc import Awaitable, Callable, Sequence
-from typing import Any, overload
+from typing import Any
 
 from unicex._abc import IUniWebsocketManager
 from unicex._base import Websocket
@@ -37,26 +37,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         self._websocket_manager = WebsocketManager(self._client, **ws_kwargs)  # type: ignore
         self._adapter = Adapter()
 
-    @overload
-    def klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     def klines(
         self,
         callback: CallbackType,
@@ -78,26 +58,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             `Websocket`: Экземпляр вебсокета для управления соединением.
         """
         raise NotSupported("Spot market data is not supported for Aster")
-
-    @overload
-    def futures_klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
 
     def futures_klines(
         self,
@@ -127,24 +87,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             interval=timeframe.to_exchange_format(Exchange.ASTER),
         )
 
-    @overload
-    def trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     def trades(
         self,
         callback: CallbackType,
@@ -165,24 +107,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         """
         raise NotSupported("Spot market data is not supported for Aster")
 
-    @overload
-    def aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     def aggtrades(
         self,
         callback: CallbackType,
@@ -202,24 +126,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             `Websocket`: Экземпляр вебсокета.
         """
         raise NotSupported("Spot market data is not supported for Aster")
-
-    @overload
-    def futures_trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
 
     def futures_trades(
         self,
@@ -243,24 +149,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             `Websocket`: Экземпляр вебсокета.
         """
         return self.futures_aggtrades(callback, symbol, symbols)  # type: ignore
-
-    @overload
-    def futures_aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
 
     def futures_aggtrades(
         self,

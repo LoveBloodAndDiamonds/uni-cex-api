@@ -1,7 +1,7 @@
 __all__ = ["IUniWebsocketManager"]
 
 from collections.abc import Awaitable, Callable, Sequence
-from typing import Any, overload
+from typing import Any
 
 from unicex._abc import IUniWebsocketManager
 from unicex._base import Websocket
@@ -57,26 +57,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             return list(symbols)
         raise ValueError("Either symbol or symbols must be provided")
 
-    @overload
-    def klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     def klines(
         self,
         callback: CallbackType,
@@ -104,26 +84,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             interval=timeframe.to_exchange_format(Exchange.OKX),  # type: ignore
             inst_id=inst_id,
         )
-
-    @overload
-    def futures_klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
 
     def futures_klines(
         self,
@@ -153,24 +113,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             inst_id=inst_id,
         )
 
-    @overload
-    def trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     def trades(
         self,
         callback: CallbackType,
@@ -192,24 +134,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         inst_id = self._normalize_symbol(symbol, symbols)
         wrapper = self._make_wrapper(self._adapter.trades_message, callback)
         return self._websocket_manager.all_trades(callback=wrapper, inst_id=inst_id)
-
-    @overload
-    def aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
 
     def aggtrades(
         self,
@@ -233,24 +157,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         wrapper = self._make_wrapper(self._adapter.trades_message, callback)
         return self._websocket_manager.trades(callback=wrapper, inst_id=inst_id)
 
-    @overload
-    def futures_trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     def futures_trades(
         self,
         callback: CallbackType,
@@ -272,24 +178,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         inst_id = self._normalize_symbol(symbol, symbols)
         wrapper = self._make_wrapper(self._adapter.trades_message, callback)
         return self._websocket_manager.all_trades(callback=wrapper, inst_id=inst_id)
-
-    @overload
-    def futures_aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
 
     def futures_aggtrades(
         self,

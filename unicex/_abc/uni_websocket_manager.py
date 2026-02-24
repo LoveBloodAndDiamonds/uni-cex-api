@@ -2,7 +2,7 @@ __all__ = ["IUniWebsocketManager"]
 
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable, Sequence
-from typing import Any, overload
+from typing import Any
 
 from loguru import logger as _logger
 
@@ -70,26 +70,6 @@ class IUniWebsocketManager(ABC):
         is_subscribe = raw_msg.get("channel") == "subscriptionResponse"
         return is_pong or is_subscribe
 
-    @overload
-    def klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     @abstractmethod
     def klines(
         self,
@@ -112,26 +92,6 @@ class IUniWebsocketManager(ABC):
             `Websocket`: Экземпляр вебсокета для управления соединением.
         """
         ...
-
-    @overload
-    def futures_klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
 
     @abstractmethod
     def futures_klines(
@@ -156,24 +116,6 @@ class IUniWebsocketManager(ABC):
         """
         ...
 
-    @overload
-    def trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     @abstractmethod
     def trades(
         self,
@@ -194,24 +136,6 @@ class IUniWebsocketManager(ABC):
             `Websocket`: Экземпляр вебсокета.
         """
         ...
-
-    @overload
-    def aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
 
     @abstractmethod
     def aggtrades(
@@ -234,24 +158,6 @@ class IUniWebsocketManager(ABC):
         """
         ...
 
-    @overload
-    def futures_trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     @abstractmethod
     def futures_trades(
         self,
@@ -272,24 +178,6 @@ class IUniWebsocketManager(ABC):
             `Websocket`: Экземпляр вебсокета.
         """
         ...
-
-    @overload
-    def futures_aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
 
     @abstractmethod
     def futures_aggtrades(
@@ -312,24 +200,6 @@ class IUniWebsocketManager(ABC):
         """
         ...
 
-    @overload
-    def futures_best_bid_ask(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_best_bid_ask(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     @abstractmethod
     def futures_best_bid_ask(
         self,
@@ -350,26 +220,6 @@ class IUniWebsocketManager(ABC):
             `Websocket`: Экземпляр вебсокета.
         """
         ...
-
-    @overload
-    def futures_partial_book_depth(
-        self,
-        callback: CallbackType,
-        limit: int,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_partial_book_depth(
-        self,
-        callback: CallbackType,
-        limit: int,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
 
     @abstractmethod
     def futures_partial_book_depth(

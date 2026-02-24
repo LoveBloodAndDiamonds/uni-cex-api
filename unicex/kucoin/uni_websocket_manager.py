@@ -1,7 +1,7 @@
 __all__ = ["IUniWebsocketManager"]
 
 from collections.abc import Awaitable, Callable, Sequence
-from typing import Any, overload
+from typing import Any
 
 from unicex._abc import IUniWebsocketManager
 from unicex._base import Websocket
@@ -35,27 +35,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         super().__init__(client=client, logger=logger)
         self._websocket_manager = WebsocketManager(self._client, **ws_kwargs)  # type: ignore
         self._adapter = Adapter()
-
-    @overload
-    def klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     def klines(
         self,
         callback: CallbackType,
@@ -77,27 +56,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             `Websocket`: Экземпляр вебсокета для управления соединением.
         """
         raise NotImplementedError()
-
-    @overload
-    def futures_klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     def futures_klines(
         self,
         callback: CallbackType,
@@ -119,25 +77,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             `Websocket`: Экземпляр вебсокета.
         """
         raise NotImplementedError()
-
-    @overload
-    def trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     def trades(
         self,
         callback: CallbackType,
@@ -157,25 +96,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             `Websocket`: Экземпляр вебсокета.
         """
         raise NotImplementedError()
-
-    @overload
-    def aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     def aggtrades(
         self,
         callback: CallbackType,
@@ -195,25 +115,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             `Websocket`: Экземпляр вебсокета.
         """
         raise NotImplementedError()
-
-    @overload
-    def futures_trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     def futures_trades(
         self,
         callback: CallbackType,
@@ -233,25 +134,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             `Websocket`: Экземпляр вебсокета.
         """
         raise NotImplementedError()
-
-    @overload
-    def futures_aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     def futures_aggtrades(
         self,
         callback: CallbackType,

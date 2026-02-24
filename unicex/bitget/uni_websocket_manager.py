@@ -1,7 +1,7 @@
 __all__ = ["IUniWebsocketManager"]
 
 from collections.abc import Awaitable, Callable, Sequence
-from typing import Any, overload
+from typing import Any
 
 from unicex._abc import IUniWebsocketManager
 from unicex._base import Websocket
@@ -43,26 +43,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         """
         return raw_msg.get("event") == "subscribe"
 
-    @overload
-    def klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     def klines(
         self,
         callback: CallbackType,
@@ -95,26 +75,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             ),  # кто бы мог подумать, что у Bitget на споте для вебсокетов и HTTP запросов совершенно разные перечисления. Тупые ублюдки.
         )
 
-    @overload
-    def futures_klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     def futures_klines(
         self,
         callback: CallbackType,
@@ -144,24 +104,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             interval=timeframe.to_exchange_format(Exchange.BITGET, MarketType.FUTURES),
         )
 
-    @overload
-    def trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     def trades(
         self,
         callback: CallbackType,
@@ -185,24 +127,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             callback=wrapper, symbol=symbol, symbols=symbols, market_type="SPOT"
         )
 
-    @overload
-    def aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     def aggtrades(
         self,
         callback: CallbackType,
@@ -222,24 +146,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             `Websocket`: Экземпляр вебсокета.
         """
         return self.trades(callback=callback, symbol=symbol, symbols=symbols)  # type: ignore[reportCallIssue]
-
-    @overload
-    def futures_trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
 
     def futures_trades(
         self,
@@ -263,24 +169,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         return self._websocket_manager.trade(
             callback=wrapper, symbol=symbol, symbols=symbols, market_type="USDT-FUTURES"
         )
-
-    @overload
-    def futures_aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
 
     def futures_aggtrades(
         self,
