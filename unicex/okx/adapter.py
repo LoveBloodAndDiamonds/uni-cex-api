@@ -246,13 +246,14 @@ class Adapter:
         Возвращает:
             list[PartialBookDepthDict]: Список обновлений стакана в унифицированном формате.
         """
+        arg = raw_msg["arg"]
         data = raw_msg["data"][0]
         bids = data.get("bids", [])
         asks = data.get("asks", [])
 
         return [
             PartialBookDepthDict(
-                s=str(raw_msg["arg"]["sprdId"]),
+                s=str(arg["sprdId"]),
                 t=int(data["ts"]),
                 u=int(data["seqId"]),
                 b=[(float(item[0]), float(item[1])) for item in bids],

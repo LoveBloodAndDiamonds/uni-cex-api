@@ -220,13 +220,14 @@ class Adapter:
         Возвращает:
           `list[BestBidAskDict]`: Список обновлений лучших бидов и асков в унифицированном формате.
         """
-        bid = raw_msg["data"]["b"][0]
-        ask = raw_msg["data"]["a"][0]
+        data = raw_msg["data"]
+        bid = data["b"][0]
+        ask = data["a"][0]
         return [
             BestBidAskDict(
-                s=str(raw_msg["data"]["s"]),
+                s=str(data["s"]),
                 t=int(raw_msg["ts"]),
-                u=int(raw_msg["data"]["u"]),
+                u=int(data["u"]),
                 b=float(bid[0]),
                 B=float(bid[1]),
                 a=float(ask[0]),
@@ -244,12 +245,13 @@ class Adapter:
         Возвращает:
           `list[PartialBookDepthDict]`: Список обновлений стакана в унифицированном формате.
         """
+        data = raw_msg["data"]
         return [
             PartialBookDepthDict(
-                s=str(raw_msg["data"]["s"]),
+                s=str(data["s"]),
                 t=int(raw_msg["ts"]),
-                u=int(raw_msg["data"]["u"]),
-                b=[(float(price), float(quantity)) for price, quantity in raw_msg["data"]["b"]],
-                a=[(float(price), float(quantity)) for price, quantity in raw_msg["data"]["a"]],
+                u=int(data["u"]),
+                b=[(float(price), float(quantity)) for price, quantity in data["b"]],
+                a=[(float(price), float(quantity)) for price, quantity in data["a"]],
             )
         ]

@@ -199,12 +199,13 @@ class Adapter:
         Возвращает:
             list[BestBidAskDict]: Список обновлений лучших бидов и асков в унифицированном формате.
         """
+        arg = raw_msg["arg"]
         data = raw_msg["data"][0]
         best_bid = data["bids"][0]
         best_ask = data["asks"][0]
         return [
             BestBidAskDict(
-                s=str(raw_msg["arg"]["instId"]),
+                s=str(arg["instId"]),
                 t=int(data["ts"]),
                 u=int(data["seq"]),
                 b=float(best_bid[0]),
