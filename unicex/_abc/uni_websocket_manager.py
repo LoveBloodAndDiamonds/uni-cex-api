@@ -38,7 +38,9 @@ class IUniWebsocketManager(ABC):
         self._logger = logger or _logger
 
     def _make_wrapper(
-        self, adapter_func: Callable[[dict], Any], callback: CallbackType
+        self,
+        adapter_func: Callable[[dict], Any],
+        callback: CallbackType,
     ) -> CallbackType:
         """Создает обертку над callback, применяя адаптер к сырым сообщениям."""
 
@@ -300,6 +302,88 @@ class IUniWebsocketManager(ABC):
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Должен быть указан либо `symbol`, либо `symbols`.
+
+        Возвращает:
+            `Websocket`: Экземпляр вебсокета.
+        """
+        ...
+
+    @overload
+    def futures_best_bid_ask(
+        self,
+        callback: CallbackType,
+        *,
+        symbol: str,
+        symbols: None = None,
+    ) -> Websocket: ...
+
+    @overload
+    def futures_best_bid_ask(
+        self,
+        callback: CallbackType,
+        *,
+        symbol: None = None,
+        symbols: Sequence[str],
+    ) -> Websocket: ...
+
+    @abstractmethod
+    def futures_best_bid_ask(
+        self,
+        callback: CallbackType,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+    ) -> Websocket:
+        """Открывает стрим лучших бидов и асков с унификацией сообщений.
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Должен быть указан либо `symbol`, либо `symbols`.
+
+        Возвращает:
+            `Websocket`: Экземпляр вебсокета.
+        """
+        ...
+
+    @overload
+    def futures_partial_book_depth(
+        self,
+        callback: CallbackType,
+        limit: int,
+        *,
+        symbol: str,
+        symbols: None = None,
+    ) -> Websocket: ...
+
+    @overload
+    def futures_partial_book_depth(
+        self,
+        callback: CallbackType,
+        limit: int,
+        *,
+        symbol: None = None,
+        symbols: Sequence[str],
+    ) -> Websocket: ...
+
+    @abstractmethod
+    def futures_partial_book_depth(
+        self,
+        callback: CallbackType,
+        limit: int,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+    ) -> Websocket:
+        """Открывает поток частичного стакана глубиной limit с унификацией сообщений.
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            limit (`int`): Лимит лучших асков и бидов в одном сообщении.
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 

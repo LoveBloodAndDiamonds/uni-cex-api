@@ -13,6 +13,8 @@ __all__ = [
     "TickerInfoItem",
     "TickersInfoDict",
     "LiquidationDict",
+    "BestBidAskDict",
+    "PartialBookDepthDict",
 ]
 
 from logging import Logger as LoggingLogger
@@ -166,3 +168,41 @@ class TickerInfoItem(TypedDict):
 
 type TickersInfoDict = dict[str, TickerInfoItem]
 """Информация о размерах тиков, ступеней цены и множителя контракта (если есть) для всех тикеров."""
+
+
+class BestBidAskDict(TypedDict):
+    """Модель обновления лучшего аска и бида через вебсокет."""
+
+    t: int
+    """Время события в миллисекундах."""
+
+    u: int
+    """Айди обновления."""
+
+    b: float
+    """Цена лучшего бида."""
+
+    B: float
+    """Объем лучшего бида."""
+
+    a: float
+    """Цена лучшего аска."""
+
+    A: float
+    """Объем лучшего аска."""
+
+
+class PartialBookDepthDict(TypedDict):
+    """Модель обновления ближайших N асков и бидов через вебсокет."""
+
+    t: int
+    """Время события в миллисекундах."""
+
+    u: int
+    """Айди обновления."""
+
+    b: list[tuple[float, float]]  # price, quantity
+    """Лучшие биды. Два значения: цена и объем."""
+
+    a: list[tuple[float, float]]  # price, quantity
+    """Лучшие аски. Два значения: цена и объем."""

@@ -93,7 +93,10 @@ class UniWebsocketManager(IUniWebsocketManager):
         )
 
     def trades(
-        self, callback: CallbackType, symbol: str | None = None, symbols: list[str] | None = None
+        self,
+        callback: CallbackType,
+        symbol: str | None = None,
+        symbols: list[str] | None = None,
     ) -> Websocket:
         """Создаёт вебсокет для получения сделок на споте с унификацией сообщений.
 
@@ -111,7 +114,10 @@ class UniWebsocketManager(IUniWebsocketManager):
         return self._websocket_manager.trade(callback=wrapper, symbol=symbol, symbols=symbols)
 
     def aggtrades(
-        self, callback: CallbackType, symbol: str | None = None, symbols: list[str] | None = None
+        self,
+        callback: CallbackType,
+        symbol: str | None = None,
+        symbols: list[str] | None = None,
     ) -> Websocket:
         """Создаёт вебсокет для получения агрегированных сделок на споте с унификацией сообщений.
 
@@ -129,7 +135,10 @@ class UniWebsocketManager(IUniWebsocketManager):
         return self._websocket_manager.agg_trade(callback=wrapper, symbol=symbol, symbols=symbols)
 
     def futures_trades(
-        self, callback: CallbackType, symbol: str | None = None, symbols: list[str] | None = None
+        self,
+        callback: CallbackType,
+        symbol: str | None = None,
+        symbols: list[str] | None = None,
     ) -> Websocket:
         """Создаёт вебсокет для получения сделок на фьючерсах с унификацией сообщений.
 
@@ -150,7 +159,10 @@ class UniWebsocketManager(IUniWebsocketManager):
         )
 
     def futures_aggtrades(
-        self, callback: CallbackType, symbol: str | None = None, symbols: list[str] | None = None
+        self,
+        callback: CallbackType,
+        symbol: str | None = None,
+        symbols: list[str] | None = None,
     ) -> Websocket:
         """Создаёт вебсокет для получения агрегированных сделок на фьючерсах с унификацией сообщений.
 
@@ -170,7 +182,10 @@ class UniWebsocketManager(IUniWebsocketManager):
         )
 
     def liquidations(
-        self, callback: CallbackType, symbol: str | None = None, symbols: list[str] | None = None
+        self,
+        callback: CallbackType,
+        symbol: str | None = None,
+        symbols: list[str] | None = None,
     ) -> Websocket:
         """Открывает стрим ликвидаций (futures) с унификацией сообщений.
 

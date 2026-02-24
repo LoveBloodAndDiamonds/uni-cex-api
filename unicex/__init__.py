@@ -25,6 +25,8 @@ __all__ = [
     "TickerInfoItem",
     "TickersInfoDict",
     "LiquidationDict",
+    "BestBidAskDict",
+    "PartialBookDepthDict",
     # Interfaces
     "IUniClient",
     "IUniWebsocketManager",
@@ -126,6 +128,8 @@ from .types import (
     TickerInfoItem,
     TickersInfoDict,
     LiquidationDict,
+    BestBidAskDict,
+    PartialBookDepthDict,
 )
 
 # exchanges
