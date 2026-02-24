@@ -307,6 +307,7 @@ class Adapter:
         ask_price = float(result["a"]) if result["a"] != "" else 0.0
         return [
             BestBidAskDict(
+                s=str(result["s"]),
                 t=int(result["t"]),
                 u=int(result["u"]),
                 b=bid_price,
@@ -334,6 +335,7 @@ class Adapter:
             raise ValueError("Field `id` is missing in futures.order_book message")
         return [
             PartialBookDepthDict(
+                s=str(result["s"]),
                 t=int(result["t"]),
                 u=int(update_id),
                 b=[(float(item["p"]), float(item["s"])) for item in bids],

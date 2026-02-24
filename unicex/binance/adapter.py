@@ -232,6 +232,7 @@ class Adapter:
 
         return [
             BestBidAskDict(
+                s=str(msg["s"]),
                 t=int(msg["E"]),
                 u=int(msg["u"]),
                 b=float(msg["b"]),
@@ -255,6 +256,7 @@ class Adapter:
 
         return [
             PartialBookDepthDict(
+                s=str(msg["s"]),
                 t=int(msg["E"]),
                 u=int(msg["u"]),
                 b=[(float(price), float(quantity)) for price, quantity in msg["b"]],

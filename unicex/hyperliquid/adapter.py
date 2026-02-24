@@ -302,6 +302,7 @@ class Adapter:
 
         return [
             BestBidAskDict(
+                s=Adapter._resolve_spot_symbol(str(data["coin"]), resolve_symbols),
                 t=int(data["time"]),
                 u=int(data["time"]),
                 b=bid_price,
@@ -324,6 +325,7 @@ class Adapter:
 
         return [
             PartialBookDepthDict(
+                s=Adapter._resolve_spot_symbol(str(data["coin"]), resolve_symbols),
                 t=int(data["time"]),
                 u=int(data["time"]),
                 b=[(float(level["px"]), float(level["sz"])) for level in bids],

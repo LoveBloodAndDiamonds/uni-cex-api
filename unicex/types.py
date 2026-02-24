@@ -173,6 +173,9 @@ type TickersInfoDict = dict[str, TickerInfoItem]
 class BestBidAskDict(TypedDict):
     """Модель обновления лучшего аска и бида через вебсокет."""
 
+    s: str
+    """Символ."""
+
     t: int
     """Время события в миллисекундах."""
 
@@ -194,6 +197,9 @@ class BestBidAskDict(TypedDict):
 
 class PartialBookDepthDict(TypedDict):
     """Модель обновления ближайших N асков и бидов через вебсокет."""
+
+    s: str
+    """Символ."""
 
     t: int
     """Время события в миллисекундах."""

@@ -224,6 +224,7 @@ class Adapter:
         ask = raw_msg["data"]["a"][0]
         return [
             BestBidAskDict(
+                s=str(raw_msg["data"]["s"]),
                 t=int(raw_msg["ts"]),
                 u=int(raw_msg["data"]["u"]),
                 b=float(bid[0]),
@@ -245,6 +246,7 @@ class Adapter:
         """
         return [
             PartialBookDepthDict(
+                s=str(raw_msg["data"]["s"]),
                 t=int(raw_msg["ts"]),
                 u=int(raw_msg["data"]["u"]),
                 b=[(float(price), float(quantity)) for price, quantity in raw_msg["data"]["b"]],
