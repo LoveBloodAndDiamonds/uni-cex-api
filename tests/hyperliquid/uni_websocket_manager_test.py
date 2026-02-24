@@ -1,27 +1,42 @@
 import asyncio
 
-from unicex.hyperliquid import UniWebsocketManager, ExchangeInfo
-from unicex import Timeframe
-
-# 1771333346024
-# 1771333425340
+from unicex.hyperliquid import UniWebsocketManager, UniClient  # type: ignore # noqa
+from unicex.types import PartialBookDepthDict, BestBidAskDict  # type: ignore # noqa
+from time import time
 
 
-async def callback(msg):
-    print(msg)
+# async def callback(event: PartialBookDepthDict) -> None:
+#     """Выводит ликвидации в консоль."""
+#     print(int(time()), event)
+#     exit(1)
+
+
+# async def main() -> None:
+#     """Запусти пример подписки на ликвидации Binance."""
+#     t = ["ETH"]
+#     manager = UniWebsocketManager()
+#     ws = manager.futures_partial_book_depth(
+#         callback=callback,
+#         symbols=t,
+#         limit=20,
+#     )
+#     await ws.start()
+
+
+async def callback(event: BestBidAskDict) -> None:
+    """Выводит ликвидации в консоль."""
+    print(int(time()), event)
 
 
 async def main() -> None:
-    """Main entry point for the application."""
-    asyncio.create_task(ExchangeInfo.start())
-
-    await asyncio.sleep(3)
-
-    m = UniWebsocketManager()
-
-    s = m.klines(callback=callback, symbol="@107", timeframe=Timeframe.MIN_1)
-
-    await s.start()
+    """Запусти пример подписки на ликвидации Binance."""
+    t = ["ETH"]
+    manager = UniWebsocketManager()
+    ws = manager.futures_best_bid_ask(
+        callback=callback,
+        symbols=t,
+    )
+    await ws.start()
 
 
 if __name__ == "__main__":
