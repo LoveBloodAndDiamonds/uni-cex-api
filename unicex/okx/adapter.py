@@ -4,9 +4,11 @@ __all__ = ["Adapter"]
 from typing import Any
 
 from unicex.types import (
+    BestBidAskDict,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
+    PartialBookDepthDict,
     TickerDailyDict,
     TickerDailyItem,
     TradeDict,
@@ -199,3 +201,59 @@ class Adapter:
             return ExchangeInfo.get_futures_ticker_info(symbol)["contract_size"] or 1
         except:  # noqa
             return 1
+
+    @staticmethod
+    def futures_best_bid_ask_message(raw_msg: Any) -> list[BestBidAskDict]:
+        """Преобразует вебсокет-сообщение с лучшими бидом и аском в унифицированный формат.
+
+        Параметры:
+            raw_msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[BestBidAskDict]: Список обновлений лучших бидов и асков в унифицированном формате.
+        """
+        data = raw_msg["data"][0]
+        bids = data.get("bids", [])
+        asks = data.get("asks", [])
+
+        best_bid = bids[0] if bids else None
+        best_ask = asks[0] if asks else None
+
+        bid_price = float(best_bid[0]) if best_bid else 0.0
+        bid_size = float(best_bid[1]) if best_bid else 0.0
+        ask_price = float(best_ask[0]) if best_ask else 0.0
+        ask_size = float(best_ask[1]) if best_ask else 0.0
+
+        return [
+            BestBidAskDict(
+                t=int(data["ts"]),
+                u=int(data["seqId"]),
+                b=bid_price,
+                B=bid_size,
+                a=ask_price,
+                A=ask_size,
+            )
+        ]
+
+    @staticmethod
+    def futures_partial_book_depth_message(raw_msg: Any) -> list[PartialBookDepthDict]:
+        """Преобразует вебсокет-сообщение с частичным стаканом в унифицированный формат.
+
+        Параметры:
+            raw_msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[PartialBookDepthDict]: Список обновлений стакана в унифицированном формате.
+        """
+        data = raw_msg["data"][0]
+        bids = data.get("bids", [])
+        asks = data.get("asks", [])
+
+        return [
+            PartialBookDepthDict(
+                t=int(data["ts"]),
+                u=int(data["seqId"]),
+                b=[(float(item[0]), float(item[1])) for item in bids],
+                a=[(float(item[0]), float(item[1])) for item in asks],
+            )
+        ]
