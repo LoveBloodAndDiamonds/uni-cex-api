@@ -26,19 +26,24 @@ class ExchangeInfo(IExchangeInfo):
         exchange_info = await Client(session).futures_exchange_info()
         tickers_info: dict[str, TickerInfoItem] = {}
         for symbol_info in exchange_info.get("symbols", []):
-            filters = {
-                flt["filterType"]: flt
-                for flt in symbol_info.get("filters", [])
-                if "filterType" in flt
-            }
-            price_filter = filters["PRICE_FILTER"]
-            lot_size_filter = filters["LOT_SIZE"]
-            tickers_info[symbol_info["symbol"]] = TickerInfoItem(
-                tick_step=float(price_filter["tickSize"]),
-                tick_precision=None,
-                size_step=float(lot_size_filter["stepSize"]),
-                size_precision=None,
-                contract_size=1,
-            )
+            try:
+                filters = {
+                    flt["filterType"]: flt
+                    for flt in symbol_info.get("filters", [])
+                    if "filterType" in flt
+                }
+                price_filter = filters["PRICE_FILTER"]
+                lot_size_filter = filters["LOT_SIZE"]
+                tickers_info[symbol_info["symbol"]] = TickerInfoItem(
+                    tick_step=float(price_filter["tickSize"]),
+                    tick_precision=None,
+                    size_step=float(lot_size_filter["stepSize"]),
+                    size_precision=None,
+                    contract_size=1,
+                )
+            except Exception as e:
+                cls._logger.error(
+                    f"{type(e)} creating TickerInfoItem for element={symbol_info}: {e}"
+                )
 
         cls._futures_tickers_info = tickers_info

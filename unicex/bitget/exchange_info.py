@@ -20,13 +20,18 @@ class ExchangeInfo(IExchangeInfo):
         exchange_info = await Client(session).get_symbol_info()
         tickers_info: dict[str, TickerInfoItem] = {}
         for symbol_info in exchange_info["data"]:
-            tickers_info[symbol_info["symbol"]] = TickerInfoItem(
-                tick_precision=int(symbol_info["pricePrecision"]),
-                tick_step=None,
-                size_precision=int(symbol_info["quantityPrecision"]),
-                size_step=None,
-                contract_size=1,
-            )
+            try:
+                tickers_info[symbol_info["symbol"]] = TickerInfoItem(
+                    tick_precision=int(symbol_info["pricePrecision"]),
+                    tick_step=None,
+                    size_precision=int(symbol_info["quantityPrecision"]),
+                    size_step=None,
+                    contract_size=1,
+                )
+            except Exception as e:
+                cls._logger.error(
+                    f"{type(e)} creating TickerInfoItem for element={symbol_info}: {e}"
+                )
 
         cls._tickers_info = tickers_info
 
@@ -36,13 +41,18 @@ class ExchangeInfo(IExchangeInfo):
         tickers_info: dict[str, TickerInfoItem] = {}
         exchange_info = await Client(session).futures_get_contracts("USDT-FUTURES")
         for symbol_info in exchange_info["data"]:
-            symbol = symbol_info["symbol"]
-            tickers_info[symbol] = TickerInfoItem(
-                tick_precision=int(symbol_info["pricePlace"]),
-                tick_step=None,
-                size_precision=int(symbol_info["volumePlace"]),
-                size_step=None,
-                contract_size=float(symbol_info["sizeMultiplier"]),
-            )
+            try:
+                symbol = symbol_info["symbol"]
+                tickers_info[symbol] = TickerInfoItem(
+                    tick_precision=int(symbol_info["pricePlace"]),
+                    tick_step=None,
+                    size_precision=int(symbol_info["volumePlace"]),
+                    size_step=None,
+                    contract_size=float(symbol_info["sizeMultiplier"]),
+                )
+            except Exception as e:
+                cls._logger.error(
+                    f"{type(e)} creating TickerInfoItem for element={symbol_info}: {e}"
+                )
 
         cls._futures_tickers_info = tickers_info

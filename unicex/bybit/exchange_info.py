@@ -20,14 +20,19 @@ class ExchangeInfo(IExchangeInfo):
         exchange_info = await Client(session).instruments_info("spot", limit=1000)
         tickers_info: dict[str, TickerInfoItem] = {}
         for symbol_info in exchange_info["result"]["list"]:
-            tickers_info[symbol_info["symbol"]] = TickerInfoItem(
-                tick_step=float(symbol_info["priceFilter"]["tickSize"]),
-                tick_precision=None,
-                size_step=float(symbol_info["lotSizeFilter"]["basePrecision"]),
-                size_precision=None,
-                contract_size=1,
-                min_order_quantity=float(symbol_info["lotSizeFilter"]["minOrderQty"]),  # type: ignore
-            )
+            try:
+                tickers_info[symbol_info["symbol"]] = TickerInfoItem(
+                    tick_step=float(symbol_info["priceFilter"]["tickSize"]),
+                    tick_precision=None,
+                    size_step=float(symbol_info["lotSizeFilter"]["basePrecision"]),
+                    size_precision=None,
+                    contract_size=1,
+                    min_order_quantity=float(symbol_info["lotSizeFilter"]["minOrderQty"]),  # type: ignore
+                )
+            except Exception as e:
+                cls._logger.error(
+                    f"{type(e)} creating TickerInfoItem for element={symbol_info}: {e}"
+                )
 
         cls._tickers_info = tickers_info
 
@@ -46,8 +51,8 @@ class ExchangeInfo(IExchangeInfo):
                     contract_size=1,
                     min_order_quantity=float(symbol_info["lotSizeFilter"]["minOrderQty"]),  # type: ignore
                 )
-            except ValueError as e:
-                cls._logger.trace(
-                    f"ValueError on {cls.exchange_name} by {symbol_info['symbol']}: {e}"
+            except Exception as e:
+                cls._logger.error(
+                    f"{type(e)} creating TickerInfoItem for element={symbol_info}: {e}"
                 )
         cls._futures_tickers_info = tickers_info

@@ -36,13 +36,18 @@ class ExchangeInfo(IExchangeInfo):
 
         tickers_info: dict[str, TickerInfoItem] = {}
         for symbol_info in cls._spot_meta["tokens"]:
-            tickers_info[symbol_info["name"]] = TickerInfoItem(
-                tick_step=None,
-                tick_precision=int(symbol_info["weiDecimals"]),
-                size_step=None,
-                size_precision=int(symbol_info["szDecimals"]),
-                contract_size=1,
-            )
+            try:
+                tickers_info[symbol_info["name"]] = TickerInfoItem(
+                    tick_step=None,
+                    tick_precision=int(symbol_info["weiDecimals"]),
+                    size_step=None,
+                    size_precision=int(symbol_info["szDecimals"]),
+                    contract_size=1,
+                )
+            except Exception as e:
+                cls._logger.error(
+                    f"{type(e)} creating TickerInfoItem for element={symbol_info}: {e}"
+                )
 
         cls._tickers_info = tickers_info
 

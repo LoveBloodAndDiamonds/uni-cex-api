@@ -82,13 +82,15 @@ class IExchangeInfo(ABC):
                 await cls._load_spot_exchange_info(session)
                 cls._logger.debug(f"Loaded spot exchange data for {cls.exchange_name} ")
             except Exception as e:
-                cls._logger.error(f"Error loading spot exchange data for {cls.exchange_name}: {e}")
+                cls._logger.error(
+                    f"{type(e)} loading spot exchange data for {cls.exchange_name}: {e}"
+                )
             try:
                 await cls._load_futures_exchange_info(session)
                 cls._logger.debug(f"Loaded futures exchange data for {cls.exchange_name} ")
             except Exception as e:
                 cls._logger.error(
-                    f"Error loading futures exchange data for {cls.exchange_name}: {e}"
+                    f"{type(e)} loading futures exchange data for {cls.exchange_name}: {e}"
                 )
         cls._loaded = True
 

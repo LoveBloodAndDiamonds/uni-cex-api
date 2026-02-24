@@ -195,14 +195,6 @@ class Adapter:
         ]
 
     @staticmethod
-    def _get_contract_size(symbol: str) -> float:
-        """Возвращает размер контракта для указанного символа тикера."""
-        try:
-            return ExchangeInfo.get_futures_ticker_info(symbol)["contract_size"] or 1
-        except:  # noqa
-            return 1
-
-    @staticmethod
     def futures_best_bid_ask_message(raw_msg: Any) -> list[BestBidAskDict]:
         """Преобразует вебсокет-сообщение с лучшими бидом и аском в унифицированный формат.
 
@@ -213,6 +205,8 @@ class Adapter:
             list[BestBidAskDict]: Список обновлений лучших бидов и асков в унифицированном формате.
         """
         data = raw_msg["data"][0]
+        inst_id = raw_msg["arg"]["instId"]
+        contract_size = Adapter._get_contract_size(inst_id)
         bids = data.get("bids", [])
         asks = data.get("asks", [])
 
@@ -226,13 +220,13 @@ class Adapter:
 
         return [
             BestBidAskDict(
-                s=str(raw_msg["arg"]["sprdId"]),
+                s=str(raw_msg["arg"]["instId"]),
                 t=int(data["ts"]),
                 u=int(data["seqId"]),
                 b=bid_price,
-                B=bid_size,
+                B=bid_size * contract_size,
                 a=ask_price,
-                A=ask_size,
+                A=ask_size * contract_size,
             )
         ]
 
@@ -246,17 +240,26 @@ class Adapter:
         Возвращает:
             list[PartialBookDepthDict]: Список обновлений стакана в унифицированном формате.
         """
-        arg = raw_msg["arg"]
         data = raw_msg["data"][0]
+        inst_id = raw_msg["arg"]["instId"]
+        contract_size = Adapter._get_contract_size(inst_id)
         bids = data.get("bids", [])
         asks = data.get("asks", [])
 
         return [
             PartialBookDepthDict(
-                s=str(arg["sprdId"]),
+                s=inst_id,
                 t=int(data["ts"]),
                 u=int(data["seqId"]),
-                b=[(float(item[0]), float(item[1])) for item in bids],
-                a=[(float(item[0]), float(item[1])) for item in asks],
+                b=[(float(item[0]), float(item[1]) * contract_size) for item in bids],
+                a=[(float(item[0]), float(item[1]) * contract_size) for item in asks],
             )
         ]
+
+    @staticmethod
+    def _get_contract_size(symbol: str) -> float:
+        """Возвращает размер контракта для указанного символа тикера."""
+        try:
+            return ExchangeInfo.get_futures_ticker_info(symbol)["contract_size"] or 1
+        except:  # noqa
+            return 1

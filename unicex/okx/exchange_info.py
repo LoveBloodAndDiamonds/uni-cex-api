@@ -20,13 +20,16 @@ class ExchangeInfo(IExchangeInfo):
         tickers_info = {}
         exchange_info = await Client(session).get_instruments("SPOT")
         for el in exchange_info["data"]:
-            tickers_info[el["instId"]] = TickerInfoItem(
-                tick_precision=None,
-                tick_step=float(el["tickSz"] or "0"),
-                size_precision=None,
-                size_step=float(el["lotSz"] or "0"),
-                contract_size=1,
-            )
+            try:
+                tickers_info[el["instId"]] = TickerInfoItem(
+                    tick_precision=None,
+                    tick_step=float(el["tickSz"] or "0"),
+                    size_precision=None,
+                    size_step=float(el["lotSz"] or "0"),
+                    contract_size=1,
+                )
+            except Exception as e:
+                cls._logger.error(f"{type(e)} creating TickerInfoItem for element={el}: {e}")
 
         cls._tickers_info = tickers_info
 
@@ -36,12 +39,15 @@ class ExchangeInfo(IExchangeInfo):
         tickers_info = {}
         exchange_info = await Client(session).get_instruments("SWAP")
         for el in exchange_info["data"]:
-            tickers_info[el["instId"]] = TickerInfoItem(
-                tick_precision=None,
-                tick_step=float(el["tickSz"]),
-                size_precision=None,
-                size_step=float(el["lotSz"]) * float(el["ctVal"]),
-                contract_size=float(el["ctVal"]),
-            )
+            try:
+                tickers_info[el["instId"]] = TickerInfoItem(
+                    tick_precision=None,
+                    tick_step=float(el["tickSz"]),
+                    size_precision=None,
+                    size_step=float(el["lotSz"]) * float(el["ctVal"]),
+                    contract_size=float(el["ctVal"]),
+                )
+            except Exception as e:
+                cls._logger.error(f"{type(e)} creating TickerInfoItem for element={el}: {e}")
 
         cls._futures_tickers_info = tickers_info

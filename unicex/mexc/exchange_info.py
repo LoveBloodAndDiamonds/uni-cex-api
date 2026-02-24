@@ -20,13 +20,16 @@ class ExchangeInfo(IExchangeInfo):
         exchange_info = await Client(session).exchange_info()
         tickers_info = {}
         for el in exchange_info["symbols"]:
-            tickers_info[el["symbol"]] = TickerInfoItem(
-                tick_precision=int(el["quotePrecision"]),
-                tick_step=None,
-                size_precision=int(el["baseAssetPrecision"]),
-                size_step=None,
-                contract_size=1,
-            )
+            try:
+                tickers_info[el["symbol"]] = TickerInfoItem(
+                    tick_precision=int(el["quotePrecision"]),
+                    tick_step=None,
+                    size_precision=int(el["baseAssetPrecision"]),
+                    size_step=None,
+                    contract_size=1,
+                )
+            except Exception as e:
+                cls._logger.error(f"{type(e)} creating TickerInfoItem for element={el}: {e}")
 
         cls._tickers_info = tickers_info
 
@@ -36,12 +39,15 @@ class ExchangeInfo(IExchangeInfo):
         exchange_info = await Client(session).futures_contract_detail()
         tickers_info = {}
         for el in exchange_info["data"]:
-            tickers_info[el["symbol"]] = TickerInfoItem(
-                tick_precision=None,
-                tick_step=el["priceUnit"],
-                size_precision=None,
-                size_step=el["contractSize"],
-                contract_size=el["contractSize"],
-            )
+            try:
+                tickers_info[el["symbol"]] = TickerInfoItem(
+                    tick_precision=None,
+                    tick_step=el["priceUnit"],
+                    size_precision=None,
+                    size_step=el["contractSize"],
+                    contract_size=el["contractSize"],
+                )
+            except Exception as e:
+                cls._logger.error(f"{type(e)} creating TickerInfoItem for element={el}: {e}")
 
         cls._futures_tickers_info = tickers_info
