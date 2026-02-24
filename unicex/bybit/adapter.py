@@ -3,10 +3,12 @@ __all__ = ["Adapter"]
 from typing import Any
 
 from unicex.types import (
+    BestBidAskDict,
     KlineDict,
     LiquidationDict,
     OpenInterestDict,
     OpenInterestItem,
+    PartialBookDepthDict,
     TickerDailyDict,
     TickerDailyItem,
     TradeDict,
@@ -189,7 +191,7 @@ class Adapter:
         """Преобразует вебсокет-сообщение с данными о ликвидациях в унифицированный формат.
 
         Параметры:
-        raw_msg (`Any`): Сырое сообщение из вебсокета Bybit.
+          raw_msg (`Any`): Сырое сообщение из вебсокета Bybit.
 
         Возвращает:
           `list[LiquidationDict]`: Список ликвидаций в унифицированном формате.
@@ -205,5 +207,47 @@ class Adapter:
             for liquidation in sorted(
                 raw_msg["data"],
                 key=lambda x: int(x["T"]),
+            )
+        ]
+
+    @staticmethod
+    def futures_best_bid_ask_message(raw_msg: Any) -> list[BestBidAskDict]:
+        """Преобразует вебсокет-сообщение с лучшими бидом и аском в унифицированный формат.
+
+        Параметры:
+          raw_msg (`Any`): Сырое сообщение из вебсокета Bybit.
+
+        Возвращает:
+          `list[BestBidAskDict]`: Список обновлений лучших бидов и асков в унифицированном формате.
+        """
+        bid = raw_msg["data"]["b"][0]
+        ask = raw_msg["data"]["a"][0]
+        return [
+            BestBidAskDict(
+                t=int(raw_msg["ts"]),
+                u=int(raw_msg["data"]["u"]),
+                b=float(bid[0]),
+                B=float(bid[1]),
+                a=float(ask[0]),
+                A=float(ask[1]),
+            )
+        ]
+
+    @staticmethod
+    def futures_partial_book_depth_message(raw_msg: Any) -> list[PartialBookDepthDict]:
+        """Преобразует вебсокет-сообщение с частичным стаканом в унифицированный формат.
+
+        Параметры:
+          raw_msg (`Any`): Сырое сообщение из вебсокета Bybit.
+
+        Возвращает:
+          `list[PartialBookDepthDict]`: Список обновлений стакана в унифицированном формате.
+        """
+        return [
+            PartialBookDepthDict(
+                t=int(raw_msg["ts"]),
+                u=int(raw_msg["data"]["u"]),
+                b=[(float(price), float(quantity)) for price, quantity in raw_msg["data"]["b"]],
+                a=[(float(price), float(quantity)) for price, quantity in raw_msg["data"]["a"]],
             )
         ]

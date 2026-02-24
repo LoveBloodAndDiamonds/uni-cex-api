@@ -1,21 +1,40 @@
 import asyncio
 
-from unicex.bybit import UniWebsocketManager, UniClient
-from unicex.types import LiquidationDict
+from unicex.bybit import UniWebsocketManager, UniClient  # type: ignore # noqa
+from unicex.types import PartialBookDepthDict, BestBidAskDict  # type: ignore # noqa
+from time import time
 
 
-async def callback(lq: list[LiquidationDict]) -> None:
+# async def callback(event: PartialBookDepthDict) -> None:
+#     """Выводит ликвидации в консоль."""
+#     print(int(time()), len(event["b"]))
+
+
+# async def main() -> None:
+#     """Запусти пример подписки на ликвидации Binance."""
+#     t = ["BTCUSDT"]
+#     manager = UniWebsocketManager()
+#     ws = manager.futures_partial_book_depth(
+#         callback=callback,
+#         symbols=t,
+#         limit=50,
+#     )
+#     await ws.start()
+
+
+async def callback(event: BestBidAskDict) -> None:
     """Выводит ликвидации в консоль."""
-    print(lq)
+    print(int(time()), event)
 
 
 async def main() -> None:
     """Запусти пример подписки на ликвидации Binance."""
-    c = await UniClient.create()
-    async with c:
-        t = await c.futures_tickers()
+    t = ["BTCUSDT"]
     manager = UniWebsocketManager()
-    ws = manager.liquidations(callback=callback, symbols=t)
+    ws = manager.futures_best_bid_ask(
+        callback=callback,
+        symbols=t,
+    )
     await ws.start()
 
 

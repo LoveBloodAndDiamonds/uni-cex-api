@@ -7,6 +7,7 @@ from unicex._abc import IUniWebsocketManager
 from unicex._base import Websocket
 from unicex.enums import Exchange, MarketType, Timeframe
 from unicex.types import LoggerLike
+from unicex.utils import validate_allowed_kwargs
 
 from .adapter import Adapter
 from .client import Client
@@ -259,15 +260,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         if limit not in allowed_levels:
             raise ValueError("Parameter `limit` must be one of: 5, 10, 20")
 
-        allowed_kwargs = {"update_speed"}
-        unknown_kwargs = set(kwargs) - allowed_kwargs
-        if unknown_kwargs:
-            allowed_kwargs_message = ", ".join(sorted(allowed_kwargs))
-            unknown_kwargs_message = ", ".join(sorted(unknown_kwargs))
-            raise ValueError(
-                f"Unsupported kwargs: {unknown_kwargs_message}. "
-                f"Allowed kwargs: {allowed_kwargs_message}"
-            )
+        validate_allowed_kwargs(kwargs=kwargs, allowed_kwargs=("update_speed",))
 
         update_speed: str | None = kwargs.get("update_speed")
         allowed_update_speeds = {None, "100ms", "500ms"}

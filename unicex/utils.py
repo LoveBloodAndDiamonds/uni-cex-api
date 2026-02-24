@@ -11,6 +11,7 @@ __all__ = [
     "decorate_all_methods",
     "symbol_to_exchange_format",
     "validate_single_symbol_args",
+    "validate_allowed_kwargs",
 ]
 
 import base64
@@ -259,3 +260,24 @@ def validate_single_symbol_args(
         raise ValueError("Parameters symbol and symbols cannot be used together")
     if not (symbol or symbols):
         raise ValueError("Either symbol or symbols must be provided")
+
+
+def validate_allowed_kwargs(kwargs: dict[str, Any], allowed_kwargs: Sequence[str]) -> None:
+    """Проверяет, что в kwargs переданы только разрешенные ключи.
+
+    Параметры:
+      kwargs (`dict[str, Any]`): Словарь именованных аргументов для проверки.
+      allowed_kwargs (`Sequence[str]`): Список разрешенных имен аргументов.
+
+    Возвращает:
+      `None`: Ничего не возвращает, выбрасывает ValueError при нарушении условий.
+    """
+    allowed_set = set(allowed_kwargs)
+    unknown_kwargs = set(kwargs) - allowed_set
+    if unknown_kwargs:
+        allowed_kwargs_message = ", ".join(sorted(allowed_set))
+        unknown_kwargs_message = ", ".join(sorted(unknown_kwargs))
+        raise ValueError(
+            f"Unsupported kwargs: {unknown_kwargs_message}. "
+            f"Allowed kwargs: {allowed_kwargs_message}"
+        )
