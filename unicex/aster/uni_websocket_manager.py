@@ -172,3 +172,45 @@ class UniWebsocketManager(IUniWebsocketManager):
         return self._websocket_manager.futures_agg_trade(
             callback=wrapper, symbol=symbol, symbols=symbols
         )
+
+    def futures_best_bid_ask(
+        self,
+        callback: CallbackType,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+    ) -> Websocket:
+        """Открывает стрим лучших бидов и асков с унификацией сообщений.
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Должен быть указан либо `symbol`, либо `symbols`.
+
+        Возвращает:
+            `Websocket`: Экземпляр вебсокета.
+        """
+        raise NotImplementedError("Method `futures_best_bid_ask` will be implemented later")
+
+    def futures_partial_book_depth(
+        self,
+        callback: CallbackType,
+        limit: int,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+    ) -> Websocket:
+        """Открывает поток частичного стакана глубиной limit с унификацией сообщений.
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            limit (`int`): Лимит лучших асков и бидов в одном сообщении.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Должен быть указан либо `symbol`, либо `symbols`.
+
+        Возвращает:
+            `Websocket`: Экземпляр вебсокета.
+        """
+        raise NotImplementedError("Method `futures_partial_book_depth` will be implemented later")

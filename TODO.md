@@ -1,7 +1,5 @@
 ** Пофиксить: **
-- Добавить Workflow (pypi)
 - добавить поддержку testnet?
-- убрать overload из uni client and uni weboskcet manager
 - Способы авторизации слишком сильно отличаются на каждой бирже
 - Какая то путаница в OCO ордерах на бинансе: https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-list---oco-trade
 - На Hyperliquid неправильно работает лимит (добавляет + 1 свечу при запросе свечей через UniClient)
@@ -18,6 +16,8 @@
 - документацию в случаях с alias не хочется дублировать
 
 ** Сделано: **
++ Добавить Workflow (pypi)
++ убрать overload из uni client and uni weboskcet manager
 + start_exchanges_info должна возвращать список задач
 + aster.adapter куча лишних преобразований, когда и так все приходит float|int
 + убрать все bool из aster.client, вроде как они не поддерживаются
