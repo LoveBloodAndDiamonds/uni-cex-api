@@ -1,12 +1,13 @@
 import asyncio
 
 from unicex.binance import UniWebsocketManager, UniClient
-from unicex.types import LiquidationDict
+from unicex.types import PartialBookDepthDict
+from time import time
 
 
-async def callback(lq: list[LiquidationDict]) -> None:
+async def callback(event: PartialBookDepthDict) -> None:
     """Выводит ликвидации в консоль."""
-    print(lq)
+    print(time(), len(event["b"]))
 
 
 async def main() -> None:
@@ -14,8 +15,13 @@ async def main() -> None:
     c = await UniClient.create()
     async with c:
         t = await c.futures_tickers()
+    t = ["BTCUSDT"]
     manager = UniWebsocketManager()
-    ws = manager.liquidations(callback=callback, symbols=t)
+    ws = manager.futures_partial_book_depth(
+        callback=callback,
+        symbols=t,
+        limit=5,
+    )
     await ws.start()
 
 

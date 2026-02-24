@@ -223,7 +223,12 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError("Method `futures_best_bid_ask` will be implemented later")
+        wrapper = self._make_wrapper(self._adapter.futures_best_bid_ask_message, callback)
+        return self._websocket_manager.futures_symbol_book_ticker(
+            callback=wrapper,
+            symbol=symbol,
+            symbols=symbols,
+        )
 
     def futures_partial_book_depth(
         self,
@@ -231,6 +236,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         limit: int,
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
+        **kwargs: Any,
     ) -> Websocket:
         """Открывает поток частичного стакана глубиной limit с унификацией сообщений.
 
@@ -239,10 +245,40 @@ class UniWebsocketManager(IUniWebsocketManager):
             limit (`int`): Лимит лучших асков и бидов в одном сообщении.
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+            kwargs (`Any`): Дополнительные аргументы для базового метода создания вебсокета.
+                Поддерживается:
+                  - `update_speed` (`str | None`): Интервал обновления (`"100ms"` или `"500ms"`).
+                    Если не передан, используется дефолтный интервал Binance — `250ms`.
 
         Должен быть указан либо `symbol`, либо `symbols`.
 
         Возвращает:
             `Websocket`: Экземпляр вебсокета.
         """
-        raise NotImplementedError("Method `futures_partial_book_depth` will be implemented later")
+        allowed_levels = {5, 10, 20}
+        if limit not in allowed_levels:
+            raise ValueError("Parameter `limit` must be one of: 5, 10, 20")
+
+        allowed_kwargs = {"update_speed"}
+        unknown_kwargs = set(kwargs) - allowed_kwargs
+        if unknown_kwargs:
+            allowed_kwargs_message = ", ".join(sorted(allowed_kwargs))
+            unknown_kwargs_message = ", ".join(sorted(unknown_kwargs))
+            raise ValueError(
+                f"Unsupported kwargs: {unknown_kwargs_message}. "
+                f"Allowed kwargs: {allowed_kwargs_message}"
+            )
+
+        update_speed: str | None = kwargs.get("update_speed")
+        allowed_update_speeds = {None, "100ms", "500ms"}
+        if update_speed not in allowed_update_speeds:
+            raise ValueError("Parameter `update_speed` must be one of: '100ms', '500ms' or None")
+
+        wrapper = self._make_wrapper(self._adapter.futures_partial_book_depth_message, callback)
+        return self._websocket_manager.futures_partial_book_depth(
+            callback=wrapper,
+            symbol=symbol,
+            symbols=symbols,
+            levels=str(limit),
+            update_speed=update_speed,
+        )
