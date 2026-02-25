@@ -1,7 +1,7 @@
 __all__ = ["IUniWebsocketManager"]
 
 from collections.abc import Awaitable, Callable, Sequence
-from typing import Any, overload
+from typing import Any
 
 from unicex._abc import IUniWebsocketManager
 from unicex._base import Websocket
@@ -60,26 +60,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             return list(symbols)
         raise ValueError("Either symbol or symbols must be provided")
 
-    @overload
-    def klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     def klines(
         self,
         callback: CallbackType,
@@ -108,26 +88,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             interval=timeframe.to_exchange_format(Exchange.GATE, MarketType.SPOT),
             symbols=tickers,
         )
-
-    @overload
-    def futures_klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
 
     def futures_klines(
         self,
@@ -158,24 +118,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             symbols=tickers,
         )
 
-    @overload
-    def trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     def trades(
         self,
         callback: CallbackType,
@@ -199,24 +141,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         wrapper = self._make_wrapper(self._adapter.trades_message, callback)
         return self._websocket_manager.trades(callback=wrapper, symbols=tickers)
 
-    @overload
-    def aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     def aggtrades(
         self,
         callback: CallbackType,
@@ -236,24 +160,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             `Websocket`: Экземпляр вебсокета.
         """
         return self.trades(callback=callback, symbol=symbol, symbols=symbols)  # type: ignore[reportCallIssue]
-
-    @overload
-    def futures_trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
 
     def futures_trades(
         self,
@@ -278,24 +184,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         wrapper = self._make_wrapper(self._adapter.futures_trades_message, callback)
         return self._websocket_manager.futures_trades(callback=wrapper, symbols=tickers)
 
-    @overload
-    def futures_aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     def futures_aggtrades(
         self,
         callback: CallbackType,
@@ -315,3 +203,60 @@ class UniWebsocketManager(IUniWebsocketManager):
             `Websocket`: Экземпляр вебсокета.
         """
         return self.futures_trades(callback=callback, symbol=symbol, symbols=symbols)  # type: ignore[reportCallIssue]
+
+    def futures_best_bid_ask(
+        self,
+        callback: CallbackType,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+    ) -> Websocket:
+        """Открывает стрим лучших бидов и асков с унификацией сообщений.
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Должен быть указан либо `symbol`, либо `symbols`.
+
+        Возвращает:
+            `Websocket`: Экземпляр вебсокета.
+        """
+        tickers = self._normalize_symbols(symbol, symbols)
+
+        wrapper = self._make_wrapper(self._adapter.futures_best_bid_ask_message, callback)
+        return self._websocket_manager.futures_book_ticker(callback=wrapper, symbols=tickers)
+
+    def futures_partial_book_depth(
+        self,
+        callback: CallbackType,
+        limit: int,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+    ) -> Websocket:
+        """Открывает поток частичного стакана глубиной limit с унификацией сообщений.
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            limit (`int`): Лимит лучших асков и бидов в одном сообщении.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Должен быть указан либо `symbol`, либо `symbols`.
+
+        Возвращает:
+            `Websocket`: Экземпляр вебсокета.
+        """
+        allowed_levels = {1, 5, 10, 20, 50, 100}
+        if limit not in allowed_levels:
+            raise ValueError("Parameter `limit` must be one of: 1, 5, 10, 20, 50, 100")
+
+        tickers = self._normalize_symbols(symbol, symbols)
+
+        wrapper = self._make_wrapper(self._adapter.futures_partial_book_depth_message, callback)
+        return self._websocket_manager.futures_order_book(
+            callback=wrapper,
+            symbols=tickers,
+            limit=str(limit),  # type: ignore[arg-type]
+            interval="0",
+        )

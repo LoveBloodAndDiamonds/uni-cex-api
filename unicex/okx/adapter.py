@@ -4,9 +4,11 @@ __all__ = ["Adapter"]
 from typing import Any
 
 from unicex.types import (
+    BestBidAskDict,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
+    PartialBookDepthDict,
     TickerDailyDict,
     TickerDailyItem,
     TradeDict,
@@ -190,6 +192,68 @@ class Adapter:
                 v=float(trade["sz"]) * Adapter._get_contract_size(trade["instId"]),
             )
             for trade in sorted(raw_msg["data"], key=lambda item: int(item["ts"]))
+        ]
+
+    @staticmethod
+    def futures_best_bid_ask_message(raw_msg: Any) -> list[BestBidAskDict]:
+        """Преобразует вебсокет-сообщение с лучшими бидом и аском в унифицированный формат.
+
+        Параметры:
+            raw_msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[BestBidAskDict]: Список обновлений лучших бидов и асков в унифицированном формате.
+        """
+        data = raw_msg["data"][0]
+        inst_id = raw_msg["arg"]["instId"]
+        contract_size = Adapter._get_contract_size(inst_id)
+        bids = data.get("bids", [])
+        asks = data.get("asks", [])
+
+        best_bid = bids[0] if bids else None
+        best_ask = asks[0] if asks else None
+
+        bid_price = float(best_bid[0]) if best_bid else 0.0
+        bid_size = float(best_bid[1]) if best_bid else 0.0
+        ask_price = float(best_ask[0]) if best_ask else 0.0
+        ask_size = float(best_ask[1]) if best_ask else 0.0
+
+        return [
+            BestBidAskDict(
+                s=str(raw_msg["arg"]["instId"]),
+                t=int(data["ts"]),
+                u=int(data["seqId"]),
+                b=bid_price,
+                B=bid_size * contract_size,
+                a=ask_price,
+                A=ask_size * contract_size,
+            )
+        ]
+
+    @staticmethod
+    def futures_partial_book_depth_message(raw_msg: Any) -> list[PartialBookDepthDict]:
+        """Преобразует вебсокет-сообщение с частичным стаканом в унифицированный формат.
+
+        Параметры:
+            raw_msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[PartialBookDepthDict]: Список обновлений стакана в унифицированном формате.
+        """
+        data = raw_msg["data"][0]
+        inst_id = raw_msg["arg"]["instId"]
+        contract_size = Adapter._get_contract_size(inst_id)
+        bids = data.get("bids", [])
+        asks = data.get("asks", [])
+
+        return [
+            PartialBookDepthDict(
+                s=inst_id,
+                t=int(data["ts"]),
+                u=int(data["seqId"]),
+                b=[(float(item[0]), float(item[1]) * contract_size) for item in bids],
+                a=[(float(item[0]), float(item[1]) * contract_size) for item in asks],
+            )
         ]
 
     @staticmethod

@@ -1,7 +1,7 @@
 __all__ = ["IUniWebsocketManager"]
 
 from collections.abc import Awaitable, Callable, Sequence
-from typing import Any, overload
+from typing import Any
 
 from unicex._abc import IUniWebsocketManager
 from unicex._base import Websocket
@@ -42,26 +42,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             return True
         return False
 
-    @overload
-    def klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     def klines(
         self,
         callback: CallbackType,
@@ -89,26 +69,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             symbol=symbol,
             symbols=symbols,
         )
-
-    @overload
-    def futures_klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
 
     def futures_klines(
         self,
@@ -138,24 +98,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             symbols=symbols,
         )
 
-    @overload
-    def trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     def trades(
         self,
         callback: CallbackType,
@@ -181,24 +123,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             symbols=symbols,
         )
 
-    @overload
-    def aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     def aggtrades(
         self,
         callback: CallbackType,
@@ -218,24 +142,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             `Websocket`: Экземпляр вебсокета.
         """
         return self.trades(callback=callback, symbol=symbol, symbols=symbols)  # type: ignore
-
-    @overload
-    def futures_trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
 
     def futures_trades(
         self,
@@ -261,24 +167,6 @@ class UniWebsocketManager(IUniWebsocketManager):
             symbol=symbol,
             symbols=symbols,
         )
-
-    @overload
-    def futures_aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
 
     def futures_aggtrades(
         self,
@@ -321,6 +209,66 @@ class UniWebsocketManager(IUniWebsocketManager):
         return self._websocket_manager.all_liquidation(
             callback=self._make_wrapper(self._adapter.liquidations_message, callback),
             category="linear",
+            symbol=symbol,
+            symbols=symbols,
+        )
+
+    def futures_best_bid_ask(
+        self,
+        callback: CallbackType,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+    ) -> Websocket:
+        """Открывает стрим лучших бидов и асков с унификацией сообщений.
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Должен быть указан либо `symbol`, либо `symbols`.
+
+        Возвращает:
+            `Websocket`: Экземпляр вебсокета.
+        """
+        return self._websocket_manager.orderbook(
+            callback=self._make_wrapper(self._adapter.futures_best_bid_ask_message, callback),
+            category="linear",
+            depth=1,
+            symbol=symbol,
+            symbols=symbols,
+        )
+
+    def futures_partial_book_depth(
+        self,
+        callback: CallbackType,
+        limit: int,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+    ) -> Websocket:
+        """Открывает поток частичного стакана глубиной limit с унификацией сообщений.
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            limit (`int`): Лимит лучших асков и бидов в одном сообщении.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Должен быть указан либо `symbol`, либо `symbols`.
+
+        Возвращает:
+            `Websocket`: Экземпляр вебсокета.
+        """
+        allowed_levels = {1, 50, 200, 1000}
+        if limit not in allowed_levels:
+            raise ValueError("Parameter `limit` must be one of: 1, 50, 200, 1000")
+
+        wrapped_adapter = self._adapter.futures_partial_book_depth_message()
+
+        return self._websocket_manager.orderbook(
+            callback=self._make_wrapper(wrapped_adapter, callback),
+            category="linear",
+            depth=limit,  # type: ignore
             symbol=symbol,
             symbols=symbols,
         )

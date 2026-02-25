@@ -17,7 +17,9 @@ class ExchangeInfo(IExchangeInfo):
     @classmethod
     async def _load_spot_exchange_info(cls, session: aiohttp.ClientSession) -> None:
         """Загружает информацию о бирже для спотового рынка."""
-        currency_pairs = await Client(session).currency_pairs()
+        # У Gate список пар очень большой, поэтому даем больше времени на ответ и чтение.
+        client = Client(session, timeout=60, max_retries=5, retry_delay=0.5)
+        currency_pairs = await client.currency_pairs()
         tickers_info: dict[str, TickerInfoItem] = {}
         for symbol_info in currency_pairs:
             try:
@@ -28,9 +30,9 @@ class ExchangeInfo(IExchangeInfo):
                     size_step=None,
                     contract_size=1,
                 )
-            except ValueError as e:
-                cls._logger.trace(
-                    f"ValueError on {cls.exchange_name} by {symbol_info['symbol']}: {e}"
+            except Exception as e:
+                cls._logger.error(
+                    f"{type(e)} creating TickerInfoItem for element={symbol_info}: {e}"
                 )
 
         cls._tickers_info = tickers_info
@@ -38,7 +40,8 @@ class ExchangeInfo(IExchangeInfo):
     @classmethod
     async def _load_futures_exchange_info(cls, session: aiohttp.ClientSession) -> None:
         """Загружает информацию о бирже для фьючерсного рынка."""
-        contracts = await Client(session).futures_contracts("usdt")
+        client = Client(session, timeout=60, max_retries=5, retry_delay=0.5)
+        contracts = await client.futures_contracts("usdt")
         tickers_info: dict[str, TickerInfoItem] = {}
         for contract in contracts:
             try:
@@ -49,7 +52,7 @@ class ExchangeInfo(IExchangeInfo):
                     size_step=float(contract["quanto_multiplier"]),
                     contract_size=float(contract["quanto_multiplier"]),
                 )
-            except ValueError as e:
-                cls._logger.trace(f"ValueError on {cls.exchange_name} by {contract['name']}: {e}")
+            except Exception as e:
+                cls._logger.error(f"{type(e)} creating TickerInfoItem for element={contract}: {e}")
 
         cls._futures_tickers_info = tickers_info

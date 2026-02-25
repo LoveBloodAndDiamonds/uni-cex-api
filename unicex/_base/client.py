@@ -149,7 +149,7 @@ class BaseClient:
                 ) as response:
                     return await self._handle_response(response=response)
 
-            except (aiohttp.ServerTimeoutError, aiohttp.ConnectionTimeoutError) as e:
+            except (TimeoutError, aiohttp.ServerTimeoutError, aiohttp.ConnectionTimeoutError) as e:
                 errors.append(e)
                 self._logger.debug(
                     f"Attempt {attempt}/{self._max_retries} failed: {type(e)} -> {e}"

@@ -1,23 +1,39 @@
 import asyncio
 
-from unicex.bybit import UniWebsocketManager, UniClient
-from unicex.types import LiquidationDict
+from unicex.bybit import ExchangeInfo, UniWebsocketManager
+from unicex.types import PartialBookDepthDict
 
 
-async def callback(lq: list[LiquidationDict]) -> None:
-    """Выводит ликвидации в консоль."""
-    print(lq)
+async def callback(event: PartialBookDepthDict) -> None:
+    """Выводит top-20 из полного локального стакана."""
+    print(event["a"][:5])
 
 
 async def main() -> None:
-    """Запусти пример подписки на ликвидации Binance."""
-    c = await UniClient.create()
-    async with c:
-        t = await c.futures_tickers()
+    """Запускает пример подписки на Bybit partial book depth."""
+    await ExchangeInfo.start()
+
+    # await asyncio.sleep(10)
+
     manager = UniWebsocketManager()
-    ws = manager.liquidations(callback=callback, symbols=t)
+    ws = manager.futures_partial_book_depth(
+        callback=callback,
+        limit=50,
+        symbols=["CYBERUSDT"],
+    )
     await ws.start()
 
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+
+"""
+gate +
+okx +
+bybit говно, присылает diff
+binance +
+bitget +
+hyperliquid +
+aster +
+"""

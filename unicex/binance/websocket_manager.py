@@ -166,7 +166,7 @@ class WebsocketManager:
             `Websocket`: Объект для управления вебсокет соединением.
         """
         url = self._generate_stream_url(
-            type="depth" + f"@{update_speed}" if update_speed == "100ms" else "",
+            type="depth" + (f"@{update_speed}" if update_speed == "100ms" else ""),
             url=self._BASE_SPOT_URL,
             symbol=symbol,
             symbols=symbols,
@@ -377,7 +377,7 @@ class WebsocketManager:
             `Websocket`: Объект для управления вебсокет соединением.
         """
         url = self._generate_stream_url(
-            type=f"depth{levels}" + f"@{update_speed}" if update_speed else "",
+            type=f"depth{levels}" + (f"@{update_speed}" if update_speed else ""),
             url=self._BASE_SPOT_URL,
             symbol=symbol,
             symbols=symbols,
@@ -406,7 +406,7 @@ class WebsocketManager:
             `Websocket`: Объект для управления вебсокет соединением.
         """
         url = self._generate_stream_url(
-            type="depth" + f"@{update_speed}" if update_speed else "",
+            type="depth" + (f"@{update_speed}" if update_speed else ""),
             url=self._BASE_SPOT_URL,
             symbol=symbol,
             symbols=symbols,
@@ -672,7 +672,7 @@ class WebsocketManager:
             `Websocket`: Объект для управления вебсокет соединением.
         """
         url = self._generate_stream_url(
-            type=f"depth{levels}" + f"@{update_speed}" if update_speed else "",
+            type=f"depth{levels}" + (f"@{update_speed}" if update_speed else ""),
             url=self._BASE_FUTURES_URL,
             symbol=symbol,
             symbols=symbols,
@@ -701,7 +701,7 @@ class WebsocketManager:
             `Websocket`: Объект для управления вебсокет соединением.
         """
         url = self._generate_stream_url(
-            type="depth" + f"@{update_speed}" if update_speed else "",
+            type="depth" + (f"@{update_speed}" if update_speed else ""),
             url=self._BASE_FUTURES_URL,
             symbol=symbol,
             symbols=symbols,
@@ -724,7 +724,7 @@ class WebsocketManager:
             `Websocket`: Объект для управления вебсокет соединением.
         """
         url = self._generate_stream_url(
-            type="!markPrice" + f"@{update_speed}" if update_speed else "",
+            type="!markPrice" + (f"@{update_speed}" if update_speed else ""),
             url=self._BASE_FUTURES_URL,
         )
         return Websocket(callback=callback, url=url, **self._ws_kwargs)
@@ -750,7 +750,7 @@ class WebsocketManager:
             `Websocket`: Объект для управления вебсокет соединением.
         """
         url = self._generate_stream_url(
-            type="markPrice" + f"@{update_speed}" if update_speed else "",
+            type="markPrice" + (f"@{update_speed}" if update_speed else ""),
             url=self._BASE_FUTURES_URL,
             symbol=symbol,
             symbols=symbols,

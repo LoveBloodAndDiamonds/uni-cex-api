@@ -2,7 +2,7 @@ __all__ = ["IUniWebsocketManager"]
 
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable, Sequence
-from typing import Any, overload
+from typing import Any
 
 from loguru import logger as _logger
 
@@ -38,7 +38,9 @@ class IUniWebsocketManager(ABC):
         self._logger = logger or _logger
 
     def _make_wrapper(
-        self, adapter_func: Callable[[dict], Any], callback: CallbackType
+        self,
+        adapter_func: Callable[[dict], Any],
+        callback: CallbackType,
     ) -> CallbackType:
         """Создает обертку над callback, применяя адаптер к сырым сообщениям."""
 
@@ -49,7 +51,7 @@ class IUniWebsocketManager(ABC):
                 if isinstance(e, AdapterError):
                     if self._is_service_message(raw_msg):
                         return
-                self._logger.error(f"Failed to adapt message: {e}")
+                self._logger.error(f"{type(e)} while adapting message: {e}")
                 return
             if isinstance(adapted, list):
                 for item in adapted:
@@ -65,26 +67,6 @@ class IUniWebsocketManager(ABC):
         Переопределяется в каждом наследнике в связи с разным форматом входящих данных.
         """
         return False
-
-    @overload
-    def klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
 
     @abstractmethod
     def klines(
@@ -109,26 +91,6 @@ class IUniWebsocketManager(ABC):
         """
         ...
 
-    @overload
-    def futures_klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_klines(
-        self,
-        callback: CallbackType,
-        timeframe: Timeframe,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     @abstractmethod
     def futures_klines(
         self,
@@ -152,24 +114,6 @@ class IUniWebsocketManager(ABC):
         """
         ...
 
-    @overload
-    def trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     @abstractmethod
     def trades(
         self,
@@ -190,24 +134,6 @@ class IUniWebsocketManager(ABC):
             `Websocket`: Экземпляр вебсокета.
         """
         ...
-
-    @overload
-    def aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
 
     @abstractmethod
     def aggtrades(
@@ -230,24 +156,6 @@ class IUniWebsocketManager(ABC):
         """
         ...
 
-    @overload
-    def futures_trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_trades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     @abstractmethod
     def futures_trades(
         self,
@@ -269,24 +177,6 @@ class IUniWebsocketManager(ABC):
         """
         ...
 
-    @overload
-    def futures_aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: str,
-        symbols: None = None,
-    ) -> Websocket: ...
-
-    @overload
-    def futures_aggtrades(
-        self,
-        callback: CallbackType,
-        *,
-        symbol: None = None,
-        symbols: Sequence[str],
-    ) -> Websocket: ...
-
     @abstractmethod
     def futures_aggtrades(
         self,
@@ -298,6 +188,50 @@ class IUniWebsocketManager(ABC):
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Должен быть указан либо `symbol`, либо `symbols`.
+
+        Возвращает:
+            `Websocket`: Экземпляр вебсокета.
+        """
+        ...
+
+    @abstractmethod
+    def futures_best_bid_ask(
+        self,
+        callback: CallbackType,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+    ) -> Websocket:
+        """Открывает стрим лучших бидов и асков с унификацией сообщений.
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Должен быть указан либо `symbol`, либо `symbols`.
+
+        Возвращает:
+            `Websocket`: Экземпляр вебсокета.
+        """
+        ...
+
+    @abstractmethod
+    def futures_partial_book_depth(
+        self,
+        callback: CallbackType,
+        limit: int,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+    ) -> Websocket:
+        """Открывает поток частичного стакана глубиной limit с унификацией сообщений.
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            limit (`int`): Лимит лучших асков и бидов в одном сообщении.
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 

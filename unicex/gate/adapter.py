@@ -6,9 +6,11 @@ from typing import Any
 __all__ = ["Adapter"]
 
 from unicex.types import (
+    BestBidAskDict,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
+    PartialBookDepthDict,
     TickerDailyDict,
     TickerDailyItem,
     TradeDict,
@@ -283,9 +285,66 @@ class Adapter:
         ]
 
     @staticmethod
+    def futures_best_bid_ask_message(raw_msg: Any) -> list[BestBidAskDict]:
+        """Преобразует вебсокет-сообщение с лучшими бидом и аском в унифицированный формат.
+
+        Параметры:
+            raw_msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[BestBidAskDict]: Список обновлений лучших бидов и асков в унифицированном формате.
+        """
+        result = raw_msg["result"]
+        symbol = result["s"]
+        contract_size = Adapter._get_contract_size(symbol)
+        print(contract_size)
+        bid_price = float(result["b"]) if result["b"] != "" else 0.0
+        ask_price = float(result["a"]) if result["a"] != "" else 0.0
+        return [
+            BestBidAskDict(
+                s=symbol,
+                t=int(result["t"]),
+                u=int(result["u"]),
+                b=bid_price,
+                B=float(result["B"]) * contract_size,
+                a=ask_price,
+                A=float(result["A"]) * contract_size,
+            )
+        ]
+
+    @staticmethod
+    def futures_partial_book_depth_message(raw_msg: Any) -> list[PartialBookDepthDict]:
+        """Преобразует вебсокет-сообщение с частичным стаканом в унифицированный формат.
+
+        Параметры:
+            raw_msg (Any): Сырое сообщение с вебсокета.
+
+        Возвращает:
+            list[PartialBookDepthDict]: Список обновлений стакана в унифицированном формате.
+        """
+        result = raw_msg["result"]
+        symbol = result["contract"]
+        contract_size = Adapter._get_contract_size(symbol)
+        bids = result.get("bids", [])
+        asks = result.get("asks", [])
+        update_id = result.get("id", result.get("u"))
+        if update_id is None:
+            raise ValueError("Field `id` is missing in futures.order_book message")
+        return [
+            PartialBookDepthDict(
+                s=symbol,
+                t=int(result["t"]),
+                u=int(update_id),
+                b=[(float(item["p"]), float(item["s"]) * contract_size) for item in bids],
+                a=[(float(item["p"]), float(item["s"]) * contract_size) for item in asks],
+            )
+        ]
+
+    @staticmethod
     def _get_contract_size(symbol: str) -> float:
         """Возвращает размер контракта для указанного символа тикера."""
         try:
             return ExchangeInfo.get_futures_ticker_info(symbol)["contract_size"] or 1
         except:  # noqa
+            print("no")
             return 1

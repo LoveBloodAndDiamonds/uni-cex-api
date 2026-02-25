@@ -3,9 +3,11 @@ __all__ = ["Adapter"]
 import time
 
 from unicex.types import (
+    BestBidAskDict,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
+    PartialBookDepthDict,
     TickerDailyDict,
     TickerDailyItem,
     TradeDict,
@@ -285,3 +287,48 @@ class Adapter:
             )
 
         return result
+
+    @staticmethod
+    def best_bid_ask_message(raw_msg: dict, resolve_symbols: bool = True) -> list[BestBidAskDict]:
+        """Преобразует сырое websocket-сообщение с лучшим бидом/аском в унифицированный формат."""
+        data = raw_msg["data"]
+        best_bid = data["bbo"][0]
+        best_ask = data["bbo"][1]
+
+        bid_price = float(best_bid["px"]) if best_bid else 0.0
+        bid_size = float(best_bid["sz"]) if best_bid else 0.0
+        ask_price = float(best_ask["px"]) if best_ask else 0.0
+        ask_size = float(best_ask["sz"]) if best_ask else 0.0
+
+        return [
+            BestBidAskDict(
+                s=Adapter._resolve_spot_symbol(str(data["coin"]), resolve_symbols),
+                t=int(data["time"]),
+                u=int(data["time"]),
+                b=bid_price,
+                B=bid_size,
+                a=ask_price,
+                A=ask_size,
+            )
+        ]
+
+    @staticmethod
+    def partial_book_depth_message(
+        raw_msg: dict,
+        limit: int,
+        resolve_symbols: bool = True,
+    ) -> list[PartialBookDepthDict]:
+        """Преобразует сырое websocket-сообщение со стаканом в унифицированный формат."""
+        data = raw_msg["data"]
+        bids = data["levels"][0][:limit]
+        asks = data["levels"][1][:limit]
+
+        return [
+            PartialBookDepthDict(
+                s=Adapter._resolve_spot_symbol(str(data["coin"]), resolve_symbols),
+                t=int(data["time"]),
+                u=int(data["time"]),
+                b=[(float(level["px"]), float(level["sz"])) for level in bids],
+                a=[(float(level["px"]), float(level["sz"])) for level in asks],
+            )
+        ]

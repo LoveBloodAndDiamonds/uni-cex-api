@@ -1,12 +1,15 @@
 __all__ = ["Adapter"]
 
+from collections.abc import Callable
 from typing import Any
 
 from unicex.types import (
+    BestBidAskDict,
     KlineDict,
     LiquidationDict,
     OpenInterestDict,
     OpenInterestItem,
+    PartialBookDepthDict,
     TickerDailyDict,
     TickerDailyItem,
     TradeDict,
@@ -189,7 +192,7 @@ class Adapter:
         """Преобразует вебсокет-сообщение с данными о ликвидациях в унифицированный формат.
 
         Параметры:
-        raw_msg (`Any`): Сырое сообщение из вебсокета Bybit.
+          raw_msg (`Any`): Сырое сообщение из вебсокета Bybit.
 
         Возвращает:
           `list[LiquidationDict]`: Список ликвидаций в унифицированном формате.
@@ -207,3 +210,79 @@ class Adapter:
                 key=lambda x: int(x["T"]),
             )
         ]
+
+    @staticmethod
+    def futures_best_bid_ask_message(raw_msg: Any) -> list[BestBidAskDict]:
+        """Преобразует вебсокет-сообщение с лучшими бидом и аском в унифицированный формат.
+
+        Параметры:
+          raw_msg (`Any`): Сырое сообщение из вебсокета Bybit.
+
+        Возвращает:
+          `list[BestBidAskDict]`: Список обновлений лучших бидов и асков в унифицированном формате.
+        """
+        data = raw_msg["data"]
+        bid = data["b"][0]
+        ask = data["a"][0]
+        return [
+            BestBidAskDict(
+                s=data["s"],
+                t=int(raw_msg["ts"]),
+                u=int(data["u"]),
+                b=float(bid[0]),
+                B=float(bid[1]),
+                a=float(ask[0]),
+                A=float(ask[1]),
+            )
+        ]
+
+    @staticmethod
+    def futures_partial_book_depth_message() -> Callable[[Any], list[PartialBookDepthDict]]:
+        """Создает обертку для сборки полного стакана Bybit из snapshot и delta.
+
+        Возвращает:
+          `Callable[[Any], list[PartialBookDepthDict]]`: Функция адаптации одного raw-сообщения.
+        """
+        state: dict[str, dict[str, dict[float, float]]] = {}
+
+        @catch_adapter_errors
+        def _wrapper(raw_msg: Any) -> list[PartialBookDepthDict]:
+            """Преобразует одно сообщение orderbook с учетом накопленного состояния."""
+            data = raw_msg["data"]
+            symbol = data["s"]
+
+            symbol_state = state.setdefault(symbol, {"b": {}, "a": {}})
+            bids_state = symbol_state["b"]
+            asks_state = symbol_state["a"]
+
+            if raw_msg.get("type") == "snapshot":
+                bids_state.clear()
+                asks_state.clear()
+
+            for raw_price, raw_quantity in data["b"]:
+                price = float(raw_price)
+                quantity = float(raw_quantity)
+                if quantity == 0.0:
+                    bids_state.pop(price, None)
+                else:
+                    bids_state[price] = quantity
+
+            for raw_price, raw_quantity in data["a"]:
+                price = float(raw_price)
+                quantity = float(raw_quantity)
+                if quantity == 0.0:
+                    asks_state.pop(price, None)
+                else:
+                    asks_state[price] = quantity
+
+            return [
+                PartialBookDepthDict(
+                    s=symbol,
+                    t=int(raw_msg["ts"]),
+                    u=int(data["u"]),
+                    b=sorted(bids_state.items(), key=lambda item: item[0], reverse=True),
+                    a=sorted(asks_state.items(), key=lambda item: item[0]),
+                )
+            ]
+
+        return _wrapper

@@ -314,42 +314,73 @@ class WebsocketManager:
             **self._ws_kwargs,
         )
 
-    def active_asset_ctx(self, callback: CallbackType, coin: str) -> Websocket:
+    def active_asset_ctx(
+        self,
+        callback: CallbackType,
+        coin: str | None = None,
+        coins: list[str] | None = None,
+    ) -> Websocket:
         """Создает вебсокет для получения контекста активного актива.
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            coin (`str`): Символ монеты.
+            coin (`str | None`): Символ монеты.
+            coins (`list[str] | None`): Список символов монет для мультиплекс подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = self._create_subscription_message("activeAssetCtx", coin=coin)
+        if coin and coins:
+            raise ValueError("Parameters coin and coins cannot be used together")
+        if not (coin or coins):
+            raise ValueError("Either coin or coins must be provided")
+        if coin:
+            coins = [coin]
+
+        subscription_messages = [
+            self._create_subscription_message("activeAssetCtx", coin=coin)
+            for coin in coins  # type: ignore
+        ]
         return Websocket(
             callback=callback,
             url=self._URL,
-            subscription_messages=[subscription_message],
+            subscription_messages=subscription_messages,
             **self._ws_kwargs,
         )
 
-    def active_asset_data(self, callback: CallbackType, user: str, coin: str) -> Websocket:
+    def active_asset_data(
+        self,
+        callback: CallbackType,
+        user: str,
+        coin: str | None = None,
+        coins: list[str] | None = None,
+    ) -> Websocket:
         """Создает вебсокет для получения данных активного актива пользователя (только Perps).
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             user (`str`): Адрес пользователя.
-            coin (`str`): Символ монеты.
+            coin (`str | None`): Символ монеты.
+            coins (`list[str] | None`): Список символов монет для мультиплекс подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = self._create_subscription_message(
-            "activeAssetData", user=user, coin=coin
-        )
+        if coin and coins:
+            raise ValueError("Parameters coin and coins cannot be used together")
+        if not (coin or coins):
+            raise ValueError("Either coin or coins must be provided")
+        if coin:
+            coins = [coin]
+
+        subscription_messages = [
+            self._create_subscription_message("activeAssetData", user=user, coin=coin)
+            for coin in coins  # type: ignore
+        ]
         return Websocket(
             callback=callback,
             url=self._URL,
-            subscription_messages=[subscription_message],
+            subscription_messages=subscription_messages,
             **self._ws_kwargs,
         )
 
@@ -389,20 +420,36 @@ class WebsocketManager:
             **self._ws_kwargs,
         )
 
-    def bbo(self, callback: CallbackType, coin: str) -> Websocket:
+    def bbo(
+        self,
+        callback: CallbackType,
+        coin: str | None = None,
+        coins: list[str] | None = None,
+    ) -> Websocket:
         """Создает вебсокет для получения лучшего бида/аска.
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            coin (`str`): Символ монеты.
+            coin (`str | None`): Символ монеты.
+            coins (`list[str] | None`): Список символов монет для мультиплекс подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = self._create_subscription_message("bbo", coin=coin)
+        if coin and coins:
+            raise ValueError("Parameters coin and coins cannot be used together")
+        if not (coin or coins):
+            raise ValueError("Either coin or coins must be provided")
+        if coin:
+            coins = [coin]
+
+        subscription_messages = [
+            self._create_subscription_message("bbo", coin=coin)
+            for coin in coins  # type: ignore
+        ]
         return Websocket(
             callback=callback,
             url=self._URL,
-            subscription_messages=[subscription_message],
+            subscription_messages=subscription_messages,
             **self._ws_kwargs,
         )
