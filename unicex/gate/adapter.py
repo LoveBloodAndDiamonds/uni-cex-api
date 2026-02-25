@@ -323,7 +323,7 @@ class Adapter:
             list[PartialBookDepthDict]: Список обновлений стакана в унифицированном формате.
         """
         result = raw_msg["result"]
-        symbol = result["s"]
+        symbol = result["contract"]
         contract_size = Adapter._get_contract_size(symbol)
         bids = result.get("bids", [])
         asks = result.get("asks", [])

@@ -1,38 +1,26 @@
 import asyncio
 
-from unicex.bybit import UniWebsocketManager, UniClient  # type: ignore # noqa
-from unicex.types import PartialBookDepthDict, BestBidAskDict  # type: ignore # noqa
+from unicex.bybit import UniWebsocketManager, UniClient, ExchangeInfo
+from unicex.types import PartialBookDepthDict
 from time import time
 
 
-# async def callback(event: PartialBookDepthDict) -> None:
-#     """Выводит ликвидации в консоль."""
-#     print(int(time()), len(event["b"]))
-
-
-# async def main() -> None:
-#     """Запусти пример подписки на ликвидации Binance."""
-#     t = ["BTCUSDT"]
-#     manager = UniWebsocketManager()
-#     ws = manager.futures_partial_book_depth(
-#         callback=callback,
-#         symbols=t,
-#         limit=50,
-#     )
-#     await ws.start()
-
-
-async def callback(event: BestBidAskDict) -> None:
+async def callback(event: PartialBookDepthDict) -> None:
     """Выводит ликвидации в консоль."""
-    print(int(time()), event)
+    print(event["a"])
 
 
 async def main() -> None:
     """Запусти пример подписки на ликвидации Binance."""
-    t = ["BTCUSDT"]
+    await ExchangeInfo.start()
+
+    await asyncio.sleep(10)
+
+    t = ["CYBERUSDT"]
     manager = UniWebsocketManager()
-    ws = manager.futures_best_bid_ask(
+    ws = manager.futures_partial_book_depth(
         callback=callback,
+        limit=123,
         symbols=t,
     )
     await ws.start()
@@ -40,3 +28,14 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+
+"""
+gate +
+okx +
+bybit говно, присылает diff
+binance +
+bitget +
+hyperliquid +
+aster +
+"""
