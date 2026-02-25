@@ -1,5 +1,6 @@
 __all__ = ["Adapter"]
 
+from collections.abc import Callable
 from typing import Any
 
 from unicex.types import (
@@ -236,22 +237,52 @@ class Adapter:
         ]
 
     @staticmethod
-    def futures_partial_book_depth_message(raw_msg: Any) -> list[PartialBookDepthDict]:
-        """Преобразует вебсокет-сообщение с частичным стаканом в унифицированный формат.
-
-        Параметры:
-          raw_msg (`Any`): Сырое сообщение из вебсокета Bybit.
+    def futures_partial_book_depth_message() -> Callable[[Any], list[PartialBookDepthDict]]:
+        """Создает обертку для сборки полного стакана Bybit из snapshot и delta.
 
         Возвращает:
-          `list[PartialBookDepthDict]`: Список обновлений стакана в унифицированном формате.
+          `Callable[[Any], list[PartialBookDepthDict]]`: Функция адаптации одного raw-сообщения.
         """
-        data = raw_msg["data"]
-        return [
-            PartialBookDepthDict(
-                s=data["s"],
-                t=int(raw_msg["ts"]),
-                u=int(data["u"]),
-                b=[(float(price), float(quantity)) for price, quantity in data["b"]],
-                a=[(float(price), float(quantity)) for price, quantity in data["a"]],
-            )
-        ]
+        state: dict[str, dict[str, dict[float, float]]] = {}
+
+        @catch_adapter_errors
+        def _wrapper(raw_msg: Any) -> list[PartialBookDepthDict]:
+            """Преобразует одно сообщение orderbook с учетом накопленного состояния."""
+            data = raw_msg["data"]
+            symbol = data["s"]
+
+            symbol_state = state.setdefault(symbol, {"b": {}, "a": {}})
+            bids_state = symbol_state["b"]
+            asks_state = symbol_state["a"]
+
+            if raw_msg.get("type") == "snapshot":
+                bids_state.clear()
+                asks_state.clear()
+
+            for raw_price, raw_quantity in data["b"]:
+                price = float(raw_price)
+                quantity = float(raw_quantity)
+                if quantity == 0.0:
+                    bids_state.pop(price, None)
+                else:
+                    bids_state[price] = quantity
+
+            for raw_price, raw_quantity in data["a"]:
+                price = float(raw_price)
+                quantity = float(raw_quantity)
+                if quantity == 0.0:
+                    asks_state.pop(price, None)
+                else:
+                    asks_state[price] = quantity
+
+            return [
+                PartialBookDepthDict(
+                    s=symbol,
+                    t=int(raw_msg["ts"]),
+                    u=int(data["u"]),
+                    b=sorted(bids_state.items(), key=lambda item: item[0], reverse=True),
+                    a=sorted(asks_state.items(), key=lambda item: item[0]),
+                )
+            ]
+
+        return _wrapper

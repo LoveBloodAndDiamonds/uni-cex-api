@@ -263,8 +263,10 @@ class UniWebsocketManager(IUniWebsocketManager):
         if limit not in allowed_levels:
             raise ValueError("Parameter `limit` must be one of: 1, 50, 200, 1000")
 
+        wrapped_adapter = self._adapter.futures_partial_book_depth_message()
+
         return self._websocket_manager.orderbook(
-            callback=self._make_wrapper(self._adapter.futures_partial_book_depth_message, callback),
+            callback=self._make_wrapper(wrapped_adapter, callback),
             category="linear",
             depth=limit,  # type: ignore
             symbol=symbol,

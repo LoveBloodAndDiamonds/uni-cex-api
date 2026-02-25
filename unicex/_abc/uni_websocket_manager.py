@@ -51,7 +51,7 @@ class IUniWebsocketManager(ABC):
                 if isinstance(e, AdapterError):
                     if self._is_service_message(raw_msg):
                         return
-                self._logger.error(f"Failed to adapt message: {e}")
+                self._logger.error(f"{type(e)} while adapting message: {e}")
                 return
             if isinstance(adapted, list):
                 for item in adapted:

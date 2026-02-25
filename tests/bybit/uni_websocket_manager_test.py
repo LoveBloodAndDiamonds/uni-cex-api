@@ -1,27 +1,25 @@
 import asyncio
 
-from unicex.bybit import UniWebsocketManager, UniClient, ExchangeInfo
+from unicex.bybit import ExchangeInfo, UniWebsocketManager
 from unicex.types import PartialBookDepthDict
-from time import time
 
 
 async def callback(event: PartialBookDepthDict) -> None:
-    """Выводит ликвидации в консоль."""
-    print(event["a"])
+    """Выводит top-20 из полного локального стакана."""
+    print(event["a"][:5])
 
 
 async def main() -> None:
-    """Запусти пример подписки на ликвидации Binance."""
+    """Запускает пример подписки на Bybit partial book depth."""
     await ExchangeInfo.start()
 
-    await asyncio.sleep(10)
+    # await asyncio.sleep(10)
 
-    t = ["CYBERUSDT"]
     manager = UniWebsocketManager()
     ws = manager.futures_partial_book_depth(
         callback=callback,
-        limit=123,
-        symbols=t,
+        limit=50,
+        symbols=["CYBERUSDT"],
     )
     await ws.start()
 
