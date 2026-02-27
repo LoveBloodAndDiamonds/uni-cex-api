@@ -84,18 +84,22 @@ class Adapter:
     def futures_ticker_24hr(raw_data: dict) -> TickerDailyDict:
         """Преобразует статистику 24ч в унифицированный формат.
 
-        # NOTE: Обратите внимание, изменение цены в случае с OKX возвращается относительно открытия 1 day свечи.
+        Обратите внимание, изменение цены в случае с OKX возвращается относительно открытия 1 day свечи.
         """
-        return {
-            item["instId"]: TickerDailyItem(
-                p=round(
-                    (float(item["last"]) - float(item["open24h"])) / float(item["open24h"]) * 100, 2
-                ),
-                v=float(item["volCcy24h"]),
-                q=float(item["volCcy24h"]) * float(item["last"]),
-            )
-            for item in raw_data["data"]
-        }
+        result = {}
+        for item in raw_data["data"]:
+            try:
+                last = float(item["last"])
+                open_24h = float(item["open24h"])
+                vol_ccy_24h = float(item["volCcy24h"])
+                result[item["instId"]] = TickerDailyItem(
+                    p=round((last - open_24h) / open_24h * 100, 2),
+                    v=vol_ccy_24h,
+                    q=vol_ccy_24h * last,
+                )
+            except (ValueError, TypeError, KeyError, ZeroDivisionError):
+                continue
+        return result
 
     @staticmethod
     def last_price(raw_data: dict) -> dict[str, float]:
