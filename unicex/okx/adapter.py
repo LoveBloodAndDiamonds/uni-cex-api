@@ -4,6 +4,7 @@ __all__ = ["Adapter"]
 from typing import Any
 
 from unicex.types import (
+    BestBidAskDict,
     BestBidAskItem,
     KlineDict,
     OpenInterestDict,
@@ -143,6 +144,29 @@ class Adapter:
                 t=int(item["ts"]),
                 v=float(item["oiCcy"]),
                 u="coins",
+            )
+            for item in raw_data["data"]
+        }
+
+    @staticmethod
+    def futures_best_bid_ask(raw_data: dict) -> BestBidAskDict:
+        """Преобразует сырой ответ, в котором содержатся данные о лучших bid/ask фьючерсов в унифицированный формат.
+
+        Параметры:
+            raw_data (dict): Сырой ответ с биржи.
+
+        Возвращает:
+            BestBidAskDict: Словарь, где ключ - тикер, а значение - лучший бид и аск.
+        """
+        return {
+            item["instId"]: BestBidAskItem(
+                s=item["instId"],
+                t=int(item["ts"]),
+                u=0,  # REST endpoint не возвращает update id
+                b=float(item["bidPx"]),
+                B=float(item["bidSz"]) * Adapter._get_contract_size(item["instId"]),
+                a=float(item["askPx"]),
+                A=float(item["askSz"]) * Adapter._get_contract_size(item["instId"]),
             )
             for item in raw_data["data"]
         }
