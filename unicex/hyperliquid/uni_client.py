@@ -342,4 +342,7 @@ class UniClient(IUniClient[Client]):
             асков для этого тикера. Иначе - словарь, в котором ключ - тикер, а значение - словарь
             с лучшим бидом и аском.
         """
-        raise NotImplementedError("Method `futures_best_bid_ask` will be implemented later")
+        raise NotImplementedError(
+            "Method `futures_best_bid_ask` cannot be implemented for Hyperliquid: "
+            "no REST endpoint with best bid/ask and sizes."
+        )
