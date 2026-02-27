@@ -6,6 +6,7 @@ from typing import Any
 __all__ = ["Adapter"]
 
 from unicex.types import (
+    BestBidAskDict,
     BestBidAskItem,
     KlineDict,
     OpenInterestDict,
@@ -185,6 +186,29 @@ class Adapter:
         }
 
     @staticmethod
+    def futures_best_bid_ask(raw_data: list[dict]) -> BestBidAskDict:
+        """Преобразует сырой ответ, в котором содержатся данные о лучших bid/ask фьючерсов в унифицированный формат.
+
+        Параметры:
+            raw_data (list[dict]): Сырой ответ с биржи.
+
+        Возвращает:
+            BestBidAskDict: Словарь, где ключ - тикер, а значение - лучший бид и аск.
+        """
+        return {
+            item["contract"]: BestBidAskItem(
+                s=item["contract"],
+                t=int(time.time() * 1000),  # REST endpoint не возвращает event time
+                u=0,  # REST endpoint не возвращает update id
+                b=float(item["highest_bid"]),
+                B=float(item["highest_size"]) * Adapter._get_contract_size(item["contract"]),
+                a=float(item["lowest_ask"]),
+                A=float(item["lowest_size"]) * Adapter._get_contract_size(item["contract"]),
+            )
+            for item in raw_data
+        }
+
+    @staticmethod
     def klines_message(raw_msg: Any) -> list[KlineDict]:
         """Преобразует вебсокет-сообщение со свечами в унифицированный формат.
 
@@ -346,5 +370,4 @@ class Adapter:
         try:
             return ExchangeInfo.get_futures_ticker_info(symbol)["contract_size"] or 1
         except:  # noqa
-            print("no")
             return 1
