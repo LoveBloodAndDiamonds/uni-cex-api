@@ -4,7 +4,7 @@ __all__ = ["Adapter"]
 from typing import Any
 
 from unicex.types import (
-    BestBidAskDict,
+    BestBidAskItem,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
@@ -195,7 +195,7 @@ class Adapter:
         ]
 
     @staticmethod
-    def futures_best_bid_ask_message(raw_msg: Any) -> list[BestBidAskDict]:
+    def futures_best_bid_ask_message(raw_msg: Any) -> list[BestBidAskItem]:
         """Преобразует вебсокет-сообщение с лучшими бидом и аском в унифицированный формат.
 
         Параметры:
@@ -219,7 +219,7 @@ class Adapter:
         ask_size = float(best_ask[1]) if best_ask else 0.0
 
         return [
-            BestBidAskDict(
+            BestBidAskItem(
                 s=str(raw_msg["arg"]["instId"]),
                 t=int(data["ts"]),
                 u=int(data["seqId"]),

@@ -1,7 +1,7 @@
 from typing import Any
 
 from unicex.types import (
-    BestBidAskDict,
+    BestBidAskItem,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
@@ -190,7 +190,7 @@ class Adapter:
         }
 
     @staticmethod
-    def futures_best_bid_ask_message(raw_msg: Any) -> list[BestBidAskDict]:
+    def futures_best_bid_ask_message(raw_msg: Any) -> list[BestBidAskItem]:
         """Преобразует вебсокет-сообщение с лучшими бидом и аском в унифицированный формат.
 
         Параметры:
@@ -204,7 +204,7 @@ class Adapter:
         best_bid = data["bids"][0]
         best_ask = data["asks"][0]
         return [
-            BestBidAskDict(
+            BestBidAskItem(
                 s=arg["instId"],
                 t=int(data["ts"]),
                 u=int(data["seq"]),
