@@ -1,17 +1,18 @@
 import asyncio
 
-from unicex.bybit import UniWebsocketManager
-
-
-async def callback(msg) -> None:
-    print(msg)
+from unicex.bybit import UniClient
 
 
 async def main() -> None:
     """Main entry point for the application."""
-    m = UniWebsocketManager()
-    s = m.aggtrades(symbol="BTCUSDT", callback=callback)
-    await s.start()
+    c = await UniClient.create()
+
+    async with c:
+        r = await c.futures_best_bid_ask()
+
+        from pprint import pp
+
+        pp(r)
 
 
 if __name__ == "__main__":

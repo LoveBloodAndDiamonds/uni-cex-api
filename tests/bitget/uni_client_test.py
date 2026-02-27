@@ -1,6 +1,6 @@
 import asyncio
 
-from unicex.bybit import UniClient
+from unicex.bitget import UniClient
 
 
 async def main() -> None:
@@ -8,13 +8,11 @@ async def main() -> None:
     c = await UniClient.create()
 
     async with c:
-        t = await c.ticker_24hr()
+        r = await c.futures_best_bid_ask()
 
-    top_50_symbols = [
-        symbol for symbol, _ in sorted(t.items(), key=lambda item: item[1]["q"], reverse=True)[:50]
-    ]
+        from pprint import pp
 
-    print(top_50_symbols)
+        pp(r)
 
 
 if __name__ == "__main__":

@@ -8,8 +8,11 @@ async def main() -> None:
     c = await UniClient.create()
 
     async with c:
-        r = await c.tickers()
-        print(len(r))
+        r = await c.futures_best_bid_ask("BTCUSDT")
+
+        from pprint import pp
+
+        pp(r)
 
 
 if __name__ == "__main__":
