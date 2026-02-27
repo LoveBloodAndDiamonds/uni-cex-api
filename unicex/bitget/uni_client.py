@@ -204,6 +204,15 @@ class UniClient(IUniClient[Client]):
         adapted_data = Adapter.open_interest(raw_data)
         return adapted_data[symbol] if symbol else adapted_data
 
+    @overload
+    async def futures_best_bid_ask(self, symbol: str) -> BestBidAskItem: ...
+
+    @overload
+    async def futures_best_bid_ask(self, symbol: None) -> BestBidAskDict: ...
+
+    @overload
+    async def futures_best_bid_ask(self) -> BestBidAskDict: ...
+
     async def futures_best_bid_ask(
         self, symbol: str | None = None
     ) -> BestBidAskItem | BestBidAskDict:
@@ -217,4 +226,6 @@ class UniClient(IUniClient[Client]):
             асков для этого тикера. Иначе - словарь, в котором ключ - тикер, а значение - словарь
             с лучшим бидом и аском.
         """
-        raise NotImplementedError("Method `futures_best_bid_ask` will be implemented later")
+        raw_data = await self._client.futures_get_all_tickers("USDT-FUTURES")
+        adapted_data = Adapter.futures_best_bid_ask(raw_data)
+        return adapted_data[symbol] if symbol else adapted_data

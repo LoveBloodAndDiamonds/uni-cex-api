@@ -8,7 +8,7 @@ async def main() -> None:
     c = await UniClient.create()
 
     async with c:
-        r = await c.futures_best_bid_ask()
+        r = await c.futures_best_bid_ask("BTCUSDT")
 
         from pprint import pp
 

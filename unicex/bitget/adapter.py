@@ -1,6 +1,7 @@
 from typing import Any
 
 from unicex.types import (
+    BestBidAskDict,
     BestBidAskItem,
     KlineDict,
     OpenInterestDict,
@@ -187,6 +188,29 @@ class Adapter:
                 u="coins",
             )
             for i in raw_data["data"]
+        }
+
+    @staticmethod
+    def futures_best_bid_ask(raw_data: Any) -> BestBidAskDict:
+        """Преобразует сырой ответ, в котором содержатся данные о лучших bid/ask фьючерсов в унифицированный формат.
+
+        Параметры:
+            raw_data (Any): Сырой ответ с биржи.
+
+        Возвращает:
+            BestBidAskDict: Словарь, где ключ - тикер, а значение - лучший бид и аск.
+        """
+        return {
+            item["symbol"]: BestBidAskItem(
+                s=item["symbol"],
+                t=int(item["ts"]),
+                u=0,  # REST endpoint не возвращает update id
+                b=float(item["bidPr"]),
+                B=float(item["bidSz"]),
+                a=float(item["askPr"]),
+                A=float(item["askSz"]),
+            )
+            for item in raw_data["data"]
         }
 
     @staticmethod
