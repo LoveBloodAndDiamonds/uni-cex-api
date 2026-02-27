@@ -5,7 +5,13 @@ from typing import overload
 
 from unicex._abc import IUniClient
 from unicex.enums import Exchange, MarketType, Timeframe
-from unicex.types import KlineDict, OpenInterestItem, TickerDailyDict
+from unicex.types import (
+    BestBidAskDict,
+    BestBidAskItem,
+    KlineDict,
+    OpenInterestItem,
+    TickerDailyDict,
+)
 
 from .adapter import Adapter
 from .client import Client
@@ -186,3 +192,31 @@ class UniClient(IUniClient[Client]):
             raise ValueError("Symbol is required for binance open interest")
         raw_data = await self._client.open_interest(symbol=symbol)
         return Adapter.open_interest(raw_data)
+
+    @overload
+    async def futures_best_bid_ask(self, symbol: str) -> BestBidAskItem: ...
+
+    @overload
+    async def futures_best_bid_ask(self, symbol: None) -> BestBidAskDict: ...
+
+    @overload
+    async def futures_best_bid_ask(self) -> BestBidAskDict: ...
+
+    async def futures_best_bid_ask(
+        self, symbol: str | None = None
+    ) -> BestBidAskItem | BestBidAskDict:
+        """Возвращает лучший бид и аск для тикера или всех тикеров, если тикер не указан.
+
+        Параметры:
+            symbol (`str | None`): Название тикера (Опционально).
+
+        Возвращает:
+            `BestBidAskItem | BestBidAskDict`: Если тикер передан - словарь с лучшим бидом и
+            асков для этого тикера. Иначе - словарь, в котором ключ - тикер, а значение - словарь
+            с лучшим бидом и аском.
+        """
+        raw_data = await self._client.futures_ticker_book_ticker(symbol=symbol)
+        adapted_data = Adapter.futures_best_bid_ask(
+            raw_data if isinstance(raw_data, list) else [raw_data]
+        )
+        return adapted_data[symbol] if symbol else adapted_data

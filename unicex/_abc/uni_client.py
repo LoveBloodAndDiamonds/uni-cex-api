@@ -8,7 +8,15 @@ import aiohttp
 
 from unicex._base import BaseClient
 from unicex.enums import Timeframe
-from unicex.types import KlineDict, LoggerLike, OpenInterestDict, OpenInterestItem, TickerDailyDict
+from unicex.types import (
+    BestBidAskDict,
+    BestBidAskItem,
+    KlineDict,
+    LoggerLike,
+    OpenInterestDict,
+    OpenInterestItem,
+    TickerDailyDict,
+)
 from unicex.utils import batched_list
 
 TClient = TypeVar("TClient", bound="BaseClient")
@@ -355,5 +363,30 @@ class IUniClient(ABC, Generic[TClient]):
             `OpenInterestItem | OpenInterestDict`: Если тикер передан - словарь со временем и объемом
                 открытого интереса в монетах. Если нет передан - то словарь, в котором ключ - тикер,
                 а значение - словарь с временем и объемом открытого интереса в монетах.
+        """
+        ...
+
+    @overload
+    async def futures_best_bid_ask(self, symbol: str) -> BestBidAskItem: ...
+
+    @overload
+    async def futures_best_bid_ask(self, symbol: None) -> BestBidAskDict: ...
+
+    @overload
+    async def futures_best_bid_ask(self) -> BestBidAskDict: ...
+
+    @abstractmethod
+    async def futures_best_bid_ask(
+        self, symbol: str | None = None
+    ) -> BestBidAskItem | BestBidAskDict:
+        """Возвращает лучший бид и аск для тикера или всех тикеров, если тикер не указан.
+
+        Параметры:
+            symbol (`str | None`): Название тикера (Опционально).
+
+        Возвращает:
+            `BestBidAskItem | BestBidAskDict`: Если тикер передан - словарь с лучшим бидом и
+            асков для этого тикера. Иначе - словарь, в котором ключ - тикер, а значение - словарь
+            с лучшим бидом и аском.
         """
         ...

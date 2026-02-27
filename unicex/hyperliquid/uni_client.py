@@ -6,7 +6,15 @@ import aiohttp
 
 from unicex._abc import IUniClient
 from unicex.enums import Exchange, MarketType, Timeframe
-from unicex.types import KlineDict, LoggerLike, OpenInterestDict, OpenInterestItem, TickerDailyDict
+from unicex.types import (
+    BestBidAskDict,
+    BestBidAskItem,
+    KlineDict,
+    LoggerLike,
+    OpenInterestDict,
+    OpenInterestItem,
+    TickerDailyDict,
+)
 from unicex.utils import batched_list
 
 from .adapter import Adapter
@@ -320,3 +328,21 @@ class UniClient(IUniClient[Client]):
         raw_data = await self._client.perp_meta_and_asset_contexts()
         adapted_data = Adapter.open_interest(raw_data)
         return adapted_data[symbol] if symbol else adapted_data
+
+    async def futures_best_bid_ask(
+        self, symbol: str | None = None
+    ) -> BestBidAskItem | BestBidAskDict:
+        """Возвращает лучший бид и аск для тикера или всех тикеров, если тикер не указан.
+
+        Параметры:
+            symbol (`str | None`): Название тикера (Опционально).
+
+        Возвращает:
+            `BestBidAskItem | BestBidAskDict`: Если тикер передан - словарь с лучшим бидом и
+            асков для этого тикера. Иначе - словарь, в котором ключ - тикер, а значение - словарь
+            с лучшим бидом и аском.
+        """
+        raise NotImplementedError(
+            "Method `futures_best_bid_ask` cannot be implemented for Hyperliquid: "
+            "no REST endpoint with best bid/ask and sizes."
+        )

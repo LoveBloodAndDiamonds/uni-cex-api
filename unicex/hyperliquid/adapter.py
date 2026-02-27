@@ -3,7 +3,7 @@ __all__ = ["Adapter"]
 import time
 
 from unicex.types import (
-    BestBidAskDict,
+    BestBidAskItem,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
@@ -289,7 +289,7 @@ class Adapter:
         return result
 
     @staticmethod
-    def best_bid_ask_message(raw_msg: dict, resolve_symbols: bool = True) -> list[BestBidAskDict]:
+    def best_bid_ask_message(raw_msg: dict, resolve_symbols: bool = True) -> list[BestBidAskItem]:
         """Преобразует сырое websocket-сообщение с лучшим бидом/аском в унифицированный формат."""
         data = raw_msg["data"]
         best_bid = data["bbo"][0]
@@ -301,7 +301,7 @@ class Adapter:
         ask_size = float(best_ask["sz"]) if best_ask else 0.0
 
         return [
-            BestBidAskDict(
+            BestBidAskItem(
                 s=Adapter._resolve_spot_symbol(str(data["coin"]), resolve_symbols),
                 t=int(data["time"]),
                 u=int(data["time"]),

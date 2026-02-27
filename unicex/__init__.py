@@ -25,6 +25,7 @@ __all__ = [
     "TickerInfoItem",
     "TickersInfoDict",
     "LiquidationDict",
+    "BestBidAskItem",
     "BestBidAskDict",
     "PartialBookDepthDict",
     # Interfaces
@@ -128,6 +129,7 @@ from .types import (
     TickerInfoItem,
     TickersInfoDict,
     LiquidationDict,
+    BestBidAskItem,
     BestBidAskDict,
     PartialBookDepthDict,
 )

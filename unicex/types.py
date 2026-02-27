@@ -13,6 +13,7 @@ __all__ = [
     "TickerInfoItem",
     "TickersInfoDict",
     "LiquidationDict",
+    "BestBidAskItem",
     "BestBidAskDict",
     "PartialBookDepthDict",
 ]
@@ -170,8 +171,8 @@ type TickersInfoDict = dict[str, TickerInfoItem]
 """Информация о размерах тиков, ступеней цены и множителя контракта (если есть) для всех тикеров."""
 
 
-class BestBidAskDict(TypedDict):
-    """Модель обновления лучшего аска и бида через вебсокет."""
+class BestBidAskItem(TypedDict):
+    """Модель одного элемента лучшего бида и аска."""
 
     s: str
     """Символ."""
@@ -193,6 +194,10 @@ class BestBidAskDict(TypedDict):
 
     A: float
     """Объем лучшего аска."""
+
+
+type BestBidAskDict = dict[str, BestBidAskItem]
+"""Модель лучших бидов и асков."""
 
 
 class PartialBookDepthDict(TypedDict):

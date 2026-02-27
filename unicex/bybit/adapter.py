@@ -5,6 +5,7 @@ from typing import Any
 
 from unicex.types import (
     BestBidAskDict,
+    BestBidAskItem,
     KlineDict,
     LiquidationDict,
     OpenInterestDict,
@@ -103,6 +104,29 @@ class Adapter:
             dict[str, float]: Словарь, где ключ - тикер, а значение - последняя цена.
         """
         return {item["symbol"]: float(item["lastPrice"]) for item in raw_data["result"]["list"]}
+
+    @staticmethod
+    def futures_best_bid_ask(raw_data: dict) -> BestBidAskDict:
+        """Преобразует сырой ответ, в котором содержатся данные о лучших bid/ask фьючерсов в унифицированный формат.
+
+        Параметры:
+            raw_data (dict): Сырой ответ с биржи.
+
+        Возвращает:
+            BestBidAskDict: Словарь, где ключ - тикер, а значение - лучший бид и аск.
+        """
+        return {
+            item["symbol"]: BestBidAskItem(
+                s=item["symbol"],
+                t=int(raw_data["time"]),
+                u=0,  # REST endpoint не возвращает update id
+                b=float(item["bid1Price"]),
+                B=float(item["bid1Size"]),
+                a=float(item["ask1Price"]),
+                A=float(item["ask1Size"]),
+            )
+            for item in raw_data["result"]["list"]
+        }
 
     @staticmethod
     def klines(raw_data: dict) -> list[KlineDict]:
@@ -212,7 +236,7 @@ class Adapter:
         ]
 
     @staticmethod
-    def futures_best_bid_ask_message(raw_msg: Any) -> list[BestBidAskDict]:
+    def futures_best_bid_ask_message(raw_msg: Any) -> list[BestBidAskItem]:
         """Преобразует вебсокет-сообщение с лучшими бидом и аском в унифицированный формат.
 
         Параметры:
@@ -225,7 +249,7 @@ class Adapter:
         bid = data["b"][0]
         ask = data["a"][0]
         return [
-            BestBidAskDict(
+            BestBidAskItem(
                 s=data["s"],
                 t=int(raw_msg["ts"]),
                 u=int(data["u"]),

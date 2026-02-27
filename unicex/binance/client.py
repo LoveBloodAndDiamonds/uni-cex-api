@@ -874,6 +874,16 @@ class Client(BaseClient):
 
         return await self._make_request("GET", url, params=params)
 
+    async def futures_ticker_book_ticker(self, symbol: str | None = None) -> dict | list[dict]:
+        """Получение лучших цен bid/ask в фьючерсной книге ордеров.
+
+        https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Symbol-Order-Book-Ticker
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v1/ticker/bookTicker"
+        params = {"symbol": symbol}
+
+        return await self._make_request("GET", url, params=params)
+
     async def futures_klines(
         self,
         symbol: str,

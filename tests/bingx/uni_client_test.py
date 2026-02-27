@@ -1,6 +1,6 @@
 import asyncio
 
-from unicex.bingx import UniClient
+from unicex.mexc import UniClient
 
 
 async def main() -> None:
@@ -8,7 +8,7 @@ async def main() -> None:
     c = await UniClient.create()
 
     async with c:
-        r = await c.ticker_24hr()
+        r = await c.futures_tickers()
         from pprint import pp
 
         pp(r)

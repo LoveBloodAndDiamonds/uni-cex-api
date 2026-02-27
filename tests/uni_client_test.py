@@ -31,6 +31,7 @@ tests_config = {
     "single_open_interest": True,
     "funding_rate": True,
     "single_funding_rate": True,
+    "futures_best_bid_ask": True,
 }
 
 # Тестировать ли все таймфреймы?
@@ -131,6 +132,8 @@ async def test_exchange(exchange: Exchange) -> dict:
             results["single_funding_rate"] = await safe_call(
                 exchange, client.funding_rate, symbol=f_symbol
             )
+        if should_run("futures_best_bid_ask"):
+            results["futures_best_bid_ask"] = await safe_call(exchange, client.futures_best_bid_ask)
 
     finally:
         try:

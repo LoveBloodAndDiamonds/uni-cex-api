@@ -2,6 +2,7 @@ from typing import Any
 
 from unicex.types import (
     BestBidAskDict,
+    BestBidAskItem,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
@@ -190,7 +191,30 @@ class Adapter:
         }
 
     @staticmethod
-    def futures_best_bid_ask_message(raw_msg: Any) -> list[BestBidAskDict]:
+    def futures_best_bid_ask(raw_data: Any) -> BestBidAskDict:
+        """Преобразует сырой ответ, в котором содержатся данные о лучших bid/ask фьючерсов в унифицированный формат.
+
+        Параметры:
+            raw_data (Any): Сырой ответ с биржи.
+
+        Возвращает:
+            BestBidAskDict: Словарь, где ключ - тикер, а значение - лучший бид и аск.
+        """
+        return {
+            item["symbol"]: BestBidAskItem(
+                s=item["symbol"],
+                t=int(item["ts"]),
+                u=0,  # REST endpoint не возвращает update id
+                b=float(item["bidPr"]),
+                B=float(item["bidSz"]),
+                a=float(item["askPr"]),
+                A=float(item["askSz"]),
+            )
+            for item in raw_data["data"]
+        }
+
+    @staticmethod
+    def futures_best_bid_ask_message(raw_msg: Any) -> list[BestBidAskItem]:
         """Преобразует вебсокет-сообщение с лучшими бидом и аском в унифицированный формат.
 
         Параметры:
@@ -204,7 +228,7 @@ class Adapter:
         best_bid = data["bids"][0]
         best_ask = data["asks"][0]
         return [
-            BestBidAskDict(
+            BestBidAskItem(
                 s=arg["instId"],
                 t=int(data["ts"]),
                 u=int(data["seq"]),
