@@ -5,14 +5,14 @@ from unicex.gate import UniClient
 
 async def main() -> None:
     """Main entry point for the application."""
-    c = await UniClient.create()
+    c = await UniClient.create(timeout=20)
 
     async with c:
-        r = await c.futures_best_bid_ask("DEGO_USDT")
+        r = await c.futures_last_price()
 
         from pprint import pp
 
-        pp(r)
+        pp(len(r))
 
 
 if __name__ == "__main__":
