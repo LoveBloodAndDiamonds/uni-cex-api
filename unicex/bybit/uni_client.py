@@ -247,6 +247,14 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             `BookDepthDict`: Стакан для тикера.
         """
-        raise NotImplementedError(
-            "Method 'futures_depth' will be implemented later. You can open pull request to contribute."
+        if not 1 <= limit <= 500:
+            raise ValueError(
+                f"Invalid limit for bybit futures depth: {limit}. Valid range: [1, 500]"
+            )
+
+        raw_data = await self._client.orderbook(
+            category="linear",
+            symbol=symbol,
+            limit=limit,
         )
+        return Adapter.futures_depth(raw_data)

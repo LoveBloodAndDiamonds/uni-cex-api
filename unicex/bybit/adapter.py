@@ -129,6 +129,25 @@ class Adapter:
         }
 
     @staticmethod
+    def futures_depth(raw_data: dict) -> BookDepthDict:
+        """Преобразует сырой ответ, в котором содержатся данные о стакане фьючерсов, в унифицированный формат.
+
+        Параметры:
+            raw_data (dict): Сырой ответ с биржи.
+
+        Возвращает:
+            BookDepthDict: Стакан для тикера.
+        """
+        result = raw_data["result"]
+        return BookDepthDict(
+            s=result["s"],
+            t=int(result["ts"]),
+            u=int(result["u"]),
+            b=[(float(price), float(quantity)) for price, quantity in result["b"]],
+            a=[(float(price), float(quantity)) for price, quantity in result["a"]],
+        )
+
+    @staticmethod
     def klines(raw_data: dict) -> list[KlineDict]:
         """Преобразует сырой ответ, в котором содержатся данные о свечах, в унифицированный формат.
 
