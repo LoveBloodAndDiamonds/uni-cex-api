@@ -3,10 +3,10 @@ from typing import Any
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
+    BookDepthDict,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
-    PartialBookDepthDict,
     TickerDailyDict,
     TickerDailyItem,
     TradeDict,
@@ -240,7 +240,7 @@ class Adapter:
         ]
 
     @staticmethod
-    def futures_partial_book_depth_message(raw_msg: Any) -> list[PartialBookDepthDict]:
+    def futures_partial_book_depth_message(raw_msg: Any) -> list[BookDepthDict]:
         """Преобразует вебсокет-сообщение с частичным стаканом в унифицированный формат.
 
         Параметры:
@@ -251,7 +251,7 @@ class Adapter:
         """
         data = raw_msg["data"][0]
         return [
-            PartialBookDepthDict(
+            BookDepthDict(
                 s=raw_msg["arg"]["instId"],
                 t=int(data["ts"]),
                 u=int(data["seq"]),

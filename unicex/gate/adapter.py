@@ -8,10 +8,10 @@ __all__ = ["Adapter"]
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
+    BookDepthDict,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
-    PartialBookDepthDict,
     TickerDailyDict,
     TickerDailyItem,
     TradeDict,
@@ -337,7 +337,7 @@ class Adapter:
         ]
 
     @staticmethod
-    def futures_partial_book_depth_message(raw_msg: Any) -> list[PartialBookDepthDict]:
+    def futures_partial_book_depth_message(raw_msg: Any) -> list[BookDepthDict]:
         """Преобразует вебсокет-сообщение с частичным стаканом в унифицированный формат.
 
         Параметры:
@@ -355,7 +355,7 @@ class Adapter:
         if update_id is None:
             raise ValueError("Field `id` is missing in futures.order_book message")
         return [
-            PartialBookDepthDict(
+            BookDepthDict(
                 s=symbol,
                 t=int(result["t"]),
                 u=int(update_id),

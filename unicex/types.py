@@ -15,7 +15,7 @@ __all__ = [
     "LiquidationDict",
     "BestBidAskItem",
     "BestBidAskDict",
-    "PartialBookDepthDict",
+    "BookDepthDict",
 ]
 
 from logging import Logger as LoggingLogger
@@ -200,7 +200,7 @@ type BestBidAskDict = dict[str, BestBidAskItem]
 """Модель лучших бидов и асков."""
 
 
-class PartialBookDepthDict(TypedDict):
+class BookDepthDict(TypedDict):
     """Модель обновления ближайших N асков и бидов через вебсокет."""
 
     s: str

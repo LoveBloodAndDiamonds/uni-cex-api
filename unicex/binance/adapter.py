@@ -4,10 +4,10 @@ __all__ = ["Adapter"]
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
+    BookDepthDict,
     KlineDict,
     LiquidationDict,
     OpenInterestItem,
-    PartialBookDepthDict,
     TickerDailyDict,
     TickerDailyItem,
     TradeDict,
@@ -267,7 +267,7 @@ class Adapter:
         ]
 
     @staticmethod
-    def futures_partial_book_depth_message(raw_msg: dict) -> list[PartialBookDepthDict]:
+    def futures_partial_book_depth_message(raw_msg: dict) -> list[BookDepthDict]:
         """Преобразует вебсокет-сообщение с частичным стаканом в унифицированный формат.
 
         Параметры:
@@ -279,7 +279,7 @@ class Adapter:
         msg = raw_msg.get("data", raw_msg)
 
         return [
-            PartialBookDepthDict(
+            BookDepthDict(
                 s=msg["s"],
                 t=int(msg["E"]),
                 u=int(msg["u"]),

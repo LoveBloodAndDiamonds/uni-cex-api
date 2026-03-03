@@ -6,11 +6,11 @@ from typing import Any
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
+    BookDepthDict,
     KlineDict,
     LiquidationDict,
     OpenInterestDict,
     OpenInterestItem,
-    PartialBookDepthDict,
     TickerDailyDict,
     TickerDailyItem,
     TradeDict,
@@ -261,7 +261,7 @@ class Adapter:
         ]
 
     @staticmethod
-    def futures_partial_book_depth_message() -> Callable[[Any], list[PartialBookDepthDict]]:
+    def futures_partial_book_depth_message() -> Callable[[Any], list[BookDepthDict]]:
         """Создает обертку для сборки полного стакана Bybit из snapshot и delta.
 
         Возвращает:
@@ -270,7 +270,7 @@ class Adapter:
         state: dict[str, dict[str, dict[float, float]]] = {}
 
         @catch_adapter_errors
-        def _wrapper(raw_msg: Any) -> list[PartialBookDepthDict]:
+        def _wrapper(raw_msg: Any) -> list[BookDepthDict]:
             """Преобразует одно сообщение orderbook с учетом накопленного состояния."""
             data = raw_msg["data"]
             symbol = data["s"]
@@ -300,7 +300,7 @@ class Adapter:
                     asks_state[price] = quantity
 
             return [
-                PartialBookDepthDict(
+                BookDepthDict(
                     s=symbol,
                     t=int(raw_msg["ts"]),
                     u=int(data["u"]),
