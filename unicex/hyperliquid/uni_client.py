@@ -242,7 +242,8 @@ class UniClient(IUniClient[Client]):
             start_time=start_time,  # type: ignore[reportArgumentType]
             end_time=end_time,  # type: ignore[reportArgumentType]
         )
-        return Adapter.klines(raw_data=raw_data, resolve_symbols=resolve_symbols)
+        adapted_klines = Adapter.futures_klines(raw_data)
+        return adapted_klines[-limit:] if limit else adapted_klines
 
     async def futures_klines(
         self,
@@ -282,7 +283,8 @@ class UniClient(IUniClient[Client]):
             start_time=start_time,  # type: ignore[reportArgumentType]
             end_time=end_time,  # type: ignore[reportArgumentType]
         )
-        return Adapter.futures_klines(raw_data)
+        adapted_klines = Adapter.futures_klines(raw_data)
+        return adapted_klines[-limit:] if limit else adapted_klines
 
     @overload
     async def funding_rate(self, symbol: str) -> float: ...

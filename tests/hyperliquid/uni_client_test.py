@@ -1,6 +1,7 @@
 import asyncio
 
-from unicex.okx import UniClient
+from unicex.enums import Timeframe
+from unicex.hyperliquid import UniClient
 
 
 async def main() -> None:
@@ -8,11 +9,12 @@ async def main() -> None:
     c = await UniClient.create()
 
     async with c:
-        r = await c.futures_depth("ETH", 10)
+        r = await c.klines("@142", interval=Timeframe.MIN_1, limit=3)
 
-        from pprint import pp
+        from datetime import datetime
 
-        pp(r)
+        for item in r:
+            print(datetime.fromtimestamp(item["t"] / 1000))
 
 
 if __name__ == "__main__":
