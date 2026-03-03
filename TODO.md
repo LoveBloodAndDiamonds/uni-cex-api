@@ -11,11 +11,11 @@
 - может быть deprecate Client и WebsocketManager
 - self._logger = logger or _logger ничего не делает
 - ключ "х" в KlineDict обрабатывать при HTTP запросах а не просто
-- починить докстринги в aster.client
 - рефакторинг OKX Websocket Manager
 - в uniwebsocketmanager можно принимать symbol: str | list[str] а не возиться с overload который усложняет чтение и поддержку кодовой базы
 
 ** Сделано: **
++ починить докстринги в aster.client
 + документацию в случаях с alias не хочется дублировать
 + добавить в README примеры extra
 + зачем нужна функция _client_cls
