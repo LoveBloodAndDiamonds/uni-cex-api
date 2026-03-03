@@ -259,6 +259,10 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             `BookDepthDict`: Стакан для тикера.
         """
-        raise NotImplementedError(
-            "Method 'futures_depth' will be implemented later. You can open pull request to contribute."
+        raw_data = await self._client.futures_order_book(
+            settle="usdt",
+            contract=symbol,
+            limit=limit,
+            with_id="true",  # type: ignore
         )
+        return Adapter.futures_depth(raw_data=raw_data, symbol=symbol)

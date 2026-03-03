@@ -209,6 +209,26 @@ class Adapter:
         }
 
     @staticmethod
+    def futures_depth(raw_data: dict, symbol: str) -> BookDepthDict:
+        """Преобразует сырой ответ, в котором содержатся данные о стакане фьючерсов, в унифицированный формат.
+
+        Параметры:
+            raw_data (dict): Сырой ответ с биржи.
+            symbol (str): Тикер, для которого нужно преобразовать данные.
+
+        Возвращает:
+            BookDepthDict: Стакан для тикера.
+        """
+        contract_size = Adapter._get_contract_size(symbol)
+        return BookDepthDict(
+            s=symbol,
+            t=int(float(raw_data["update"]) * 1000),
+            u=int(raw_data.get("id", 0)),
+            b=[(float(item["p"]), float(item["s"]) * contract_size) for item in raw_data["bids"]],
+            a=[(float(item["p"]), float(item["s"]) * contract_size) for item in raw_data["asks"]],
+        )
+
+    @staticmethod
     def klines_message(raw_msg: Any) -> list[KlineDict]:
         """Преобразует вебсокет-сообщение со свечами в унифицированный формат.
 
