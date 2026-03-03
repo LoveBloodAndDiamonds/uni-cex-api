@@ -6,10 +6,10 @@ from typing import Any
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
+    BookDepthDict,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
-    PartialBookDepthDict,
     TickerDailyDict,
     TickerDailyItem,
     TradeDict,
@@ -176,6 +176,27 @@ class Adapter:
         }
 
     @staticmethod
+    def futures_depth(raw_data: dict, symbol: str) -> BookDepthDict:
+        """Преобразует сырой ответ, в котором содержатся данные о стакане фьючерсов, в унифицированный формат.
+
+        Параметры:
+            raw_data (dict): Сырой ответ с биржи.
+            symbol (str): Тикер, для которого нужно преобразовать данные.
+
+        Возвращает:
+            BookDepthDict: Стакан для тикера.
+        """
+        data = raw_data["data"][0]
+        contract_size = Adapter._get_contract_size(symbol)
+        return BookDepthDict(
+            s=symbol,
+            t=int(data["ts"]),
+            u=int(data["seqId"]),
+            b=[(float(item[0]), float(item[1]) * contract_size) for item in data["bids"]],
+            a=[(float(item[0]), float(item[1]) * contract_size) for item in data["asks"]],
+        )
+
+    @staticmethod
     def klines_message(raw_msg: Any) -> list[KlineDict]:
         """Преобразует вебсокет-сообщение со свечами в унифицированный формат.
 
@@ -259,7 +280,7 @@ class Adapter:
         ]
 
     @staticmethod
-    def futures_partial_book_depth_message(raw_msg: Any) -> list[PartialBookDepthDict]:
+    def futures_partial_book_depth_message(raw_msg: Any) -> list[BookDepthDict]:
         """Преобразует вебсокет-сообщение с частичным стаканом в унифицированный формат.
 
         Параметры:
@@ -275,7 +296,7 @@ class Adapter:
         asks = data.get("asks", [])
 
         return [
-            PartialBookDepthDict(
+            BookDepthDict(
                 s=inst_id,
                 t=int(data["ts"]),
                 u=int(data["seqId"]),

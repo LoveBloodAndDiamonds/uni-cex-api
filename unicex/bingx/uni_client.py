@@ -8,6 +8,7 @@ from unicex.enums import Timeframe
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
+    BookDepthDict,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
@@ -211,3 +212,21 @@ class UniClient(IUniClient[Client]):
             с лучшим бидом и аском.
         """
         raise NotImplementedError("Method `futures_best_bid_ask` will be implemented later")
+
+    async def futures_depth(
+        self,
+        symbol: str,
+        limit: int,
+    ) -> BookDepthDict:
+        """Возвращает стакан для тикера.
+
+        Параметры:
+            symbol (`str`): Название тикера.
+            limit (`int`): Глубина стакана.
+
+        Возвращает:
+            `BookDepthDict`: Стакан для тикера.
+        """
+        raise NotImplementedError(
+            "Method 'futures_depth' will be implemented later. You can open pull request to contribute."
+        )

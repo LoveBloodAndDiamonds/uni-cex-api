@@ -1,5 +1,7 @@
 ** Пофиксить: **
 - добавить поддержку testnet?
+- проверить порядок в uni_client.futures_depth
+- gate.client не умеет работать с :bool
 - CallbackType сделать Generic
 - try except в Exchbange Info
 - адаптер-обертка на байбит для топ- бидов и асков вроде как неверно работает (может быть проблема в RPI)

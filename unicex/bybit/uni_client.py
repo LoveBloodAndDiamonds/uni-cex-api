@@ -8,6 +8,7 @@ from unicex.enums import Exchange, Timeframe
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
+    BookDepthDict,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
@@ -231,3 +232,29 @@ class UniClient(IUniClient[Client]):
         raw_data = await self._client.tickers("linear", symbol=symbol)
         adapted_data = Adapter.futures_best_bid_ask(raw_data)
         return adapted_data[symbol] if symbol else adapted_data
+
+    async def futures_depth(
+        self,
+        symbol: str,
+        limit: int,
+    ) -> BookDepthDict:
+        """Возвращает стакан для тикера.
+
+        Параметры:
+            symbol (`str`): Название тикера.
+            limit (`int`): Глубина стакана.
+
+        Возвращает:
+            `BookDepthDict`: Стакан для тикера.
+        """
+        if not 1 <= limit <= 500:
+            raise ValueError(
+                f"Invalid limit for bybit futures depth: {limit}. Valid range: [1, 500]"
+            )
+
+        raw_data = await self._client.orderbook(
+            category="linear",
+            symbol=symbol,
+            limit=limit,
+        )
+        return Adapter.futures_depth(raw_data)

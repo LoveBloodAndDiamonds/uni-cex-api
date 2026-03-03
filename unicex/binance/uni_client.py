@@ -8,6 +8,7 @@ from unicex.enums import Exchange, MarketType, Timeframe
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
+    BookDepthDict,
     KlineDict,
     OpenInterestItem,
     TickerDailyDict,
@@ -220,3 +221,27 @@ class UniClient(IUniClient[Client]):
             raw_data if isinstance(raw_data, list) else [raw_data]
         )
         return adapted_data[symbol] if symbol else adapted_data
+
+    async def futures_depth(
+        self,
+        symbol: str,
+        limit: int,
+    ) -> BookDepthDict:
+        """Возвращает стакан для тикера.
+
+        Параметры:
+            symbol (`str`): Название тикера.
+            limit (`int`): Глубина стакана.
+
+        Возвращает:
+            `BookDepthDict`: Стакан для тикера.
+        """
+        valid_limits = {5, 10, 20, 50, 100, 500, 1000}
+        if limit not in valid_limits:
+            raise ValueError(
+                f"Invalid limit for binance futures depth: {limit}. "
+                f"Valid values: {sorted(valid_limits)}"
+            )
+
+        raw_data = await self._client.futures_depth(symbol=symbol, limit=limit)
+        return Adapter.futures_depth(raw_data=raw_data, symbol=symbol)

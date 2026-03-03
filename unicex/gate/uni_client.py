@@ -8,6 +8,7 @@ from unicex.enums import Exchange, MarketType, Timeframe
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
+    BookDepthDict,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
@@ -243,3 +244,25 @@ class UniClient(IUniClient[Client]):
         if value >= 1_000_000_000_000:
             return value // 1000
         return value
+
+    async def futures_depth(
+        self,
+        symbol: str,
+        limit: int,
+    ) -> BookDepthDict:
+        """Возвращает стакан для тикера.
+
+        Параметры:
+            symbol (`str`): Название тикера.
+            limit (`int`): Глубина стакана.
+
+        Возвращает:
+            `BookDepthDict`: Стакан для тикера.
+        """
+        raw_data = await self._client.futures_order_book(
+            settle="usdt",
+            contract=symbol,
+            limit=limit,
+            with_id="true",  # type: ignore
+        )
+        return Adapter.futures_depth(raw_data=raw_data, symbol=symbol)

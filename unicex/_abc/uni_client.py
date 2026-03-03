@@ -11,6 +11,7 @@ from unicex.enums import Timeframe
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
+    BookDepthDict,
     KlineDict,
     LoggerLike,
     OpenInterestDict,
@@ -388,5 +389,22 @@ class IUniClient(ABC, Generic[TClient]):
             `BestBidAskItem | BestBidAskDict`: Если тикер передан - словарь с лучшим бидом и
             асков для этого тикера. Иначе - словарь, в котором ключ - тикер, а значение - словарь
             с лучшим бидом и аском.
+        """
+        ...
+
+    @abstractmethod
+    async def futures_depth(
+        self,
+        symbol: str,
+        limit: int,
+    ) -> BookDepthDict:
+        """Возвращает стакан для тикера.
+
+        Параметры:
+            symbol (`str`): Название тикера.
+            limit (`int`): Глубина стакана.
+
+        Возвращает:
+            `BookDepthDict`: Стакан для тикера.
         """
         ...

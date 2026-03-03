@@ -6,11 +6,11 @@ from typing import Any
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
+    BookDepthDict,
     KlineDict,
     LiquidationDict,
     OpenInterestDict,
     OpenInterestItem,
-    PartialBookDepthDict,
     TickerDailyDict,
     TickerDailyItem,
     TradeDict,
@@ -127,6 +127,25 @@ class Adapter:
             )
             for item in raw_data["result"]["list"]
         }
+
+    @staticmethod
+    def futures_depth(raw_data: dict) -> BookDepthDict:
+        """Преобразует сырой ответ, в котором содержатся данные о стакане фьючерсов, в унифицированный формат.
+
+        Параметры:
+            raw_data (dict): Сырой ответ с биржи.
+
+        Возвращает:
+            BookDepthDict: Стакан для тикера.
+        """
+        result = raw_data["result"]
+        return BookDepthDict(
+            s=result["s"],
+            t=int(result["ts"]),
+            u=int(result["u"]),
+            b=[(float(price), float(quantity)) for price, quantity in result["b"]],
+            a=[(float(price), float(quantity)) for price, quantity in result["a"]],
+        )
 
     @staticmethod
     def klines(raw_data: dict) -> list[KlineDict]:
@@ -261,7 +280,7 @@ class Adapter:
         ]
 
     @staticmethod
-    def futures_partial_book_depth_message() -> Callable[[Any], list[PartialBookDepthDict]]:
+    def futures_partial_book_depth_message() -> Callable[[Any], list[BookDepthDict]]:
         """Создает обертку для сборки полного стакана Bybit из snapshot и delta.
 
         Возвращает:
@@ -270,7 +289,7 @@ class Adapter:
         state: dict[str, dict[str, dict[float, float]]] = {}
 
         @catch_adapter_errors
-        def _wrapper(raw_msg: Any) -> list[PartialBookDepthDict]:
+        def _wrapper(raw_msg: Any) -> list[BookDepthDict]:
             """Преобразует одно сообщение orderbook с учетом накопленного состояния."""
             data = raw_msg["data"]
             symbol = data["s"]
@@ -300,7 +319,7 @@ class Adapter:
                     asks_state[price] = quantity
 
             return [
-                PartialBookDepthDict(
+                BookDepthDict(
                     s=symbol,
                     t=int(raw_msg["ts"]),
                     u=int(data["u"]),

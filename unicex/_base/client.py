@@ -152,7 +152,7 @@ class BaseClient:
             except (TimeoutError, aiohttp.ServerTimeoutError, aiohttp.ConnectionTimeoutError) as e:
                 errors.append(e)
                 self._logger.debug(
-                    f"Attempt {attempt}/{self._max_retries} failed: {type(e)} -> {e}"
+                    f"Attempt {attempt}/{self._max_retries} failed: {type(e)} -> {e or 'null'}"
                 )
                 if attempt < self._max_retries:
                     await asyncio.sleep(self._retry_delay)

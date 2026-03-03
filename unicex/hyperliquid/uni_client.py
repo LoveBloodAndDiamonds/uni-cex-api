@@ -9,6 +9,7 @@ from unicex.enums import Exchange, MarketType, Timeframe
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
+    BookDepthDict,
     KlineDict,
     LoggerLike,
     OpenInterestDict,
@@ -345,4 +346,22 @@ class UniClient(IUniClient[Client]):
         raise NotImplementedError(
             "Method `futures_best_bid_ask` cannot be implemented for Hyperliquid: "
             "no REST endpoint with best bid/ask and sizes."
+        )
+
+    async def futures_depth(
+        self,
+        symbol: str,
+        limit: int,
+    ) -> BookDepthDict:
+        """Возвращает стакан для тикера.
+
+        Параметры:
+            symbol (`str`): Название тикера.
+            limit (`int`): Глубина стакана.
+
+        Возвращает:
+            `BookDepthDict`: Стакан для тикера.
+        """
+        raise NotImplementedError(
+            "Method 'futures_depth' will be implemented later. You can open pull request to contribute."
         )

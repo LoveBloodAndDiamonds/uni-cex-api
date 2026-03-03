@@ -4,10 +4,10 @@ import time
 
 from unicex.types import (
     BestBidAskItem,
+    BookDepthDict,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
-    PartialBookDepthDict,
     TickerDailyDict,
     TickerDailyItem,
     TradeDict,
@@ -317,14 +317,14 @@ class Adapter:
         raw_msg: dict,
         limit: int,
         resolve_symbols: bool = True,
-    ) -> list[PartialBookDepthDict]:
+    ) -> list[BookDepthDict]:
         """Преобразует сырое websocket-сообщение со стаканом в унифицированный формат."""
         data = raw_msg["data"]
         bids = data["levels"][0][:limit]
         asks = data["levels"][1][:limit]
 
         return [
-            PartialBookDepthDict(
+            BookDepthDict(
                 s=Adapter._resolve_spot_symbol(str(data["coin"]), resolve_symbols),
                 t=int(data["time"]),
                 u=int(data["time"]),

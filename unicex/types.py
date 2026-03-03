@@ -15,7 +15,7 @@ __all__ = [
     "LiquidationDict",
     "BestBidAskItem",
     "BestBidAskDict",
-    "PartialBookDepthDict",
+    "BookDepthDict",
 ]
 
 from logging import Logger as LoggingLogger
@@ -200,7 +200,7 @@ type BestBidAskDict = dict[str, BestBidAskItem]
 """Модель лучших бидов и асков."""
 
 
-class PartialBookDepthDict(TypedDict):
+class BookDepthDict(TypedDict):
     """Модель обновления ближайших N асков и бидов через вебсокет."""
 
     s: str
@@ -212,8 +212,10 @@ class PartialBookDepthDict(TypedDict):
     u: int
     """Айди обновления."""
 
-    b: list[tuple[float, float]]  # price, quantity
-    """Лучшие биды. Два значения: цена и объем."""
-
     a: list[tuple[float, float]]  # price, quantity
-    """Лучшие аски. Два значения: цена и объем."""
+    """Лучшие аски (те, кто продает, выше в стакане)
+    в порядке удаления от спреда. Два значения: цена и объем."""
+
+    b: list[tuple[float, float]]  # price, quantity
+    """Лучшие биды (те, кто покупают, ниже в стакане)
+    в порядке удаления от спреда. Два значения: цена и объем."""
