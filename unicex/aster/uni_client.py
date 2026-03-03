@@ -233,6 +233,12 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             `BookDepthDict`: Стакан для тикера.
         """
-        raise NotImplementedError(
-            "Method 'futures_depth' will be implemented later. You can open pull request to contribute."
-        )
+        valid_limits = {5, 10, 20, 50, 100, 500, 1000}
+        if limit not in valid_limits:
+            raise ValueError(
+                f"Invalid limit for aster futures depth: {limit}. "
+                f"Valid values: {sorted(valid_limits)}"
+            )
+
+        raw_data = await self._client.futures_depth(symbol=symbol, limit=limit)
+        return Adapter.futures_depth(raw_data=raw_data, symbol=symbol)
