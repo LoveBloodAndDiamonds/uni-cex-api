@@ -214,6 +214,26 @@ class Adapter:
         }
 
     @staticmethod
+    def futures_depth(raw_data: Any, symbol: str) -> BookDepthDict:
+        """Преобразует сырой ответ, в котором содержатся данные о стакане фьючерсов, в унифицированный формат.
+
+        Параметры:
+            raw_data (Any): Сырой ответ с биржи.
+            symbol (str): Тикер, для которого нужно преобразовать данные.
+
+        Возвращает:
+            BookDepthDict: Стакан для тикера.
+        """
+        data = raw_data["data"]
+        return BookDepthDict(
+            s=symbol,
+            t=int(data["ts"]),
+            u=0,  # REST endpoint не возвращает update id
+            b=[(float(price), float(quantity)) for price, quantity in data["bids"]],
+            a=[(float(price), float(quantity)) for price, quantity in data["asks"]],
+        )
+
+    @staticmethod
     def futures_best_bid_ask_message(raw_msg: Any) -> list[BestBidAskItem]:
         """Преобразует вебсокет-сообщение с лучшими бидом и аском в унифицированный формат.
 

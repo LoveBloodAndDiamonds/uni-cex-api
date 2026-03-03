@@ -245,6 +245,16 @@ class UniClient(IUniClient[Client]):
         Возвращает:
             `BookDepthDict`: Стакан для тикера.
         """
-        raise NotImplementedError(
-            "Method 'futures_depth' will be implemented later. You can open pull request to contribute."
+        valid_limits = {1, 5, 15, 50, 100}
+        if limit not in valid_limits:
+            raise ValueError(
+                f"Invalid limit for bitget futures depth: {limit}. "
+                f"Valid values: {sorted(valid_limits)}"
+            )
+
+        raw_data = await self._client.futures_get_merge_depth(
+            symbol=symbol,
+            product_type="USDT-FUTURES",
+            limit=str(limit),
         )
+        return Adapter.futures_depth(raw_data=raw_data, symbol=symbol)
