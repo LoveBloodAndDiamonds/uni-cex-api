@@ -1,22 +1,18 @@
 import asyncio
 
-from unicex.hyperliquid import UniClient, ExchangeInfo
+from unicex.okx import UniClient
 
 
 async def main() -> None:
     """Main entry point for the application."""
-    asyncio.create_task(ExchangeInfo.start())
-
-    await asyncio.sleep(3)
-
     c = await UniClient.create()
 
     async with c:
-        t = await c.ticker_24hr(resolve_symbols=True)
+        r = await c.futures_depth("ETH", 10)
 
         from pprint import pp
 
-        pp(t)
+        pp(r)
 
 
 if __name__ == "__main__":
