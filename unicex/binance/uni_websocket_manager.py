@@ -132,7 +132,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета для управления соединением.
         """
-        wrapper = self._make_wrapper(self._adapter.aggtrades_message, callback)
+        wrapper = self._make_wrapper(self._adapter.trades_message, callback)
         return self._websocket_manager.agg_trade(callback=wrapper, symbol=symbol, symbols=symbols)
 
     def futures_trades(
@@ -177,7 +177,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         Возвращает:
             `Websocket`: Экземпляр вебсокета для управления соединением.
         """
-        wrapper = self._make_wrapper(self._adapter.aggtrades_message, callback)
+        wrapper = self._make_wrapper(self._adapter.trades_message, callback)
         return self._websocket_manager.futures_agg_trade(
             callback=wrapper, symbol=symbol, symbols=symbols
         )

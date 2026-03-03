@@ -8,7 +8,7 @@ async def main() -> None:
     c = await UniClient.create()
 
     async with c:
-        r = await c.futures_depth("BTCUSDT", 10)
+        r = await c.tickers()
 
         from pprint import pp
 

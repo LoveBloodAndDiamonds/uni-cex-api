@@ -195,28 +195,6 @@ class Adapter:
         ]
 
     @staticmethod
-    def aggtrades_message(raw_msg: dict) -> list[TradeDict]:
-        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
-        аггрегированных сделке/сделках в унифицированный вид.
-
-        Параметры:
-            raw_msg (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
-        """
-        msg = raw_msg.get("data", raw_msg)
-        return [
-            TradeDict(
-                t=int(msg["T"]),
-                s=str(msg["s"]),
-                S="SELL" if bool(msg["m"]) else "BUY",
-                p=float(msg["p"]),
-                v=float(msg["q"]),
-            )
-        ]
-
-    @staticmethod
     def trades_message(raw_msg: dict) -> list[TradeDict]:
         """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
         сделке/сделках в унифицированный вид.
