@@ -6,9 +6,9 @@ from typing import overload
 from unicex._abc import IUniClient
 from unicex.enums import Exchange, Timeframe
 from unicex.types import (
-    BookDepthDict,
     BestBidAskDict,
     BestBidAskItem,
+    BookDepthDict,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
@@ -233,11 +233,16 @@ class UniClient(IUniClient[Client]):
         adapted_data = Adapter.futures_best_bid_ask(raw_data)
         return adapted_data[symbol] if symbol else adapted_data
 
-    async def futures_depth(self, symbol: str) -> BookDepthDict:
+    async def futures_depth(
+        self,
+        symbol: str,
+        limit: int,
+    ) -> BookDepthDict:
         """Возвращает стакан для тикера.
 
         Параметры:
             symbol (`str`): Название тикера.
+            limit (`int`): Глубина стакана.
 
         Возвращает:
             `BookDepthDict`: Стакан для тикера.
@@ -245,4 +250,3 @@ class UniClient(IUniClient[Client]):
         raise NotImplementedError(
             "Method 'futures_depth' will be implemented later. You can open pull request to contribute."
         )
-

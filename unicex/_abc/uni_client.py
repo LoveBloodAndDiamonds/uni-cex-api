@@ -393,11 +393,16 @@ class IUniClient(ABC, Generic[TClient]):
         ...
 
     @abstractmethod
-    async def futures_depth(self, symbol: str) -> BookDepthDict:
+    async def futures_depth(
+        self,
+        symbol: str,
+        limit: int,
+    ) -> BookDepthDict:
         """Возвращает стакан для тикера.
 
         Параметры:
             symbol (`str`): Название тикера.
+            limit (`int`): Глубина стакана.
 
         Возвращает:
             `BookDepthDict`: Стакан для тикера.
