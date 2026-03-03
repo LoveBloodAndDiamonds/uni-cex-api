@@ -8,7 +8,7 @@ async def main() -> None:
     c = await UniClient.create()
 
     async with c:
-        r = await c.futures_best_bid_ask("AXS-USDT-SWAP")
+        r = await c.futures_depth("BTC-USDT-SWAP", 10)
 
         from pprint import pp
 
