@@ -9,8 +9,8 @@ async def main() -> None:
     """Main entry point for the application."""
     client = await Client.create()
     async with client:
-        # r = await client.futures_tickers(settle="usdt", contract="EVIX_USDT")
-        r = await client.futures_tickers(settle="usdt")
+        # r = await client.order_book(currency_pair="BTC_USDT", with_id=True)
+        r = await client.trades(currency_pair="BTC_USDT", reverse=False)
         from pprint import pp
 
         pp(r)

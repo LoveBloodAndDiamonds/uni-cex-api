@@ -1,9 +1,6 @@
 ** Пофиксить: **
-- добавить поддержку testnet?
-- проверить порядок в uni_client.futures_depth
 - gate.client не умеет работать с :bool
 - CallbackType сделать Generic
-- try except в Exchbange Info
 - адаптер-обертка на байбит для топ- бидов и асков вроде как неверно работает (может быть проблема в RPI)
 - проверить ненужные преобразования в adapter
 - добавить унификацию ликвидаций
@@ -24,6 +21,9 @@
 - документацию в случаях с alias не хочется дублировать
 
 ** Сделано: **
++ try except в Exchbange Info
++ проверить порядок в uni_client.futures_depth
++ добавить поддержку testnet?
 + Добавить Workflow (pypi)
 + убрать overload из uni client and uni weboskcet manager
 + start_exchanges_info должна возвращать список задач
