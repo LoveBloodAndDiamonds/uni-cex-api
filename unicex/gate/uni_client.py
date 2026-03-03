@@ -6,6 +6,7 @@ from typing import overload
 from unicex._abc import IUniClient
 from unicex.enums import Exchange, MarketType, Timeframe
 from unicex.types import (
+    BookDepthDict,
     BestBidAskDict,
     BestBidAskItem,
     KlineDict,
@@ -243,3 +244,17 @@ class UniClient(IUniClient[Client]):
         if value >= 1_000_000_000_000:
             return value // 1000
         return value
+
+    async def futures_depth(self, symbol: str) -> BookDepthDict:
+        """Возвращает стакан для тикера.
+
+        Параметры:
+            symbol (`str`): Название тикера.
+
+        Возвращает:
+            `BookDepthDict`: Стакан для тикера.
+        """
+        raise NotImplementedError(
+            "Method 'futures_depth' will be implemented later. You can open pull request to contribute."
+        )
+

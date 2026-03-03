@@ -6,6 +6,7 @@ from typing import overload
 from unicex._abc import IUniClient
 from unicex.enums import Timeframe
 from unicex.types import (
+    BookDepthDict,
     BestBidAskDict,
     BestBidAskItem,
     KlineDict,
@@ -211,3 +212,17 @@ class UniClient(IUniClient[Client]):
             с лучшим бидом и аском.
         """
         raise NotImplementedError("Method `futures_best_bid_ask` will be implemented later")
+
+    async def futures_depth(self, symbol: str) -> BookDepthDict:
+        """Возвращает стакан для тикера.
+
+        Параметры:
+            symbol (`str`): Название тикера.
+
+        Возвращает:
+            `BookDepthDict`: Стакан для тикера.
+        """
+        raise NotImplementedError(
+            "Method 'futures_depth' will be implemented later. You can open pull request to contribute."
+        )
+

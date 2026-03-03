@@ -4,7 +4,7 @@ __all__ = ["UniClient"]
 from typing import overload
 from unicex._abc import IUniClient
 from unicex.enums import Exchange, Timeframe
-from unicex.types import KlineDict, OpenInterestDict, OpenInterestItem, TickerDailyDict
+from unicex.types import KlineDict, OpenInterestDict, OpenInterestItem, TickerDailyDict, BookDepthDict
 
 from .adapter import Adapter
 from .client import Client
@@ -149,3 +149,17 @@ class UniClient(IUniClient[Client]):
                 а значение - словарь с временем и объемом открытого интереса в монетах.
         """
         raise NotImplementedError()
+
+    async def futures_depth(self, symbol: str) -> BookDepthDict:
+        """Возвращает стакан для тикера.
+
+        Параметры:
+            symbol (`str`): Название тикера.
+
+        Возвращает:
+            `BookDepthDict`: Стакан для тикера.
+        """
+        raise NotImplementedError(
+            "Method 'futures_depth' will be implemented later. You can open pull request to contribute."
+        )
+

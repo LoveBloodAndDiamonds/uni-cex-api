@@ -8,6 +8,7 @@ from unicex.enums import Exchange, MarketType, Timeframe
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
+    BookDepthDict,
     KlineDict,
     OpenInterestItem,
     TickerDailyDict,
@@ -220,3 +221,16 @@ class UniClient(IUniClient[Client]):
             raw_data if isinstance(raw_data, list) else [raw_data]
         )
         return adapted_data[symbol] if symbol else adapted_data
+
+    async def futures_depth(self, symbol: str) -> BookDepthDict:
+        """Возвращает стакан для тикера.
+
+        Параметры:
+            symbol (`str`): Название тикера.
+
+        Возвращает:
+            `BookDepthDict`: Стакан для тикера.
+        """
+        raise NotImplementedError(
+            "Method 'futures_depth' will be implemented later. You can open pull request to contribute."
+        )
