@@ -8,8 +8,6 @@
 - Какая то путаница в OCO ордерах на бинансе: https://developers.binance.com/docs/binance-spot-api-docs/rest-api/trading-endpoints#new-order-list---oco-trade
 - bingx adapter отрефакторить
 - красивое округление
-- добавить в README примеры extra
-- зачем нужна функция _client_cls
 - может быть deprecate Client и WebsocketManager
 - self._logger = logger or _logger ничего не делает
 - ключ "х" в KlineDict обрабатывать при HTTP запросах а не просто
@@ -19,6 +17,8 @@
 - документацию в случаях с alias не хочется дублировать
 
 ** Сделано: **
++ добавить в README примеры extra
++ зачем нужна функция _client_cls
 + gate.client не умеет работать с :bool
 + На Hyperliquid неправильно работает лимит (добавляет + 1 свечу при запросе свечей через UniClient)
 + try except в Exchbange Info

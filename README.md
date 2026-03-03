@@ -164,7 +164,6 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-
 ### Пример: Округление цен используя фоновый класс ExchangeInfo
 
 
@@ -212,4 +211,51 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+```
+
+### Пример: Полезные утилиты из `unicex.extra`
+
+```python
+import time
+from unicex import Exchange, MarketType
+from unicex.extra import (
+    TimeoutTracker,
+    SignalCounter,
+    percent_greater,
+    percent_less,
+    normalize_ticker,
+    normalize_symbol,
+    generate_ex_link,
+    generate_tv_link,
+    generate_cg_link,
+    make_humanreadable,
+)
+
+entry, last = 1975.0, 2012.5
+print("Рост (%):", round(percent_greater(last, entry), 2))
+print("Просадка (%):", round(percent_less(last, entry), 2))
+
+raw = "eth-usdt-swap"
+symbol = normalize_symbol(raw)      # ETHUSDT
+ticker = normalize_ticker(raw)      # ETH
+print("ticker:", ticker, "| symbol:", symbol)
+
+print("Биржа:", generate_ex_link(Exchange.OKX, MarketType.FUTURES, symbol))
+print("TradingView:", generate_tv_link(Exchange.OKX, MarketType.FUTURES, symbol))
+print("CoinGlass:", generate_cg_link(Exchange.OKX, MarketType.FUTURES, symbol))
+
+notional = 12_345_678.9
+print("Объем (RU):", make_humanreadable(notional, "ru"))
+print("Volume (EN):", make_humanreadable(notional, "en"))
+
+cooldown = TimeoutTracker[str]()
+cooldown.block("BTCUSDT", duration=3)
+print("BTCUSDT заблокирован:", cooldown.is_blocked("BTCUSDT"))
+time.sleep(3)
+print("BTCUSDT заблокирован:", cooldown.is_blocked("BTCUSDT"))
+
+counter = SignalCounter[str](window_sec=5)
+counter.add("breakout")
+counter.add("breakout")
+print("Лимит 3 не превышен:", counter.is_within_limit("breakout", limit=3))
 ```
