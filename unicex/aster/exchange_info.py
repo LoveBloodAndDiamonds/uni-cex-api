@@ -9,20 +9,17 @@ from .client import Client
 
 
 class ExchangeInfo(IExchangeInfo):
-    """Предзагружает информацию о тикерах для биржи Aster."""
 
     exchange_name = "Aster"
     """Название биржи, на которой работает класс."""
 
     @classmethod
     async def _load_spot_exchange_info(cls, session: aiohttp.ClientSession) -> None:
-        """Загружает информацию о бирже для спотового рынка."""
         # В документации Aster нет спотового API, поэтому не загружаем данные.
         cls._tickers_info = {}
 
     @classmethod
     async def _load_futures_exchange_info(cls, session: aiohttp.ClientSession) -> None:
-        """Загружает информацию о бирже для фьючерсного рынка."""
         exchange_info = await Client(session).futures_exchange_info()
         tickers_info: dict[str, TickerInfoItem] = {}
         for symbol_info in exchange_info.get("symbols", []):

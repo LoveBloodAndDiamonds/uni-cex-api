@@ -37,7 +37,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         self._adapter = Adapter()
 
     def _is_service_message(self, raw_msg: Any) -> bool:
-        """Дополнительно обрабатывает ошибку адаптации сообщения с вебсокета Bybit."""
         if raw_msg.get("op") == "subscribe":
             return True
         return False
@@ -49,19 +48,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Открывает стрим свечей (spot) с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            timeframe (`Timeframe`): Временной интервал свечей.
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета для управления соединением.
-        """
         return self._websocket_manager.kline(
             callback=self._make_wrapper(self._adapter.Klines_message, callback),
             category="spot",
@@ -77,19 +63,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Открывает стрим свечей (futures) с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            timeframe (`Timeframe`): Временной интервал свечей.
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета.
-        """
         return self._websocket_manager.kline(
             callback=self._make_wrapper(self._adapter.Klines_message, callback),
             category="linear",
@@ -104,18 +77,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Открывает стрим сделок (spot) с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета.
-        """
         return self._websocket_manager.trade(
             callback=self._make_wrapper(self._adapter.trades_message, callback),
             category="spot",
@@ -129,18 +90,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Открывает стрим агрегированных сделок (spot) с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета.
-        """
         return self.trades(callback=callback, symbol=symbol, symbols=symbols)  # type: ignore
 
     def futures_trades(
@@ -149,18 +98,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Открывает стрим сделок (futures) с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета.
-        """
         return self._websocket_manager.trade(
             callback=self._make_wrapper(self._adapter.trades_message, callback),
             category="linear",
@@ -174,18 +111,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Открывает стрим агрегированных сделок (futures) с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета.
-        """
         return self.futures_trades(callback=callback, symbol=symbol, symbols=symbols)  # type: ignore
 
     def liquidations(
@@ -194,18 +119,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Открывает стрим ликвидаций (futures) с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета.
-        """
         return self._websocket_manager.all_liquidation(
             callback=self._make_wrapper(self._adapter.liquidations_message, callback),
             category="linear",
@@ -219,18 +132,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Открывает стрим лучших бидов и асков с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета.
-        """
         return self._websocket_manager.orderbook(
             callback=self._make_wrapper(self._adapter.futures_best_bid_ask_message, callback),
             category="linear",
@@ -246,19 +147,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Открывает поток частичного стакана глубиной limit с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            limit (`int`): Лимит лучших асков и бидов в одном сообщении.
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета.
-        """
         allowed_levels = {1, 50, 200, 1000}
         if limit not in allowed_levels:
             raise ValueError("Parameter `limit` must be one of: 1, 50, 200, 1000")

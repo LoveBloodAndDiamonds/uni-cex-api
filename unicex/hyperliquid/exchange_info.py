@@ -9,7 +9,6 @@ from .client import Client
 
 
 class ExchangeInfo(IExchangeInfo):
-    """Предзагружает информацию о тикерах для биржи Hyperliquid."""
 
     exchange_name = "Hyperliquid"
     """Название биржи, на которой работает класс."""
@@ -30,7 +29,6 @@ class ExchangeInfo(IExchangeInfo):
 
     @classmethod
     async def _load_spot_exchange_info(cls, session: aiohttp.ClientSession) -> None:
-        """Загружает информацию о бирже для спотового рынка."""
         cls._spot_meta = await Client(session).spot_metadata()
         cls._build_spot_mappings(cls._spot_meta)
 
@@ -53,12 +51,10 @@ class ExchangeInfo(IExchangeInfo):
 
     @classmethod
     async def _load_futures_exchange_info(cls, session: aiohttp.ClientSession) -> None:
-        """Загружает информацию о бирже для фьючерсного рынка."""
         cls._futures_meta = await Client(session).perp_metadata()
 
     @classmethod
     def _build_spot_mappings(cls, spot_meta: dict) -> None:
-        """Строит словари соответствия '@индекс' ↔ индекс ↔ 'BTC'."""
         universe = spot_meta["universe"]
         tokens = spot_meta["tokens"]
 
@@ -74,27 +70,16 @@ class ExchangeInfo(IExchangeInfo):
 
     @classmethod
     def get_spot_meta(cls) -> dict:
-        """Возвращает метаинформацию о спотовом рынке."""
         cls._check_loaded()
         return cls._spot_meta
 
     @classmethod
     def get_futures_meta(cls) -> dict:
-        """Возвращает метаинформацию о фьючерсном рынке."""
         cls._check_loaded()
         return cls._futures_meta
 
     @classmethod
     def resolve_spot_symbol(cls, ident: str) -> str:
-        """Преобразует внутренний идентификатор вида '@142' в тикер, например 'BTC'.
-        Не рейзит KeyError, если тикер не найден.
-
-        Параметры:
-            token_name (str): Имя токена на бирже, например '@142' или 'BTC'.
-
-        Возвращает:
-            str | None: Название тикера (например 'BTC'), либо None, если не найден.
-        """
         cls._check_loaded()
 
         try:
@@ -104,17 +89,6 @@ class ExchangeInfo(IExchangeInfo):
 
     @classmethod
     def resolve_spot_ident(cls, symbol: str) -> str:
-        """Преобразует тикер (например, 'BTC') в внутренний идентификатор (например, '@142').
-
-        Параметры:
-            symbol (str): Название тикера, например 'BTC'.
-
-        Возвращает:
-            str: Внутренний идентификатор (например '@142').
-
-        Исключения:
-            KeyError: Если тикер не найден в локальном кэше биржи.
-        """
         cls._check_loaded()
 
         # Находим индекс по тикеру
