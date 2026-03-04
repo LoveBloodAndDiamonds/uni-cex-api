@@ -11,6 +11,7 @@ from unicex.types import (
     LiquidationDict,
     OpenInterestDict,
     OpenInterestItem,
+    OrderIdDict,
     TickerDailyDict,
     TickerDailyItem,
     TradeDict,
@@ -145,6 +146,23 @@ class Adapter:
             u=int(result["u"]),
             b=[(float(price), float(quantity)) for price, quantity in result["b"]],
             a=[(float(price), float(quantity)) for price, quantity in result["a"]],
+        )
+
+    @staticmethod
+    def futures_order_create(raw_data: dict) -> OrderIdDict:
+        """Преобразует ответ создания фьючерсного ордера в унифицированный формат.
+
+        Параметры:
+            raw_data (dict): Сырой ответ с биржи.
+
+        Возвращает:
+            OrderIdDict: Базовая информация об ордере после создания.
+        """
+        result = raw_data["result"]
+        return OrderIdDict(
+            t=int(raw_data["time"]),
+            id=result["orderId"],
+            cloid=result.get("orderLinkId", ""),
         )
 
     @staticmethod

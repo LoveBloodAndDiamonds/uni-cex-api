@@ -17,6 +17,7 @@ from unicex.types import (
     LoggerLike,
     OpenInterestDict,
     OpenInterestItem,
+    OrderIdDict,
     OrderInfoDict,
     TickerDailyDict,
 )
@@ -428,7 +429,7 @@ class IUniClient(ABC, Generic[TClient]):
         price: str | None = None,
         client_order_id: str | None = None,
         reduce_only: bool | None = None,
-    ) -> OrderInfoDict:
+    ) -> OrderIdDict:
         """Создает фьючерсный ордер.
 
         Параметры:
@@ -441,7 +442,7 @@ class IUniClient(ABC, Generic[TClient]):
             reduce_only (`bool | None`): Флаг ордера на уменьшение позиции (Опционально).
 
         Возвращает:
-            `OrderInfoDict`: Словарь с информацией о созданном ордере.
+            `OrderIdDict`: Словарь с айди созданного ордера.
         """
         ...
 

@@ -31,6 +31,7 @@ __all__ = [
     "BestBidAskItem",
     "BestBidAskDict",
     "BookDepthDict",
+    "OrderIdDict",
     "OrderInfoDict",
     # Interfaces
     "IUniClient",
@@ -136,6 +137,7 @@ from .types import (
     BestBidAskItem,
     BestBidAskDict,
     BookDepthDict,
+    OrderIdDict,
     OrderInfoDict,
 )
 

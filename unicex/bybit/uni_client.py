@@ -12,6 +12,7 @@ from unicex.types import (
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
+    OrderIdDict,
     OrderInfoDict,
     TickerDailyDict,
 )
@@ -167,8 +168,14 @@ class UniClient(IUniClient[Client]):
         price: str | None = None,
         client_order_id: str | None = None,
         reduce_only: bool | None = None,
-    ) -> OrderInfoDict:
+    ) -> OrderIdDict:
         self.ensure_authorized()
+
+        if type == OrderType.LIMIT and price is None:
+            raise ValueError("Price is required for limit orders.")
+
+        if client_order_id and len(client_order_id) > 36:
+            raise ValueError("client_order_id length must be less than or equal to 36.")
 
         raw_data = await self.client.create_order(
             category="linear",
@@ -181,7 +188,7 @@ class UniClient(IUniClient[Client]):
             reduce_only=reduce_only,
         )
 
-        return raw_data
+        return Adapter.futures_order_create(raw_data)
 
     async def futures_order_cancel(
         self,

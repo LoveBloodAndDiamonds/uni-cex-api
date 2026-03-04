@@ -14,6 +14,7 @@ from unicex.types import (
     LoggerLike,
     OpenInterestDict,
     OpenInterestItem,
+    OrderIdDict,
     OrderInfoDict,
     TickerDailyDict,
 )
@@ -238,7 +239,7 @@ class UniClient(IUniClient[Client]):
         price: str | None = None,
         client_order_id: str | None = None,
         reduce_only: bool | None = None,
-    ) -> OrderInfoDict:
+    ) -> OrderIdDict:
         raise NotImplementedError("Method will be implemented later.")
 
     async def futures_order_cancel(

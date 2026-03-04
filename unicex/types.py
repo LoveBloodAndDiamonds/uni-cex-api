@@ -16,6 +16,7 @@ __all__ = [
     "BestBidAskItem",
     "BestBidAskDict",
     "BookDepthDict",
+    "OrderIdDict",
     "OrderInfoDict",
 ]
 
@@ -222,8 +223,8 @@ class BookDepthDict(TypedDict):
     в порядке удаления от спреда. Два значения: цена и объем."""
 
 
-class OrderInfoDict(TypedDict):
-    """Информация о ордере."""
+class OrderIdDict(TypedDict):
+    """Базовая информация о айди ордера."""
 
     t: int
     """Время события в миллисекундах."""
@@ -233,6 +234,10 @@ class OrderInfoDict(TypedDict):
 
     cloid: str
     """Клиентский айди ордера."""
+
+
+class OrderInfoDict(OrderIdDict):
+    """Информация о ордере."""
 
     symbol: str
     """Торговая пара."""
