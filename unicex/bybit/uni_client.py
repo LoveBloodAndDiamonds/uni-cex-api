@@ -185,4 +185,10 @@ class UniClient(IUniClient[Client]):
         return Adapter.futures_order_create(raw_data)
 
     async def futures_position_info(self, symbol: str) -> PositionInfoDict:
-        raise NotImplementedError("Method will be implemented later.")
+        self.ensure_authorized()
+
+        raw_data = await self._client.position_info(
+            category="linear",
+            symbol=symbol,
+        )
+        return Adapter.futures_position_info(raw_data)

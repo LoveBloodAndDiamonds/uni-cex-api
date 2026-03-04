@@ -12,6 +12,7 @@ from unicex.types import (
     OpenInterestDict,
     OpenInterestItem,
     OrderIdDict,
+    PositionInfoDict,
     TickerDailyDict,
     TickerDailyItem,
     TradeDict,
@@ -163,6 +164,37 @@ class Adapter:
             t=int(raw_data["time"]),
             id=result["orderId"],
             cloid=result.get("orderLinkId", "") or "",
+        )
+
+    @staticmethod
+    def futures_position_info(raw_data: dict) -> PositionInfoDict:
+        """Преобразует ответ с информацией о фьючерсной позиции в унифицированный формат.
+
+        Параметры:
+            raw_data (dict): Сырой ответ с биржи.
+
+        Возвращает:
+            PositionInfoDict: Информация о позиции в унифицированном формате.
+        """
+        positions = raw_data["result"]["list"]
+        if not positions:
+            raise ValueError(f"Positions list are empty: {raw_data}.")
+
+        position = positions[0]
+
+        return PositionInfoDict(
+            t=int(position.get("updatedTime") or raw_data["time"]),
+            symbol=position["symbol"],
+            side=position.get("side", "").upper(),
+            quantity=float(position["size"]),
+            entry_price=float(position.get("avgPrice") or 0.0),
+            mark_price=float(position["markPrice"]),
+            liquidation_price=float(position.get("liqPrice") or 0.0),
+            unrealized_pnl=float(position.get("unrealisedPnl") or 0.0),
+            realized_pnl=float(position.get("curRealisedPnl") or 0.0),
+            leverage=float(position["leverage"]),
+            notional=float(position.get("positionValue") or 0.0),
+            breakeven_price=float(position.get("breakEvenPrice") or 0.0),
         )
 
     @staticmethod

@@ -1,10 +1,9 @@
 import asyncio
-from venv import logger
 
-from unicex import OrderSide, OrderType
+from unicex import OrderSide, OrderType  # type: ignore
 from unicex.bybit import UniClient
 
-from loguru import logger
+from loguru import logger  # type: ignore
 
 import os
 
@@ -17,13 +16,15 @@ async def main() -> None:
     )
 
     async with c:
-        r = await c.futures_order_create(
-            symbol="TRXUSDT",
-            side=OrderSide.BUY,
-            type=OrderType.MARKET,
-            quantity="50",
-            client_order_id="123",
-        )
+        # r = await c.futures_order_create(
+        #     symbol="TRXUSDT",
+        #     side=OrderSide.BUY,
+        #     type=OrderType.MARKET,
+        #     quantity="50",
+        #     client_order_id="123",
+        # )
+
+        r = await c.futures_position_info("TRXUSDT")
 
         from pprint import pp
 

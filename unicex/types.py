@@ -21,7 +21,7 @@ __all__ = [
 ]
 
 from logging import Logger as LoggingLogger
-from typing import Literal, TypedDict
+from typing import Literal, NotRequired, TypedDict
 
 import loguru
 
@@ -245,13 +245,13 @@ class PositionInfoDict(TypedDict):
     symbol: str
     """Торговая пара."""
 
-    side: Literal["BUY", "SELL"]
+    side: Literal["BUY", "SELL", ""]  # "" if position is not opened
     """Направление позиции."""
 
     quantity: float
     """Объем позиции в монетах."""
 
-    entry_price: float
+    entry_price: float  # "0" if position is not opened
     """Средняя цена входа в позицию."""
 
     mark_price: float
@@ -268,3 +268,12 @@ class PositionInfoDict(TypedDict):
 
     leverage: float
     """Торговое плечо."""
+
+    # Not required attrs for the future updates
+    # Supports not on all exchanges
+
+    notional: NotRequired[float]
+    """Размер позиции в долларах."""
+
+    breakeven_price: NotRequired[float]
+    """Цена безубытка."""
