@@ -452,7 +452,7 @@ class IUniClient(ABC, Generic[TClient]):
         symbol: str,
         order_id: str | None = None,
         client_order_id: str | None = None,
-    ) -> None:
+    ) -> list[OrderIdDict]:
         """Отменяет фьючерсный ордер. Обязательно указать либо `order_id`, либо `client_order_id`.
 
         Параметры:

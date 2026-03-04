@@ -8,6 +8,7 @@ from unicex.types import (
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
+    OrderIdDict,
     OrderInfoDict,
     TickerDailyDict,
     BookDepthDict,
@@ -192,7 +193,7 @@ class UniClient(IUniClient[Client]):
         symbol: str,
         order_id: str | None = None,
         client_order_id: str | None = None,
-    ) -> None:
+    ) -> list[OrderIdDict]:
         raise NotImplementedError("Method will be implemented later.")
 
     async def futures_order_info(
