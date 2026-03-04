@@ -236,14 +236,35 @@ class OrderIdDict(TypedDict):
     """Клиентский айди ордера."""
 
 
-class PositionInfoDict(OrderIdDict):
+class PositionInfoDict(TypedDict):
     """Информация о позиции."""
+
+    t: int
+    """Время ответа в миллисекундах."""
 
     symbol: str
     """Торговая пара."""
 
     side: Literal["BUY", "SELL"]
-    """Направление ордера."""
+    """Направление позиции."""
 
-    quantity: float | None
-    """Объем ордера в монетах."""
+    quantity: float
+    """Объем позиции в монетах."""
+
+    entry_price: float
+    """Средняя цена входа в позицию."""
+
+    mark_price: float
+    """Цена маркировки на тикере."""
+
+    liquidation_price: float
+    """Цена ликвидации позиции."""
+
+    unrealized_pnl: float
+    """Нереализованный PNL."""
+
+    realized_pnl: float
+    """Реализованный PNL."""
+
+    leverage: float
+    """Торговое плечо."""
