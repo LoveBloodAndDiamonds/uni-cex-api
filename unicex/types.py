@@ -17,7 +17,7 @@ __all__ = [
     "BestBidAskDict",
     "BookDepthDict",
     "OrderIdDict",
-    "OrderInfoDict",
+    "PositionInfoDict",
 ]
 
 from logging import Logger as LoggingLogger
@@ -236,23 +236,14 @@ class OrderIdDict(TypedDict):
     """Клиентский айди ордера."""
 
 
-class OrderInfoDict(OrderIdDict):
-    """Информация о ордере."""
+class PositionInfoDict(OrderIdDict):
+    """Информация о позиции."""
 
     symbol: str
     """Торговая пара."""
 
     side: Literal["BUY", "SELL"]
     """Направление ордера."""
-
-    type: Literal["MARKET", "LIMIT"]
-    """Тип ордера."""
-
-    status: Literal["NEW", "PARTIALLY_FILLED", "FILLED", "CANCELED"]
-    """Статус ордера."""
-
-    price: float | None
-    """Цена ордера."""
 
     quantity: float | None
     """Объем ордера в монетах."""

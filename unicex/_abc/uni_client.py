@@ -18,7 +18,6 @@ from unicex.types import (
     OpenInterestDict,
     OpenInterestItem,
     OrderIdDict,
-    OrderInfoDict,
     TickerDailyDict,
 )
 from unicex.utils import batched_list
@@ -446,52 +445,5 @@ class IUniClient(ABC, Generic[TClient]):
         """
         ...
 
-    @abstractmethod
-    async def futures_order_cancel(
-        self,
-        symbol: str,
-        order_id: str | None = None,
-        client_order_id: str | None = None,
-    ) -> OrderIdDict:
-        """Отменяет фьючерсный ордер. Обязательно указать либо `order_id`, либо `client_order_id`.
 
-        Параметры:
-            symbol (`str`): Название тикера.
-            order_id (`str`): ID ордера для отмены.
-            client_order_id (`str | None`): Пользовательский ID ордера для отмены.
 
-        Возвращает:
-            `OrderIdDict`: Словарь с информацией об отмененном ордере.
-        """
-        ...
-
-    @abstractmethod
-    async def futures_order_cancel_all(self, symbol: str) -> list[OrderIdDict]:
-        """Отменяет все фьючерсные ордера для указанного тикера.
-
-        Параметры:
-            symbol (`str`): Название тикера.
-
-        Возвращает:
-            `list[OrderIdDict]`: Список словарей с информацией об отмененных ордерах.
-        """
-        ...
-
-    @abstractmethod
-    async def futures_order_info(
-        self,
-        symbol: str,
-        order_id: str | None = None,
-        client_order_id: str | None = None,
-    ) -> OrderInfoDict:
-        """Возвращает информацию о фьючерсном ордере. Обязательно указать либо `order_id`, либо `client_order_id`.
-
-        Параметры:
-            symbol (`str`): Название тикера.
-            order_id (`str`): ID ордера для получения информации.
-            client_order_id (`str | None`): Пользовательский ID ордера для получения информации.
-
-        Возвращает:
-            `OrderInfoDict`: Словарь с информацией о ордере.
-        """
-        ...

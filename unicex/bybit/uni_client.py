@@ -13,10 +13,8 @@ from unicex.types import (
     OpenInterestDict,
     OpenInterestItem,
     OrderIdDict,
-    OrderInfoDict,
     TickerDailyDict,
 )
-from unicex.utils import validate_order_identifiers
 
 from .adapter import Adapter
 from .client import Client
@@ -185,46 +183,5 @@ class UniClient(IUniClient[Client]):
 
         return Adapter.futures_order_create(raw_data)
 
-    async def futures_order_cancel(
-        self,
-        symbol: str,
-        order_id: str | None = None,
-        client_order_id: str | None = None,
-    ) -> OrderIdDict:
-        self.ensure_authorized()
-        validate_order_identifiers(order_id, client_order_id)
 
-        raw_data = await self.client.cancel_order(
-            category="linear",
-            symbol=symbol,
-            order_id=order_id,
-            order_link_id=client_order_id,
-        )
-        return Adapter.futures_order_cancel(raw_data)
 
-    async def futures_order_cancel_all(self, symbol: str) -> list[OrderIdDict]:
-        self.ensure_authorized()
-
-        raw_data = await self.client.cancel_all_orders(
-            category="linear",
-            symbol=symbol,
-        )
-        return Adapter.futures_order_cancel_all(raw_data)
-
-    async def futures_order_info(
-        self,
-        symbol: str,
-        order_id: str | None = None,
-        client_order_id: str | None = None,
-    ) -> OrderInfoDict:
-        self.ensure_authorized()
-        validate_order_identifiers(order_id, client_order_id)
-
-        raw_data = await self.client.open_orders(
-            category="linear",
-            symbol=symbol,
-            order_id=order_id,
-            order_link_id=client_order_id,
-            limit=1,
-        )
-        return Adapter.futures_order_info(raw_data)

@@ -1,7 +1,7 @@
 __all__ = ["Adapter"]
 
 from collections.abc import Callable
-from typing import Any, Literal
+from typing import Any
 
 from unicex.types import (
     BestBidAskDict,
@@ -12,7 +12,6 @@ from unicex.types import (
     OpenInterestDict,
     OpenInterestItem,
     OrderIdDict,
-    OrderInfoDict,
     TickerDailyDict,
     TickerDailyItem,
     TradeDict,
@@ -165,94 +164,6 @@ class Adapter:
             id=result["orderId"],
             cloid=result.get("orderLinkId", "") or "",
         )
-
-    @staticmethod
-    def futures_order_cancel(raw_data: dict) -> OrderIdDict:
-        """Преобразует ответ отмены фьючерсного ордера в унифицированный формат.
-
-        Параметры:
-            raw_data (dict): Сырой ответ с биржи.
-
-        Возвращает:
-            OrderIdDict: Базовая информация об ордере после отмены.
-        """
-        result = raw_data["result"]
-        return OrderIdDict(
-            t=int(raw_data["time"]),
-            id=result["orderId"],
-            cloid=result.get("orderLinkId", "") or "",
-        )
-
-    @staticmethod
-    def futures_order_cancel_all(raw_data: dict) -> list[OrderIdDict]:
-        """Преобразует ответ отмены всех фьючерсных ордеров в унифицированный формат.
-
-        Параметры:
-            raw_data (dict): Сырой ответ с биржи.
-
-        Возвращает:
-            list[OrderIdDict]: Список базовой информации об отмененных ордерах.
-        """
-        canceled_time = int(raw_data["time"])
-        return [
-            OrderIdDict(
-                t=canceled_time,
-                id=item["orderId"],
-                cloid=item.get("orderLinkId", "") or "",
-            )
-            for item in raw_data["result"].get("list", [])
-        ]
-
-    @staticmethod
-    def futures_order_info(raw_data: dict) -> OrderInfoDict:
-        """Преобразует ответ с информацией о фьючерсном ордере в унифицированный формат.
-
-        Параметры:
-            raw_data (dict): Сырой ответ с биржи.
-
-        Возвращает:
-            OrderInfoDict: Информация об ордере в унифицированном формате.
-        """
-        orders = raw_data["result"]["list"]
-        if not orders:
-            raise ValueError("Order not found.")
-        return Adapter._adapt_order_info(orders[0])
-
-    @staticmethod
-    def _adapt_order_info(
-        raw_order: dict,
-        timestamp: int | None = None,
-        status_override: str | None = None,
-    ) -> OrderInfoDict:
-        """Преобразует raw-ордер Bybit в OrderInfoDict."""
-        raw_price = raw_order.get("price")
-        raw_quantity = raw_order.get("qty")
-        raw_status = status_override or raw_order.get("orderStatus", "")
-
-        return OrderInfoDict(
-            t=int(timestamp if timestamp is not None else raw_order.get("updatedTime", 0)),
-            id=raw_order["orderId"],
-            cloid=raw_order.get("orderLinkId", "") or "",
-            symbol=raw_order["symbol"],
-            side=str(raw_order["side"]).upper(),
-            type=str(raw_order["orderType"]).upper(),
-            status=Adapter._normalize_order_status(str(raw_status)),
-            price=float(raw_price) if raw_price not in ("", None) else None,
-            quantity=float(raw_quantity) if raw_quantity not in ("", None) else None,
-        )
-
-    @staticmethod
-    def _normalize_order_status(
-        status: str,
-    ) -> Literal["NEW", "PARTIALLY_FILLED", "FILLED", "CANCELED"]:
-        """Нормализует статус ордера Bybit к унифицированным статусам."""
-        if status == "Filled":
-            return "FILLED"
-        if status == "PartiallyFilled":
-            return "PARTIALLY_FILLED"
-        if status in {"New", "Created", "Untriggered", "Triggered", "Active"}:
-            return "NEW"
-        return "CANCELED"
 
     @staticmethod
     def klines(raw_data: dict) -> list[KlineDict]:

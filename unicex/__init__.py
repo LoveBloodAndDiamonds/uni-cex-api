@@ -32,7 +32,7 @@ __all__ = [
     "BestBidAskDict",
     "BookDepthDict",
     "OrderIdDict",
-    "OrderInfoDict",
+    "PositionInfoDict",
     # Interfaces
     "IUniClient",
     "IUniWebsocketManager",
@@ -138,7 +138,7 @@ from .types import (
     BestBidAskDict,
     BookDepthDict,
     OrderIdDict,
-    OrderInfoDict,
+    PositionInfoDict,
 )
 
 # exchanges
