@@ -15,6 +15,7 @@ from unicex.types import (
     OpenInterestDict,
     OpenInterestItem,
     OrderIdDict,
+    PositionInfoDict,
     TickerDailyDict,
 )
 from unicex.utils import batched_list
@@ -241,5 +242,5 @@ class UniClient(IUniClient[Client]):
     ) -> OrderIdDict:
         raise NotImplementedError("Method will be implemented later.")
 
-
-
+    async def futures_position_info(self, symbol: str) -> PositionInfoDict:
+        raise NotImplementedError("Method will be implemented later.")

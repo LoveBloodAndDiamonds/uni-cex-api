@@ -13,6 +13,7 @@ from unicex.types import (
     OpenInterestDict,
     OpenInterestItem,
     OrderIdDict,
+    PositionInfoDict,
     TickerDailyDict,
 )
 
@@ -183,5 +184,5 @@ class UniClient(IUniClient[Client]):
 
         return Adapter.futures_order_create(raw_data)
 
-
-
+    async def futures_position_info(self, symbol: str) -> PositionInfoDict:
+        raise NotImplementedError("Method will be implemented later.")

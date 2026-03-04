@@ -18,6 +18,7 @@ from unicex.types import (
     OpenInterestDict,
     OpenInterestItem,
     OrderIdDict,
+    PositionInfoDict,
     TickerDailyDict,
 )
 from unicex.utils import batched_list
@@ -445,5 +446,14 @@ class IUniClient(ABC, Generic[TClient]):
         """
         ...
 
+    @abstractmethod
+    async def futures_position_info(self, symbol: str) -> PositionInfoDict:
+        """Возвращает информацию о позиции для фьючерсного тикера.
 
+        Параметры:
+            symbol (`str`): Название тикера.
 
+        Возвращает:
+            `PositionInfoDict`: Словарь с информацией о позиции.
+        """
+        ...
