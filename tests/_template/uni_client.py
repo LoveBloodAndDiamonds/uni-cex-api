@@ -180,8 +180,8 @@ class UniClient(IUniClient[Client]):
         symbol: str,
         side: OrderSide,
         type: OrderType,
-        quantity: float,
-        price: float | None = None,
+        quantity: str,
+        price: str | None = None,
         client_order_id: str | None = None,
         reduce_only: bool | None = None,
     ) -> OrderInfoDict:

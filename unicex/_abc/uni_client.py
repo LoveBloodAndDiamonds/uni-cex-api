@@ -423,8 +423,8 @@ class IUniClient(ABC, Generic[TClient]):
         symbol: str,
         side: OrderSide,
         type: OrderType,
-        quantity: float,
-        price: float | None = None,
+        quantity: str,
+        price: str | None = None,
         client_order_id: str | None = None,
         reduce_only: bool | None = None,
     ) -> OrderInfoDict:
@@ -434,9 +434,8 @@ class IUniClient(ABC, Generic[TClient]):
             symbol (`str`): Название тикера.
             side (`OrderSide`): Сторона ордера (BUY/SELL).
             type (`OrderType`): Тип ордера.
-            quantity (`float`): Количество базового актива.
-            price (`float | None`): Цена ордера (Опционально, для лимитных ордеров).
-            stop_price (`float | None`): Стоп-цена ордера (Опционально, для стоп-ордеров).
+            quantity (`str`): Количество базового актива.
+            price (`str | None`): Цена ордера (Опционально, для лимитных ордеров).
             client_order_id (`str | None`): Пользовательский ID ордера (Опционально).
             reduce_only (`bool | None`): Флаг ордера на уменьшение позиции (Опционально).
 

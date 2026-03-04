@@ -163,12 +163,25 @@ class UniClient(IUniClient[Client]):
         symbol: str,
         side: OrderSide,
         type: OrderType,
-        quantity: float,
-        price: float | None = None,
+        quantity: str,
+        price: str | None = None,
         client_order_id: str | None = None,
         reduce_only: bool | None = None,
     ) -> OrderInfoDict:
-        raise NotImplementedError("Method will be implemented later.")
+        self.ensure_authorized()
+
+        raw_data = await self.client.create_order(
+            category="linear",
+            symbol=symbol,
+            side=side.to_exchange_format(Exchange.BYBIT),  # type: ignore
+            order_type=type.to_exchange_format(Exchange.BYBIT),  # type: ignore
+            qty=quantity,
+            price=price,
+            order_link_id=client_order_id,
+            reduce_only=reduce_only,
+        )
+
+        return raw_data
 
     async def futures_order_cancel(
         self,

@@ -49,6 +49,14 @@ class OrderSide(StrEnum):
     BUY = "BUY"
     SELL = "SELL"
 
+    def to_exchange_format(self, exchange: Exchange) -> str:
+        """Нормализует."""
+        match exchange:
+            case Exchange.BYBIT:
+                return self.capitalize()
+            case _:
+                raise NotImplementedError(f"Exchange {exchange} is not supported")
+
 
 class OrderType(StrEnum):
     """Тип ордера."""
