@@ -50,3 +50,4 @@ format.docstring-code-format = true      # Приводить код внутр�
 "unicex/*/uni_client.py" = ["D102"]
 "unicex/*/uni_websocket_manager.py" = ["D102"]
 "unicex/*/exchange_info.py" = ["D101", "D102"]
+"unicex/*/adapter.py" = ["D102"]

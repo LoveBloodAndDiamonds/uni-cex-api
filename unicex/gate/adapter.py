@@ -27,15 +27,6 @@ class Adapter:
 
     @staticmethod
     def tickers(raw_data: list[dict], only_usdt: bool) -> list[str]:
-        """Преобразует сырой ответ о тикерах в список символов.
-
-        Параметры:
-            raw_data (list[dict]): Сырой ответ с биржи.
-            only_usdt (bool): Флаг, указывающий, нужно ли включать только тикеры в паре c USDT.
-
-        Возвращает:
-            list[str]: Список тикеров.
-        """
         return [
             item["currency_pair"]
             for item in raw_data
@@ -44,15 +35,6 @@ class Adapter:
 
     @staticmethod
     def futures_tickers(raw_data: list[dict], only_usdt: bool) -> list[str]:
-        """Преобразует сырой ответ о фьючерсных тикерах в список символов.
-
-        Параметры:
-            raw_data (list[dict]): Сырой ответ с биржи.
-            only_usdt (bool): Флаг, указывающий, нужно ли включать только тикеры в паре c USDT.
-
-        Возвращает:
-            list[str]: Список тикеров.
-        """
         return [
             item["contract"]
             for item in raw_data
@@ -61,31 +43,14 @@ class Adapter:
 
     @staticmethod
     def last_price(raw_data: list[dict]) -> dict[str, float]:
-        """Преобразует данные о последних ценах (spot) в унифицированный формат.
-
-        Параметры:
-            raw_data (list[dict]): Сырой ответ с биржи.
-
-        Возвращает:
-            dict[str, float]: Словарь, где ключ — тикер, а значение — последняя цена.
-        """
         return {item["currency_pair"]: float(item["last"]) for item in raw_data}
 
     @staticmethod
     def futures_last_price(raw_data: list[dict]) -> dict[str, float]:
-        """Преобразует данные о последних ценах (futures) в унифицированный формат."""
         return {item["contract"]: float(item["last"]) for item in raw_data}
 
     @staticmethod
     def ticker_24hr(raw_data: list[dict]) -> TickerDailyDict:
-        """Преобразует 24-часовую статистику (spot) в унифицированный формат.
-
-        Параметры:
-            raw_data (list[dict]): Сырой ответ с биржи.
-
-        Возвращает:
-            TickerDailyDict: Словарь, где ключ — тикер, а значение — агрегированная статистика.
-        """
         return {
             item["currency_pair"]: TickerDailyItem(
                 p=float(item["change_percentage"]),
@@ -97,7 +62,6 @@ class Adapter:
 
     @staticmethod
     def futures_ticker_24hr(raw_data: list[dict]) -> TickerDailyDict:
-        """Преобразует 24-часовую статистику (futures) в унифицированный формат."""
         return {
             item["contract"]: TickerDailyItem(
                 p=float(item["change_percentage"]),
@@ -109,15 +73,6 @@ class Adapter:
 
     @staticmethod
     def klines(raw_data: list[list], symbol: str) -> list[KlineDict]:
-        """Преобразует данные о свечах в унифицированный формат.
-
-        Параметры:
-            raw_data (list[list]): Сырой ответ с биржи.
-            symbol (str): Символ тикера.
-
-        Возвращает:
-            list[KlineDict]: Список свечей.
-        """
         return [
             KlineDict(
                 s=symbol,
@@ -139,15 +94,6 @@ class Adapter:
 
     @staticmethod
     def futures_klines(raw_data: list[dict], symbol: str) -> list[KlineDict]:
-        """Преобразует данные о свечах в унифицированный формат.
-
-        Параметры:
-            raw_data (list[dict]): Сырой ответ с биржи.
-            symbol (str): Символ тикера.
-
-        Возвращает:
-            list[KlineDict]: Список свечей.
-        """
         return [
             KlineDict(
                 s=symbol,
@@ -166,7 +112,6 @@ class Adapter:
 
     @staticmethod
     def funding_rate(raw_data: list[dict]) -> dict[str, float]:
-        """Преобразует данные о ставках финансирования в унифицированный формат."""
         return {
             item["contract"]: float(item["funding_rate"]) * 100
             for item in raw_data
@@ -175,7 +120,6 @@ class Adapter:
 
     @staticmethod
     def open_interest(raw_data: list[dict]) -> OpenInterestDict:
-        """Преобразует данные об открытом интересе в унифицированный формат."""
         return {
             item["contract"]: OpenInterestItem(
                 t=int(time.time() * 1000),
@@ -187,14 +131,6 @@ class Adapter:
 
     @staticmethod
     def futures_best_bid_ask(raw_data: list[dict]) -> BestBidAskDict:
-        """Преобразует сырой ответ, в котором содержатся данные о лучших bid/ask фьючерсов в унифицированный формат.
-
-        Параметры:
-            raw_data (list[dict]): Сырой ответ с биржи.
-
-        Возвращает:
-            BestBidAskDict: Словарь, где ключ - тикер, а значение - лучший бид и аск.
-        """
         return {
             item["contract"]: BestBidAskItem(
                 s=item["contract"],
@@ -210,15 +146,6 @@ class Adapter:
 
     @staticmethod
     def futures_depth(raw_data: dict, symbol: str) -> BookDepthDict:
-        """Преобразует сырой ответ, в котором содержатся данные о стакане фьючерсов, в унифицированный формат.
-
-        Параметры:
-            raw_data (dict): Сырой ответ с биржи.
-            symbol (str): Тикер, для которого нужно преобразовать данные.
-
-        Возвращает:
-            BookDepthDict: Стакан для тикера.
-        """
         contract_size = Adapter._get_contract_size(symbol)
         return BookDepthDict(
             s=symbol,
@@ -230,14 +157,6 @@ class Adapter:
 
     @staticmethod
     def klines_message(raw_msg: Any) -> list[KlineDict]:
-        """Преобразует вебсокет-сообщение со свечами в унифицированный формат.
-
-        Параметры:
-            raw_msg (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            list[KlineDict]: Список свечей в унифицированном формате.
-        """
         data = raw_msg["result"]
         return [
             KlineDict(
@@ -256,14 +175,6 @@ class Adapter:
 
     @staticmethod
     def futures_klines_message(raw_msg: Any) -> list[KlineDict]:
-        """Преобразует вебсокет-сообщение со свечами в унифицированный формат.
-
-        Параметры:
-            raw_msg (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            list[KlineDict]: Список свечей в унифицированном формате.
-        """
         return [
             KlineDict(
                 s=item["n"].split("_", 1)[1],  # XRP_USDT
@@ -285,14 +196,6 @@ class Adapter:
 
     @staticmethod
     def trades_message(raw_msg: Any) -> list[TradeDict]:
-        """Преобразует вебсокет-сообщение со сделками в унифицированный формат.
-
-        Параметры:
-            raw_msg (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            list[TradeDict]: Список сделок в унифицированном формате.
-        """
         trade = raw_msg["result"]
         return [
             TradeDict(
@@ -306,14 +209,6 @@ class Adapter:
 
     @staticmethod
     def futures_trades_message(raw_msg: Any) -> list[TradeDict]:
-        """Преобразует вебсокет-сообщение со сделками в унифицированный формат.
-
-        Параметры:
-            raw_msg (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            list[TradeDict]: Список сделок в унифицированном формате.
-        """
         return [
             TradeDict(
                 t=item["create_time_ms"],
@@ -330,18 +225,9 @@ class Adapter:
 
     @staticmethod
     def futures_best_bid_ask_message(raw_msg: Any) -> list[BestBidAskItem]:
-        """Преобразует вебсокет-сообщение с лучшими бидом и аском в унифицированный формат.
-
-        Параметры:
-            raw_msg (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            list[BestBidAskDict]: Список обновлений лучших бидов и асков в унифицированном формате.
-        """
         result = raw_msg["result"]
         symbol = result["s"]
         contract_size = Adapter._get_contract_size(symbol)
-        print(contract_size)
         bid_price = float(result["b"]) if result["b"] != "" else 0.0
         ask_price = float(result["a"]) if result["a"] != "" else 0.0
         return [
@@ -358,14 +244,6 @@ class Adapter:
 
     @staticmethod
     def futures_partial_book_depth_message(raw_msg: Any) -> list[BookDepthDict]:
-        """Преобразует вебсокет-сообщение с частичным стаканом в унифицированный формат.
-
-        Параметры:
-            raw_msg (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            list[PartialBookDepthDict]: Список обновлений стакана в унифицированном формате.
-        """
         result = raw_msg["result"]
         symbol = result["contract"]
         contract_size = Adapter._get_contract_size(symbol)
@@ -386,7 +264,6 @@ class Adapter:
 
     @staticmethod
     def _get_contract_size(symbol: str) -> float:
-        """Возвращает размер контракта для указанного символа тикера."""
         try:
             return ExchangeInfo.get_futures_ticker_info(symbol)["contract_size"] or 1
         except:  # noqa

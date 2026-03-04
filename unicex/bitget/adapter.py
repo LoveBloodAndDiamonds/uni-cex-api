@@ -20,15 +20,6 @@ class Adapter:
 
     @staticmethod
     def tickers(raw_data: Any, only_usdt: bool) -> list[str]:
-        """Преобразует сырой ответ, в котором содержатся данные о тикерах в список тикеров.
-
-        Параметры:
-            raw_data (Any): Сырой ответ с биржи.
-            only_usdt (bool): Флаг, указывающий, нужно ли включать только тикеры в паре к USDT.
-
-        Возвращает:
-            list[str]: Список тикеров.
-        """
         return [
             item["symbol"]
             for item in raw_data["data"]
@@ -37,15 +28,6 @@ class Adapter:
 
     @staticmethod
     def ticker_24hr(raw_data: Any) -> TickerDailyDict:
-        """Преобразует сырой ответ, в котором содержатся данные о тикере за последние 24 часа
-        в унифицированный формат.
-
-        Параметры:
-            raw_data (Any): Сырой ответ с биржи.
-
-        Возвращает:
-            TickerDailyDict: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
-        """
         return {
             item["symbol"]: TickerDailyItem(
                 p=round(float(item["change24h"]) * 100, 2),  # конвертируем в проценты
@@ -57,29 +39,10 @@ class Adapter:
 
     @staticmethod
     def last_price(raw_data: Any) -> dict[str, float]:
-        """Преобразует сырой ответ, в котором содержатся данные о последних ценах тикеров
-        в унифицированный формат.
-
-        Параметры:
-            raw_data (Any): Сырой ответ с биржи.
-
-        Возвращает:
-            dict[str, float]: Словарь, где ключ - тикер, а значение - последняя цена.
-        """
         return {item["symbol"]: float(item["lastPr"]) for item in raw_data["data"]}
 
     @staticmethod
     def klines(raw_data: Any, symbol: str) -> list[KlineDict]:
-        """Преобразует сырой ответ, в котором содержатся данные о котировках тикеров в
-        унифицированный формат.
-
-        Параметры:
-            raw_data (Any): Сырой ответ с биржи.
-            symbol (str): Тикер, для которого нужно преобразовать данные.
-
-        Возвращает:
-            list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
-        """
         return [
             KlineDict(
                 s=symbol,
@@ -101,28 +64,10 @@ class Adapter:
 
     @staticmethod
     def funding_rate(raw_data: Any) -> dict[str, float]:
-        """Преобразует сырой ответ, в котором содержатся данные о ставках финансирования
-        тикеров в унифицированный формат.
-
-        Параметры:
-            raw_data (Any): Сырой ответ с биржи.
-
-        Возвращает:
-            dict[str, float]: Словарь, где ключ - тикер, а значение - ставка финансирования.
-        """
         return {item["symbol"]: float(item["fundingRate"]) * 100 for item in raw_data["data"]}
 
     @staticmethod
     def klines_message(raw_msg: Any) -> list[KlineDict]:
-        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
-        свече/свечах в унифицированный вид.
-
-        Параметры:
-            raw_msg (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
-        """
         symbol = raw_msg["arg"]["instId"]
 
         return [
@@ -146,14 +91,6 @@ class Adapter:
 
     @staticmethod
     def trades_message(raw_msg: Any) -> list[TradeDict]:
-        """Преобразует сырое сообщение вебсокета со сделками в унифицированный формат.
-
-        Параметры:
-            raw_msg (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            list[TradeDict]: Список сделок в унифицированном формате.
-        """
         symbol = raw_msg["arg"]["instId"]
 
         return [
@@ -172,15 +109,6 @@ class Adapter:
 
     @staticmethod
     def open_interest(raw_data: Any) -> OpenInterestDict:
-        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
-        объеме открытых позиций в унифицированный вид.
-
-        Параметры:
-            raw_data (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            `OpenInterestDict`: Cловарь, где ключи - название тикера, а значения - объемы открытых позиций в монетах.
-        """
         return {
             i["symbol"]: OpenInterestItem(
                 t=int(i["ts"]),
@@ -192,14 +120,6 @@ class Adapter:
 
     @staticmethod
     def futures_best_bid_ask(raw_data: Any) -> BestBidAskDict:
-        """Преобразует сырой ответ, в котором содержатся данные о лучших bid/ask фьючерсов в унифицированный формат.
-
-        Параметры:
-            raw_data (Any): Сырой ответ с биржи.
-
-        Возвращает:
-            BestBidAskDict: Словарь, где ключ - тикер, а значение - лучший бид и аск.
-        """
         return {
             item["symbol"]: BestBidAskItem(
                 s=item["symbol"],
@@ -215,15 +135,6 @@ class Adapter:
 
     @staticmethod
     def futures_depth(raw_data: Any, symbol: str) -> BookDepthDict:
-        """Преобразует сырой ответ, в котором содержатся данные о стакане фьючерсов, в унифицированный формат.
-
-        Параметры:
-            raw_data (Any): Сырой ответ с биржи.
-            symbol (str): Тикер, для которого нужно преобразовать данные.
-
-        Возвращает:
-            BookDepthDict: Стакан для тикера.
-        """
         data = raw_data["data"]
         return BookDepthDict(
             s=symbol,
@@ -235,14 +146,6 @@ class Adapter:
 
     @staticmethod
     def futures_best_bid_ask_message(raw_msg: Any) -> list[BestBidAskItem]:
-        """Преобразует вебсокет-сообщение с лучшими бидом и аском в унифицированный формат.
-
-        Параметры:
-            raw_msg (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            list[BestBidAskDict]: Список обновлений лучших бидов и асков в унифицированном формате.
-        """
         arg = raw_msg["arg"]
         data = raw_msg["data"][0]
         best_bid = data["bids"][0]
@@ -261,14 +164,6 @@ class Adapter:
 
     @staticmethod
     def futures_partial_book_depth_message(raw_msg: Any) -> list[BookDepthDict]:
-        """Преобразует вебсокет-сообщение с частичным стаканом в унифицированный формат.
-
-        Параметры:
-            raw_msg (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            list[PartialBookDepthDict]: Список обновлений стакана в унифицированном формате.
-        """
         data = raw_msg["data"][0]
         return [
             BookDepthDict(

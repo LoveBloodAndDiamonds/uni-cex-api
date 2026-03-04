@@ -18,15 +18,6 @@ class Adapter:
 
     @staticmethod
     def tickers(raw_data: dict, only_usdt: bool) -> list[str]:
-        """Преобразует сырой ответ, в котором содержатся данные о тикерах в список тикеров.
-
-        Параметры:
-            raw_data (dict): Сырой ответ с биржи.
-            only_usdt (bool): Флаг, указывающий, нужно ли включать только тикеры в паре к USDT.
-
-        Возвращает:
-            list[str]: Список тикеров.
-        """
         data = raw_data["data"]
         items = data["symbols"] if isinstance(data, dict) and "symbols" in data else data
         return [
@@ -35,14 +26,6 @@ class Adapter:
 
     @staticmethod
     def ticker_24hr(raw_data: dict) -> TickerDailyDict:
-        """Преобразует сырой ответ, в котором содержатся данные о тикере за последние 24 часа в унифицированный формат.
-
-        Параметры:
-            raw_data (dict): Сырой ответ с биржи.
-
-        Возвращает:
-            TickerDailyDict: Словарь, где ключ - тикер, а значение - статистика за последние 24 часа.
-        """
         items = raw_data["data"]
         result = {}
         for item in items:
@@ -59,27 +42,11 @@ class Adapter:
 
     @staticmethod
     def open_interest(raw_data: dict) -> OpenInterestItem:
-        """Преобразует сырой ответ, в котором содержатся данные об открытом интересе, в унифицированный формат.
-
-        Параметры:
-            raw_data (dict): Сырой ответ с биржи.
-
-        Возвращает:
-            OpenInterestItem: Словарь со временем и объемом открытого интереса в монетах.
-        """
         item = raw_data["data"]
         return OpenInterestItem(t=int(item["time"]), v=float(item["openInterest"]), u="usd")
 
     @staticmethod
     def funding_rate(raw_data: dict) -> dict[str, float]:
-        """Преобразует сырой ответ, в котором содержатся данные о ставках финансирования, в унифицированный формат.
-
-        Параметры:
-            raw_data (dict): Сырой ответ с биржи.
-
-        Возвращает:
-            dict[str, float]: Словарь, где ключ - тикер, а значение - ставка финансирования.
-        """
         data = raw_data["data"]
         items = data if isinstance(data, list) else [data]
         result: dict[str, float] = {}
@@ -92,14 +59,6 @@ class Adapter:
 
     @staticmethod
     def last_price(raw_data: dict) -> dict[str, float]:
-        """Преобразует сырой ответ, в котором содержатся данные о последней цене, в унифицированный формат.
-
-        Параметры:
-            raw_data (dict): Сырой ответ с биржи.
-
-        Возвращает:
-            dict[str, float]: Словарь, где ключ - тикер, а значение - последняя цена.
-        """
         data = raw_data["data"]
         if isinstance(data, list):
             return {
@@ -112,14 +71,6 @@ class Adapter:
 
     @staticmethod
     def klines(raw_data: dict) -> list[KlineDict]:
-        """Преобразует сырой ответ, в котором содержатся данные о свечах, в унифицированный формат.
-
-        Параметры:
-            raw_data (dict): Сырой ответ с биржи.
-
-        Возвращает:
-            list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
-        """
         data = raw_data["data"]
         items = data["klines"] if isinstance(data, dict) and "klines" in data else data
         if "symbol" in raw_data:
@@ -169,68 +120,19 @@ class Adapter:
         ]
 
     @staticmethod
-    def Klines_message(msg: Any) -> list[KlineDict]:
-        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
-        свече/свечах в унифицированный вид.
-
-        Параметры:
-            msg (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
-        """
-        ...
+    def Klines_message(msg: Any) -> list[KlineDict]: ...
 
     @staticmethod
-    def futures_klines_message(msg: Any) -> list[KlineDict]:
-        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
-        свече/свечах в унифицированный вид.
-
-        Параметры:
-            msg (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
-        """
-        ...
+    def futures_klines_message(msg: Any) -> list[KlineDict]: ...
 
     @staticmethod
-    def aggtrades_message(msg: Any) -> list[TradeDict]:
-        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
-        аггрегированных сделке/сделках в унифицированный вид.
-
-        Параметры:
-            msg (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
-        """
-        ...
+    def aggtrades_message(msg: Any) -> list[TradeDict]: ...
 
     @staticmethod
-    def futures_aggtrades_message(msg: Any) -> list[TradeDict]:
-        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
-        аггрегированных сделке/сделках в унифицированный вид.
-
-        Параметры:
-            msg (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
-        """
-        ...
+    def futures_aggtrades_message(msg: Any) -> list[TradeDict]: ...
 
     @staticmethod
     def trades_message(msg: Any) -> list[TradeDict]:
-        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
-        сделке/сделках в унифицированный вид.
-
-        Параметры:
-            msg (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            list[KlineDict]: Список словарей, где каждый словарь содержит данные о сделке.
-        """
         return [
             TradeDict(
                 t=int(trade["T"]),
@@ -246,14 +148,4 @@ class Adapter:
         ]
 
     @staticmethod
-    def liquidations_message(msg: Any) -> list[LiquidationDict]:
-        """Преобразует сырое сообщение с вебсокета, в котором содержится информация о
-        ликвидации/ликвидациях в унифицированный вид.
-
-        Параметры:
-            msg (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            list[LiquidationDict]: Список словарей, где каждый словарь содержит данные о ликвидации.
-        """
-        ...
+    def liquidations_message(msg: Any) -> list[LiquidationDict]: ...
