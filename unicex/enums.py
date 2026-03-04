@@ -4,7 +4,10 @@ __all__ = [
     "MarketType",
     "Exchange",
     "Timeframe",
-    "Side",
+    "OrderSide",
+    "OrderType",
+    "TimeInForce",
+    "PositionSide",
 ]
 
 from enum import StrEnum
@@ -40,11 +43,34 @@ class Exchange(StrEnum):
         return self, market_type
 
 
-class Side(StrEnum):
+class OrderSide(StrEnum):
     """Перечисление сторон сделки."""
 
     BUY = "BUY"
     SELL = "SELL"
+
+
+class OrderType(StrEnum):
+    """Тип ордера."""
+
+    LIMIT = "LIMIT"
+    MARKET = "MARKET"
+
+
+class TimeInForce(StrEnum):
+    """Перечисление времени действия ордера."""
+
+    GTC = "GTC"
+    IOC = "IOC"
+    FOK = "FOK"
+
+
+class PositionSide(StrEnum):
+    """Перечисление сторон позиции."""
+
+    BOTH = "BOTH"  # Means one-way mode
+    LONG = "LONG"
+    SHORT = "SHORT"
 
 
 class Timeframe(StrEnum):

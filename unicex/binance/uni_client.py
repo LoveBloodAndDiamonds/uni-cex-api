@@ -4,13 +4,14 @@ __all__ = ["UniClient"]
 from typing import overload
 
 from unicex._abc import IUniClient
-from unicex.enums import Exchange, MarketType, Timeframe
+from unicex.enums import Exchange, MarketType, OrderSide, OrderType, Timeframe
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
     BookDepthDict,
     KlineDict,
     OpenInterestItem,
+    OrderInfoDict,
     TickerDailyDict,
 )
 
@@ -145,3 +146,32 @@ class UniClient(IUniClient[Client]):
 
         raw_data = await self._client.futures_depth(symbol=symbol, limit=limit)
         return Adapter.futures_depth(raw_data=raw_data, symbol=symbol)
+
+    async def futures_order_create(
+        self,
+        symbol: str,
+        side: OrderSide,
+        type: OrderType,
+        quantity: float,
+        price: float | None = None,
+        stop_price: float | None = None,
+        client_order_id: str | None = None,
+        reduce_only: bool | None = None,
+    ) -> OrderInfoDict:
+        raise NotImplementedError("Method will be implemented later.")
+
+    async def futures_order_cancel(
+        self,
+        symbol: str,
+        order_id: str | None = None,
+        client_order_id: str | None = None,
+    ) -> None:
+        raise NotImplementedError("Method will be implemented later.")
+
+    async def futures_order_info(
+        self,
+        symbol: str,
+        order_id: str | None = None,
+        client_order_id: str | None = None,
+    ) -> OrderInfoDict:
+        raise NotImplementedError("Method will be implemented later.")

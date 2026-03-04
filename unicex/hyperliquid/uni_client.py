@@ -5,7 +5,7 @@ from typing import Self, overload
 import aiohttp
 
 from unicex._abc import IUniClient
-from unicex.enums import Exchange, MarketType, Timeframe
+from unicex.enums import Exchange, MarketType, OrderSide, OrderType, Timeframe
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
@@ -14,6 +14,7 @@ from unicex.types import (
     LoggerLike,
     OpenInterestDict,
     OpenInterestItem,
+    OrderInfoDict,
     TickerDailyDict,
 )
 from unicex.utils import batched_list
@@ -227,3 +228,32 @@ class UniClient(IUniClient[Client]):
         raise NotImplementedError(
             "Method 'futures_depth' will be implemented later. You can open pull request to contribute."
         )
+
+    async def futures_order_create(
+        self,
+        symbol: str,
+        side: OrderSide,
+        type: OrderType,
+        quantity: float,
+        price: float | None = None,
+        stop_price: float | None = None,
+        client_order_id: str | None = None,
+        reduce_only: bool | None = None,
+    ) -> OrderInfoDict:
+        raise NotImplementedError("Method will be implemented later.")
+
+    async def futures_order_cancel(
+        self,
+        symbol: str,
+        order_id: str | None = None,
+        client_order_id: str | None = None,
+    ) -> None:
+        raise NotImplementedError("Method will be implemented later.")
+
+    async def futures_order_info(
+        self,
+        symbol: str,
+        order_id: str | None = None,
+        client_order_id: str | None = None,
+    ) -> OrderInfoDict:
+        raise NotImplementedError("Method will be implemented later.")

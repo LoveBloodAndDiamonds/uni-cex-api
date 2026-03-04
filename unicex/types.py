@@ -16,6 +16,7 @@ __all__ = [
     "BestBidAskItem",
     "BestBidAskDict",
     "BookDepthDict",
+    "OrderInfoDict",
 ]
 
 from logging import Logger as LoggingLogger
@@ -219,3 +220,34 @@ class BookDepthDict(TypedDict):
     b: list[tuple[float, float]]  # price, quantity
     """Лучшие биды (те, кто покупают, ниже в стакане)
     в порядке удаления от спреда. Два значения: цена и объем."""
+
+
+class OrderInfoDict(TypedDict):
+    """Информация о ордере."""
+
+    t: int
+    """Время события в миллисекундах."""
+
+    id: str
+    """Айди ордера."""
+
+    cloid: str
+    """Клиентский айди ордера."""
+
+    symbol: str
+    """Торговая пара."""
+
+    side: Literal["BUY", "SELL"]
+    """Направление ордера."""
+
+    type: Literal["MARKET", "LIMIT"]
+    """Тип ордера."""
+
+    status: Literal["NEW", "PARTIALLY_FILLED", "FILLED", "CANCELED"]
+    """Статус ордера."""
+
+    price: float | None
+    """Цена ордера."""
+
+    quantity: float | None
+    """Объем ордера в монетах."""

@@ -7,7 +7,7 @@ from typing import Generic, Self, TypeVar, overload
 import aiohttp
 
 from unicex._base import BaseClient
-from unicex.enums import Timeframe
+from unicex.enums import OrderSide, OrderType, Timeframe
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
@@ -16,6 +16,7 @@ from unicex.types import (
     LoggerLike,
     OpenInterestDict,
     OpenInterestItem,
+    OrderInfoDict,
     TickerDailyDict,
 )
 from unicex.utils import batched_list
@@ -406,5 +407,69 @@ class IUniClient(ABC, Generic[TClient]):
 
         Возвращает:
             `BookDepthDict`: Стакан для тикера.
+        """
+        ...
+
+    @abstractmethod
+    async def futures_order_create(
+        self,
+        symbol: str,
+        side: OrderSide,
+        type: OrderType,
+        quantity: float,
+        price: float | None = None,
+        stop_price: float | None = None,
+        client_order_id: str | None = None,
+        reduce_only: bool | None = None,
+    ) -> OrderInfoDict:
+        """Создает фьючерсный ордер.
+
+        Параметры:
+            symbol (`str`): Название тикера.
+            side (`OrderSide`): Сторона ордера (BUY/SELL).
+            type (`OrderType`): Тип ордера.
+            quantity (`float`): Количество базового актива.
+            price (`float | None`): Цена ордера (Опционально, для лимитных ордеров).
+            stop_price (`float | None`): Стоп-цена ордера (Опционально, для стоп-ордеров).
+            client_order_id (`str | None`): Пользовательский ID ордера (Опционально).
+            reduce_only (`bool | None`): Флаг ордера на уменьшение позиции (Опционально).
+
+        Возвращает:
+            `OrderInfoDict`: Словарь с информацией о созданном ордере.
+        """
+        ...
+
+    @abstractmethod
+    async def futures_order_cancel(
+        self,
+        symbol: str,
+        order_id: str | None = None,
+        client_order_id: str | None = None,
+    ) -> None:
+        """Отменяет фьючерсный ордер. Обязательно указать либо `order_id`, либо `client_order_id`.
+
+        Параметры:
+            symbol (`str`): Название тикера.
+            order_id (`str`): ID ордера для отмены.
+            client_order_id (`str | None`): Пользовательский ID ордера для отмены.
+        """
+        ...
+
+    @abstractmethod
+    async def futures_order_info(
+        self,
+        symbol: str,
+        order_id: str | None = None,
+        client_order_id: str | None = None,
+    ) -> OrderInfoDict:
+        """Возвращает информацию о фьючерсном ордере. Обязательно указать либо `order_id`, либо `client_order_id`.
+
+        Параметры:
+            symbol (`str`): Название тикера.
+            order_id (`str`): ID ордера для получения информации.
+            client_order_id (`str | None`): Пользовательский ID ордера для получения информации.
+
+        Возвращает:
+            `OrderInfoDict`: Словарь с информацией о ордере.
         """
         ...
