@@ -172,7 +172,6 @@ class UniClient(IUniClient[Client]):
         type: OrderType,
         quantity: float,
         price: float | None = None,
-        stop_price: float | None = None,
         client_order_id: str | None = None,
         reduce_only: bool | None = None,
     ) -> OrderInfoDict:

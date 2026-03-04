@@ -55,6 +55,19 @@ class OrderType(StrEnum):
 
     LIMIT = "LIMIT"
     MARKET = "MARKET"
+    TAKE_PROFIT = "TAKE_PROFIT"
+    STOP_LOSS = "STOP_LOSS"
+
+    def to_exchange_format(self, exchange: Exchange) -> str:
+        """Нормализует."""
+        match exchange:
+            case Exchange.BYBIT:
+                if self in [OrderType.LIMIT, OrderType.MARKET]:
+                    return self.capitalize()
+                else:
+                    raise ValueError(f"Unsupported order type {self} for exchange {exchange}")
+            case _:
+                raise NotImplementedError(f"Exchange {exchange} is not supported")
 
 
 class TimeInForce(StrEnum):

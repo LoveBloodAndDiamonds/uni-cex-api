@@ -128,6 +128,13 @@ class IUniClient(ABC, Generic[TClient]):
         """
         return self._client.is_authorized()
 
+    def ensure_authorized(self) -> None:
+        """Проверяет, наличие апи ключей в инстансе клиента и выбрасывает исключение, если их нет."""
+        if not self.is_authorized():
+            raise ValueError(
+                "Client is not authorized. Please provide API key, secret and passphrase."
+            )
+
     async def close_connection(self) -> None:
         """Закрывает сессию клиента."""
         await self._client.close_connection()
@@ -418,7 +425,6 @@ class IUniClient(ABC, Generic[TClient]):
         type: OrderType,
         quantity: float,
         price: float | None = None,
-        stop_price: float | None = None,
         client_order_id: str | None = None,
         reduce_only: bool | None = None,
     ) -> OrderInfoDict:
