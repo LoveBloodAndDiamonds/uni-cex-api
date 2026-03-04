@@ -12,6 +12,7 @@ __all__ = [
     "symbol_to_exchange_format",
     "validate_single_symbol_args",
     "validate_allowed_kwargs",
+    "validate_order_identifiers",
 ]
 
 import base64
@@ -281,3 +282,9 @@ def validate_allowed_kwargs(kwargs: dict[str, Any], allowed_kwargs: Sequence[str
             f"Unsupported kwargs: {unknown_kwargs_message}. "
             f"Allowed kwargs: {allowed_kwargs_message}"
         )
+
+
+def validate_order_identifiers(order_id: str | None, client_order_id: str | None) -> None:
+    """Проверяет, что передан хотя бы один идентификатор ордера."""
+    if not order_id and not client_order_id:
+        raise ValueError("Either order_id or client_order_id must be provided.")

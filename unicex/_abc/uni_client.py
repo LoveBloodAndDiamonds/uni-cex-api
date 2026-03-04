@@ -459,18 +459,21 @@ class IUniClient(ABC, Generic[TClient]):
             symbol (`str`): Название тикера.
             order_id (`str`): ID ордера для отмены.
             client_order_id (`str | None`): Пользовательский ID ордера для отмены.
+
+        Возвращает:
+            `OrderIdDict`: Словарь с информацией об отмененном ордере.
         """
         ...
 
     @abstractmethod
-    async def futures_order_cancel_all(self, symbol: str) -> list[OrderInfoDict]:
+    async def futures_order_cancel_all(self, symbol: str) -> list[OrderIdDict]:
         """Отменяет все фьючерсные ордера для указанного тикера.
 
         Параметры:
             symbol (`str`): Название тикера.
 
         Возвращает:
-            `list[OrderInfoDict]`: Список словарей с информацией об отмененных ордерах.
+            `list[OrderIdDict]`: Список словарей с информацией об отмененных ордерах.
         """
         ...
 

@@ -186,7 +186,7 @@ class UniClient(IUniClient[Client]):
     ) -> OrderIdDict:
         raise NotImplementedError("Method will be implemented later.")
 
-    async def futures_order_cancel_all(self, symbol: str) -> list[OrderInfoDict]:
+    async def futures_order_cancel_all(self, symbol: str) -> list[OrderIdDict]:
         raise NotImplementedError("Method will be implemented later.")
 
     async def futures_order_info(

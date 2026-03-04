@@ -16,6 +16,7 @@ from unicex.types import (
     OrderInfoDict,
     TickerDailyDict,
 )
+from unicex.utils import validate_order_identifiers
 
 from .adapter import Adapter
 from .client import Client
@@ -171,12 +172,6 @@ class UniClient(IUniClient[Client]):
     ) -> OrderIdDict:
         self.ensure_authorized()
 
-        if type == OrderType.LIMIT and price is None:
-            raise ValueError("Price is required for limit orders.")
-
-        if client_order_id and len(client_order_id) > 36:
-            raise ValueError("client_order_id length must be less than or equal to 36.")
-
         raw_data = await self.client.create_order(
             category="linear",
             symbol=symbol,
@@ -196,10 +191,25 @@ class UniClient(IUniClient[Client]):
         order_id: str | None = None,
         client_order_id: str | None = None,
     ) -> OrderIdDict:
-        raise NotImplementedError("Method will be implemented later.")
+        self.ensure_authorized()
+        validate_order_identifiers(order_id, client_order_id)
 
-    async def futures_order_cancel_all(self, symbol: str) -> list[OrderInfoDict]:
-        raise NotImplementedError("Method will be implemented later.")
+        raw_data = await self.client.cancel_order(
+            category="linear",
+            symbol=symbol,
+            order_id=order_id,
+            order_link_id=client_order_id,
+        )
+        return Adapter.futures_order_cancel(raw_data)
+
+    async def futures_order_cancel_all(self, symbol: str) -> list[OrderIdDict]:
+        self.ensure_authorized()
+
+        raw_data = await self.client.cancel_all_orders(
+            category="linear",
+            symbol=symbol,
+        )
+        return Adapter.futures_order_cancel_all(raw_data)
 
     async def futures_order_info(
         self,
@@ -207,4 +217,14 @@ class UniClient(IUniClient[Client]):
         order_id: str | None = None,
         client_order_id: str | None = None,
     ) -> OrderInfoDict:
-        raise NotImplementedError("Method will be implemented later.")
+        self.ensure_authorized()
+        validate_order_identifiers(order_id, client_order_id)
+
+        raw_data = await self.client.open_orders(
+            category="linear",
+            symbol=symbol,
+            order_id=order_id,
+            order_link_id=client_order_id,
+            limit=1,
+        )
+        return Adapter.futures_order_info(raw_data)
