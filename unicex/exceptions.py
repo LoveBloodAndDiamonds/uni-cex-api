@@ -54,11 +54,11 @@ class ResponseError(UniCexException):
             preview = str(self.response_json)
             if len(preview) > 500:
                 preview = preview[:500] + "..."
-            return f"ResponseError: status_code={self.status_code}, code={self.code}, response_json: {preview}"
+            return f"message='{self.message}', status_code={self.status_code}, code='{self.code}', response_json: {preview}"
         elif self.response_text:
             preview = str(self.response_text)
             if len(preview) > 500:
                 preview = preview[:500] + "..."
-            return f"ResponseError: status_code={self.status_code}, code={self.code}, response_text: {preview}"
+            return f"message='{self.message}', status_code={self.status_code}, code='{self.code}', response_text: '{preview}'"
         else:
-            return f"ResponseError: status_code={self.status_code}, code={self.code}"
+            return f"message='{self.message}', status_code={self.status_code}, code='{self.code}'"

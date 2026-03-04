@@ -21,7 +21,7 @@ async def main() -> None:
             symbol="TRXUSDT",
             side=OrderSide.BUY,
             type=OrderType.MARKET,
-            quantity="10",
+            quantity=10,
         )
 
         from pprint import pp

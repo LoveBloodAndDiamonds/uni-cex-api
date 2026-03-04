@@ -5,7 +5,7 @@ import time
 from typing import Any, Literal
 
 from unicex._base import BaseClient
-from unicex.exceptions import NotAuthorized
+from unicex.exceptions import NotAuthorized, ResponseError
 from unicex.types import RequestMethod
 from unicex.utils import dict_to_query_string, filter_params, generate_hmac_sha256_signature
 
@@ -138,6 +138,20 @@ class Client(BaseClient):
         return await self._make_request(
             method=method, endpoint=endpoint, params=params, signed=signed
         )
+
+    def _validate_response(
+        self, status_code: int, response_text: str, response_json: dict[str, Any]
+    ) -> None:
+        """Проверка ответа API на ошибки биржи. Переопределяется в клиентах конкретных бирж."""
+        ret_code = response_json.get("retCode")
+        if ret_code != 0:
+            raise ResponseError(
+                response_json.get("retMsg", ""),
+                code=str(ret_code),
+                status_code=status_code,
+                response_text=response_text,
+                response_json=response_json,
+            )
 
     # topic: market
 

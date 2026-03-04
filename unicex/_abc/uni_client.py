@@ -8,6 +8,7 @@ import aiohttp
 
 from unicex._base import BaseClient
 from unicex.enums import OrderSide, OrderType, Timeframe
+from unicex.exceptions import NotAuthorized
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
@@ -131,7 +132,7 @@ class IUniClient(ABC, Generic[TClient]):
     def ensure_authorized(self) -> None:
         """Проверяет, наличие апи ключей в инстансе клиента и выбрасывает исключение, если их нет."""
         if not self.is_authorized():
-            raise ValueError(
+            raise NotAuthorized(
                 "Client is not authorized. Please provide API key, secret and passphrase."
             )
 
