@@ -242,31 +242,31 @@ class PositionInfoDict(TypedDict):
     t: int
     """Время ответа в миллисекундах."""
 
-    symbol: str
+    symbol: str  # "" if position is not opened
     """Торговая пара."""
 
     side: Literal["BUY", "SELL", ""]  # "" if position is not opened
     """Направление позиции."""
 
-    quantity: float
+    quantity: float  # 0 if position is not opened
     """Объем позиции в монетах."""
 
-    entry_price: float  # "0" if position is not opened
+    entry_price: float  # 0 if position is not opened
     """Средняя цена входа в позицию."""
 
-    mark_price: float
+    mark_price: float  # 0 if position is not opened
     """Цена маркировки на тикере."""
 
-    liquidation_price: float
+    liquidation_price: float  # 0 if position is not opened
     """Цена ликвидации позиции."""
 
-    unrealized_pnl: float
+    unrealized_pnl: float  # 0 if position is not opened
     """Нереализованный PNL."""
 
-    realized_pnl: float
+    realized_pnl: float  # 0 if position is not opened
     """Реализованный PNL."""
 
-    leverage: float
+    leverage: float  # 0 if position is not opened
     """Торговое плечо."""
 
     # Not required attrs for the future updates

@@ -7,6 +7,7 @@ from unicex.types import (
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
+    PositionInfoDict,
     TickerDailyDict,
     TickerDailyItem,
     TradeDict,
@@ -142,6 +143,39 @@ class Adapter:
             u=0,  # REST endpoint не возвращает update id
             b=[(float(price), float(quantity)) for price, quantity in data["bids"]],
             a=[(float(price), float(quantity)) for price, quantity in data["asks"]],
+        )
+
+    @staticmethod
+    def futures_position_info(raw_data: Any) -> PositionInfoDict:
+        positions = raw_data["data"]
+        if not positions:
+            return PositionInfoDict(
+                t=raw_data["requestTime"],
+                symbol="",
+                side="",
+                quantity=0,
+                entry_price=0,
+                mark_price=0,
+                liquidation_price=0,
+                unrealized_pnl=0,
+                realized_pnl=0,
+                leverage=0,
+            )
+
+        position = positions[0]
+
+        return PositionInfoDict(
+            t=int(position["uTime"]),
+            symbol=position["symbol"],
+            side={"long": "BUY", "short": "SELL"}[position["holdSide"]],  # type: ignore
+            quantity=float(position["total"]),
+            entry_price=float(position["openPriceAvg"]),
+            mark_price=float(position["markPrice"]),
+            liquidation_price=float(position["liquidationPrice"]),
+            unrealized_pnl=float(position["unrealizedPL"]),
+            realized_pnl=float(position["achievedProfits"]) - float(position["deductedFee"]),
+            leverage=float(position["leverage"]),
+            breakeven_price=float(position["breakEvenPrice"]),
         )
 
     @staticmethod

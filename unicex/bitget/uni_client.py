@@ -172,4 +172,11 @@ class UniClient(IUniClient[Client]):
         raise NotImplementedError("Method will be implemented later.")
 
     async def futures_position_info(self, symbol: str) -> PositionInfoDict:
-        raise NotImplementedError("Method will be implemented later.")
+        self.ensure_authorized()
+
+        raw_data = await self._client.futures_get_single_position(
+            symbol=symbol,
+            margin_coin="USDT",
+            product_type="USDT-FUTURES",
+        )
+        return Adapter.futures_position_info(raw_data)
