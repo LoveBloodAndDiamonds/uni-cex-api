@@ -59,6 +59,8 @@ class OrderSide(StrEnum):
                 return self.capitalize()
             case Exchange.BITGET:
                 return self.lower()
+            case Exchange.GATE:
+                return self.lower()
             case _:
                 raise NotImplementedError(f"Exchange {exchange} is not supported")
 
@@ -87,6 +89,11 @@ class OrderType(StrEnum):
             case Exchange.BITGET:
                 if self in [OrderType.LIMIT, OrderType.MARKET]:
                     return self.capitalize()
+                else:
+                    raise ValueError(f"Unsupported order type {self} for exchange {exchange}")
+            case Exchange.GATE:
+                if self in [OrderType.LIMIT, OrderType.MARKET]:
+                    return self.lower()
                 else:
                     raise ValueError(f"Unsupported order type {self} for exchange {exchange}")
             case _:

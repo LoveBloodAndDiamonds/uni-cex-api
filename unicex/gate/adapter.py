@@ -12,6 +12,8 @@ from unicex.types import (
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
+    OrderIdDict,
+    PositionInfoDict,
     TickerDailyDict,
     TickerDailyItem,
     TradeDict,
@@ -156,6 +158,49 @@ class Adapter:
         )
 
     @staticmethod
+    def futures_order_create(raw_data: dict) -> OrderIdDict:
+        return OrderIdDict(
+            t=int(float(raw_data["update_time"]) * 1000),
+            id=str(raw_data["id"]),
+            cloid=str(raw_data.get("text", "")),
+        )
+
+    @staticmethod
+    def futures_position_info(raw_data: dict) -> PositionInfoDict:
+        if not raw_data:
+            return PositionInfoDict(
+                t=0,
+                symbol="",
+                side="",
+                quantity=0,
+                entry_price=0,
+                mark_price=0,
+                liquidation_price=0,
+                unrealized_pnl=0,
+                realized_pnl=0,
+                leverage=0,
+                notional=0,
+            )
+        position = raw_data[0]
+        contracts = float(position["size"])
+        contract_size = Adapter._get_contract_size(position["contract"])
+        quantity = abs(contracts) * contract_size
+
+        return PositionInfoDict(
+            t=position["update_time"] * 1000,
+            symbol=position["contract"],
+            side="BUY" if contracts > 0 else "SELL" if contracts < 0 else "",
+            quantity=quantity,
+            entry_price=float(position["entry_price"]),
+            mark_price=float(position["mark_price"]),
+            liquidation_price=float(position["liq_price"]),
+            unrealized_pnl=float(position["unrealised_pnl"]),
+            realized_pnl=float(position["realised_pnl"]),
+            leverage=float(position["lever"]),
+            notional=abs(float(position["value"])),
+        )
+
+    @staticmethod
     def klines_message(raw_msg: Any) -> list[KlineDict]:
         data = raw_msg["result"]
         return [
@@ -267,4 +312,4 @@ class Adapter:
         try:
             return ExchangeInfo.get_futures_ticker_info(symbol)["contract_size"] or 1
         except:  # noqa
-            return 1
+            raise

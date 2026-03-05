@@ -1,10 +1,12 @@
 __all__ = ["UniClient"]
 
 
+from decimal import Decimal
 from typing import overload
 
 from unicex._abc import IUniClient
 from unicex.enums import Exchange, MarketType, OrderSide, OrderType, Timeframe
+from unicex.exceptions import ResponseError
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
@@ -176,7 +178,56 @@ class UniClient(IUniClient[Client]):
         client_order_id: str | None = None,
         reduce_only: bool | None = None,
     ) -> OrderIdDict:
-        raise NotImplementedError("Method will be implemented later.")
+        self.ensure_authorized()
+
+        if type == OrderType.LIMIT and price is None:
+            raise ValueError("Price is required for limit order type on Gate futures.")
+
+        if type not in {OrderType.LIMIT, OrderType.MARKET}:
+            raise ValueError(f"Unsupported order type for Gate futures: {type}.")
+
+        contract_size = Adapter._get_contract_size(symbol)
+        contracts = Decimal(quantity) / Decimal(str(contract_size))
+        signed_size = contracts if side == OrderSide.BUY else -contracts
+        size = self._format_decimal(signed_size)
+
+        text = None
+        if client_order_id:
+            text = client_order_id if client_order_id.startswith("t-") else f"t-{client_order_id}"
+
+        order_data = {
+            "contract": symbol,
+            "size": size,
+            "price": "0" if type == OrderType.MARKET else price,
+            "tif": "ioc" if type == OrderType.MARKET else "gtc",
+            "text": text,
+            "reduce_only": reduce_only,
+        }
+        raw_data = await self._client.futures_create_order(
+            settle="usdt",
+            order=order_data,
+        )
+        return Adapter.futures_order_create(raw_data)
 
     async def futures_position_info(self, symbol: str) -> PositionInfoDict:
-        raise NotImplementedError("Method will be implemented later.")
+        self.ensure_authorized()
+
+        try:
+            raw_data = await self._client.futures_position(
+                settle="usdt",
+                contract=symbol,
+            )
+        except ResponseError as e:
+            if e.response_json.get("label") == "POSITION_NOT_FOUND":
+                raw_data = {}
+            else:
+                raise
+        return Adapter.futures_position_info(raw_data)
+
+    @staticmethod
+    def _format_decimal(value: Decimal) -> str:
+        """Преобразует Decimal в строку без экспоненты и лишних нулей."""
+        normalized = format(value, "f")
+        if "." in normalized:
+            normalized = normalized.rstrip("0").rstrip(".")
+        return normalized or "0"
