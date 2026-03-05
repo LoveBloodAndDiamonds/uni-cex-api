@@ -2,7 +2,7 @@ __all__ = ["IUniClient"]
 
 import time
 from abc import ABC, abstractmethod
-from typing import Generic, Self, TypeVar, overload
+from typing import Any, Generic, Self, TypeVar, overload
 
 import aiohttp
 
@@ -429,6 +429,7 @@ class IUniClient(ABC, Generic[TClient]):
         price: str | None = None,
         client_order_id: str | None = None,
         reduce_only: bool | None = None,
+        **kwargs: Any,
     ) -> OrderIdDict:
         """Создает фьючерсный ордер.
 
@@ -440,6 +441,7 @@ class IUniClient(ABC, Generic[TClient]):
             price (`str | None`): Цена ордера (Опционально, для лимитных ордеров).
             client_order_id (`str | None`): Пользовательский ID ордера (Опционально).
             reduce_only (`bool | None`): Флаг ордера на уменьшение позиции (Опционально).
+            **kwargs (`Any`): Дополнительные параметры специфичные для биржи.
 
         Возвращает:
             `OrderIdDict`: Словарь с айди созданного ордера.

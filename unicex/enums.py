@@ -8,6 +8,7 @@ __all__ = [
     "OrderType",
     "TimeInForce",
     "PositionSide",
+    "MarginMode",
 ]
 
 from enum import StrEnum
@@ -54,6 +55,8 @@ class OrderSide(StrEnum):
         match exchange:
             case Exchange.BYBIT:
                 return self.capitalize()
+            case Exchange.BITGET:
+                return self.lower()
             case _:
                 raise NotImplementedError(f"Exchange {exchange} is not supported")
 
@@ -67,13 +70,33 @@ class OrderType(StrEnum):
     STOP_LOSS = "STOP_LOSS"
 
     def to_exchange_format(self, exchange: Exchange) -> str:
-        """Нормализует."""
+        """Нормализует тип ордера под конкретную биржу."""
         match exchange:
             case Exchange.BYBIT:
                 if self in [OrderType.LIMIT, OrderType.MARKET]:
                     return self.capitalize()
                 else:
                     raise ValueError(f"Unsupported order type {self} for exchange {exchange}")
+            case Exchange.BITGET:
+                if self in [OrderType.LIMIT, OrderType.MARKET]:
+                    return self.capitalize()
+                else:
+                    raise ValueError(f"Unsupported order type {self} for exchange {exchange}")
+            case _:
+                raise NotImplementedError(f"Exchange {exchange} is not supported")
+
+
+class MarginMode(StrEnum):
+    """Перечисление режимов маржи."""
+
+    ISOLATED = "ISOLATED"
+    CROSSED = "CROSSED"
+
+    def to_exchange_format(self, exchange: Exchange) -> str:
+        """Нормализует тип режима маржи под конкретную биржу."""
+        match exchange:
+            case Exchange.BITGET:
+                return self.lower()
             case _:
                 raise NotImplementedError(f"Exchange {exchange} is not supported")
 
@@ -85,6 +108,12 @@ class TimeInForce(StrEnum):
     IOC = "IOC"
     FOK = "FOK"
 
+    def to_exchange_format(self, exchange: Exchange) -> str:
+        """Нормализует режим маржи под конкретную биржу."""
+        match exchange:
+            case _:
+                return self
+
 
 class PositionSide(StrEnum):
     """Перечисление сторон позиции."""
@@ -92,6 +121,12 @@ class PositionSide(StrEnum):
     BOTH = "BOTH"  # Means one-way mode
     LONG = "LONG"
     SHORT = "SHORT"
+
+    def to_exchange_format(self, exchange: Exchange) -> str:
+        """Нормализует сторону позиции под конкретную биржу."""
+        match exchange:
+            case _:
+                return self
 
 
 class Timeframe(StrEnum):

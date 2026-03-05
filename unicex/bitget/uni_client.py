@@ -3,7 +3,7 @@ __all__ = ["UniClient"]
 from typing import overload
 
 from unicex._abc import IUniClient
-from unicex.enums import Exchange, MarketType, OrderSide, OrderType, Timeframe
+from unicex.enums import Exchange, MarginMode, MarketType, OrderSide, OrderType, Timeframe
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
@@ -168,8 +168,28 @@ class UniClient(IUniClient[Client]):
         price: str | None = None,
         client_order_id: str | None = None,
         reduce_only: bool | None = None,
+        # Bitget only params
+        margin_mode: MarginMode = MarginMode.ISOLATED,
     ) -> OrderIdDict:
-        raise NotImplementedError("Method will be implemented later.")
+        self.ensure_authorized()
+
+        if type == OrderType.LIMIT and price is None:
+            raise ValueError("Price is required for limit order type on Bitget futures.")
+
+        raw_data = await self._client.futures_place_order(
+            symbol=symbol,
+            product_type="USDT-FUTURES",
+            margin_mode=margin_mode.to_exchange_format(Exchange.BITGET),
+            margin_coin="USDT",
+            size=quantity,
+            price=price,
+            side=side.to_exchange_format(Exchange.BITGET),
+            order_type=type.to_exchange_format(Exchange.BITGET),
+            force="gtc" if type == OrderType.LIMIT else None,
+            client_oid=client_order_id,
+            reduce_only={True: "YES", False: "NO", None: None}[reduce_only],
+        )
+        return Adapter.futures_order_create(raw_data)
 
     async def futures_position_info(self, symbol: str) -> PositionInfoDict:
         self.ensure_authorized()

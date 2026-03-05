@@ -16,6 +16,7 @@ __all__ = [
     "OrderType",
     "TimeInForce",
     "PositionSide",
+    "MarginMode",
     # Types
     "TickerDailyDict",
     "TickerDailyItem",
@@ -120,7 +121,16 @@ from ._abc import IUniClient, IUniWebsocketManager
 from ._base import BaseClient, Websocket
 
 # enums, mappers, types
-from .enums import Exchange, MarketType, OrderSide, Timeframe, OrderType, TimeInForce, PositionSide
+from .enums import (
+    Exchange,
+    MarketType,
+    OrderSide,
+    Timeframe,
+    OrderType,
+    TimeInForce,
+    PositionSide,
+    MarginMode,
+)
 from .mapper import get_uni_client, get_uni_websocket_manager, get_exchange_info
 from .types import (
     TickerDailyDict,

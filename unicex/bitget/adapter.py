@@ -7,6 +7,7 @@ from unicex.types import (
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
+    OrderIdDict,
     PositionInfoDict,
     TickerDailyDict,
     TickerDailyItem,
@@ -143,6 +144,15 @@ class Adapter:
             u=0,  # REST endpoint не возвращает update id
             b=[(float(price), float(quantity)) for price, quantity in data["bids"]],
             a=[(float(price), float(quantity)) for price, quantity in data["asks"]],
+        )
+
+    @staticmethod
+    def futures_order_create(raw_data: Any) -> OrderIdDict:
+        data = raw_data["data"]
+        return OrderIdDict(
+            t=int(raw_data["requestTime"]),
+            id=data["orderId"],
+            cloid=data["clientOid"],
         )
 
     @staticmethod

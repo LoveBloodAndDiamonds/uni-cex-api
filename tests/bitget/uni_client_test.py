@@ -17,13 +17,13 @@ async def main() -> None:
     )
 
     async with c:
-        # r = await c.futures_order_create(
-        #     symbol="TRXUSDT",
-        #     side=OrderSide.BUY,
-        #     type=OrderType.MARKET,
-        #     quantity="50",
-        #     client_order_id="123",
-        # )
+        r = await c.futures_order_create(
+            symbol="TRXUSDT",
+            side=OrderSide.SELL,
+            type=OrderType.MARKET,
+            quantity="50",
+            client_order_id="1232",
+        )
 
         r = await c.futures_position_info("TRXUSDT")
 
