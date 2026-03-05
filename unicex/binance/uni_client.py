@@ -29,27 +29,27 @@ class UniClient(IUniClient[Client]):
 
     async def tickers(self, only_usdt: bool = True) -> list[str]:
         raw_data = await self._client.ticker_price()
-        return Adapter.tickers(raw_data=raw_data, only_usdt=only_usdt)  # type: ignore | raw_data is list[dict] if symbol param is not ommited
+        return Adapter.tickers(raw_data=raw_data, only_usdt=only_usdt)  # type: ignore | raw_data is list[dict] if symbol param is not omitted
 
     async def futures_tickers(self, only_usdt: bool = True) -> list[str]:
         raw_data = await self._client.futures_ticker_price()
-        return Adapter.tickers(raw_data=raw_data, only_usdt=only_usdt)  # type: ignore | raw_data is list[dict] if symbol param is not ommited
+        return Adapter.tickers(raw_data=raw_data, only_usdt=only_usdt)  # type: ignore | raw_data is list[dict] if symbol param is not omitted
 
     async def last_price(self) -> dict[str, float]:
         raw_data = await self._client.ticker_price()
-        return Adapter.last_price(raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not ommited
+        return Adapter.last_price(raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not omitted
 
     async def futures_last_price(self) -> dict[str, float]:
         raw_data = await self._client.futures_ticker_price()
-        return Adapter.last_price(raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not ommited
+        return Adapter.last_price(raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not omitted
 
     async def ticker_24hr(self) -> TickerDailyDict:
         raw_data = await self._client.ticker_24hr()
-        return Adapter.ticker_24hr(raw_data=raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not ommited
+        return Adapter.ticker_24hr(raw_data=raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not omitted
 
     async def futures_ticker_24hr(self) -> TickerDailyDict:
         raw_data = await self._client.futures_ticker_24hr()
-        return Adapter.ticker_24hr(raw_data=raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not ommited
+        return Adapter.ticker_24hr(raw_data=raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not omitted
 
     async def klines(
         self,

@@ -211,7 +211,7 @@ class BaseClient:
         except Exception as e:
             self._logger.error(f"Error while logging response: {e}")
 
-        # Валидирование ответа в конерктной реализации клиента
+        # Валидирование ответа в конкретной реализации клиента
         self._validate_response(status_code, response_text, response_json)
 
         return response_json
