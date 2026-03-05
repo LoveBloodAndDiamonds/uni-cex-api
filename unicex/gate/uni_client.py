@@ -194,9 +194,18 @@ class UniClient(IUniClient[Client]):
                 contract_size = ExchangeInfo.get_futures_ticker_info(symbol)["contract_size"]
             except Exception as e:
                 raise ValueError(f"Failed to get contract size for symbol {symbol}") from e
-            contracts = Decimal(quantity) / Decimal(str(contract_size))
+
+            quantity_decimal = Decimal(quantity)
+            contract_size_decimal = Decimal(str(contract_size))
+            contracts = quantity_decimal / contract_size_decimal
+            if contracts % 1 != 0:
+                raise ValueError(
+                    f"Quantity {quantity} is not multiple of contract size {contract_size} "
+                    f"for symbol {symbol}."
+                )
+
             signed_size = contracts if side == OrderSide.BUY else -contracts
-            size = str(signed_size)
+            size = str(int(signed_size))
         elif quantity_unit == "currency":
             size = quantity
         else:
