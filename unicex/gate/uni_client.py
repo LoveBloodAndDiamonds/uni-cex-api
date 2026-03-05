@@ -2,7 +2,7 @@ __all__ = ["UniClient"]
 
 
 from decimal import Decimal
-from typing import overload
+from typing import Literal, overload
 
 from unicex._abc import IUniClient
 from unicex.enums import Exchange, MarketType, OrderSide, OrderType, Timeframe
@@ -21,6 +21,7 @@ from unicex.types import (
 
 from .adapter import Adapter
 from .client import Client
+from .exchange_info import ExchangeInfo
 
 
 class UniClient(IUniClient[Client]):
@@ -177,6 +178,8 @@ class UniClient(IUniClient[Client]):
         price: str | None = None,
         client_order_id: str | None = None,
         reduce_only: bool | None = None,
+        # Gate only args
+        quantity_unit: Literal["contract", "currency"] = "contract",
     ) -> OrderIdDict:
         self.ensure_authorized()
 
@@ -186,10 +189,18 @@ class UniClient(IUniClient[Client]):
         if type not in {OrderType.LIMIT, OrderType.MARKET}:
             raise ValueError(f"Unsupported order type for Gate futures: {type}.")
 
-        contract_size = Adapter._get_contract_size(symbol)
-        contracts = Decimal(quantity) / Decimal(str(contract_size))
-        signed_size = contracts if side == OrderSide.BUY else -contracts
-        size = self._format_decimal(signed_size)
+        if quantity_unit == "contract":
+            try:
+                contract_size = ExchangeInfo.get_futures_ticker_info(symbol)["contract_size"]
+            except Exception as e:
+                raise ValueError(f"Failed to get contract size for symbol {symbol}") from e
+            contracts = Decimal(quantity) / Decimal(str(contract_size))
+            signed_size = contracts if side == OrderSide.BUY else -contracts
+            size = str(signed_size)
+        elif quantity_unit == "currency":
+            size = quantity
+        else:
+            raise ValueError(f"Unsupported quantity unit: {quantity_unit}.")
 
         text = None
         if client_order_id:
@@ -223,11 +234,3 @@ class UniClient(IUniClient[Client]):
             else:
                 raise
         return Adapter.futures_position_info(raw_data)
-
-    @staticmethod
-    def _format_decimal(value: Decimal) -> str:
-        """Преобразует Decimal в строку без экспоненты и лишних нулей."""
-        normalized = format(value, "f")
-        if "." in normalized:
-            normalized = normalized.rstrip("0").rstrip(".")
-        return normalized or "0"

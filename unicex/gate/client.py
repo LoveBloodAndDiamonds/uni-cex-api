@@ -64,7 +64,9 @@ class Client(BaseClient):
         if not self.is_authorized():
             raise NotAuthorized("Api key and api secret is required to private endpoints")
 
-        payload_string = json.dumps(data, separators=(",", ":")) if data else ""
+        # Для Gate подпись должна считаться по точно такому же JSON,
+        # который уйдет в aiohttp `json=...` (по умолчанию json.dumps без compact separators).
+        payload_string = json.dumps(data) if data else ""
         query_string = dict_to_query_string(params) if params else ""
         hashed_payload = hashlib.sha512(payload_string.encode("utf-8")).hexdigest()
         signature_body = (

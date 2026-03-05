@@ -24,9 +24,9 @@ async def main() -> None:
         r = await c.futures_order_create(
             symbol="TRX_USDT",
             side=OrderSide.BUY,
-            type=OrderType.LIMIT,
-            quantity="100",
-            price="0.28",
+            type=OrderType.MARKET,
+            quantity="150",
+            # price="0.28",
             client_order_id="1232",
         )
         from pprint import pp

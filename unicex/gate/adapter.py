@@ -160,9 +160,9 @@ class Adapter:
     @staticmethod
     def futures_order_create(raw_data: dict) -> OrderIdDict:
         return OrderIdDict(
-            t=int(float(raw_data["update_time"]) * 1000),
-            id=str(raw_data["id"]),
-            cloid=str(raw_data.get("text", "")),
+            t=raw_data["create_time"] * 1000,
+            id=raw_data["id"],
+            cloid=raw_data["text"],
         )
 
     @staticmethod
@@ -181,23 +181,22 @@ class Adapter:
                 leverage=0,
                 notional=0,
             )
-        position = raw_data[0]
-        contracts = float(position["size"])
-        contract_size = Adapter._get_contract_size(position["contract"])
+        contracts = float(raw_data["size"])
+        contract_size = Adapter._get_contract_size(raw_data["contract"])
         quantity = abs(contracts) * contract_size
 
         return PositionInfoDict(
-            t=position["update_time"] * 1000,
-            symbol=position["contract"],
+            t=raw_data["update_time"] * 1000,
+            symbol=raw_data["contract"],
             side="BUY" if contracts > 0 else "SELL" if contracts < 0 else "",
             quantity=quantity,
-            entry_price=float(position["entry_price"]),
-            mark_price=float(position["mark_price"]),
-            liquidation_price=float(position["liq_price"]),
-            unrealized_pnl=float(position["unrealised_pnl"]),
-            realized_pnl=float(position["realised_pnl"]),
-            leverage=float(position["lever"]),
-            notional=abs(float(position["value"])),
+            entry_price=float(raw_data["entry_price"]),
+            mark_price=float(raw_data["mark_price"]),
+            liquidation_price=float(raw_data["liq_price"]),
+            unrealized_pnl=float(raw_data["unrealised_pnl"]),
+            realized_pnl=float(raw_data["realised_pnl"]),
+            leverage=float(raw_data["lever"]),
+            notional=abs(float(raw_data["value"])),
         )
 
     @staticmethod
