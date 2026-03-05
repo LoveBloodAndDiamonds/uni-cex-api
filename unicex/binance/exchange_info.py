@@ -10,7 +10,6 @@ from .client import Client
 
 
 class ExchangeInfo(IExchangeInfo):
-
     exchange_name = "Binance"
     """Название биржи, на которой работает класс."""
 

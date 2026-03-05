@@ -9,7 +9,6 @@ from .client import Client
 
 
 class ExchangeInfo(IExchangeInfo):
-
     exchange_name = "Aster"
     """Название биржи, на которой работает класс."""
 
