@@ -53,6 +53,8 @@ class OrderSide(StrEnum):
     def to_exchange_format(self, exchange: Exchange) -> str:
         """Нормализует."""
         match exchange:
+            case Exchange.BINANCE:
+                return self
             case Exchange.BYBIT:
                 return self.capitalize()
             case Exchange.BITGET:
@@ -72,6 +74,11 @@ class OrderType(StrEnum):
     def to_exchange_format(self, exchange: Exchange) -> str:
         """Нормализует тип ордера под конкретную биржу."""
         match exchange:
+            case Exchange.BINANCE:
+                if self in [OrderType.LIMIT, OrderType.MARKET]:
+                    return self
+                else:
+                    raise ValueError(f"Unsupported order type {self} for exchange {exchange}")
             case Exchange.BYBIT:
                 if self in [OrderType.LIMIT, OrderType.MARKET]:
                     return self.capitalize()

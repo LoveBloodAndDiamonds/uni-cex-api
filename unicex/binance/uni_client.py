@@ -158,7 +158,25 @@ class UniClient(IUniClient[Client]):
         client_order_id: str | None = None,
         reduce_only: bool | None = None,
     ) -> OrderIdDict:
-        raise NotImplementedError("Method will be implemented later.")
+        self.ensure_authorized()
+
+        if type == OrderType.LIMIT and price is None:
+            raise ValueError("Price is required for limit order type on Binance futures.")
+
+        raw_data = await self._client.futures_order_create(
+            symbol=symbol,
+            side=side.to_exchange_format(Exchange.BINANCE),
+            type=type.to_exchange_format(Exchange.BINANCE),
+            quantity=quantity,
+            price=price,
+            new_client_order_id=client_order_id,
+            reduce_only=reduce_only,
+            time_in_force="GTC" if type == OrderType.LIMIT else None,
+        )
+        return Adapter.futures_order_create(raw_data)
 
     async def futures_position_info(self, symbol: str) -> PositionInfoDict:
-        raise NotImplementedError("Method will be implemented later.")
+        self.ensure_authorized()
+
+        raw_data = await self._client.futures_position_info(symbol=symbol)
+        return Adapter.futures_position_info(raw_data=raw_data, symbol=symbol)
