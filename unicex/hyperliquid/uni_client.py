@@ -5,7 +5,7 @@ from typing import Self, overload
 import aiohttp
 
 from unicex._abc import IUniClient
-from unicex.enums import Exchange, MarketType, Timeframe
+from unicex.enums import Exchange, MarketType, OrderSide, OrderType, Timeframe
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
@@ -14,6 +14,8 @@ from unicex.types import (
     LoggerLike,
     OpenInterestDict,
     OpenInterestItem,
+    OrderIdDict,
+    PositionInfoDict,
     TickerDailyDict,
 )
 from unicex.utils import batched_list
@@ -74,23 +76,6 @@ class UniClient(IUniClient[Client]):
         proxies: list[str] | None = None,
         timeout: int = 10,
     ) -> Self:
-        """Создает инстанцию клиента.
-        Создать клиент можно и через __init__, но в таком случае session: `aiohttp.ClientSession` - обязательный параметр.
-
-        Параметры:
-            session (`aiohttp.ClientSession`): Сессия для выполнения HTTP‑запросов.
-            private_key (`str | bytes | None`): Приватный ключ API для аутентификации (Hyperliquid).
-            wallet_address (`str | None`): Адрес кошелька для аутентификации (Hyperliquid).
-            vault_address (`str | None`): Адрес хранилища для аутентификации (Hyperliquid).
-            logger (`LoggerLike | None`): Логгер для вывода информации.
-            max_retries (`int`): Максимальное количество повторных попыток запроса.
-            retry_delay (`int | float`): Задержка между повторными попытками, сек.
-            proxies (`list[str] | None`): Список HTTP(S)‑прокси для циклического использования.
-            timeout (`int`): Максимальное время ожидания ответа от сервера, сек.
-
-        Возвращает:
-            `IUniClient`: Созданный экземпляр клиента.
-        """
         return cls(
             session=aiohttp.ClientSession(),
             private_key=private_key,
@@ -105,100 +90,39 @@ class UniClient(IUniClient[Client]):
 
     @property
     def _client_cls(self) -> type[Client]:
-        """Возвращает класс клиента для Hyperliquid.
-
-        Возвращает:
-            type[Client]: Класс клиента для Hyperliquid.
-        """
         return Client
 
     async def tickers(self, resolve_symbols: bool = True) -> list[str]:
-        """Возвращает список тикеров.
-
-        Параметры:
-            resolve_symbols (bool): Если True, возвращает спотовые тикеры в обычном виде (например, `BTC`).
-
-        Возвращает:
-            list[str]: Список тикеров.
-        """
         raw_data = await self._client.spot_metadata()
         return Adapter.tickers(raw_data, resolve_symbols=resolve_symbols)
 
     async def tickers_batched(
         self, batch_size: int = 20, resolve_symbols: bool = True
     ) -> list[list[str]]:
-        """Возвращает список тикеров в чанках.
-
-        Параметры:
-            batch_size (`int`): Размер чанка.
-            resolve_symbols (bool): Если True, возвращает спотовые тикеры в обычном виде (например, `BTC`).
-
-        Возвращает:
-            `list[list[str]]`: Список тикеров в чанках.
-        """
         tickers = await self.tickers(resolve_symbols=resolve_symbols)
         return batched_list(tickers, batch_size)
 
     async def futures_tickers(self) -> list[str]:
-        """Возвращает список тикеров.
-
-        Возвращает:
-            list[str]: Список тикеров.
-        """
         raw_data = await self._client.perp_metadata()
         return Adapter.futures_tickers(raw_data)
 
     async def futures_tickers_batched(self, batch_size: int = 20) -> list[list[str]]:
-        """Возвращает список тикеров в чанках.
-
-        Параметры:
-            batch_size (`int`): Размер чанка.
-
-        Возвращает:
-            `list[list[str]]`: Список тикеров в чанках.
-        """
         tickers = await self.futures_tickers()
         return batched_list(tickers, batch_size)
 
     async def last_price(self, resolve_symbols: bool = True) -> dict[str, float]:
-        """Возвращает последнюю цену для каждого тикера.
-
-        Параметры:
-            resolve_symbols (bool): Если True, возвращает спотовые тикеры в обычном виде (например, `BTC`).
-
-        Возвращает:
-            dict[str, float]: Словарь с последними ценами для каждого тикера.
-        """
         raw_data = await self._client.all_mids()
         return Adapter.last_price(raw_data, resolve_symbols=resolve_symbols)
 
     async def futures_last_price(self) -> dict[str, float]:
-        """Возвращает последнюю цену для каждого тикера.
-
-        Возвращает:
-            dict[str, float]: Словарь с последними ценами для каждого тикера.
-        """
         raw_data = await self._client.all_mids()
         return Adapter.futures_last_price(raw_data)
 
     async def ticker_24hr(self, resolve_symbols: bool = True) -> TickerDailyDict:
-        """Возвращает статистику за последние 24 часа для каждого тикера.
-
-        Параметры:
-            resolve_symbols (bool): Если True, возвращает спотовые тикеры в обычном виде (например, `BTC`).
-
-        Возвращает:
-            TickerDailyDict: Словарь с статистикой за последние 24 часа для каждого тикера.
-        """
         raw_data = await self._client.spot_meta_and_asset_contexts()
         return Adapter.ticker_24hr(raw_data, resolve_symbols=resolve_symbols)
 
     async def futures_ticker_24hr(self) -> TickerDailyDict:
-        """Возвращает статистику за последние 24 часа для каждого тикера.
-
-        Возвращает:
-            TickerDailyDict: Словарь с статистикой за последние 24 часа для каждого тикера.
-        """
         raw_data = await self._client.perp_meta_and_asset_contexts()
         return Adapter.futures_ticker_24hr(raw_data)
 
@@ -211,19 +135,6 @@ class UniClient(IUniClient[Client]):
         end_time: int | None = None,
         resolve_symbols: bool = True,
     ) -> list[KlineDict]:
-        """Возвращает список свечей для тикера.
-
-        Параметры:
-            symbol (str): Название тикера. Например "@1".
-            limit (int | None): Количество свечей.
-            interval (Timeframe | str): Таймфрейм свечей.
-            start_time (int | None): Время начала периода в миллисекундах.
-            end_time (int | None): Время окончания периода в миллисекундах.
-            resolve_symbols (bool): Если True, возвращает спотовый тикер в обычном виде (например, `BTC`).
-
-        Возвращает:
-            list[KlineDict]: Список свечей для тикера.
-        """
         if not limit and not all([start_time, end_time]):
             raise ValueError("limit or (start_time and end_time) must be provided")
 
@@ -242,7 +153,8 @@ class UniClient(IUniClient[Client]):
             start_time=start_time,  # type: ignore[reportArgumentType]
             end_time=end_time,  # type: ignore[reportArgumentType]
         )
-        return Adapter.klines(raw_data=raw_data, resolve_symbols=resolve_symbols)
+        adapted_klines = Adapter.futures_klines(raw_data)
+        return adapted_klines[-limit:] if limit else adapted_klines
 
     async def futures_klines(
         self,
@@ -252,18 +164,6 @@ class UniClient(IUniClient[Client]):
         start_time: int | None = None,
         end_time: int | None = None,
     ) -> list[KlineDict]:
-        """Возвращает список свечей для тикера.
-
-        Параметры:
-            symbol (str): Название тикера. Например "BTC".
-            limit (int | None): Количество свечей.
-            interval (Timeframe | str): Таймфрейм свечей.
-            start_time (int | None): Время начала периода в миллисекундах.
-            end_time (int | None): Время окончания периода в миллисекундах.
-
-        Возвращает:
-            list[KlineDict]: Список свечей для тикера.
-        """
         if not limit and not all([start_time, end_time]):
             raise ValueError("limit and (start_time and end_time) must be provided")
 
@@ -282,7 +182,8 @@ class UniClient(IUniClient[Client]):
             start_time=start_time,  # type: ignore[reportArgumentType]
             end_time=end_time,  # type: ignore[reportArgumentType]
         )
-        return Adapter.futures_klines(raw_data)
+        adapted_klines = Adapter.futures_klines(raw_data)
+        return adapted_klines[-limit:] if limit else adapted_klines
 
     @overload
     async def funding_rate(self, symbol: str) -> float: ...
@@ -294,14 +195,6 @@ class UniClient(IUniClient[Client]):
     async def funding_rate(self) -> dict[str, float]: ...
 
     async def funding_rate(self, symbol: str | None = None) -> dict[str, float] | float:
-        """Возвращает ставку финансирования для тикера или всех тикеров, если тикер не указан.
-
-        Параметры:
-            symbol (`str | None`): Название тикера (Опционально).
-
-        Возвращает:
-            `dict[str, float] | float`: Ставка финансирования для тикера или словарь со ставками для всех тикеров.
-        """
         raw_data = await self._client.perp_meta_and_asset_contexts()
         adapted_data = Adapter.funding_rate(raw_data)
         return adapted_data[symbol] if symbol else adapted_data
@@ -316,16 +209,6 @@ class UniClient(IUniClient[Client]):
     async def open_interest(self) -> OpenInterestDict: ...
 
     async def open_interest(self, symbol: str | None = None) -> OpenInterestItem | OpenInterestDict:
-        """Возвращает объем открытого интереса для тикера или всех тикеров, если тикер не указан.
-
-        Параметры:
-            symbol (`str | None`): Название тикера. (Опционально, но обязателен для следующих бирж: BINANCE).
-
-        Возвращает:
-            `OpenInterestItem | OpenInterestDict`: Если тикер передан - словарь со временем и объемом
-                открытого интереса в монетах. Если нет передан - то словарь, в котором ключ - тикер,
-                а значение - словарь с временем и объемом открытого интереса в монетах.
-        """
         raw_data = await self._client.perp_meta_and_asset_contexts()
         adapted_data = Adapter.open_interest(raw_data)
         return adapted_data[symbol] if symbol else adapted_data
@@ -333,16 +216,6 @@ class UniClient(IUniClient[Client]):
     async def futures_best_bid_ask(
         self, symbol: str | None = None
     ) -> BestBidAskItem | BestBidAskDict:
-        """Возвращает лучший бид и аск для тикера или всех тикеров, если тикер не указан.
-
-        Параметры:
-            symbol (`str | None`): Название тикера (Опционально).
-
-        Возвращает:
-            `BestBidAskItem | BestBidAskDict`: Если тикер передан - словарь с лучшим бидом и
-            асков для этого тикера. Иначе - словарь, в котором ключ - тикер, а значение - словарь
-            с лучшим бидом и аском.
-        """
         raise NotImplementedError(
             "Method `futures_best_bid_ask` cannot be implemented for Hyperliquid: "
             "no REST endpoint with best bid/ask and sizes."
@@ -353,15 +226,21 @@ class UniClient(IUniClient[Client]):
         symbol: str,
         limit: int,
     ) -> BookDepthDict:
-        """Возвращает стакан для тикера.
-
-        Параметры:
-            symbol (`str`): Название тикера.
-            limit (`int`): Глубина стакана.
-
-        Возвращает:
-            `BookDepthDict`: Стакан для тикера.
-        """
         raise NotImplementedError(
             "Method 'futures_depth' will be implemented later. You can open pull request to contribute."
         )
+
+    async def futures_order_create(
+        self,
+        symbol: str,
+        side: OrderSide,
+        type: OrderType,
+        quantity: str,
+        price: str | None = None,
+        client_order_id: str | None = None,
+        reduce_only: bool | None = None,
+    ) -> OrderIdDict:
+        raise NotImplementedError("Method will be implemented later.")
+
+    async def futures_position_info(self, symbol: str) -> PositionInfoDict:
+        raise NotImplementedError("Method will be implemented later.")

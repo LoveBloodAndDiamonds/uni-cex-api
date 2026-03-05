@@ -4,7 +4,11 @@ __all__ = [
     "MarketType",
     "Exchange",
     "Timeframe",
-    "Side",
+    "OrderSide",
+    "OrderType",
+    "TimeInForce",
+    "PositionSide",
+    "MarginMode",
 ]
 
 from enum import StrEnum
@@ -40,11 +44,103 @@ class Exchange(StrEnum):
         return self, market_type
 
 
-class Side(StrEnum):
+class OrderSide(StrEnum):
     """Перечисление сторон сделки."""
 
     BUY = "BUY"
     SELL = "SELL"
+
+    def to_exchange_format(self, exchange: Exchange) -> str:
+        """Нормализует."""
+        match exchange:
+            case Exchange.BINANCE:
+                return self
+            case Exchange.BYBIT:
+                return self.capitalize()
+            case Exchange.BITGET:
+                return self.lower()
+            case Exchange.GATE:
+                return self.lower()
+            case _:
+                raise NotImplementedError(f"Exchange {exchange} is not supported")
+
+
+class OrderType(StrEnum):
+    """Тип ордера."""
+
+    LIMIT = "LIMIT"
+    MARKET = "MARKET"
+    TAKE_PROFIT = "TAKE_PROFIT"
+    STOP_LOSS = "STOP_LOSS"
+
+    def to_exchange_format(self, exchange: Exchange) -> str:
+        """Нормализует тип ордера под конкретную биржу."""
+        match exchange:
+            case Exchange.BINANCE:
+                if self in [OrderType.LIMIT, OrderType.MARKET]:
+                    return self
+                else:
+                    raise ValueError(f"Unsupported order type {self} for exchange {exchange}")
+            case Exchange.BYBIT:
+                if self in [OrderType.LIMIT, OrderType.MARKET]:
+                    return self.capitalize()
+                else:
+                    raise ValueError(f"Unsupported order type {self} for exchange {exchange}")
+            case Exchange.BITGET:
+                if self in [OrderType.LIMIT, OrderType.MARKET]:
+                    return self.capitalize()
+                else:
+                    raise ValueError(f"Unsupported order type {self} for exchange {exchange}")
+            case Exchange.GATE:
+                if self in [OrderType.LIMIT, OrderType.MARKET]:
+                    return self.lower()
+                else:
+                    raise ValueError(f"Unsupported order type {self} for exchange {exchange}")
+            case _:
+                raise NotImplementedError(f"Exchange {exchange} is not supported")
+
+
+class MarginMode(StrEnum):
+    """Перечисление режимов маржи."""
+
+    ISOLATED = "ISOLATED"
+    CROSSED = "CROSSED"
+
+    def to_exchange_format(self, exchange: Exchange) -> str:
+        """Нормализует тип режима маржи под конкретную биржу."""
+        match exchange:
+            case Exchange.BITGET:
+                return self.lower()
+            case _:
+                raise NotImplementedError(f"Exchange {exchange} is not supported")
+
+
+class TimeInForce(StrEnum):
+    """Перечисление времени действия ордера."""
+
+    GTC = "GTC"
+    IOC = "IOC"
+    FOK = "FOK"
+
+    def to_exchange_format(self, exchange: Exchange) -> str:
+        """Нормализует режим маржи под конкретную биржу."""
+        match exchange:
+            case _:
+                return self
+
+
+class PositionSide(StrEnum):
+    """Перечисление сторон позиции."""
+
+    BOTH = "BOTH"  # Means one-way mode
+    LONG = "LONG"
+    SHORT = "SHORT"
+
+    def to_exchange_format(self, exchange: Exchange) -> str:
+        """Нормализует сторону позиции под конкретную биржу."""
+        match exchange:
+            case _:
+                return self
 
 
 class Timeframe(StrEnum):

@@ -5,7 +5,7 @@ import time
 from typing import Any, Literal
 
 from unicex._base import BaseClient
-from unicex.exceptions import NotAuthorized
+from unicex.exceptions import NotAuthorized, ResponseError
 from unicex.types import NumberLike, RequestMethod
 from unicex.utils import (
     dict_to_query_string,
@@ -182,6 +182,20 @@ class Client(BaseClient):
             data=data,
             headers=headers,
         )
+
+    def _validate_response(
+        self, status_code: int, response_text: str, response_json: dict[str, Any]
+    ) -> None:
+        """Проверка ответа API на ошибки биржи. Переопределяется в клиентах конкретных бирж."""
+        code = response_json.get("code")
+        if code != "00000":
+            raise ResponseError(
+                response_json.get("msg", ""),
+                code=str(code),
+                status_code=status_code,
+                response_text=response_text,
+                response_json=response_json,
+            )
 
     async def request(
         self, method: RequestMethod, endpoint: str, params: dict, data: dict, signed: bool

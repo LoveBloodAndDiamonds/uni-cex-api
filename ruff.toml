@@ -28,7 +28,6 @@ lint.ignore = [
     "D100", # документация для публичного модуля
     "D205", # пропуск одной строки в документации
     "UP046",  # новый синтаксис Generic
-
     "D203",  # конфликтует с D211
     "D213",  # конфликтует с D212
 ]
@@ -45,3 +44,10 @@ format.line-ending = "auto"
 format.exclude = ["tests", "**/unicex/mexc/_spot_ws_proto"]
 format.skip-magic-trailing-comma = false # Всегда добавлять висящую запятую
 format.docstring-code-format = true      # Приводить код внутри docstring к единому стилю
+
+# Игнор правил для конкретных модулей
+[lint.per-file-ignores]
+"unicex/*/uni_client.py" = ["D102"]
+"unicex/*/uni_websocket_manager.py" = ["D102"]
+"unicex/*/exchange_info.py" = ["D101", "D102"]
+"unicex/*/adapter.py" = ["D102"]

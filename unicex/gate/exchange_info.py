@@ -9,14 +9,11 @@ from .client import Client
 
 
 class ExchangeInfo(IExchangeInfo):
-    """Предзагружает информацию о тикерах для биржи Gateio."""
-
     exchange_name = "Gateio"
     """Название биржи, на которой работает класс."""
 
     @classmethod
     async def _load_spot_exchange_info(cls, session: aiohttp.ClientSession) -> None:
-        """Загружает информацию о бирже для спотового рынка."""
         # У Gate список пар очень большой, поэтому даем больше времени на ответ и чтение.
         client = Client(session, timeout=60, max_retries=5, retry_delay=0.5)
         currency_pairs = await client.currency_pairs()
@@ -39,7 +36,6 @@ class ExchangeInfo(IExchangeInfo):
 
     @classmethod
     async def _load_futures_exchange_info(cls, session: aiohttp.ClientSession) -> None:
-        """Загружает информацию о бирже для фьючерсного рынка."""
         client = Client(session, timeout=60, max_retries=5, retry_delay=0.5)
         contracts = await client.futures_contracts("usdt")
         tickers_info: dict[str, TickerInfoItem] = {}

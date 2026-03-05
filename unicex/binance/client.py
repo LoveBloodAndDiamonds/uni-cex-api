@@ -3,7 +3,7 @@ __all__ = ["Client"]
 import json
 import time
 import warnings
-from typing import Any
+from typing import Any, Literal
 
 from unicex._base import BaseClient
 from unicex.exceptions import NotAuthorized
@@ -1286,12 +1286,16 @@ class Client(BaseClient):
 
         return await self._make_request("POST", url, True, params=params)
 
-    async def futures_position_info(self, symbol: str | None = None) -> list[dict]:
+    async def futures_position_info(
+        self,
+        symbol: str | None = None,
+        version: Literal["2", "3"] = "2",
+    ) -> list[dict]:
         """Получение информации о позициях на фьючерсах.
 
-        https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Position-Information-V3
+        https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Position-Information-V{version}
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v3/positionRisk"
+        url = self._BASE_FUTURES_URL + f"/fapi/v{version}/positionRisk"
         params = {"symbol": symbol}
 
         return await self._make_request("GET", url, True, params=params)

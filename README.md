@@ -4,29 +4,49 @@
 
 ## ✅ Статус реализации
 
-| Exchange        | Client | Auth | WS Manager | User WS | Uni Client | Uni WS Manager | ExchangeInfo |
-|-----------------|--------|------|------------|---------|------------|----------------|--------------|
-| **Aster**       | ✓      | ✓    | ✓          | ✓       | ✓          | ✓              | ✓            |
-| **Binance**     | ✓      | ✓    | ✓          | ✓       | ✓          | ✓              | ✓            |
-| **Bitget**      | ✓      | ✓    | ✓          |         | ✓          | ✓              | ✓            |
-| **Bybit**       | ✓      | ✓    | ✓          |         | ✓          | ✓              | ✓            |
-| **Gateio**      | ✓      | ✓    | ✓          |         | ✓          | ✓              | ✓            |
-| **Hyperliquid** | ✓      | ✓    | ✓          | ✓       | ✓          | ✓              |              |
-| **Mexc**        | ✓      | ✓    | ✓          |         | ✓          | ✓              | ✓            |
-| **Okx**         | ✓      | ✓    | ✓          |         | ✓          | ✓              | ✓            |
-| **Kucoin**      |        |      |            |         | ✓          |                |              |
-| **BingX**       |        |      |            |         | ✓          |                |              |
----
+### 1) Инфраструктурный слой
 
-### 📖 Описание колонок
+| Exchange | Client | Auth | WS Manager | User WS | ExchangeInfo |
+|---|---|---|---|---|---|
+| **Aster** | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 |
+| **Binance** | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 |
+| **Bitget** | 🟢 | 🟢 | 🟢 | 🔴 | 🟢 |
+| **Bybit** | 🟢 | 🟢 | 🟢 | 🔴 | 🟢 |
+| **Gateio** | 🟢 | 🟢 | 🟢 | 🔴 | 🟢 |
+| **Hyperliquid** | 🟢 | 🟢 | 🟢 | 🔴 | 🟢 |
+| **Mexc** | 🟢 | 🟢 | 🟢 | 🔴 | 🟢 |
+| **Okx** | 🟢 | 🟢 | 🟢 | 🔴 | 🟢 |
+| **Kucoin** | 🟢 | 🔴 | 🟢 | 🔴 | 🟢 |
+| **BingX** | 🟢 | 🔴 | 🟢 | 🔴 | 🟢 |
 
-- **Client** - Обертки над HTTP методами следующих разделов: market, order, position, account.
-- **Auth** - Поддержка авторизации и приватных эндпоинтов.
-- **WS Manager** - Обертки над вебсокетами биржи.
-- **User WS** - Поддержка пользовательских вебсокетов.
-- **UniClient** - Унифированный клиент.
-- **UniWebsocketManager** - Унифированный менеджер вебсокетов.
-- **ExchangeInfo** - Информация о бирже для округления цен и объемов
+### 2) Унифицированный слой
+
+| Exchange | UniClient (15) | UniWebsocketManager (8) |
+|---|---|---|
+| **Aster** | 13/15 🟡 | 8/8 🟢 |
+| **Binance** | 15/15 🟢 | 8/8 🟢 |
+| **Bitget** | 15/15 🟢 | 8/8 🟢 |
+| **Bybit** | 15/15 🟢 | 8/8 🟢 |
+| **Gateio** | 15/15 🟢 | 8/8 🟢 |
+| **Hyperliquid** | 11/15 🟡 | 8/8 🟢 |
+| **Mexc** | 12/15 🟡 | 6/8 🟡 |
+| **Okx** | 13/15 🟡 | 8/8 🟢 |
+| **Kucoin** | 11/15 🟡 | 0/8 🔴 |
+| **BingX** | 11/15 🟡 | 4/8 🟡 |
+
+
+**Расшифровка колонок (1 таблица):**
+
+- **Client** - Реализация сырого REST-клиента биржи (market/order/position/account).
+- **Auth** - Поддержка авторизации и приватных REST-эндпоинтов.
+- **WS Manager** - Реализация сырого WebSocket-менеджера биржи.
+- **User WS** - Поддержка пользовательских (приватных) WebSocket-потоков.
+- **ExchangeInfo** - Фоновая загрузка рыночных параметров (шаг цены, шаг объема, множитель контракта).
+
+**Расшифровка колонок (2 таблица):**
+
+- **UniClient (15)** - Количество реализованных методов из интерфейса `IUniClient`.
+- **UniWebsocketManager (8)** - Количество реализованных методов из интерфейса `IUniWebsocketManager`.
 ---
 
 ## 🚀 Быстрый старт
@@ -145,7 +165,6 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-
 ### Пример: Округление цен используя фоновый класс ExchangeInfo
 
 
@@ -193,4 +212,51 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+```
+
+### Пример: Полезные утилиты из `unicex.extra`
+
+```python
+import time
+from unicex import Exchange, MarketType
+from unicex.extra import (
+    TimeoutTracker,
+    SignalCounter,
+    percent_greater,
+    percent_less,
+    normalize_ticker,
+    normalize_symbol,
+    generate_ex_link,
+    generate_tv_link,
+    generate_cg_link,
+    make_humanreadable,
+)
+
+entry, last = 1975.0, 2012.5
+print("Рост (%):", round(percent_greater(last, entry), 2))
+print("Просадка (%):", round(percent_less(last, entry), 2))
+
+raw = "eth-usdt-swap"
+symbol = normalize_symbol(raw)      # ETHUSDT
+ticker = normalize_ticker(raw)      # ETH
+print("ticker:", ticker, "| symbol:", symbol)
+
+print("Биржа:", generate_ex_link(Exchange.OKX, MarketType.FUTURES, symbol))
+print("TradingView:", generate_tv_link(Exchange.OKX, MarketType.FUTURES, symbol))
+print("CoinGlass:", generate_cg_link(Exchange.OKX, MarketType.FUTURES, symbol))
+
+notional = 12_345_678.9
+print("Объем (RU):", make_humanreadable(notional, "ru"))
+print("Volume (EN):", make_humanreadable(notional, "en"))
+
+cooldown = TimeoutTracker[str]()
+cooldown.block("BTCUSDT", duration=3)
+print("BTCUSDT заблокирован:", cooldown.is_blocked("BTCUSDT"))
+time.sleep(3)
+print("BTCUSDT заблокирован:", cooldown.is_blocked("BTCUSDT"))
+
+counter = SignalCounter[str](window_sec=5)
+counter.add("breakout")
+counter.add("breakout")
+print("Лимит 3 не превышен:", counter.is_within_limit("breakout", limit=3))
 ```

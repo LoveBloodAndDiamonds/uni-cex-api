@@ -1,10 +1,12 @@
 __all__ = ["UniClient"]
 
 
-from typing import overload
+from decimal import Decimal
+from typing import Literal, overload
 
 from unicex._abc import IUniClient
-from unicex.enums import Exchange, MarketType, Timeframe
+from unicex.enums import Exchange, MarketType, OrderSide, OrderType, Timeframe
+from unicex.exceptions import ResponseError
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
@@ -12,11 +14,14 @@ from unicex.types import (
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
+    OrderIdDict,
+    PositionInfoDict,
     TickerDailyDict,
 )
 
 from .adapter import Adapter
 from .client import Client
+from .exchange_info import ExchangeInfo
 
 
 class UniClient(IUniClient[Client]):
@@ -24,70 +29,29 @@ class UniClient(IUniClient[Client]):
 
     @property
     def _client_cls(self) -> type[Client]:
-        """Возвращает класс клиента для Gateio.
-
-        Возвращает:
-            type[Client]: Класс клиента для Gateio.
-        """
         return Client
 
     async def tickers(self, only_usdt: bool = True) -> list[str]:
-        """Возвращает список тикеров.
-
-        Параметры:
-            only_usdt (bool): Если True, возвращает только тикеры в паре к USDT.
-
-        Возвращает:
-            list[str]: Список тикеров.
-        """
         raw_data = await self._client.tickers()
         return Adapter.tickers(raw_data=raw_data, only_usdt=only_usdt)  # type: ignore[reportArgumentType]
 
     async def futures_tickers(self, only_usdt: bool = True) -> list[str]:
-        """Возвращает список тикеров.
-
-        Параметры:
-            only_usdt (bool): Если True, возвращает только тикеры в паре к USDT.
-
-        Возвращает:
-            list[str]: Список тикеров.
-        """
         raw_data = await self._client.futures_tickers(settle="usdt")
         return Adapter.futures_tickers(raw_data=raw_data, only_usdt=only_usdt)  # type: ignore[reportArgumentType]
 
     async def last_price(self) -> dict[str, float]:
-        """Возвращает последнюю цену для каждого тикера.
-
-        Возвращает:
-            dict[str, float]: Словарь с последними ценами для каждого тикера.
-        """
         raw_data = await self._client.tickers()
         return Adapter.last_price(raw_data=raw_data)  # type: ignore[reportArgumentType]
 
     async def futures_last_price(self) -> dict[str, float]:
-        """Возвращает последнюю цену для каждого тикера.
-
-        Возвращает:
-            dict[str, float]: Словарь с последними ценами для каждого тикера.
-        """
         raw_data = await self._client.futures_tickers(settle="usdt")
         return Adapter.futures_last_price(raw_data=raw_data)  # type: ignore[reportArgumentType]
 
     async def ticker_24hr(self) -> TickerDailyDict:
-        """Возвращает статистику за последние 24 часа для каждого тикера.
-
-        Возвращает:
-            TickerDailyDict: Словарь с статистикой за последние 24 часа для каждого тикера.
-        """
         raw_data = await self._client.tickers()
         return Adapter.ticker_24hr(raw_data=raw_data)  # type: ignore[reportArgumentType]
 
     async def futures_ticker_24hr(self) -> TickerDailyDict:
-        """Возвращает статистику за последние 24 часа для каждого тикера.
-
-        Возвращает:
-            TickerDailyDict: Словарь с статистикой за последние 24 часа для каждого тикера.
-        """
         raw_data = await self._client.futures_tickers(settle="usdt")
         return Adapter.futures_ticker_24hr(raw_data=raw_data)  # type: ignore[reportArgumentType]
 
@@ -99,18 +63,6 @@ class UniClient(IUniClient[Client]):
         start_time: int | None = None,
         end_time: int | None = None,
     ) -> list[KlineDict]:
-        """Возвращает список свечей для тикера.
-
-        Параметры:
-            symbol (str): Название тикера.
-            limit (int | None): Количество свечей.
-            interval (Timeframe | str): Таймфрейм свечей.
-            start_time (int | None): Время начала периода в миллисекундах.
-            end_time (int | None): Время окончания периода в миллисекундах.
-
-        Возвращает:
-            list[KlineDict]: Список свечей для тикера.
-        """
         interval = (
             interval.to_exchange_format(Exchange.GATE, MarketType.SPOT)
             if isinstance(interval, Timeframe)
@@ -133,18 +85,6 @@ class UniClient(IUniClient[Client]):
         start_time: int | None = None,
         end_time: int | None = None,
     ) -> list[KlineDict]:
-        """Возвращает список свечей для тикера.
-
-        Параметры:
-            symbol (str): Название тикера.
-            limit (int | None): Количество свечей.
-            interval (Timeframe | str): Таймфрейм свечей.
-            start_time (int | None): Время начала периода в миллисекундах.
-            end_time (int | None): Время окончания периода в миллисекундах.
-
-        Возвращает:
-            list[KlineDict]: Список свечей для тикера.
-        """
         interval = (
             interval.to_exchange_format(Exchange.GATE, MarketType.FUTURES)
             if isinstance(interval, Timeframe)
@@ -170,14 +110,6 @@ class UniClient(IUniClient[Client]):
     async def funding_rate(self) -> dict[str, float]: ...
 
     async def funding_rate(self, symbol: str | None = None) -> dict[str, float] | float:
-        """Возвращает ставку финансирования для тикера или всех тикеров, если тикер не указан.
-
-        - Параметры:
-        symbol (`str | None`): Название тикера (Опционально).
-
-        Возвращает:
-          `dict[str, float] | float`: Ставка финансирования для тикера или словарь со ставками для всех тикеров.
-        """
         raw_data = await self._client.futures_tickers(settle="usdt", contract=symbol)
         items = raw_data if isinstance(raw_data, list) else [raw_data]
         adapted_data = Adapter.funding_rate(raw_data=items)  # type: ignore[reportArgumentType]
@@ -193,16 +125,6 @@ class UniClient(IUniClient[Client]):
     async def open_interest(self) -> OpenInterestDict: ...
 
     async def open_interest(self, symbol: str | None = None) -> OpenInterestItem | OpenInterestDict:
-        """Возвращает объем открытого интереса для тикера или всех тикеров, если тикер не указан.
-
-        Параметры:
-            symbol (`str | None`): Название тикера. (Опционально, но обязателен для следующих бирж: BINANCE).
-
-        Возвращает:
-            `OpenInterestItem | OpenInterestDict`: Если тикер передан - словарь со временем и объемом
-                открытого интереса в монетах. Если нет передан - то словарь, в котором ключ - тикер,
-                а значение - словарь с временем и объемом открытого интереса в монетах.
-        """
         raw_data = await self._client.futures_tickers(settle="usdt", contract=symbol)
         items = raw_data if isinstance(raw_data, list) else [raw_data]
         adapted_data = Adapter.open_interest(raw_data=items)  # type: ignore[reportArgumentType]
@@ -222,23 +144,12 @@ class UniClient(IUniClient[Client]):
     async def futures_best_bid_ask(
         self, symbol: str | None = None
     ) -> BestBidAskItem | BestBidAskDict:
-        """Возвращает лучший бид и аск для тикера или всех тикеров, если тикер не указан.
-
-        Параметры:
-            symbol (`str | None`): Название тикера (Опционально).
-
-        Возвращает:
-            `BestBidAskItem | BestBidAskDict`: Если тикер передан - словарь с лучшим бидом и
-            асков для этого тикера. Иначе - словарь, в котором ключ - тикер, а значение - словарь
-            с лучшим бидом и аском.
-        """
         raw_data = await self._client.futures_tickers(settle="usdt", contract=symbol)
         adapted_data = Adapter.futures_best_bid_ask(raw_data=raw_data)  # type: ignore[reportArgumentType]
         return adapted_data[symbol] if symbol else adapted_data
 
     @staticmethod
     def _to_seconds(value: int | None) -> int | None:
-        """Преобразует значение из миллисекунд в секунды для передачи в API."""
         if value is None:
             return None
         if value >= 1_000_000_000_000:
@@ -250,15 +161,6 @@ class UniClient(IUniClient[Client]):
         symbol: str,
         limit: int,
     ) -> BookDepthDict:
-        """Возвращает стакан для тикера.
-
-        Параметры:
-            symbol (`str`): Название тикера.
-            limit (`int`): Глубина стакана.
-
-        Возвращает:
-            `BookDepthDict`: Стакан для тикера.
-        """
         raw_data = await self._client.futures_order_book(
             settle="usdt",
             contract=symbol,
@@ -266,3 +168,78 @@ class UniClient(IUniClient[Client]):
             with_id="true",  # type: ignore
         )
         return Adapter.futures_depth(raw_data=raw_data, symbol=symbol)
+
+    async def futures_order_create(
+        self,
+        symbol: str,
+        side: OrderSide,
+        type: OrderType,
+        quantity: str,
+        price: str | None = None,
+        client_order_id: str | None = None,
+        reduce_only: bool | None = None,
+        # Gate only args
+        quantity_unit: Literal["contract", "currency"] = "contract",
+    ) -> OrderIdDict:
+        self.ensure_authorized()
+
+        if type == OrderType.LIMIT and price is None:
+            raise ValueError("Price is required for limit order type on Gate futures.")
+
+        if type not in {OrderType.LIMIT, OrderType.MARKET}:
+            raise ValueError(f"Unsupported order type for Gate futures: {type}.")
+
+        if quantity_unit == "contract":
+            try:
+                contract_size = ExchangeInfo.get_futures_ticker_info(symbol)["contract_size"]
+            except Exception as e:
+                raise ValueError(f"Failed to get contract size for symbol {symbol}") from e
+
+            quantity_decimal = Decimal(quantity)
+            contract_size_decimal = Decimal(str(contract_size))
+            contracts = quantity_decimal / contract_size_decimal
+            if contracts % 1 != 0:
+                raise ValueError(
+                    f"Quantity {quantity} is not multiple of contract size {contract_size} "
+                    f"for symbol {symbol}."
+                )
+
+            signed_size = contracts if side == OrderSide.BUY else -contracts
+            size = str(int(signed_size))
+        elif quantity_unit == "currency":
+            size = quantity
+        else:
+            raise ValueError(f"Unsupported quantity unit: {quantity_unit}.")
+
+        text = None
+        if client_order_id:
+            text = client_order_id if client_order_id.startswith("t-") else f"t-{client_order_id}"
+
+        order_data = {
+            "contract": symbol,
+            "size": size,
+            "price": "0" if type == OrderType.MARKET else price,
+            "tif": "ioc" if type == OrderType.MARKET else "gtc",
+            "text": text,
+            "reduce_only": reduce_only,
+        }
+        raw_data = await self._client.futures_create_order(
+            settle="usdt",
+            order=order_data,
+        )
+        return Adapter.futures_order_create(raw_data)
+
+    async def futures_position_info(self, symbol: str) -> PositionInfoDict:
+        self.ensure_authorized()
+
+        try:
+            raw_data = await self._client.futures_position(
+                settle="usdt",
+                contract=symbol,
+            )
+        except ResponseError as e:
+            if e.response_json.get("label") == "POSITION_NOT_FOUND":
+                raw_data = {}
+            else:
+                raise
+        return Adapter.futures_position_info(raw_data)

@@ -23,7 +23,6 @@ class Adapter:
 
     @staticmethod
     def _resolve_spot_symbol(symbol: str, resolve_symbols: bool) -> str:
-        """Преобразует внутренний спотовый идентификатор в тикер."""
         if not resolve_symbols:
             return symbol
         try:
@@ -34,15 +33,6 @@ class Adapter:
 
     @staticmethod
     def tickers(raw_data: dict, resolve_symbols: bool = True) -> list[str]:
-        """Преобразует данные Hyperliquid в список спотовых тикеров.
-
-        Параметры:
-            raw_data (dict): Сырой ответ с биржи.
-            resolve_symbols (bool): Если True, преобразует "@123" в обычный тикер.
-
-        Возвращает:
-            list[str]: Список тикеров.
-        """
         return [
             Adapter._resolve_spot_symbol(item["name"], resolve_symbols)
             for item in raw_data["universe"]
@@ -50,27 +40,10 @@ class Adapter:
 
     @staticmethod
     def futures_tickers(raw_data: dict) -> list[str]:
-        """Преобразует данные Hyperliquid в список фьючерсных тикеров.
-
-        Параметры:
-            raw_data (dict): Сырой ответ с биржи.
-
-        Возвращает:
-            list[str]: Список тикеров (например, "BTC, ETH").
-        """
         return Adapter.tickers(raw_data, resolve_symbols=False)
 
     @staticmethod
     def last_price(raw_data: dict, resolve_symbols: bool = True) -> dict[str, float]:
-        """Преобразует данные о последних ценах (spot) в унифицированный формат.
-
-        Параметры:
-            raw_data (dict): Сырой ответ с биржи.
-            resolve_symbols (bool): Если True, преобразует "@123" в обычный тикер.
-
-        Возвращает:
-            dict[str, float]: Словарь тикеров и последних цен.
-        """
         return {
             Adapter._resolve_spot_symbol(token, resolve_symbols): float(price)
             for token, price in raw_data.items()
@@ -79,29 +52,12 @@ class Adapter:
 
     @staticmethod
     def futures_last_price(raw_data: dict) -> dict[str, float]:
-        """Преобразует данные о последних ценах (futures) в унифицированный формат.
-
-        Параметры:
-            raw_data (dict): Сырой ответ с биржи.
-
-        Возвращает:
-            dict[str, float]: Словарь тикеров и последних цен.
-        """
         return {
             token: float(price) for token, price in raw_data.items() if not token.startswith("@")
         }
 
     @staticmethod
     def ticker_24hr(raw_data: list, resolve_symbols: bool = True) -> TickerDailyDict:
-        """Преобразует 24-часовую статистику (spot) в унифицированный формат.
-
-        Параметры:
-            raw_data (list): Сырой ответ с биржи.
-            resolve_symbols (bool): Если True, преобразует "@123" в обычный тикер.
-
-        Возвращает:
-            TickerDailyDict: Словарь тикеров и их статистики.
-        """
         metrics = raw_data[1]
         result: TickerDailyDict = {}
 
@@ -136,14 +92,6 @@ class Adapter:
 
     @staticmethod
     def futures_ticker_24hr(raw_data: list) -> TickerDailyDict:
-        """Преобразует 24-часовую статистику (futures) в унифицированный формат.
-
-        Параметры:
-            raw_data (list): Сырой ответ с биржи.
-
-        Возвращает:
-            TickerDailyDict: Словарь тикеров и их статистики.
-        """
         universe = raw_data[0]["universe"]
         metrics = raw_data[1]
 
@@ -168,15 +116,6 @@ class Adapter:
 
     @staticmethod
     def klines(raw_data: list[dict], resolve_symbols: bool = True) -> list[KlineDict]:
-        """Преобразует сырой ответ, в котором содержатся данные о свечах, в унифицированный формат.
-
-        Параметры:
-            raw_data (list[dict]): Сырой ответ с биржи.
-            resolve_symbols (bool): Если True, преобразует "@123" в обычный тикер.
-
-        Возвращает:
-            list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
-        """
         return [
             KlineDict(
                 s=Adapter._resolve_spot_symbol(str(kline["s"]), resolve_symbols),
@@ -198,27 +137,10 @@ class Adapter:
 
     @staticmethod
     def futures_klines(raw_data: list[dict]) -> list[KlineDict]:
-        """Преобразует сырой ответ, в котором содержатся данные о свечах, в унифицированный формат.
-
-        Параметры:
-            raw_data (list[dict]): Сырой ответ с биржи.
-            symbol (str): Символ тикера.
-
-        Возвращает:
-            list[KlineDict]: Список словарей, где каждый словарь содержит данные о свече.
-        """
         return Adapter.klines(raw_data, resolve_symbols=False)
 
     @staticmethod
     def funding_rate(raw_data: list) -> dict[str, float]:
-        """Преобразует данные о ставках финансирования в унифицированный формат.
-
-        Параметры:
-            raw_data (list): Сырой ответ с биржи.
-
-        Возвращает:
-            dict[str, float]: Словарь тикеров и ставок финансирования (в %).
-        """
         universe = raw_data[0]["universe"]
         metrics = raw_data[1]
         return {
@@ -229,14 +151,6 @@ class Adapter:
 
     @staticmethod
     def open_interest(raw_data: list) -> OpenInterestDict:
-        """Преобразует данные об открытом интересе в унифицированный формат.
-
-        Параметры:
-            raw_data (list): Сырой ответ с биржи.
-
-        Возвращает:
-            OpenInterestDict: Словарь тикеров и значений открытого интереса.
-        """
         universe = raw_data[0]["universe"]
         metrics = raw_data[1]
         return {
@@ -250,7 +164,6 @@ class Adapter:
 
     @staticmethod
     def klines_message(raw_msg: dict, resolve_symbols: bool = True) -> list[KlineDict]:
-        """Преобразует сырое websocket-сообщение со свечой в унифицированный формат."""
         candle = raw_msg["data"]
         volume = float(candle["v"])
         close_price = float(candle["c"])
@@ -272,7 +185,6 @@ class Adapter:
 
     @staticmethod
     def trades_message(raw_msg: dict, resolve_symbols: bool = True) -> list[TradeDict]:
-        """Преобразует сырое websocket-сообщение со сделками в унифицированный формат."""
         result: list[TradeDict] = []
         for trade in sorted(raw_msg["data"], key=lambda item: int(item["time"])):
             side = "BUY" if trade["side"] == "B" else "SELL"
@@ -290,7 +202,6 @@ class Adapter:
 
     @staticmethod
     def best_bid_ask_message(raw_msg: dict, resolve_symbols: bool = True) -> list[BestBidAskItem]:
-        """Преобразует сырое websocket-сообщение с лучшим бидом/аском в унифицированный формат."""
         data = raw_msg["data"]
         best_bid = data["bbo"][0]
         best_ask = data["bbo"][1]
@@ -318,7 +229,6 @@ class Adapter:
         limit: int,
         resolve_symbols: bool = True,
     ) -> list[BookDepthDict]:
-        """Преобразует сырое websocket-сообщение со стаканом в унифицированный формат."""
         data = raw_msg["data"]
         bids = data["levels"][0][:limit]
         asks = data["levels"][1][:limit]

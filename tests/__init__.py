@@ -1,10 +1,4 @@
-import asyncio
-from unicex import HyperliquidUniClient
+from unicex.enums import OrderType, Exchange
 
 
-async def main() -> None:
-    """Main entry point for the application."""
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+print(OrderType.LIMIT.to_exchange_format(Exchange.BINANCE))

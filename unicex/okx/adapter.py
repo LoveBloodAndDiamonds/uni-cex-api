@@ -25,15 +25,6 @@ class Adapter:
 
     @staticmethod
     def tickers(raw_data: dict, only_usdt: bool) -> list[str]:
-        """Преобразует сырые данные о тикерах в список унифицированных символов.
-
-        Параметры:
-            raw_data (`dict`): Сырой ответ от OKX.
-            only_usdt (`bool`): Возвращать только тикеры в паре с USDT.
-
-        Возвращает:
-            `list[str]`: Список тикеров.
-        """
         return [
             item["instId"]
             for item in raw_data["data"]
@@ -42,15 +33,6 @@ class Adapter:
 
     @staticmethod
     def futures_tickers(raw_data: dict, only_usdt: bool) -> list[str]:
-        """Преобразует сырые данные о тикерах в список унифицированных символов.
-
-        Параметры:
-            raw_data (`dict`): Сырой ответ от OKX.
-            only_usdt (`bool`): Возвращать только тикеры в паре с USDT.
-
-        Возвращает:
-            `list[str]`: Список тикеров.
-        """
         return [
             item["instId"]
             for item in raw_data["data"]
@@ -59,10 +41,7 @@ class Adapter:
 
     @staticmethod
     def ticker_24hr(raw_data: dict) -> TickerDailyDict:
-        """Преобразует статистику 24ч в унифицированный формат.
-
-        # NOTE: Обратите внимание, изменение цены в случае с OKX возвращается относительно открытия 1 day свечи.
-        """
+        # Обратите внимание, изменение цены в случае с OKX возвращается относительно открытия 1 day свечи.
         result = {}
         for item in raw_data["data"]:
             try:
@@ -82,10 +61,7 @@ class Adapter:
 
     @staticmethod
     def futures_ticker_24hr(raw_data: dict) -> TickerDailyDict:
-        """Преобразует статистику 24ч в унифицированный формат.
-
-        Обратите внимание, изменение цены в случае с OKX возвращается относительно открытия 1 day свечи.
-        """
+        # Обратите внимание, изменение цены в случае с OKX возвращается относительно открытия 1 day свечи.
         result = {}
         for item in raw_data["data"]:
             try:
@@ -103,7 +79,6 @@ class Adapter:
 
     @staticmethod
     def last_price(raw_data: dict) -> dict[str, float]:
-        """Преобразует данные о последней цене в унифицированный формат."""
         result = {}
         for item in raw_data["data"]:
             try:
@@ -114,7 +89,6 @@ class Adapter:
 
     @staticmethod
     def klines(raw_data: dict, symbol: str) -> list[KlineDict]:
-        """Преобразует данные о свечах в унифицированный формат."""
         return [
             KlineDict(
                 s=symbol,
@@ -136,13 +110,11 @@ class Adapter:
 
     @staticmethod
     def funding_rate(raw_data: dict) -> dict[str, float]:
-        """Преобразует данные о ставках финансирования в унифицированный формат."""
         data = raw_data["data"][0]
         return {data["instId"]: float(data["fundingRate"]) * 100}
 
     @staticmethod
     def open_interest(raw_data: dict) -> OpenInterestDict:
-        """Преобразует данные об открытом интересе в унифицированный формат."""
         return {
             item["instId"]: OpenInterestItem(
                 t=int(item["ts"]),
@@ -154,14 +126,6 @@ class Adapter:
 
     @staticmethod
     def futures_best_bid_ask(raw_data: dict) -> BestBidAskDict:
-        """Преобразует сырой ответ, в котором содержатся данные о лучших bid/ask фьючерсов в унифицированный формат.
-
-        Параметры:
-            raw_data (dict): Сырой ответ с биржи.
-
-        Возвращает:
-            BestBidAskDict: Словарь, где ключ - тикер, а значение - лучший бид и аск.
-        """
         return {
             item["instId"]: BestBidAskItem(
                 s=item["instId"],
@@ -177,15 +141,6 @@ class Adapter:
 
     @staticmethod
     def futures_depth(raw_data: dict, symbol: str) -> BookDepthDict:
-        """Преобразует сырой ответ, в котором содержатся данные о стакане фьючерсов, в унифицированный формат.
-
-        Параметры:
-            raw_data (dict): Сырой ответ с биржи.
-            symbol (str): Тикер, для которого нужно преобразовать данные.
-
-        Возвращает:
-            BookDepthDict: Стакан для тикера.
-        """
         data = raw_data["data"][0]
         contract_size = Adapter._get_contract_size(symbol)
         return BookDepthDict(
@@ -198,14 +153,6 @@ class Adapter:
 
     @staticmethod
     def klines_message(raw_msg: Any) -> list[KlineDict]:
-        """Преобразует вебсокет-сообщение со свечами в унифицированный формат.
-
-        Параметры:
-            raw_msg (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            list[KlineDict]: Список свечей в унифицированном формате.
-        """
         return [
             KlineDict(
                 s=raw_msg["arg"]["instId"],
@@ -224,14 +171,6 @@ class Adapter:
 
     @staticmethod
     def trades_message(raw_msg: Any) -> list[TradeDict]:
-        """Преобразует вебсокет-сообщение со сделками в унифицированный формат.
-
-        Параметры:
-            raw_msg (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            list[TradeDict]: Список сделок в унифицированном формате.
-        """
         return [
             TradeDict(
                 t=int(trade["ts"]),
@@ -245,14 +184,6 @@ class Adapter:
 
     @staticmethod
     def futures_best_bid_ask_message(raw_msg: Any) -> list[BestBidAskItem]:
-        """Преобразует вебсокет-сообщение с лучшими бидом и аском в унифицированный формат.
-
-        Параметры:
-            raw_msg (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            list[BestBidAskDict]: Список обновлений лучших бидов и асков в унифицированном формате.
-        """
         data = raw_msg["data"][0]
         inst_id = raw_msg["arg"]["instId"]
         contract_size = Adapter._get_contract_size(inst_id)
@@ -281,14 +212,6 @@ class Adapter:
 
     @staticmethod
     def futures_partial_book_depth_message(raw_msg: Any) -> list[BookDepthDict]:
-        """Преобразует вебсокет-сообщение с частичным стаканом в унифицированный формат.
-
-        Параметры:
-            raw_msg (Any): Сырое сообщение с вебсокета.
-
-        Возвращает:
-            list[PartialBookDepthDict]: Список обновлений стакана в унифицированном формате.
-        """
         data = raw_msg["data"][0]
         inst_id = raw_msg["arg"]["instId"]
         contract_size = Adapter._get_contract_size(inst_id)
@@ -307,7 +230,6 @@ class Adapter:
 
     @staticmethod
     def _get_contract_size(symbol: str) -> float:
-        """Возвращает размер контракта для указанного символа тикера."""
         try:
             return ExchangeInfo.get_futures_ticker_info(symbol)["contract_size"] or 1
         except:  # noqa

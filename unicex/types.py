@@ -16,10 +16,12 @@ __all__ = [
     "BestBidAskItem",
     "BestBidAskDict",
     "BookDepthDict",
+    "OrderIdDict",
+    "PositionInfoDict",
 ]
 
 from logging import Logger as LoggingLogger
-from typing import Literal, TypedDict
+from typing import Literal, NotRequired, TypedDict
 
 import loguru
 
@@ -219,3 +221,59 @@ class BookDepthDict(TypedDict):
     b: list[tuple[float, float]]  # price, quantity
     """Лучшие биды (те, кто покупают, ниже в стакане)
     в порядке удаления от спреда. Два значения: цена и объем."""
+
+
+class OrderIdDict(TypedDict):
+    """Базовая информация о айди ордера."""
+
+    t: int
+    """Время события в миллисекундах."""
+
+    id: str
+    """Айди ордера."""
+
+    cloid: str
+    """Клиентский айди ордера."""
+
+
+class PositionInfoDict(TypedDict):
+    """Информация о позиции."""
+
+    t: int
+    """Время ответа в миллисекундах."""
+
+    symbol: str  # "" if position is not opened
+    """Торговая пара."""
+
+    side: Literal["BUY", "SELL", ""]  # "" if position is not opened
+    """Направление позиции."""
+
+    quantity: float  # 0 if position is not opened
+    """Объем позиции в монетах."""
+
+    entry_price: float  # 0 if position is not opened
+    """Средняя цена входа в позицию."""
+
+    mark_price: float  # 0 if position is not opened
+    """Цена маркировки на тикере."""
+
+    liquidation_price: float  # 0 if position is not opened
+    """Цена ликвидации позиции."""
+
+    unrealized_pnl: float  # 0 if position is not opened
+    """Нереализованный PNL."""
+
+    realized_pnl: float  # 0 if position is not opened
+    """Реализованный PNL."""
+
+    leverage: float  # 0 if position is not opened
+    """Торговое плечо."""
+
+    # Not required attrs for the future updates
+    # Supports not on all exchanges
+
+    notional: NotRequired[float]
+    """Размер позиции в долларах."""
+
+    breakeven_price: NotRequired[float]
+    """Цена безубытка."""

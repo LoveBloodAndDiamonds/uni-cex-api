@@ -2,12 +2,13 @@ __all__ = ["IUniClient"]
 
 import time
 from abc import ABC, abstractmethod
-from typing import Generic, Self, TypeVar, overload
+from typing import Any, Generic, Self, TypeVar, overload
 
 import aiohttp
 
 from unicex._base import BaseClient
-from unicex.enums import Timeframe
+from unicex.enums import OrderSide, OrderType, Timeframe
+from unicex.exceptions import NotAuthorized
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
@@ -16,6 +17,8 @@ from unicex.types import (
     LoggerLike,
     OpenInterestDict,
     OpenInterestItem,
+    OrderIdDict,
+    PositionInfoDict,
     TickerDailyDict,
 )
 from unicex.utils import batched_list
@@ -126,6 +129,13 @@ class IUniClient(ABC, Generic[TClient]):
             `bool`: True, если апи ключи присутствуют, иначе False.
         """
         return self._client.is_authorized()
+
+    def ensure_authorized(self) -> None:
+        """Проверяет, наличие апи ключей в инстансе клиента и выбрасывает исключение, если их нет."""
+        if not self.is_authorized():
+            raise NotAuthorized(
+                "Client is not authorized. Please provide API key, secret and passphrase."
+            )
 
     async def close_connection(self) -> None:
         """Закрывает сессию клиента."""
@@ -406,5 +416,46 @@ class IUniClient(ABC, Generic[TClient]):
 
         Возвращает:
             `BookDepthDict`: Стакан для тикера.
+        """
+        ...
+
+    @abstractmethod
+    async def futures_order_create(
+        self,
+        symbol: str,
+        side: OrderSide,
+        type: OrderType,
+        quantity: str,
+        price: str | None = None,
+        client_order_id: str | None = None,
+        reduce_only: bool | None = None,
+        **kwargs: Any,
+    ) -> OrderIdDict:
+        """Создает фьючерсный ордер.
+
+        Параметры:
+            symbol (`str`): Название тикера.
+            side (`OrderSide`): Сторона ордера (BUY/SELL).
+            type (`OrderType`): Тип ордера.
+            quantity (`str`): Количество базового актива.
+            price (`str | None`): Цена ордера (Опционально, для лимитных ордеров).
+            client_order_id (`str | None`): Пользовательский ID ордера (Опционально).
+            reduce_only (`bool | None`): Флаг ордера на уменьшение позиции (Опционально).
+            **kwargs (`Any`): Дополнительные параметры специфичные для биржи.
+
+        Возвращает:
+            `OrderIdDict`: Словарь с айди созданного ордера.
+        """
+        ...
+
+    @abstractmethod
+    async def futures_position_info(self, symbol: str) -> PositionInfoDict:
+        """Возвращает информацию о позиции для фьючерсного тикера.
+
+        Параметры:
+            symbol (`str`): Название тикера.
+
+        Возвращает:
+            `PositionInfoDict`: Словарь с информацией о позиции.
         """
         ...

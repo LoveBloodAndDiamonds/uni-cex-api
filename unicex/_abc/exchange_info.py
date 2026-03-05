@@ -77,9 +77,13 @@ class IExchangeInfo(ABC):
     @classmethod
     async def load_exchange_info(cls) -> None:
         """Принудительно вызывает загрузку информации о бирже."""
+        spot_loaded = False
+        futures_loaded = False
+
         async with aiohttp.ClientSession() as session:
             try:
                 await cls._load_spot_exchange_info(session)
+                spot_loaded = True
                 cls._logger.debug(f"Loaded spot exchange data for {cls.exchange_name} ")
             except Exception as e:
                 cls._logger.error(
@@ -87,12 +91,19 @@ class IExchangeInfo(ABC):
                 )
             try:
                 await cls._load_futures_exchange_info(session)
+                futures_loaded = True
                 cls._logger.debug(f"Loaded futures exchange data for {cls.exchange_name} ")
             except Exception as e:
                 cls._logger.error(
                     f"{type(e)} loading futures exchange data for {cls.exchange_name}: {e}"
                 )
-        cls._loaded = True
+
+        cls._loaded = spot_loaded and futures_loaded
+        if not cls._loaded:
+            cls._logger.warning(
+                f"Exchange data for {cls.exchange_name} is partial or not loaded "
+                f"(spot_loaded={spot_loaded}, futures_loaded={futures_loaded})."
+            )
 
     @classmethod
     @abstractmethod

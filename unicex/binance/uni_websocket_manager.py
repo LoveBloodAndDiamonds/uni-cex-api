@@ -44,19 +44,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Создаёт вебсокет для получения свечей на споте с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обработки адаптированных сообщений.
-            timeframe (`Timeframe`): Временной интервал свечей (унифицированный).
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета для управления соединением.
-        """
         wrapper = self._make_wrapper(self._adapter.klines_message, callback)
         return self._websocket_manager.klines(
             callback=wrapper,
@@ -72,19 +59,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Создаёт вебсокет для получения свечей на фьючерсах с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обработки адаптированных сообщений.
-            timeframe (`Timeframe`): Временной интервал свечей (унифицированный).
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета для управления соединением.
-        """
         wrapper = self._make_wrapper(self._adapter.klines_message, callback)
         return self._websocket_manager.futures_klines(
             callback=wrapper,
@@ -99,18 +73,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Создаёт вебсокет для получения сделок на споте с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обработки адаптированных сообщений.
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета для управления соединением.
-        """
         wrapper = self._make_wrapper(self._adapter.trades_message, callback)
         return self._websocket_manager.trade(callback=wrapper, symbol=symbol, symbols=symbols)
 
@@ -120,19 +82,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Создаёт вебсокет для получения агрегированных сделок на споте с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обработки адаптированных сообщений.
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета для управления соединением.
-        """
-        wrapper = self._make_wrapper(self._adapter.aggtrades_message, callback)
+        wrapper = self._make_wrapper(self._adapter.trades_message, callback)
         return self._websocket_manager.agg_trade(callback=wrapper, symbol=symbol, symbols=symbols)
 
     def futures_trades(
@@ -141,19 +91,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Создаёт вебсокет для получения сделок на фьючерсах с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обработки
-                адаптированных сообщений.
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета для управления соединением.
-        """
         wrapper = self._make_wrapper(self._adapter.trades_message, callback)
         return self._websocket_manager.futures_trade(
             callback=wrapper, symbol=symbol, symbols=symbols
@@ -165,19 +102,7 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Создаёт вебсокет для получения агрегированных сделок на фьючерсах с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обработки адаптированных сообщений.
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета для управления соединением.
-        """
-        wrapper = self._make_wrapper(self._adapter.aggtrades_message, callback)
+        wrapper = self._make_wrapper(self._adapter.trades_message, callback)
         return self._websocket_manager.futures_agg_trade(
             callback=wrapper, symbol=symbol, symbols=symbols
         )
@@ -188,18 +113,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Открывает стрим ликвидаций (futures) с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета.
-        """
         return self._websocket_manager.liquidation_order(
             callback=self._make_wrapper(self._adapter.liquidations_message, callback),
             symbol=symbol,
@@ -212,18 +125,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Открывает стрим лучших бидов и асков с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета.
-        """
         wrapper = self._make_wrapper(self._adapter.futures_best_bid_ask_message, callback)
         return self._websocket_manager.futures_symbol_book_ticker(
             callback=wrapper,
@@ -239,23 +140,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbols: Sequence[str] | None = None,
         **kwargs: Any,
     ) -> Websocket:
-        """Открывает поток частичного стакана глубиной limit с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            limit (`int`): Лимит лучших асков и бидов в одном сообщении.
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-            kwargs (`Any`): Дополнительные аргументы для базового метода создания вебсокета.
-                Поддерживается:
-                  - `update_speed` (`str | None`): Интервал обновления (`"100ms"` или `"500ms"`).
-                    Если не передан, используется дефолтный интервал Binance — `250ms`.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета.
-        """
         allowed_levels = {5, 10, 20}
         if limit not in allowed_levels:
             raise ValueError("Parameter `limit` must be one of: 5, 10, 20")

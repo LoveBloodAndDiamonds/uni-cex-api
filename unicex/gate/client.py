@@ -18,6 +18,22 @@ class Client(BaseClient):
     _BASE_URL: str = "https://api.gateio.ws"
     """Базовый URL для REST API Gate.io."""
 
+    def _normalize_query_params(
+        self,
+        params: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Нормализует query-параметры для корректной передачи bool в Gate.io."""
+        normalized: dict[str, Any] = {}
+
+        for key, value in params.items():
+            if isinstance(value, bool):
+                normalized[key] = str(value).lower()
+                continue
+
+            normalized[key] = value
+
+        return normalized
+
     def _prepare_request(
         self,
         *,
@@ -29,6 +45,7 @@ class Client(BaseClient):
     ) -> tuple[str, dict[str, Any] | None, dict[str, Any] | None, dict[str, str]]:
         """Формирует параметры и заголовки для HTTP-запроса."""
         params = filter_params(params) if params else None
+        params = self._normalize_query_params(params) if params else None
         data = filter_params(data) if data else None
         url = f"{self._BASE_URL}{endpoint}"
 
@@ -47,7 +64,9 @@ class Client(BaseClient):
         if not self.is_authorized():
             raise NotAuthorized("Api key and api secret is required to private endpoints")
 
-        payload_string = json.dumps(data, separators=(",", ":")) if data else ""
+        # Для Gate подпись должна считаться по точно такому же JSON,
+        # который уйдет в aiohttp `json=...` (по умолчанию json.dumps без compact separators).
+        payload_string = json.dumps(data) if data else ""
         query_string = dict_to_query_string(params) if params else ""
         hashed_payload = hashlib.sha512(payload_string.encode("utf-8")).hexdigest()
         signature_body = (

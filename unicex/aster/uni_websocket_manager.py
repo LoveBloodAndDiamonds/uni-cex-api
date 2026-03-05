@@ -45,19 +45,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Открывает стрим свечей (spot) с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            timeframe (`Timeframe`): Временной интервал свечей.
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета для управления соединением.
-        """
         raise NotSupported("Spot market data is not supported for Aster")
 
     def futures_klines(
@@ -67,19 +54,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Открывает стрим свечей (futures) с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            timeframe (`Timeframe`): Временной интервал свечей.
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета.
-        """
         wrapper = self._make_wrapper(self._adapter.Klines_message, callback)
         return self._websocket_manager.futures_klines(
             callback=wrapper,
@@ -94,18 +68,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Открывает стрим сделок (spot) с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета.
-        """
         raise NotSupported("Spot market data is not supported for Aster")
 
     def aggtrades(
@@ -114,18 +76,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Открывает стрим агрегированных сделок (spot) с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета.
-        """
         raise NotSupported("Spot market data is not supported for Aster")
 
     def futures_trades(
@@ -134,21 +84,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Открывает стрим агрегированных сделок (futures) с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        В Aster доступен только поток агрегированных сделок, поэтому `futures_aggtrades`
-        будет использован автоматически.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета.
-        """
         return self.futures_aggtrades(callback, symbol, symbols)  # type: ignore
 
     def futures_aggtrades(
@@ -157,18 +92,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Открывает стрим агрегированных сделок (futures) с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета.
-        """
         wrapper = self._make_wrapper(self._adapter.trades_message, callback)
         return self._websocket_manager.futures_agg_trade(
             callback=wrapper, symbol=symbol, symbols=symbols
@@ -180,18 +103,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        """Открывает стрим лучших бидов и асков с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета.
-        """
         wrapper = self._make_wrapper(self._adapter.futures_best_bid_ask_message, callback)
         return self._websocket_manager.futures_symbol_book_ticker(
             callback=wrapper,
@@ -207,23 +118,6 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbols: Sequence[str] | None = None,
         **kwargs: Any,
     ) -> Websocket:
-        """Открывает поток частичного стакана глубиной limit с унификацией сообщений.
-
-        Параметры:
-            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            limit (`int`): Лимит лучших асков и бидов в одном сообщении.
-            symbol (`str | None`): Один символ для подписки.
-            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
-            kwargs (`Any`): Дополнительные аргументы для базового метода создания вебсокета.
-                Поддерживается:
-                  - `update_speed` (`str | None`): Интервал обновления (`"100ms"` или `"500ms"`).
-                    Если не передан, используется дефолтный интервал Aster — `250ms`.
-
-        Должен быть указан либо `symbol`, либо `symbols`.
-
-        Возвращает:
-            `Websocket`: Экземпляр вебсокета.
-        """
         allowed_levels = {5, 10, 20}
         if limit not in allowed_levels:
             raise ValueError("Parameter `limit` must be one of: 5, 10, 20")

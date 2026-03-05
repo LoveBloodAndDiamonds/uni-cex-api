@@ -4,13 +4,15 @@ __all__ = ["UniClient"]
 from typing import overload
 
 from unicex._abc import IUniClient
-from unicex.enums import Exchange, MarketType, Timeframe
+from unicex.enums import Exchange, MarketType, OrderSide, OrderType, Timeframe
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
     BookDepthDict,
     KlineDict,
     OpenInterestItem,
+    OrderIdDict,
+    PositionInfoDict,
     TickerDailyDict,
 )
 
@@ -23,72 +25,31 @@ class UniClient(IUniClient[Client]):
 
     @property
     def _client_cls(self) -> type[Client]:
-        """Возвращает класс клиента для Binance.
-
-        Возвращает:
-            type[Client]: Класс клиента для Binance.
-        """
         return Client
 
     async def tickers(self, only_usdt: bool = True) -> list[str]:
-        """Возвращает список тикеров.
-
-        Параметры:
-            only_usdt (bool): Если True, возвращает только тикеры в паре к USDT.
-
-        Возвращает:
-            list[str]: Список тикеров.
-        """
         raw_data = await self._client.ticker_price()
-        return Adapter.tickers(raw_data=raw_data, only_usdt=only_usdt)  # type: ignore | raw_data is list[dict] if symbol param is not ommited
+        return Adapter.tickers(raw_data=raw_data, only_usdt=only_usdt)  # type: ignore | raw_data is list[dict] if symbol param is not omitted
 
     async def futures_tickers(self, only_usdt: bool = True) -> list[str]:
-        """Возвращает список тикеров.
-
-        Параметры:
-            only_usdt (bool): Если True, возвращает только тикеры в паре к USDT.
-
-        Возвращает:
-            list[str]: Список тикеров.
-        """
         raw_data = await self._client.futures_ticker_price()
-        return Adapter.tickers(raw_data=raw_data, only_usdt=only_usdt)  # type: ignore | raw_data is list[dict] if symbol param is not ommited
+        return Adapter.tickers(raw_data=raw_data, only_usdt=only_usdt)  # type: ignore | raw_data is list[dict] if symbol param is not omitted
 
     async def last_price(self) -> dict[str, float]:
-        """Возвращает последнюю цену для каждого тикера.
-
-        Возвращает:
-            dict[str, float]: Словарь с последними ценами для каждого тикера.
-        """
         raw_data = await self._client.ticker_price()
-        return Adapter.last_price(raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not ommited
+        return Adapter.last_price(raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not omitted
 
     async def futures_last_price(self) -> dict[str, float]:
-        """Возвращает последнюю цену для каждого тикера.
-
-        Возвращает:
-            dict[str, float]: Словарь с последними ценами для каждого тикера.
-        """
         raw_data = await self._client.futures_ticker_price()
-        return Adapter.last_price(raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not ommited
+        return Adapter.last_price(raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not omitted
 
     async def ticker_24hr(self) -> TickerDailyDict:
-        """Возвращает статистику за последние 24 часа для каждого тикера.
-
-        Возвращает:
-            TickerDailyDict: Словарь с статистикой за последние 24 часа для каждого тикера.
-        """
         raw_data = await self._client.ticker_24hr()
-        return Adapter.ticker_24hr(raw_data=raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not ommited
+        return Adapter.ticker_24hr(raw_data=raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not omitted
 
     async def futures_ticker_24hr(self) -> TickerDailyDict:
-        """Возвращает статистику за последние 24 часа для каждого тикера.
-
-        Возвращает:
-            TickerDailyDict: Словарь с статистикой за последние 24 часа для каждого тикера.
-        """
         raw_data = await self._client.futures_ticker_24hr()
-        return Adapter.ticker_24hr(raw_data=raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not ommited
+        return Adapter.ticker_24hr(raw_data=raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not omitted
 
     async def klines(
         self,
@@ -98,18 +59,6 @@ class UniClient(IUniClient[Client]):
         start_time: int | None = None,
         end_time: int | None = None,
     ) -> list[KlineDict]:
-        """Возвращает список свечей для тикера.
-
-        Параметры:
-            symbol (str): Название тикера.
-            limit (int | None): Количество свечей.
-            interval (Timeframe | str): Таймфрейм свечей.
-            start_time (int | None): Время начала периода в миллисекундах.
-            end_time (int | None): Время окончания периода в миллисекундах.
-
-        Возвращает:
-            list[KlineDict]: Список свечей для тикера.
-        """
         interval = (
             interval.to_exchange_format(Exchange.BINANCE, MarketType.SPOT)
             if isinstance(interval, Timeframe)
@@ -132,18 +81,6 @@ class UniClient(IUniClient[Client]):
         start_time: int | None = None,
         end_time: int | None = None,
     ) -> list[KlineDict]:
-        """Возвращает список свечей для тикера.
-
-        Параметры:
-            symbol (str): Название тикера.
-            limit (int | None): Количество свечей.
-            interval (Timeframe | str): Таймфрейм свечей.
-            start_time (int | None): Время начала периода в миллисекундах.
-            end_time (int | None): Время окончания периода в миллисекундах.
-
-        Возвращает:
-            list[KlineDict]: Список свечей для тикера.
-        """
         interval = (
             interval.to_exchange_format(Exchange.BINANCE, MarketType.FUTURES)
             if isinstance(interval, Timeframe)
@@ -168,27 +105,11 @@ class UniClient(IUniClient[Client]):
     async def funding_rate(self) -> dict[str, float]: ...
 
     async def funding_rate(self, symbol: str | None = None) -> dict[str, float] | float:
-        """Возвращает ставку финансирования для тикера или всех тикеров, если тикер не указан.
-
-        Параметры:
-          symbol (`str | None`): Название тикера (Опционально).
-
-        Возвращает:
-          `dict[str, float] | float`: Ставка финансирования для тикера или словарь со ставками для всех тикеров.
-        """
         raw_data = await self._client.futures_mark_price(symbol=symbol)
         adapted_data = Adapter.funding_rate(raw_data if isinstance(raw_data, list) else [raw_data])  # type: ignore[arg-type]
         return adapted_data[symbol] if symbol else adapted_data
 
     async def open_interest(self, symbol: str = None) -> OpenInterestItem:  # type: ignore[reportArgumentType] | We should provide our exception message
-        """Возвращает объем открытого интереса для тикера.
-
-        Параметры:
-            symbol (`str`): Название тикера.
-
-        Возвращает:
-            `OpenInterestItem`: Словарь со временем и объемом открытого интереса в монетах.
-        """
         if not symbol:
             raise ValueError("Symbol is required for binance open interest")
         raw_data = await self._client.open_interest(symbol=symbol)
@@ -206,16 +127,6 @@ class UniClient(IUniClient[Client]):
     async def futures_best_bid_ask(
         self, symbol: str | None = None
     ) -> BestBidAskItem | BestBidAskDict:
-        """Возвращает лучший бид и аск для тикера или всех тикеров, если тикер не указан.
-
-        Параметры:
-            symbol (`str | None`): Название тикера (Опционально).
-
-        Возвращает:
-            `BestBidAskItem | BestBidAskDict`: Если тикер передан - словарь с лучшим бидом и
-            асков для этого тикера. Иначе - словарь, в котором ключ - тикер, а значение - словарь
-            с лучшим бидом и аском.
-        """
         raw_data = await self._client.futures_ticker_book_ticker(symbol=symbol)
         adapted_data = Adapter.futures_best_bid_ask(
             raw_data if isinstance(raw_data, list) else [raw_data]
@@ -227,15 +138,6 @@ class UniClient(IUniClient[Client]):
         symbol: str,
         limit: int,
     ) -> BookDepthDict:
-        """Возвращает стакан для тикера.
-
-        Параметры:
-            symbol (`str`): Название тикера.
-            limit (`int`): Глубина стакана.
-
-        Возвращает:
-            `BookDepthDict`: Стакан для тикера.
-        """
         valid_limits = {5, 10, 20, 50, 100, 500, 1000}
         if limit not in valid_limits:
             raise ValueError(
@@ -245,3 +147,36 @@ class UniClient(IUniClient[Client]):
 
         raw_data = await self._client.futures_depth(symbol=symbol, limit=limit)
         return Adapter.futures_depth(raw_data=raw_data, symbol=symbol)
+
+    async def futures_order_create(
+        self,
+        symbol: str,
+        side: OrderSide,
+        type: OrderType,
+        quantity: str,
+        price: str | None = None,
+        client_order_id: str | None = None,
+        reduce_only: bool | None = None,
+    ) -> OrderIdDict:
+        self.ensure_authorized()
+
+        if type == OrderType.LIMIT and price is None:
+            raise ValueError("Price is required for limit order type on Binance futures.")
+
+        raw_data = await self._client.futures_order_create(
+            symbol=symbol,
+            side=side.to_exchange_format(Exchange.BINANCE),
+            type=type.to_exchange_format(Exchange.BINANCE),
+            quantity=quantity,
+            price=price,
+            new_client_order_id=client_order_id,
+            reduce_only=reduce_only,
+            time_in_force="GTC" if type == OrderType.LIMIT else None,
+        )
+        return Adapter.futures_order_create(raw_data)
+
+    async def futures_position_info(self, symbol: str) -> PositionInfoDict:
+        self.ensure_authorized()
+
+        raw_data = await self._client.futures_position_info(symbol=symbol)
+        return Adapter.futures_position_info(raw_data=raw_data, symbol=symbol)
