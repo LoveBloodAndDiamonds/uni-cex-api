@@ -52,12 +52,12 @@ class IExchangeInfo(ABC):
         asyncio.create_task(cls._load_exchange_info_loop(update_interval_seconds))
 
     @classmethod
-    async def stop(cls) -> None:
+    def stop(cls) -> None:
         """Останавливает фоновую задачу для обновления информации о бирже."""
         cls._running = False
 
     @classmethod
-    async def set_logger(cls, logger: "loguru.Logger") -> None:
+    def set_logger(cls, logger: "loguru.Logger") -> None:
         """Устанавливает логгер для записи сообщений о работе с биржей."""
         cls._logger = logger
 
