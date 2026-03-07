@@ -164,7 +164,7 @@ class IExchangeInfo(ABC):
             else:
                 precision = cls._futures_tickers_info[symbol]["size_precision"]
                 step = cls._futures_tickers_info[symbol]["size_step"]
-            if precision:
+            if precision is not None:
                 return cls._floor_round(quantity, precision)
             return cls._floor_to_step(quantity, step)  # type: ignore
         except KeyError as e:
