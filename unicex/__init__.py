@@ -37,6 +37,7 @@ __all__ = [
     # Interfaces
     "IUniClient",
     "IUniWebsocketManager",
+    "IExchangeInfo",
     # Base clients and websockets
     "Websocket",
     "BaseClient",
@@ -117,7 +118,7 @@ __all__ = [
 # abstract & base
 import asyncio
 from typing import Awaitable
-from ._abc import IUniClient, IUniWebsocketManager
+from ._abc import IUniClient, IUniWebsocketManager, IExchangeInfo
 from ._base import BaseClient, Websocket
 
 # enums, mappers, types
