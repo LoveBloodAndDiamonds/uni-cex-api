@@ -9,7 +9,7 @@ async def main() -> None:
     for e in Exchange:
         client = await get_uni_client(e).create()
 
-        if e in [Exchange.BINANCE]:
+        if e in [Exchange.BINANCE, Exchange.BYBIT]:
             continue
 
         try:
