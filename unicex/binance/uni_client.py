@@ -109,6 +109,20 @@ class UniClient(IUniClient[Client]):
         adapted_data = Adapter.funding_rate(raw_data if isinstance(raw_data, list) else [raw_data])  # type: ignore[arg-type]
         return adapted_data[symbol] if symbol else adapted_data
 
+    @overload
+    async def funding_interval(self, symbol: str) -> int: ...
+
+    @overload
+    async def funding_interval(self, symbol: None) -> dict[str, int]: ...
+
+    @overload
+    async def funding_interval(self) -> dict[str, int]: ...
+
+    async def funding_interval(self, symbol: str | None = None) -> dict[str, int] | int:
+        raw_data = await self._client.futures_funding_info()
+        adapted_data = Adapter.funding_interval(raw_data=raw_data)
+        return adapted_data[symbol] if symbol else adapted_data
+
     async def open_interest(self, symbol: str = None) -> OpenInterestItem:  # type: ignore[reportArgumentType] | We should provide our exception message
         if not symbol:
             raise ValueError("Symbol is required for binance open interest")

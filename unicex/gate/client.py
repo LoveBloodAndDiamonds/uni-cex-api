@@ -713,7 +713,7 @@ class Client(BaseClient):
         settle: Literal["usdt", "btc"],
         limit: int | None = None,
         offset: int | None = None,
-    ) -> dict:
+    ) -> list[dict]:
         """Получение списка фьючерсных контрактов.
 
         https://www.gate.com/docs/developers/apiv4/en/#query-all-futures-contracts

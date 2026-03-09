@@ -355,6 +355,27 @@ class IUniClient(ABC, Generic[TClient]):
         ...
 
     @overload
+    async def funding_interval(self, symbol: str) -> int: ...
+
+    @overload
+    async def funding_interval(self, symbol: None) -> dict[str, int]: ...
+
+    @overload
+    async def funding_interval(self) -> dict[str, int]: ...
+
+    @abstractmethod
+    async def funding_interval(self, symbol: str | None = None) -> dict[str, int] | int:
+        """Возвращает интервал ставки финансирования для тикера или всех тикеров, если тикер не указан.
+
+        Параметры:
+            symbol (`str | None`): Название тикера (Опционально).
+
+        Возвращает:
+            `int`: Интервал списания ставки финансирования в часах.
+        """
+        ...
+
+    @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...
 
     @overload
@@ -418,6 +439,8 @@ class IUniClient(ABC, Generic[TClient]):
             `BookDepthDict`: Стакан для тикера.
         """
         ...
+
+    # Private endpoints
 
     @abstractmethod
     async def futures_order_create(

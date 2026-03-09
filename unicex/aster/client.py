@@ -273,6 +273,27 @@ class Client(BaseClient):
 
         return await self._make_request("GET", url, params=params)
 
+    async def futures_funding_info(self) -> list[dict]:
+        """Получение информации о ставках финансирования.
+
+        Этого эндпоинта нет в официальной документации.
+        Пример ответа:
+            ```[
+                {
+                    "symbol": "GNSUSD",
+                    "interestRate": "0",
+                    "time": 1773080759003,
+                    "fundingIntervalHours": 8,
+                    "fundingFeeCap": 0.02,
+                    "fundingFeeFloor": -0.02,
+                }, ...
+            ]
+        ```
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v1/fundingInfo"
+
+        return await self._make_request("GET", url)
+
     async def futures_ticker_24hr(self, symbol: str | None = None) -> dict | list[dict]:
         """Получение статистики изменения цен и объема за 24 часа.
 

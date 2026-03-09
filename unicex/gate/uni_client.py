@@ -116,6 +116,20 @@ class UniClient(IUniClient[Client]):
         return adapted_data[symbol] if symbol else adapted_data
 
     @overload
+    async def funding_interval(self, symbol: str) -> int: ...
+
+    @overload
+    async def funding_interval(self, symbol: None) -> dict[str, int]: ...
+
+    @overload
+    async def funding_interval(self) -> dict[str, int]: ...
+
+    async def funding_interval(self, symbol: str | None = None) -> dict[str, int] | int:
+        raw_data = await self._client.futures_contracts(settle="usdt")
+        adapted_data = Adapter.funding_interval(raw_data=raw_data)
+        return adapted_data[symbol] if symbol else adapted_data
+
+    @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...
 
     @overload

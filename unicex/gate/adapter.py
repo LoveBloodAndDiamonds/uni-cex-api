@@ -121,6 +121,14 @@ class Adapter:
         }
 
     @staticmethod
+    def funding_interval(raw_data: list[dict]) -> dict[str, int]:
+        return {
+            item["name"]: int(item["funding_interval"]) // 3600
+            for item in raw_data
+            if item.get("funding_interval") is not None
+        }
+
+    @staticmethod
     def open_interest(raw_data: list[dict]) -> OpenInterestDict:
         return {
             item["contract"]: OpenInterestItem(

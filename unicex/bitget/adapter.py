@@ -69,6 +69,10 @@ class Adapter:
         return {item["symbol"]: float(item["fundingRate"]) * 100 for item in raw_data["data"]}
 
     @staticmethod
+    def funding_interval(raw_data: Any) -> dict[str, int]:
+        return {item["symbol"]: int(item["fundingRateInterval"]) for item in raw_data["data"]}
+
+    @staticmethod
     def klines_message(raw_msg: Any) -> list[KlineDict]:
         symbol = raw_msg["arg"]["instId"]
 

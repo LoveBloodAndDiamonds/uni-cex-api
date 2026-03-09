@@ -2351,7 +2351,7 @@ class Client(BaseClient):
             params=params,
         )
 
-    async def get_funding_rate(self, inst_id: str) -> dict:
+    async def get_funding_rate(self, inst_id: str | Literal["ANY"]) -> dict:
         """Получение текущей ставки финансирования.
 
         https://www.okx.com/docs-v5/en/#public-data-rest-api-get-funding-rate

@@ -68,6 +68,10 @@ class Adapter:
         return {item["symbol"]: float(item["lastFundingRate"]) * 100 for item in raw_data}
 
     @staticmethod
+    def funding_interval(raw_data: list[dict]) -> dict[str, int]:
+        return {item["symbol"]: int(item["fundingIntervalHours"]) for item in raw_data}
+
+    @staticmethod
     def open_interest(raw_data: dict) -> OpenInterestItem:
         return OpenInterestItem(
             t=raw_data["time"],

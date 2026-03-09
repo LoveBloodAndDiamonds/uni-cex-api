@@ -121,6 +121,18 @@ class UniClient(IUniClient[Client]):
         return Adapter.funding_rate(raw_data)
 
     @overload
+    async def funding_interval(self, symbol: str) -> int: ...
+
+    @overload
+    async def funding_interval(self, symbol: None) -> dict[str, int]: ...
+
+    @overload
+    async def funding_interval(self) -> dict[str, int]: ...
+
+    async def funding_interval(self, symbol: str | None = None) -> dict[str, int] | int:
+        raise NotImplementedError("This method will be implemented in a future release")
+
+    @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...
 
     @overload
