@@ -9,12 +9,14 @@ async def main() -> None:
     for e in Exchange:
         client = await get_uni_client(e).create()
 
-        if e in [Exchange.BINANCE, Exchange.BYBIT, Exchange.BITGET, Exchange.GATE]:
+        if e in [Exchange.BINANCE, Exchange.BYBIT, Exchange.BITGET, Exchange.GATE, Exchange.ASTER]:
             continue
 
         try:
             interval = await client.funding_interval()
             print(f"{e}: funding_interval={interval}")
+
+            print(len(interval))
         except NotImplementedError:
             print(f"{e}: funding_interval is not implemented")
 

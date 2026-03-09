@@ -114,6 +114,15 @@ class Adapter:
         return {data["instId"]: float(data["fundingRate"]) * 100}
 
     @staticmethod
+    def funding_interval(raw_data: dict) -> dict[str, int]:
+        return {
+            item["instId"]: (int(item["fundingTime"]) - int(item["prevFundingTime"]))
+            // (1000 * 60 * 60)
+            for item in raw_data["data"]
+            if item.get("fundingTime") and item.get("prevFundingTime")
+        }
+
+    @staticmethod
     def open_interest(raw_data: dict) -> OpenInterestDict:
         return {
             item["instId"]: OpenInterestItem(
