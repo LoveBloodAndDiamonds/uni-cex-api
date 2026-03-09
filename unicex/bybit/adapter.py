@@ -63,6 +63,13 @@ class Adapter:
         }
 
     @staticmethod
+    def funding_interval(raw_data: dict) -> dict[str, int]:
+        return {
+            item["symbol"]: int(item["fundingInterval"]) // 60
+            for item in raw_data["result"]["list"]
+        }
+
+    @staticmethod
     def last_price(raw_data: dict) -> dict[str, float]:
         return {item["symbol"]: float(item["lastPrice"]) for item in raw_data["result"]["list"]}
 

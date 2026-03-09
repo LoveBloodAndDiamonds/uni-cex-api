@@ -9,6 +9,9 @@ async def main() -> None:
     for e in Exchange:
         client = await get_uni_client(e).create()
 
+        if e in [Exchange.BINANCE]:
+            continue
+
         try:
             interval = await client.funding_interval()
             print(f"{e}: funding_interval={interval}")
