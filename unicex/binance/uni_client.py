@@ -119,7 +119,9 @@ class UniClient(IUniClient[Client]):
     async def funding_interval(self) -> dict[str, int]: ...
 
     async def funding_interval(self, symbol: str | None = None) -> dict[str, int] | int:
-        raise NotImplementedError("This method will be implemented in a future release")
+        raw_data = await self._client.futures_funding_info()
+        adapted_data = Adapter.funding_interval(raw_data=raw_data)
+        return adapted_data[symbol] if symbol else adapted_data
 
     async def open_interest(self, symbol: str = None) -> OpenInterestItem:  # type: ignore[reportArgumentType] | We should provide our exception message
         if not symbol:
