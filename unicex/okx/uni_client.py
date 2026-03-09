@@ -106,9 +106,7 @@ class UniClient(IUniClient[Client]):
     async def funding_rate(self) -> dict[str, float]: ...
 
     async def funding_rate(self, symbol: str = None) -> dict[str, float] | float:  # type: ignore[reportArgumentType]  # We want to raise our exception
-        if not symbol:
-            raise ValueError("Symbol is required to okx funding rate")
-        raw_data = await self._client.get_funding_rate(inst_id=symbol)
+        raw_data = await self._client.get_funding_rate("ANY")
         adapted_data = Adapter.funding_rate(raw_data)
         return adapted_data[symbol]
 
