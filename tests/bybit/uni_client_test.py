@@ -15,17 +15,25 @@ async def main() -> None:
         api_secret=os.getenv("BYBIT_API_SECRET"),
     )
 
+    # async with c:
+    # tickers = await c.futures_tickers()
+
+    # for t in tickers:
+    #     try:
+    #         # r = await c.client.set_leverage("linear", t, "5", "5")
+    #         r = await c.client.set_margin_mode("ISOLATED_MARGIN")
+    #         print(f"{t}: {r}")
+    #     except Exception as e:
+    #         print(f"{t}: {e}")
+
     async with c:
-        # r = await c.futures_order_create(
-        #     symbol="TRXUSDT",
-        #     side=OrderSide.BUY,
-        #     type=OrderType.MARKET,
-        #     quantity="50",
-        #     client_order_id="123",
-        # )
-
-        r = await c.futures_position_info("TRXUSDT")
-
+        r = await c.futures_order_create(
+            symbol="TRXUSDT",
+            side=OrderSide.BUY,
+            type=OrderType.MARKET,
+            quantity="100",
+            reduce_only=True,
+        )
         from pprint import pp
 
         pp(r)

@@ -23,6 +23,14 @@ class Client(BaseClient):
     _RECV_WINDOW: int = 5000
     """Стандартный интервал времени для получения ответа от сервера."""
 
+    @staticmethod
+    def _normalize_bool_params(params: dict[str, Any]) -> dict[str, Any]:
+        """Преобразует bool-параметры в строки "true"/"false"."""
+        return {
+            k: ("true" if isinstance(v, bool) and v else "false" if isinstance(v, bool) else v)
+            for k, v in params.items()
+        }
+
     def _get_headers(self, method: RequestMethod) -> dict:
         """Возвращает заголовки для запросов к Binance API."""
         headers = {"Accept": "application/json"}
@@ -57,8 +65,9 @@ class Client(BaseClient):
                 - payload (`dict`): Параметры/тело запроса с подписью (если нужно).
                 - headers (`dict | None`): Заголовки для запроса или None.
         """
-        # Фильтруем параметры от None значений
+        # Фильтруем параметры от None значений и нормализуем bool для aiohttp/yarl.
         params = filter_params(params) if params else {}
+        params = self._normalize_bool_params(params)
 
         # Получаем заголовки для запроса
         headers = self._get_headers(method)
@@ -1349,7 +1358,7 @@ class Client(BaseClient):
     async def futures_leverage_change(self, symbol: str, leverage: int) -> dict:
         """Изменение кредитного плеча на фьючерсах.
 
-        https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Change-Initial-Leverage
+        https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api/Change-Initial-Leverage
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/leverage"
         params = {"symbol": symbol, "leverage": leverage}
@@ -1359,7 +1368,7 @@ class Client(BaseClient):
     async def futures_margin_type_change(self, symbol: str, margin_type: str) -> dict:
         """Изменение типа маржи на фьючерсах.
 
-        https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Change-Margin-Type
+        https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api/Change-Margin-Type
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/marginType"
         params = {"symbol": symbol, "marginType": margin_type}

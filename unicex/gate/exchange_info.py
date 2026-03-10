@@ -20,7 +20,7 @@ class ExchangeInfo(IExchangeInfo):
         tickers_info: dict[str, TickerInfoItem] = {}
         for symbol_info in currency_pairs:
             try:
-                tickers_info[symbol_info.get("id")] = TickerInfoItem(
+                tickers_info[symbol_info["id"]] = TickerInfoItem(
                     tick_precision=int(symbol_info["precision"]),
                     tick_step=None,
                     size_precision=int(symbol_info["amount_precision"]),
@@ -41,7 +41,7 @@ class ExchangeInfo(IExchangeInfo):
         tickers_info: dict[str, TickerInfoItem] = {}
         for contract in contracts:
             try:
-                tickers_info[contract.get("name")] = TickerInfoItem(
+                tickers_info[contract["name"]] = TickerInfoItem(
                     tick_precision=None,
                     tick_step=float(contract["order_price_round"]),
                     size_precision=None,
