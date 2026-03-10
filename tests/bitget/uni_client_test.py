@@ -7,6 +7,8 @@ from loguru import logger  # type: ignore
 
 import os
 
+logger.remove()
+
 
 async def main() -> None:
     """Main entry point for the application."""
@@ -17,19 +19,15 @@ async def main() -> None:
     )
 
     async with c:
-        r = await c.futures_order_create(
-            symbol="TRXUSDT",
-            side=OrderSide.SELL,
-            type=OrderType.MARKET,
-            quantity="50",
-            client_order_id="1232",
-        )
+        tickers = await c.futures_tickers()
 
-        r = await c.futures_position_info("TRXUSDT")
-
-        from pprint import pp
-
-        pp(r)
+        for t in tickers:
+            try:
+                r = await c.client.futures_set_leverage(t, "usdt", leverage="5")
+                r2 = await c.client.futures_set_margin_mode(t, "usdt", margin_mode="isolated")
+                print(f"{t}: {r}, {r2} \n")
+            except Exception as e:
+                print(f">>> {t}: {e}")
 
 
 if __name__ == "__main__":

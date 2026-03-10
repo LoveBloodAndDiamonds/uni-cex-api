@@ -1349,7 +1349,7 @@ class Client(BaseClient):
     async def futures_leverage_change(self, symbol: str, leverage: int) -> dict:
         """Изменение кредитного плеча на фьючерсах.
 
-        https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Change-Initial-Leverage
+        https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api/Change-Initial-Leverage
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/leverage"
         params = {"symbol": symbol, "leverage": leverage}
@@ -1359,7 +1359,7 @@ class Client(BaseClient):
     async def futures_margin_type_change(self, symbol: str, margin_type: str) -> dict:
         """Изменение типа маржи на фьючерсах.
 
-        https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Change-Margin-Type
+        https://developers.binance.com/docs/derivatives/usds-margined-futures/trade/rest-api/Change-Margin-Type
         """
         url = self._BASE_FUTURES_URL + "/fapi/v1/marginType"
         params = {"symbol": symbol, "marginType": margin_type}

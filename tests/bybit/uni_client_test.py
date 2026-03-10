@@ -16,19 +16,15 @@ async def main() -> None:
     )
 
     async with c:
-        # r = await c.futures_order_create(
-        #     symbol="TRXUSDT",
-        #     side=OrderSide.BUY,
-        #     type=OrderType.MARKET,
-        #     quantity="50",
-        #     client_order_id="123",
-        # )
+        tickers = await c.futures_tickers()
 
-        r = await c.futures_position_info("TRXUSDT")
-
-        from pprint import pp
-
-        pp(r)
+        for t in tickers:
+            try:
+                # r = await c.client.set_leverage("linear", t, "5", "5")
+                r = await c.client.set_margin_mode("ISOLATED_MARGIN")
+                print(f"{t}: {r}")
+            except Exception as e:
+                print(f"{t}: {e}")
 
 
 if __name__ == "__main__":
