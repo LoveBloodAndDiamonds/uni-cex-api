@@ -23,6 +23,14 @@ class Client(BaseClient):
     _RECV_WINDOW: int = 5000
     """Стандартный интервал времени для получения ответа от сервера."""
 
+    @staticmethod
+    def _normalize_bool_params(params: dict[str, Any]) -> dict[str, Any]:
+        """Преобразует bool-параметры в строки "true"/"false"."""
+        return {
+            k: ("true" if isinstance(v, bool) and v else "false" if isinstance(v, bool) else v)
+            for k, v in params.items()
+        }
+
     def _get_headers(self, method: RequestMethod) -> dict:
         """Возвращает заголовки для запросов к Binance API."""
         headers = {"Accept": "application/json"}
@@ -57,8 +65,9 @@ class Client(BaseClient):
                 - payload (`dict`): Параметры/тело запроса с подписью (если нужно).
                 - headers (`dict | None`): Заголовки для запроса или None.
         """
-        # Фильтруем параметры от None значений
+        # Фильтруем параметры от None значений и нормализуем bool для aiohttp/yarl.
         params = filter_params(params) if params else {}
+        params = self._normalize_bool_params(params)
 
         # Получаем заголовки для запроса
         headers = self._get_headers(method)
