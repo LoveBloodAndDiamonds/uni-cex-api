@@ -179,7 +179,7 @@ class UniClient(IUniClient[Client]):
             quantity=quantity,
             price=price,
             new_client_order_id=client_order_id,
-            reduce_only={True: "true", False: "false", None: None}[reduce_only],
+            reduce_only=reduce_only,
             time_in_force="GTC" if type == OrderType.LIMIT else None,
         )
         return Adapter.futures_order_create(raw_data)
