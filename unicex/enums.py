@@ -109,6 +109,8 @@ class MarginType(StrEnum):
     def to_exchange_format(self, exchange: Exchange) -> str:
         """Нормализует тип режима маржи под конкретную биржу."""
         match exchange:
+            case Exchange.BINANCE:
+                return self.upper()
             case Exchange.BITGET:
                 return self.lower()
             case _:

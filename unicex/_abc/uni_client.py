@@ -484,11 +484,12 @@ class IUniClient(ABC, Generic[TClient]):
         ...
 
     @abstractmethod
-    async def futures_set_leverage(self, symbol: str) -> None:
+    async def futures_set_leverage(self, symbol: str, leverage: int) -> None:
         """Устанавливает торговое плечо для фьючерсного тикера.
 
         Параметры:
             symbol (`str`): Название тикера.
+            leverage (`int`): Размер торгового плеча.
         """
         ...
 

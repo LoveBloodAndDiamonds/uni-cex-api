@@ -258,7 +258,7 @@ class UniClient(IUniClient[Client]):
                 raise
         return Adapter.futures_position_info(raw_data)
 
-    async def futures_set_leverage(self, symbol: str) -> None:
+    async def futures_set_leverage(self, symbol: str, leverage: int) -> None:
         raise NotImplementedError("Method will be implemented later.")
 
     async def futures_set_margin_type(self, symbol: str, margin_type: MarginType) -> None:
