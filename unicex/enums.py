@@ -123,6 +123,11 @@ class MarginType(StrEnum):
                     MarginType.ISOLATED: "ISOLATED",
                     MarginType.CROSSED: "CROSS",
                 }[self]
+            case Exchange.OKX:
+                return {
+                    MarginType.ISOLATED: "isolated",
+                    MarginType.CROSSED: "cross",
+                }[self]
             case Exchange.BITGET:
                 return self.lower()
             case _:

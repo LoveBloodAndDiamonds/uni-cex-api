@@ -5,6 +5,7 @@ from typing import overload
 
 from unicex._abc import IUniClient
 from unicex.enums import Exchange, MarginType, OrderSide, OrderType, Timeframe
+from unicex.exceptions import NotSupported
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
@@ -182,8 +183,26 @@ class UniClient(IUniClient[Client]):
     async def futures_position_info(self, symbol: str) -> PositionInfoDict:
         raise NotImplementedError("Method will be implemented later.")
 
-    async def futures_set_leverage(self, symbol: str, leverage: int) -> None:
-        raise NotImplementedError("Method will be implemented later.")
+    async def futures_set_leverage(
+        self,
+        symbol: str,
+        leverage: int,
+        # Okx only params
+        margin_type: MarginType,
+    ) -> None:
+        self.ensure_authorized()
 
-    async def futures_set_margin_type(self, symbol: str, margin_type: MarginType) -> None:
-        raise NotImplementedError("Method will be implemented later.")
+        return await self._client.set_leverage(
+            inst_id=symbol,
+            lever=str(leverage),
+            mgn_mode=margin_type.to_exchange_format(Exchange.OKX),  # type: ignore[arg-type]
+        )
+
+    async def futures_set_margin_type(
+        self,
+        symbol: str,
+        margin_type: MarginType,
+    ) -> None:
+        raise NotSupported(
+            "Method is not supported by OKX. Margin type can be set when placing an order."
+        )
