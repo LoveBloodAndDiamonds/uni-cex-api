@@ -55,6 +55,8 @@ class OrderSide(StrEnum):
         match exchange:
             case Exchange.BINANCE:
                 return self
+            case Exchange.ASTER:
+                return self
             case Exchange.BYBIT:
                 return self.capitalize()
             case Exchange.BITGET:
@@ -77,6 +79,11 @@ class OrderType(StrEnum):
         """Нормализует тип ордера под конкретную биржу."""
         match exchange:
             case Exchange.BINANCE:
+                if self in [OrderType.LIMIT, OrderType.MARKET]:
+                    return self
+                else:
+                    raise ValueError(f"Unsupported order type {self} for exchange {exchange}")
+            case Exchange.ASTER:
                 if self in [OrderType.LIMIT, OrderType.MARKET]:
                     return self
                 else:
@@ -110,9 +117,9 @@ class MarginType(StrEnum):
         """Нормализует тип режима маржи под конкретную биржу."""
         match exchange:
             case Exchange.BINANCE:
-                return self.upper()
+                return self
             case Exchange.ASTER:
-                return self.upper()
+                return self
             case Exchange.BYBIT:
                 return {
                     MarginType.ISOLATED: "ISOLATED_MARGIN",

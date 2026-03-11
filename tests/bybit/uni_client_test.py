@@ -19,10 +19,12 @@ async def main() -> None:
     )
 
     async with c:
-        t = "BTCUSDT"
+        tickers = await c.futures_tickers()
 
-        # await c.futures_set_leverage(t, leverage=10)
-        await c.futures_set_margin_type(t, MarginType.CROSSED)
+        for t in tickers:
+            await c.futures_set_leverage(t, leverage=5)
+            await c.futures_set_margin_type(t, MarginType.ISOLATED)
+            print(t)
 
     # async with c:
     #     r = await c.futures_order_create(

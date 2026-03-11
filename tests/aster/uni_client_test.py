@@ -2,7 +2,7 @@ import asyncio
 
 from unicex.aster import UniClient
 
-from unicex import MarginType
+from unicex import *
 
 import os
 
@@ -18,23 +18,24 @@ async def main() -> None:
         api_secret=os.environ.get("ASTER_API_SECRET"),
     )
 
-    async with c:
-        t = "BTCUSDT"
-
-        # await c.futures_set_leverage(t, leverage=10)
-        await c.futures_set_margin_type(t, MarginType.ISOLATED)
-
     # async with c:
-    #     r = await c.futures_order_create(
-    #         symbol="TRXUSDT",
-    #         side=OrderSide.BUY,
-    #         type=OrderType.MARKET,
-    #         quantity="100",
-    #         reduce_only=True,
-    #     )
-    #     from pprint import pp
+    #     t = "BTCUSDT"
 
-    #     pp(r)
+    #     # await c.futures_set_leverage(t, leverage=10)
+    #     await c.futures_set_margin_type(t, MarginType.ISOLATED)
+
+    async with c:
+        r = await c.futures_order_create(
+            symbol="TRXUSDT",
+            side=OrderSide.BUY,
+            type=OrderType.MARKET,
+            quantity="100",
+            reduce_only=True,
+        )
+        # r = await c.futures_position_info("TRXUSDT")
+        from pprint import pp
+
+        pp(r)
 
 
 if __name__ == "__main__":

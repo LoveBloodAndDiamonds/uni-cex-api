@@ -326,7 +326,7 @@ class Client(BaseClient):
 
     # topic: futures account/trade endpoints
 
-    async def futures_position_mode(self, dual_side_position: Literal["true", "false"]) -> dict:
+    async def futures_position_mode(self, dual_side_position: bool) -> dict:
         """Изменение режима позиции.
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#change-position-mode-trade
@@ -345,7 +345,7 @@ class Client(BaseClient):
 
         return await self._make_request("GET", url, True)
 
-    async def futures_multi_asset_mode(self, multi_assets_margin: Literal["true", "false"]) -> dict:
+    async def futures_multi_asset_mode(self, multi_assets_margin: bool) -> dict:
         """Изменение режима мультиактивной маржи.
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#change-multi-assets-mode-trade
@@ -380,11 +380,11 @@ class Client(BaseClient):
         position_side: Literal["BOTH", "LONG", "SHORT"] | None = None,
         time_in_force: str | None = None,
         quantity: NumberLike | None = None,
-        reduce_only: Literal["true", "false"] | None = None,
+        reduce_only: bool | None = None,
         price: NumberLike | None = None,
         new_client_order_id: str | None = None,
         stop_price: NumberLike | None = None,
-        close_position: Literal["true", "false"] | None = None,
+        close_position: bool | None = None,
         activation_price: NumberLike | None = None,
         callback_rate: NumberLike | None = None,
         working_type: Literal["MARK_PRICE", "CONTRACT_PRICE"] | None = None,

@@ -9,6 +9,8 @@ from unicex.types import (
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
+    OrderIdDict,
+    PositionInfoDict,
     TickerDailyDict,
     TickerDailyItem,
     TradeDict,
@@ -103,6 +105,41 @@ class Adapter:
             u=int(raw_data["lastUpdateId"]),
             b=[(float(price), float(quantity)) for price, quantity in raw_data["bids"]],
             a=[(float(price), float(quantity)) for price, quantity in raw_data["asks"]],
+        )
+
+    @staticmethod
+    def futures_order_create(raw_data: dict) -> OrderIdDict:
+        return OrderIdDict(
+            t=int(raw_data["updateTime"]),
+            id=str(raw_data["orderId"]),
+            cloid=str(raw_data.get("clientOrderId", "")),
+        )
+
+    @staticmethod
+    def futures_position_info(raw_data: list[dict], symbol: str) -> PositionInfoDict:
+        # В hedge-режиме может быть несколько записей по одному symbol.
+        # Сначала берем открытую позицию, иначе первую доступную.
+        positions = [position for position in raw_data if position.get("symbol") == symbol]
+        if not positions:
+            raise ValueError(f"Positions are not found for symbol {symbol}.")
+
+        position = next(
+            (item for item in positions if float(item.get("positionAmt", 0)) != 0),
+            positions[0],
+        )
+        position_amount = float(position["positionAmt"])
+        return PositionInfoDict(
+            t=int(position["updateTime"]),
+            symbol=position["symbol"],
+            side="BUY" if position_amount >= 0 else "SELL",
+            quantity=abs(position_amount),
+            entry_price=float(position["entryPrice"]),
+            mark_price=float(position["markPrice"]),
+            liquidation_price=float(position["liquidationPrice"]),
+            unrealized_pnl=float(position["unRealizedProfit"]),
+            realized_pnl=0,
+            leverage=float(position["leverage"]),
+            notional=abs(float(position_amount) * float(position["markPrice"])),
         )
 
     @staticmethod
