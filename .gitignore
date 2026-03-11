@@ -1,3 +1,6 @@
+# Parsed documentation
+docs
+
 # Test API Keys file
 tests/keys.py
 
