@@ -198,7 +198,7 @@ class BaseClient:
             raise ResponseError(
                 f"HTTP error: {e}. Response: {response_json}. Status code: {response.status}",
                 status_code=status_code,
-                code=error_code,
+                code=str(error_code),
                 response_text=response_text,
                 response_json=response_json,
             ) from None

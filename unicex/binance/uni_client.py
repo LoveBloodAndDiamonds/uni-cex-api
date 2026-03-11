@@ -210,5 +210,5 @@ class UniClient(IUniClient[Client]):
                 margin_type=margin_type.to_exchange_format(Exchange.BINANCE),
             )
         except ResponseError as e:
-            if e.code != -4046:
+            if e.code != "-4046":
                 raise e

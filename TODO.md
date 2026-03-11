@@ -1,5 +1,6 @@
 ** Пофиксить: **
 - CallbackType сделать Generic
+- validate response to binance client
 - тесты юни клиент обновить методы (список)
 - Написать все to_exchange_format
 - Сделать адаптер интерфейсом

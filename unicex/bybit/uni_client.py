@@ -5,6 +5,7 @@ from typing import overload
 
 from unicex._abc import IUniClient
 from unicex.enums import Exchange, MarginType, OrderSide, OrderType, Timeframe
+from unicex.exceptions import ResponseError
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
@@ -212,7 +213,26 @@ class UniClient(IUniClient[Client]):
         return Adapter.futures_position_info(raw_data)
 
     async def futures_set_leverage(self, symbol: str, leverage: int) -> None:
-        raise NotImplementedError("Method will be implemented later.")
+        self.ensure_authorized()
 
-    async def futures_set_margin_type(self, symbol: str, margin_type: MarginType) -> None:
-        raise NotImplementedError("Method will be implemented later.")
+        try:
+            await self._client.set_leverage(
+                category="linear",
+                symbol=symbol,
+                buy_leverage=str(leverage),
+                sell_leverage=str(leverage),
+            )
+        except ResponseError as e:
+            if e.code != "110043":
+                raise e
+
+    async def futures_set_margin_type(
+        self,
+        symbol: str | None,
+        margin_type: MarginType,
+    ) -> None:
+        self.ensure_authorized()
+
+        await self._client.set_margin_mode(
+            set_margin_mode=margin_type.to_exchange_format(Exchange.BYBIT),  # type: ignore
+        )

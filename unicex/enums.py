@@ -113,6 +113,11 @@ class MarginType(StrEnum):
                 return self.upper()
             case Exchange.ASTER:
                 return self.upper()
+            case Exchange.BYBIT:
+                return {
+                    MarginType.ISOLATED: "ISOLATED_MARGIN",
+                    MarginType.CROSSED: "REGULAR_MARGIN",
+                }[self]
             case Exchange.BITGET:
                 return self.lower()
             case _:
