@@ -111,6 +111,8 @@ class MarginType(StrEnum):
         match exchange:
             case Exchange.BINANCE:
                 return self.upper()
+            case Exchange.ASTER:
+                return self.upper()
             case Exchange.BITGET:
                 return self.lower()
             case _:

@@ -2,6 +2,8 @@ import asyncio
 
 from unicex.aster import UniClient
 
+from unicex import MarginType
+
 import os
 
 from loguru import logger
@@ -17,15 +19,22 @@ async def main() -> None:
     )
 
     async with c:
-        tickers = await c.futures_tickers()
+        t = "BTCUSDT"
 
-        for t in tickers:
-            try:
-                r = await c.client.futures_leverage_change(t, leverage=5)
-                r2 = await c.client.futures_margin_type_change(t, "ISOLATED")
-                print(f"{t}: {r}, {r2} \n")
-            except Exception as e:
-                print(f">>> {t}: {e}")
+        # await c.futures_set_leverage(t, leverage=10)
+        await c.futures_set_margin_type(t, MarginType.ISOLATED)
+
+    # async with c:
+    #     r = await c.futures_order_create(
+    #         symbol="TRXUSDT",
+    #         side=OrderSide.BUY,
+    #         type=OrderType.MARKET,
+    #         quantity="100",
+    #         reduce_only=True,
+    #     )
+    #     from pprint import pp
+
+    #     pp(r)
 
 
 if __name__ == "__main__":
