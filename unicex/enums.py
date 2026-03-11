@@ -118,6 +118,11 @@ class MarginType(StrEnum):
                     MarginType.ISOLATED: "ISOLATED_MARGIN",
                     MarginType.CROSSED: "REGULAR_MARGIN",
                 }[self]
+            case Exchange.GATE:
+                return {
+                    MarginType.ISOLATED: "ISOLATED",
+                    MarginType.CROSSED: "CROSS",
+                }[self]
             case Exchange.BITGET:
                 return self.lower()
             case _:
