@@ -3,7 +3,7 @@ __all__ = ["UniClient"]
 from typing import overload
 
 from unicex._abc import IUniClient
-from unicex.enums import Exchange, MarginMode, MarketType, OrderSide, OrderType, Timeframe
+from unicex.enums import Exchange, MarginType, MarketType, OrderSide, OrderType, Timeframe
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
@@ -186,7 +186,7 @@ class UniClient(IUniClient[Client]):
         client_order_id: str | None = None,
         reduce_only: bool | None = None,
         # Bitget only params
-        margin_mode: MarginMode = MarginMode.ISOLATED,
+        margin_type: MarginType = MarginType.ISOLATED,
     ) -> OrderIdDict:
         self.ensure_authorized()
 
@@ -196,7 +196,7 @@ class UniClient(IUniClient[Client]):
         raw_data = await self._client.futures_place_order(
             symbol=symbol,
             product_type="USDT-FUTURES",
-            margin_mode=margin_mode.to_exchange_format(Exchange.BITGET),
+            margin_mode=margin_type.to_exchange_format(Exchange.BITGET),
             margin_coin="USDT",
             size=quantity,
             price=price,
@@ -217,3 +217,23 @@ class UniClient(IUniClient[Client]):
             product_type="USDT-FUTURES",
         )
         return Adapter.futures_position_info(raw_data)
+
+    async def futures_set_leverage(self, symbol: str, leverage: int) -> None:
+        self.ensure_authorized()
+
+        await self._client.futures_set_leverage(
+            symbol=symbol,
+            margin_coin="USDT",
+            product_type="USDT-FUTURES",
+            leverage=str(leverage),
+        )
+
+    async def futures_set_margin_type(self, symbol: str, margin_type: MarginType) -> None:
+        self.ensure_authorized()
+
+        await self._client.futures_set_margin_mode(
+            symbol=symbol,
+            margin_coin="USDT",
+            margin_mode=margin_type.to_exchange_format(Exchange.BITGET),
+            product_type="USDT-FUTURES",
+        )

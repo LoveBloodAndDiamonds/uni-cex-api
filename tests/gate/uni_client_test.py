@@ -1,6 +1,7 @@
 import asyncio
 
 from unicex import OrderSide, OrderType  # type: ignore
+from unicex.enums import MarginType
 from unicex.gate import UniClient, ExchangeInfo
 
 from loguru import logger  # type: ignore
@@ -21,28 +22,23 @@ async def main() -> None:
         api_secret=os.getenv("GATE_API_SECRET"),
     )
 
-    # async with c:
-    #     tickers = await c.futures_tickers()
-
-    #     for t in tickers:
-    #         try:
-    #             r = await c.client.futures_update_leverage("usdt", contract=t, leverage="5")
-    #             r2 = await c.client.futures_switch_cross_mode("usdt", mode="ISOLATED", contract=t)
-    #             print(f"{t}: {r}, {r2} \n")
-    #         except Exception as e:
-    #             print(f">>> {t}: {e}")
-
     async with c:
-        r = await c.futures_order_create(
-            symbol="TRX_USDT",
-            side=OrderSide.BUY,
-            type=OrderType.MARKET,
-            quantity="100",
-            reduce_only=True,
-        )
-        from pprint import pp
+        t = "BTC_USDT"
 
-        pp(r)
+        # await c.futures_set_leverage(t, leverage=10)
+        await c.futures_set_margin_type(t, MarginType.ISOLATED)
+
+    # async with c:
+    #     r = await c.futures_order_create(
+    #         symbol="TRX_USDT",
+    #         side=OrderSide.BUY,
+    #         type=OrderType.MARKET,
+    #         quantity="100",
+    #         reduce_only=True,
+    #     )
+    #     from pprint import pp
+
+    #     pp(r)
 
 
 if __name__ == "__main__":

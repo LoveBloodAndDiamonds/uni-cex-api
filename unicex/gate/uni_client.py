@@ -5,7 +5,7 @@ from decimal import Decimal
 from typing import Literal, overload
 
 from unicex._abc import IUniClient
-from unicex.enums import Exchange, MarketType, OrderSide, OrderType, Timeframe
+from unicex.enums import Exchange, MarginType, MarketType, OrderSide, OrderType, Timeframe
 from unicex.exceptions import ResponseError
 from unicex.types import (
     BestBidAskDict,
@@ -257,3 +257,21 @@ class UniClient(IUniClient[Client]):
             else:
                 raise
         return Adapter.futures_position_info(raw_data)
+
+    async def futures_set_leverage(self, symbol: str, leverage: int) -> None:
+        self.ensure_authorized()
+
+        await self._client.futures_update_leverage(
+            settle="usdt",
+            contract=symbol,
+            leverage=str(leverage),
+        )
+
+    async def futures_set_margin_type(self, symbol: str, margin_type: MarginType) -> None:
+        self.ensure_authorized()
+
+        await self._client.futures_switch_cross_mode(
+            settle="usdt",
+            mode=margin_type.to_exchange_format(Exchange.GATE),
+            contract=symbol,
+        )

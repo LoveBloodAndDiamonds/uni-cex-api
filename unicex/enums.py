@@ -8,7 +8,7 @@ __all__ = [
     "OrderType",
     "TimeInForce",
     "PositionSide",
-    "MarginMode",
+    "MarginType",
 ]
 
 from enum import StrEnum
@@ -100,7 +100,7 @@ class OrderType(StrEnum):
                 raise NotImplementedError(f"Exchange {exchange} is not supported")
 
 
-class MarginMode(StrEnum):
+class MarginType(StrEnum):
     """Перечисление режимов маржи."""
 
     ISOLATED = "ISOLATED"
@@ -109,6 +109,25 @@ class MarginMode(StrEnum):
     def to_exchange_format(self, exchange: Exchange) -> str:
         """Нормализует тип режима маржи под конкретную биржу."""
         match exchange:
+            case Exchange.BINANCE:
+                return self.upper()
+            case Exchange.ASTER:
+                return self.upper()
+            case Exchange.BYBIT:
+                return {
+                    MarginType.ISOLATED: "ISOLATED_MARGIN",
+                    MarginType.CROSSED: "REGULAR_MARGIN",
+                }[self]
+            case Exchange.GATE:
+                return {
+                    MarginType.ISOLATED: "ISOLATED",
+                    MarginType.CROSSED: "CROSS",
+                }[self]
+            case Exchange.OKX:
+                return {
+                    MarginType.ISOLATED: "isolated",
+                    MarginType.CROSSED: "cross",
+                }[self]
             case Exchange.BITGET:
                 return self.lower()
             case _:

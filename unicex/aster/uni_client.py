@@ -4,8 +4,8 @@ __all__ = ["UniClient"]
 from typing import overload
 
 from unicex._abc import IUniClient
-from unicex.enums import Exchange, OrderSide, OrderType, Timeframe
-from unicex.exceptions import NotSupported
+from unicex.enums import Exchange, MarginType, OrderSide, OrderType, Timeframe
+from unicex.exceptions import NotSupported, ResponseError
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
@@ -171,3 +171,20 @@ class UniClient(IUniClient[Client]):
 
     async def futures_position_info(self, symbol: str) -> PositionInfoDict:
         raise NotImplementedError("Method will be implemented later.")
+
+    async def futures_set_leverage(self, symbol: str, leverage: int) -> None:
+        self.ensure_authorized()
+
+        await self._client.futures_leverage_change(symbol=symbol, leverage=leverage)
+
+    async def futures_set_margin_type(self, symbol: str, margin_type: MarginType) -> None:
+        self.ensure_authorized()
+
+        try:
+            await self._client.futures_margin_type_change(
+                symbol=symbol,
+                margin_type=margin_type.to_exchange_format(Exchange.ASTER),
+            )
+        except ResponseError as e:
+            if e.code != -4046:
+                raise e
