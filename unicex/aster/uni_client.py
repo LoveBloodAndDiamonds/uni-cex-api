@@ -171,3 +171,6 @@ class UniClient(IUniClient[Client]):
 
     async def futures_position_info(self, symbol: str) -> PositionInfoDict:
         raise NotImplementedError("Method will be implemented later.")
+
+    async def futures_set_leverage(self, symbol: str) -> int:
+        raise NotImplementedError("Method will be implemented later.")

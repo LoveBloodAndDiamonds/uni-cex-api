@@ -194,3 +194,6 @@ class UniClient(IUniClient[Client]):
 
         raw_data = await self._client.futures_position_info(symbol=symbol)
         return Adapter.futures_position_info(raw_data=raw_data, symbol=symbol)
+
+    async def futures_set_leverage(self, symbol: str) -> int:
+        raise NotImplementedError("Method will be implemented later.")

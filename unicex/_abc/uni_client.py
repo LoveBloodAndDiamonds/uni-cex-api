@@ -482,3 +482,15 @@ class IUniClient(ABC, Generic[TClient]):
             `PositionInfoDict`: Словарь с информацией о позиции.
         """
         ...
+
+    @abstractmethod
+    async def futures_set_leverage(self, symbol: str) -> int:
+        """Устанавливает торговое плечо для фьючерсного тикера.
+
+        Параметры:
+            symbol (`str`): Название тикера.
+
+        Возвращает:
+            `int`: Установленное торговое плечо.
+        """
+        ...
