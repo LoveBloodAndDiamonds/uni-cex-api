@@ -16,7 +16,7 @@ __all__ = [
     "OrderType",
     "TimeInForce",
     "PositionSide",
-    "MarginMode",
+    "MarginType",
     # Types
     "TickerDailyDict",
     "TickerDailyItem",
@@ -130,7 +130,7 @@ from .enums import (
     OrderType,
     TimeInForce,
     PositionSide,
-    MarginMode,
+    MarginType,
 )
 from .mapper import get_uni_client, get_uni_websocket_manager, get_exchange_info
 from .types import (

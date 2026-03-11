@@ -4,7 +4,7 @@ __all__ = ["UniClient"]
 from typing import overload
 
 from unicex._abc import IUniClient
-from unicex.enums import Exchange, MarketType, OrderSide, OrderType, Timeframe
+from unicex.enums import Exchange, MarginType, MarketType, OrderSide, OrderType, Timeframe
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
@@ -195,5 +195,8 @@ class UniClient(IUniClient[Client]):
         raw_data = await self._client.futures_position_info(symbol=symbol)
         return Adapter.futures_position_info(raw_data=raw_data, symbol=symbol)
 
-    async def futures_set_leverage(self, symbol: str) -> int:
+    async def futures_set_leverage(self, symbol: str) -> None:
+        raise NotImplementedError("Method will be implemented later.")
+
+    async def futures_set_margin_type(self, symbol: str, margin_type: MarginType) -> None:
         raise NotImplementedError("Method will be implemented later.")

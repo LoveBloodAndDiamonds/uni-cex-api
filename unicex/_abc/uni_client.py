@@ -7,7 +7,7 @@ from typing import Any, Generic, Self, TypeVar, overload
 import aiohttp
 
 from unicex._base import BaseClient
-from unicex.enums import OrderSide, OrderType, Timeframe
+from unicex.enums import MarginType, OrderSide, OrderType, Timeframe
 from unicex.exceptions import NotAuthorized
 from unicex.types import (
     BestBidAskDict,
@@ -484,13 +484,20 @@ class IUniClient(ABC, Generic[TClient]):
         ...
 
     @abstractmethod
-    async def futures_set_leverage(self, symbol: str) -> int:
+    async def futures_set_leverage(self, symbol: str) -> None:
         """Устанавливает торговое плечо для фьючерсного тикера.
 
         Параметры:
             symbol (`str`): Название тикера.
+        """
+        ...
 
-        Возвращает:
-            `int`: Установленное торговое плечо.
+    @abstractmethod
+    async def futures_set_margin_type(self, symbol: str, margin_type: MarginType) -> None:
+        """Устанавливает тип маржи для фьючерсного тикера.
+
+        Параметры:
+            symbol (`str`): Название тикера.
+            margin_type (`MarginType`): Тип маржи.
         """
         ...

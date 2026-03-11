@@ -5,7 +5,7 @@ from typing import Self, overload
 import aiohttp
 
 from unicex._abc import IUniClient
-from unicex.enums import Exchange, MarketType, OrderSide, OrderType, Timeframe
+from unicex.enums import Exchange, MarginType, MarketType, OrderSide, OrderType, Timeframe
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
@@ -257,5 +257,8 @@ class UniClient(IUniClient[Client]):
     async def futures_position_info(self, symbol: str) -> PositionInfoDict:
         raise NotImplementedError("Method will be implemented later.")
 
-    async def futures_set_leverage(self, symbol: str) -> int:
+    async def futures_set_leverage(self, symbol: str) -> None:
+        raise NotImplementedError("Method will be implemented later.")
+
+    async def futures_set_margin_type(self, symbol: str, margin_type: MarginType) -> None:
         raise NotImplementedError("Method will be implemented later.")

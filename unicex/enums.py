@@ -8,7 +8,7 @@ __all__ = [
     "OrderType",
     "TimeInForce",
     "PositionSide",
-    "MarginMode",
+    "MarginType",
 ]
 
 from enum import StrEnum
@@ -100,7 +100,7 @@ class OrderType(StrEnum):
                 raise NotImplementedError(f"Exchange {exchange} is not supported")
 
 
-class MarginMode(StrEnum):
+class MarginType(StrEnum):
     """Перечисление режимов маржи."""
 
     ISOLATED = "ISOLATED"
