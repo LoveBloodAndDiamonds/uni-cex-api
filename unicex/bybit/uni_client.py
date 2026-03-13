@@ -158,7 +158,7 @@ class UniClient(IUniClient[Client]):
         self, symbol: str | None = None
     ) -> BestBidAskItem | BestBidAskDict:
         raw_data = await self._client.tickers("linear", symbol=symbol)
-        adapted_data = Adapter.futures_best_bid_ask(raw_data)
+        adapted_data = Adapter.best_bid_ask(raw_data)
         return adapted_data[symbol] if symbol else adapted_data
 
     async def futures_depth(
@@ -176,7 +176,7 @@ class UniClient(IUniClient[Client]):
             symbol=symbol,
             limit=limit,
         )
-        return Adapter.futures_depth(raw_data)
+        return Adapter.depth(raw_data)
 
     async def futures_order_create(
         self,
@@ -201,7 +201,7 @@ class UniClient(IUniClient[Client]):
             reduce_only=reduce_only,
         )
 
-        return Adapter.futures_order_create(raw_data)
+        return Adapter.order_create(raw_data)
 
     async def futures_position_info(self, symbol: str) -> PositionInfoDict:
         self.ensure_authorized()

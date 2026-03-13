@@ -74,7 +74,7 @@ class Adapter:
         return {item["symbol"]: float(item["lastPrice"]) for item in raw_data["result"]["list"]}
 
     @staticmethod
-    def futures_best_bid_ask(raw_data: dict) -> BestBidAskDict:
+    def best_bid_ask(raw_data: dict) -> BestBidAskDict:
         return {
             item["symbol"]: BestBidAskItem(
                 s=item["symbol"],
@@ -89,7 +89,7 @@ class Adapter:
         }
 
     @staticmethod
-    def futures_depth(raw_data: dict) -> BookDepthDict:
+    def depth(raw_data: dict) -> BookDepthDict:
         result = raw_data["result"]
         return BookDepthDict(
             s=result["s"],
@@ -100,7 +100,7 @@ class Adapter:
         )
 
     @staticmethod
-    def futures_order_create(raw_data: dict) -> OrderIdDict:
+    def order_create(raw_data: dict) -> OrderIdDict:
         result = raw_data["result"]
         return OrderIdDict(
             t=int(raw_data["time"]),
