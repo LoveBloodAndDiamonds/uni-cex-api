@@ -3,6 +3,8 @@ __all__ = ["Adapter"]
 from collections.abc import Callable
 from typing import Any
 
+from loguru import logger
+
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
@@ -34,69 +36,102 @@ class Adapter:
 
     @staticmethod
     def ticker_24hr(raw_data: dict) -> TickerDailyDict:
-        return {
-            item["symbol"]: TickerDailyItem(
-                p=round(float(item["price24hPcnt"]) * 100, 2),
-                v=float(item["volume24h"]),
-                q=float(item["turnover24h"]),
-            )
-            for item in raw_data["result"]["list"]
-        }
+        result = {}
+        for item in raw_data["result"]["list"]:
+            try:
+                result[item["symbol"]] = TickerDailyItem(
+                    p=round(float(item["price24hPcnt"]) * 100, 2),
+                    v=float(item["volume24h"]),
+                    q=float(item["turnover24h"]),
+                )
+            except Exception as e:  # noqa: BLE001
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
 
     @staticmethod
     def open_interest(raw_data: dict) -> OpenInterestDict:
-        return {
-            item["symbol"]: OpenInterestItem(
-                t=raw_data["time"],
-                v=float(item["openInterest"]),
-                u="coins",
-            )
-            for item in raw_data["result"]["list"]
-        }
+        result = {}
+        for item in raw_data["result"]["list"]:
+            try:
+                result[item["symbol"]] = OpenInterestItem(
+                    t=raw_data["time"],
+                    v=float(item["openInterest"]),
+                    u="coins",
+                )
+            except Exception as e:  # noqa: BLE001
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
 
     @staticmethod
     def funding_rate(raw_data: dict) -> dict[str, float]:
-        return {
-            item["symbol"]: float(item["fundingRate"]) * 100
-            for item in raw_data["result"]["list"]
-            if item["fundingRate"]
-        }
+        result = {}
+        for item in raw_data["result"]["list"]:
+            try:
+                if item["fundingRate"]:
+                    result[item["symbol"]] = float(item["fundingRate"]) * 100
+            except Exception as e:  # noqa: BLE001
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
 
     @staticmethod
     def funding_interval(raw_data: dict) -> dict[str, int]:
-        return {
-            item["symbol"]: int(item["fundingInterval"]) // 60
-            for item in raw_data["result"]["list"]
-        }
+        result = {}
+        for item in raw_data["result"]["list"]:
+            try:
+                result[item["symbol"]] = int(item["fundingInterval"]) // 60
+            except Exception as e:  # noqa: BLE001
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
 
     @staticmethod
     def last_price(raw_data: dict) -> dict[str, float]:
-        return {item["symbol"]: float(item["lastPrice"]) for item in raw_data["result"]["list"]}
+        result = {}
+        for item in raw_data["result"]["list"]:
+            try:
+                result[item["symbol"]] = float(item["lastPrice"])
+            except Exception as e:  # noqa: BLE001
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
 
     @staticmethod
     def best_bid_ask(raw_data: dict) -> BestBidAskDict:
-        return {
-            item["symbol"]: BestBidAskItem(
-                s=item["symbol"],
-                t=int(raw_data["time"]),
-                u=0,  # REST endpoint не возвращает update id
-                b=float(item["bid1Price"]),
-                B=float(item["bid1Size"]),
-                a=float(item["ask1Price"]),
-                A=float(item["ask1Size"]),
-            )
-            for item in raw_data["result"]["list"]
-        }
+        result = {}
+        for item in raw_data["result"]["list"]:
+            try:
+                result[item["symbol"]] = BestBidAskItem(
+                    s=item["symbol"],
+                    t=int(raw_data["time"]),
+                    u=0,
+                    b=float(item["bid1Price"]),
+                    B=float(item["bid1Size"]),
+                    a=float(item["ask1Price"]),
+                    A=float(item["ask1Size"]),
+                )
+            except Exception as e:  # noqa: BLE001
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
 
     @staticmethod
     def depth(raw_data: dict) -> BookDepthDict:
         result = raw_data["result"]
+        bids: list[tuple[float, float]] = []
+        asks: list[tuple[float, float]] = []
+        for price, quantity in result["b"]:
+            try:
+                bids.append((float(price), float(quantity)))
+            except Exception as e:  # noqa: BLE001
+                logger.error(f"Item {(price, quantity)} iteration {type(e)} error: {e}")
+        for price, quantity in result["a"]:
+            try:
+                asks.append((float(price), float(quantity)))
+            except Exception as e:  # noqa: BLE001
+                logger.error(f"Item {(price, quantity)} iteration {type(e)} error: {e}")
         return BookDepthDict(
             s=result["s"],
             t=int(result["ts"]),
             u=int(result["u"]),
-            b=[(float(price), float(quantity)) for price, quantity in result["b"]],
-            a=[(float(price), float(quantity)) for price, quantity in result["a"]],
+            b=bids,
+            a=asks,
         )
 
     @staticmethod
@@ -207,7 +242,7 @@ class Adapter:
         ]
 
     @staticmethod
-    def futures_best_bid_ask_message(raw_msg: Any) -> list[BestBidAskItem]:
+    def best_bid_ask_message(raw_msg: Any) -> list[BestBidAskItem]:
         data = raw_msg["data"]
         bid = data["b"][0]
         ask = data["a"][0]
@@ -224,7 +259,7 @@ class Adapter:
         ]
 
     @staticmethod
-    def futures_partial_book_depth_message() -> Callable[[Any], list[BookDepthDict]]:
+    def partial_book_depth_message() -> Callable[[Any], list[BookDepthDict]]:
         state: dict[str, dict[str, dict[float, float]]] = {}
 
         @catch_adapter_errors
