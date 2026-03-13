@@ -44,7 +44,7 @@ class Adapter:
                     v=float(item["volume24h"]),
                     q=float(item["turnover24h"]),
                 )
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Item {item} iteration {type(e)} error: {e}")
         return result
 
@@ -58,7 +58,7 @@ class Adapter:
                     v=float(item["openInterest"]),
                     u="coins",
                 )
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Item {item} iteration {type(e)} error: {e}")
         return result
 
@@ -69,7 +69,7 @@ class Adapter:
             try:
                 if item["fundingRate"]:
                     result[item["symbol"]] = float(item["fundingRate"]) * 100
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Item {item} iteration {type(e)} error: {e}")
         return result
 
@@ -79,7 +79,7 @@ class Adapter:
         for item in raw_data["result"]["list"]:
             try:
                 result[item["symbol"]] = int(item["fundingInterval"]) // 60
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Item {item} iteration {type(e)} error: {e}")
         return result
 
@@ -89,7 +89,7 @@ class Adapter:
         for item in raw_data["result"]["list"]:
             try:
                 result[item["symbol"]] = float(item["lastPrice"])
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Item {item} iteration {type(e)} error: {e}")
         return result
 
@@ -107,7 +107,7 @@ class Adapter:
                     a=float(item["ask1Price"]),
                     A=float(item["ask1Size"]),
                 )
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Item {item} iteration {type(e)} error: {e}")
         return result
 
@@ -119,12 +119,12 @@ class Adapter:
         for price, quantity in result["b"]:
             try:
                 bids.append((float(price), float(quantity)))
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Item {(price, quantity)} iteration {type(e)} error: {e}")
         for price, quantity in result["a"]:
             try:
                 asks.append((float(price), float(quantity)))
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 logger.error(f"Item {(price, quantity)} iteration {type(e)} error: {e}")
         return BookDepthDict(
             s=result["s"],
