@@ -1,9 +1,9 @@
-from __future__ import annotations
+__all__ = ["Adapter"]
 
 import time
 from typing import Any
 
-__all__ = ["Adapter"]
+from loguru import logger
 
 from unicex.types import (
     BestBidAskDict,
@@ -45,33 +45,51 @@ class Adapter:
 
     @staticmethod
     def last_price(raw_data: list[dict]) -> dict[str, float]:
-        return {item["currency_pair"]: float(item["last"]) for item in raw_data}
+        result = {}
+        for item in raw_data:
+            try:
+                result[item["currency_pair"]] = float(item["last"])
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
 
     @staticmethod
     def futures_last_price(raw_data: list[dict]) -> dict[str, float]:
-        return {item["contract"]: float(item["last"]) for item in raw_data}
+        result = {}
+        for item in raw_data:
+            try:
+                result[item["contract"]] = float(item["last"])
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
 
     @staticmethod
     def ticker_24hr(raw_data: list[dict]) -> TickerDailyDict:
-        return {
-            item["currency_pair"]: TickerDailyItem(
-                p=float(item["change_percentage"]),
-                v=float(item["base_volume"]),
-                q=float(item["quote_volume"]),
-            )
-            for item in raw_data
-        }
+        result = {}
+        for item in raw_data:
+            try:
+                result[item["currency_pair"]] = TickerDailyItem(
+                    p=float(item["change_percentage"]),
+                    v=float(item["base_volume"]),
+                    q=float(item["quote_volume"]),
+                )
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
 
     @staticmethod
     def futures_ticker_24hr(raw_data: list[dict]) -> TickerDailyDict:
-        return {
-            item["contract"]: TickerDailyItem(
-                p=float(item["change_percentage"]),
-                v=float(item["volume_24h_base"]),
-                q=float(item["volume_24h_quote"]),
-            )
-            for item in raw_data
-        }
+        result = {}
+        for item in raw_data:
+            try:
+                result[item["contract"]] = TickerDailyItem(
+                    p=float(item["change_percentage"]),
+                    v=float(item["volume_24h_base"]),
+                    q=float(item["volume_24h_quote"]),
+                )
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
 
     @staticmethod
     def klines(raw_data: list[list], symbol: str) -> list[KlineDict]:
@@ -114,55 +132,81 @@ class Adapter:
 
     @staticmethod
     def funding_rate(raw_data: list[dict]) -> dict[str, float]:
-        return {
-            item["contract"]: float(item["funding_rate"]) * 100
-            for item in raw_data
-            if item.get("funding_rate") is not None
-        }
+        result = {}
+        for item in raw_data:
+            try:
+                if item.get("funding_rate") is not None:
+                    result[item["contract"]] = float(item["funding_rate"]) * 100
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
 
     @staticmethod
     def funding_interval(raw_data: list[dict]) -> dict[str, int]:
-        return {
-            item["name"]: int(item["funding_interval"]) // 3600
-            for item in raw_data
-            if item.get("funding_interval") is not None
-        }
+        result = {}
+        for item in raw_data:
+            try:
+                if item.get("funding_interval") is not None:
+                    result[item["name"]] = int(item["funding_interval"]) // 3600
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
 
     @staticmethod
     def open_interest(raw_data: list[dict]) -> OpenInterestDict:
-        return {
-            item["contract"]: OpenInterestItem(
-                t=int(time.time() * 1000),
-                v=float(item["total_size"]) * float(item["quanto_multiplier"]),
-                u="coins",
-            )
-            for item in raw_data
-        }
+        result = {}
+        for item in raw_data:
+            try:
+                result[item["contract"]] = OpenInterestItem(
+                    t=int(time.time() * 1000),
+                    v=float(item["total_size"]) * float(item["quanto_multiplier"]),
+                    u="coins",
+                )
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
 
     @staticmethod
     def futures_best_bid_ask(raw_data: list[dict]) -> BestBidAskDict:
-        return {
-            item["contract"]: BestBidAskItem(
-                s=item["contract"],
-                t=int(time.time() * 1000),  # REST endpoint не возвращает event time
-                u=0,  # REST endpoint не возвращает update id
-                b=float(item["highest_bid"]),
-                B=float(item["highest_size"]) * Adapter._get_contract_size(item["contract"]),
-                a=float(item["lowest_ask"]),
-                A=float(item["lowest_size"]) * Adapter._get_contract_size(item["contract"]),
-            )
-            for item in raw_data
-        }
+        result = {}
+        for item in raw_data:
+            try:
+                contract = item["contract"]
+                contract_size = Adapter._get_contract_size(contract)
+                result[contract] = BestBidAskItem(
+                    s=contract,
+                    t=int(time.time() * 1000),
+                    u=0,
+                    b=float(item["highest_bid"]),
+                    B=float(item["highest_size"]) * contract_size,
+                    a=float(item["lowest_ask"]),
+                    A=float(item["lowest_size"]) * contract_size,
+                )
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
 
     @staticmethod
     def futures_depth(raw_data: dict, symbol: str) -> BookDepthDict:
         contract_size = Adapter._get_contract_size(symbol)
+        bids = []
+        asks = []
+        for item in raw_data["bids"]:
+            try:
+                bids.append((float(item["p"]), float(item["s"]) * contract_size))
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        for item in raw_data["asks"]:
+            try:
+                asks.append((float(item["p"]), float(item["s"]) * contract_size))
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
         return BookDepthDict(
             s=symbol,
             t=int(float(raw_data["update"]) * 1000),
             u=int(raw_data.get("id", 0)),
-            b=[(float(item["p"]), float(item["s"]) * contract_size) for item in raw_data["bids"]],
-            a=[(float(item["p"]), float(item["s"]) * contract_size) for item in raw_data["asks"]],
+            b=bids,
+            a=asks,
         )
 
     @staticmethod
