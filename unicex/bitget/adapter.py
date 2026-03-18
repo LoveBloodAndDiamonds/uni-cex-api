@@ -4,6 +4,8 @@ from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
     BookDepthDict,
+    FundingInfoDict,
+    FundingInfoItem,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
@@ -75,6 +77,17 @@ class Adapter:
     @staticmethod
     def funding_next_time(raw_data: Any) -> dict[str, int]:
         return {item["symbol"]: int(item["nextUpdate"]) for item in raw_data["data"]}
+
+    @staticmethod
+    def funding_info(raw_data: Any) -> FundingInfoDict:
+        return {
+            item["symbol"]: FundingInfoItem(
+                rate=float(item["fundingRate"]) * 100,
+                interval=int(item["fundingRateInterval"]),
+                next_time=int(item["nextUpdate"]),
+            )
+            for item in raw_data["data"]
+        }
 
     @staticmethod
     def klines_message(raw_msg: Any) -> list[KlineDict]:

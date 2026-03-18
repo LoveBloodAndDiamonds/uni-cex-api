@@ -147,7 +147,12 @@ class UniClient(IUniClient[Client]):
         return adapted_data[symbol] if symbol else adapted_data
 
     async def funding_info(self, symbol: str | None = None) -> FundingInfoItem | FundingInfoDict:
-        raise NotImplementedError("Method will be implemented later.")
+        raw_data = await self._client.futures_get_current_funding_rate(
+            product_type="USDT-FUTURES",
+            symbol=symbol,
+        )
+        adapted_data = Adapter.funding_info(raw_data)
+        return adapted_data[symbol] if symbol else adapted_data
 
     @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...

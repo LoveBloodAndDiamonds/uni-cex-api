@@ -17,7 +17,7 @@ async def main() -> None:
         if e not in [
             Exchange.BINANCE,
             Exchange.BYBIT,
-            # Exchange.BITGET,
+            Exchange.BITGET,
             Exchange.GATE,
             Exchange.ASTER,
         ]:
