@@ -9,13 +9,11 @@ async def main() -> None:
     """Main entry point for the application."""
     client = await Client.create()
     async with client:
-        r = await client.futures_get_all_tickers("USDT-FUTURES")
+        r = await client.futures_get_next_funding_time("BTCUSDT", "USDT-FUTURES")
 
         from pprint import pp
 
-        for el in r["data"]:
-            if el["symbol"] == "1MCHEEMS" + "USDT":
-                pp(el)
+        pp(r)
 
 
 if __name__ == "__main__":

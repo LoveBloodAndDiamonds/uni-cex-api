@@ -72,6 +72,10 @@ class Adapter:
         return {item["symbol"]: int(item["fundingIntervalHours"]) for item in raw_data}
 
     @staticmethod
+    def funding_next_time(raw_data: list[dict]) -> dict[str, int]:
+        return {item["symbol"]: int(item["nextFundingTime"]) for item in raw_data}
+
+    @staticmethod
     def open_interest(raw_data: dict) -> OpenInterestItem:
         return OpenInterestItem(
             t=raw_data["time"],

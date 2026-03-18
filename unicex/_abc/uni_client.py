@@ -376,6 +376,28 @@ class IUniClient(ABC, Generic[TClient]):
         ...
 
     @overload
+    async def funding_next_time(self, symbol: str) -> int: ...
+
+    @overload
+    async def funding_next_time(self, symbol: None) -> dict[str, int]: ...
+
+    @overload
+    async def funding_next_time(self) -> dict[str, int]: ...
+
+    @abstractmethod
+    async def funding_next_time(self, symbol: str | None = None) -> dict[str, int] | int:
+        """Возвращает время следующего списания фандинга для тикера или всех тикеров.
+
+        Параметры:
+            symbol (`str | None`): Название тикера (Опционально).
+
+        Возвращает:
+            `int | dict[str, int]`: Unix timestamp в миллисекундах — время следующего
+                списания фандинга. Если тикер указан — одно значение, иначе словарь.
+        """
+        ...
+
+    @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...
 
     @overload

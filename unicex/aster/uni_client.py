@@ -111,6 +111,22 @@ class UniClient(IUniClient[Client]):
         return adapted_data[symbol] if symbol else adapted_data
 
     @overload
+    async def funding_next_time(self, symbol: str) -> int: ...
+
+    @overload
+    async def funding_next_time(self, symbol: None) -> dict[str, int]: ...
+
+    @overload
+    async def funding_next_time(self) -> dict[str, int]: ...
+
+    async def funding_next_time(self, symbol: str | None = None) -> dict[str, int] | int:
+        raw_data = await self._client.futures_mark_price()
+        adapted_data = Adapter.funding_next_time(
+            raw_data if isinstance(raw_data, list) else [raw_data]
+        )  # type: ignore[arg-type]
+        return adapted_data[symbol] if symbol else adapted_data
+
+    @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...
 
     @overload

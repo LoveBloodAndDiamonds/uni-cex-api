@@ -84,6 +84,17 @@ class Adapter:
         return result
 
     @staticmethod
+    def funding_next_time(raw_data: dict) -> dict[str, int]:
+        result = {}
+        for item in raw_data["result"]["list"]:
+            try:
+                if item["nextFundingTime"]:
+                    result[item["symbol"]] = int(item["nextFundingTime"])
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
+
+    @staticmethod
     def last_price(raw_data: dict) -> dict[str, float]:
         result = {}
         for item in raw_data["result"]["list"]:

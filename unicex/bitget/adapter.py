@@ -73,6 +73,10 @@ class Adapter:
         return {item["symbol"]: int(item["fundingRateInterval"]) for item in raw_data["data"]}
 
     @staticmethod
+    def funding_next_time(raw_data: Any) -> dict[str, int]:
+        return {item["symbol"]: int(item["nextUpdate"]) for item in raw_data["data"]}
+
+    @staticmethod
     def klines_message(raw_msg: Any) -> list[KlineDict]:
         symbol = raw_msg["arg"]["instId"]
 

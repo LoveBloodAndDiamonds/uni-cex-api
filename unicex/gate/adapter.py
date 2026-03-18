@@ -153,6 +153,18 @@ class Adapter:
         return result
 
     @staticmethod
+    def funding_next_time(raw_data: list[dict]) -> dict[str, int]:
+        result = {}
+        for item in raw_data:
+            try:
+                if item.get("funding_next_apply") is not None:
+                    # funding_next_apply возвращается в секундах, переводим в миллисекунды
+                    result[item["name"]] = int(item["funding_next_apply"]) * 1000
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
+
+    @staticmethod
     def open_interest(raw_data: list[dict]) -> OpenInterestDict:
         result = {}
         for item in raw_data:
