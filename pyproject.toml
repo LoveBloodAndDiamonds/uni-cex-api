@@ -6,7 +6,7 @@ name = "unicex"
 # •	MAJOR (X.y.z) → увеличивается при изменениях, которые ломают обратную совместимость.
 version = "0.26.0"
 
-description = "Unified Crypto Exchange API "
+description = "Unified Crypto Exchange API"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [
