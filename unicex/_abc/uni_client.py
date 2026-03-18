@@ -13,6 +13,8 @@ from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
     BookDepthDict,
+    FundingInfoDict,
+    FundingInfoItem,
     KlineDict,
     LoggerLike,
     OpenInterestDict,
@@ -372,6 +374,50 @@ class IUniClient(ABC, Generic[TClient]):
 
         Возвращает:
             `int`: Интервал списания ставки финансирования в часах.
+        """
+        ...
+
+    @overload
+    async def funding_next_time(self, symbol: str) -> int: ...
+
+    @overload
+    async def funding_next_time(self, symbol: None) -> dict[str, int]: ...
+
+    @overload
+    async def funding_next_time(self) -> dict[str, int]: ...
+
+    @abstractmethod
+    async def funding_next_time(self, symbol: str | None = None) -> dict[str, int] | int:
+        """Возвращает время следующего списания фандинга для тикера или всех тикеров.
+
+        Параметры:
+            symbol (`str | None`): Название тикера (Опционально).
+
+        Возвращает:
+            `int | dict[str, int]`: Unix timestamp в миллисекундах — время следующего
+                списания фандинга. Если тикер указан — одно значение, иначе словарь.
+        """
+        ...
+
+    @overload
+    async def funding_info(self, symbol: str) -> FundingInfoItem: ...
+
+    @overload
+    async def funding_info(self, symbol: None) -> FundingInfoDict: ...
+
+    @overload
+    async def funding_info(self) -> FundingInfoDict: ...
+
+    @abstractmethod
+    async def funding_info(self, symbol: str | None = None) -> FundingInfoItem | FundingInfoDict:
+        """Возвращает полную информацию о фандинге: ставку, интервал и время следующего списания.
+
+        Параметры:
+            symbol (`str | None`): Название тикера (Опционально).
+
+        Возвращает:
+            `FundingInfoItem | FundingInfoDict`: Если тикер передан — словарь с данными для него.
+                Иначе — словарь, в котором ключ — тикер, значение — `FundingInfoItem`.
         """
         ...
 

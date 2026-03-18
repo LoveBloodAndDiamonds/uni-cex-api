@@ -1,6 +1,7 @@
 __all__ = ["UniClient"]
 
 
+import asyncio
 from typing import overload
 
 from unicex._abc import IUniClient
@@ -10,6 +11,8 @@ from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
     BookDepthDict,
+    FundingInfoDict,
+    FundingInfoItem,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
@@ -129,6 +132,28 @@ class UniClient(IUniClient[Client]):
             limit=1000,
         )
         adapted_data = Adapter.funding_interval(raw_data)
+        return adapted_data[symbol] if symbol else adapted_data
+
+    @overload
+    async def funding_next_time(self, symbol: str) -> int: ...
+
+    @overload
+    async def funding_next_time(self, symbol: None) -> dict[str, int]: ...
+
+    @overload
+    async def funding_next_time(self) -> dict[str, int]: ...
+
+    async def funding_next_time(self, symbol: str | None = None) -> dict[str, int] | int:
+        raw_data = await self._client.tickers("linear", symbol=symbol)
+        adapted_data = Adapter.funding_next_time(raw_data)
+        return adapted_data[symbol] if symbol else adapted_data
+
+    async def funding_info(self, symbol: str | None = None) -> FundingInfoItem | FundingInfoDict:
+        tickers_data, instruments_data = await asyncio.gather(
+            self._client.tickers("linear", symbol=symbol),
+            self._client.instruments_info(category="linear", symbol=symbol, limit=1000),
+        )
+        adapted_data = Adapter.funding_info(tickers_data, instruments_data)
         return adapted_data[symbol] if symbol else adapted_data
 
     @overload

@@ -42,7 +42,7 @@ format.quote-style = "double"
 format.indent-style = "space"
 format.line-ending = "auto"
 format.exclude = ["tests", "**/unicex/mexc/_spot_ws_proto"]
-format.skip-magic-trailing-comma = false # Всегда добавлять висящую запятую
+format.skip-magic-trailing-comma = false # Уважать существующие trailing comma (не удалять их)
 format.docstring-code-format = true      # Приводить код внутри docstring к единому стилю
 
 # Игнор правил для конкретных модулей

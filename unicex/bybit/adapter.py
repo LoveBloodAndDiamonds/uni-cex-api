@@ -9,6 +9,8 @@ from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
     BookDepthDict,
+    FundingInfoDict,
+    FundingInfoItem,
     KlineDict,
     LiquidationDict,
     OpenInterestDict,
@@ -79,6 +81,36 @@ class Adapter:
         for item in raw_data["result"]["list"]:
             try:
                 result[item["symbol"]] = int(item["fundingInterval"]) // 60
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
+
+    @staticmethod
+    def funding_next_time(raw_data: dict) -> dict[str, int]:
+        result = {}
+        for item in raw_data["result"]["list"]:
+            try:
+                if item["nextFundingTime"]:
+                    result[item["symbol"]] = int(item["nextFundingTime"])
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
+
+    @staticmethod
+    def funding_info(tickers_data: dict, instruments_data: dict) -> FundingInfoDict:
+        intervals = {
+            item["symbol"]: int(item["fundingInterval"]) // 60
+            for item in instruments_data["result"]["list"]
+        }
+        result = {}
+        for item in tickers_data["result"]["list"]:
+            try:
+                if item["fundingRate"] and item["nextFundingTime"]:
+                    result[item["symbol"]] = FundingInfoItem(
+                        rate=float(item["fundingRate"]) * 100,
+                        interval=intervals.get(item["symbol"], 0),
+                        next_time=int(item["nextFundingTime"]),
+                    )
             except Exception as e:
                 logger.error(f"Item {item} iteration {type(e)} error: {e}")
         return result

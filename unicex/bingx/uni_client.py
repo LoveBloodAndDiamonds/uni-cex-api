@@ -9,6 +9,8 @@ from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
     BookDepthDict,
+    FundingInfoDict,
+    FundingInfoItem,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
@@ -113,6 +115,21 @@ class UniClient(IUniClient[Client]):
 
     async def funding_interval(self, symbol: str | None = None) -> dict[str, int] | int:
         raise NotImplementedError("This method will be implemented in a future release")
+
+    @overload
+    async def funding_next_time(self, symbol: str) -> int: ...
+
+    @overload
+    async def funding_next_time(self, symbol: None) -> dict[str, int]: ...
+
+    @overload
+    async def funding_next_time(self) -> dict[str, int]: ...
+
+    async def funding_next_time(self, symbol: str | None = None) -> dict[str, int] | int:
+        raise NotImplementedError("Method will be implemented later.")
+
+    async def funding_info(self, symbol: str | None = None) -> FundingInfoItem | FundingInfoDict:
+        raise NotImplementedError("Method will be implemented later.")
 
     @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...

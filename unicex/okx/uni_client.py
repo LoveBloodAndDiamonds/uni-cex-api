@@ -10,6 +10,8 @@ from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
     BookDepthDict,
+    FundingInfoDict,
+    FundingInfoItem,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
@@ -106,10 +108,10 @@ class UniClient(IUniClient[Client]):
     @overload
     async def funding_rate(self) -> dict[str, float]: ...
 
-    async def funding_rate(self, symbol: str = None) -> dict[str, float] | float:  # type: ignore[reportArgumentType]  # We want to raise our exception
-        raw_data = await self._client.get_funding_rate("ANY")
+    async def funding_rate(self, symbol: str | None = None) -> dict[str, float] | float:
+        raw_data = await self._client.get_funding_rate(symbol or "ANY")
         adapted_data = Adapter.funding_rate(raw_data)
-        return adapted_data[symbol]
+        return adapted_data[symbol] if symbol else adapted_data
 
     @overload
     async def funding_interval(self, symbol: str) -> int: ...
@@ -124,6 +126,21 @@ class UniClient(IUniClient[Client]):
         raw_data = await self._client.get_funding_rate(symbol if symbol else "ANY")
         adapted_data = Adapter.funding_interval(raw_data)
         return adapted_data[symbol] if symbol else adapted_data
+
+    @overload
+    async def funding_next_time(self, symbol: str) -> int: ...
+
+    @overload
+    async def funding_next_time(self, symbol: None) -> dict[str, int]: ...
+
+    @overload
+    async def funding_next_time(self) -> dict[str, int]: ...
+
+    async def funding_next_time(self, symbol: str | None = None) -> dict[str, int] | int:
+        raise NotImplementedError("Method will be implemented later.")
+
+    async def funding_info(self, symbol: str | None = None) -> FundingInfoItem | FundingInfoDict:
+        raise NotImplementedError("Method will be implemented later.")
 
     @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...

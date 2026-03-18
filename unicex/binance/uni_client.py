@@ -1,6 +1,7 @@
 __all__ = ["UniClient"]
 
 
+import asyncio
 from typing import overload
 
 from unicex._abc import IUniClient
@@ -10,6 +11,8 @@ from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
     BookDepthDict,
+    FundingInfoDict,
+    FundingInfoItem,
     KlineDict,
     OpenInterestItem,
     OrderIdDict,
@@ -122,6 +125,43 @@ class UniClient(IUniClient[Client]):
     async def funding_interval(self, symbol: str | None = None) -> dict[str, int] | int:
         raw_data = await self._client.futures_funding_info()
         adapted_data = Adapter.funding_interval(raw_data=raw_data)
+        return adapted_data[symbol] if symbol else adapted_data
+
+    @overload
+    async def funding_next_time(self, symbol: str) -> int: ...
+
+    @overload
+    async def funding_next_time(self, symbol: None) -> dict[str, int]: ...
+
+    @overload
+    async def funding_next_time(self) -> dict[str, int]: ...
+
+    async def funding_next_time(self, symbol: str | None = None) -> dict[str, int] | int:
+        raw_data = await self._client.futures_mark_price(symbol=symbol)
+        adapted_data = Adapter.funding_next_time(
+            raw_data if isinstance(raw_data, list) else [raw_data]
+        )  # type: ignore[arg-type]
+        return adapted_data[symbol] if symbol else adapted_data
+
+    @overload
+    async def funding_info(self, symbol: str) -> FundingInfoItem: ...
+
+    @overload
+    async def funding_info(self, symbol: None) -> FundingInfoDict: ...
+
+    @overload
+    async def funding_info(self) -> FundingInfoDict: ...
+
+    async def funding_info(self, symbol: str | None = None) -> FundingInfoItem | FundingInfoDict:
+        # Два разных endpoint'а: mark_price — rate + next_time, funding_info — interval
+        mark_data, funding_data = await asyncio.gather(
+            self._client.futures_mark_price(symbol=symbol),
+            self._client.futures_funding_info(),
+        )
+        adapted_data = Adapter.funding_info(
+            mark_data=mark_data if isinstance(mark_data, list) else [mark_data],  # type: ignore[arg-type]
+            funding_data=funding_data,
+        )
         return adapted_data[symbol] if symbol else adapted_data
 
     async def open_interest(self, symbol: str = None) -> OpenInterestItem:  # type: ignore[reportArgumentType] | We should provide our exception message
