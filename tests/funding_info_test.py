@@ -19,7 +19,7 @@ async def main() -> None:
             # Exchange.BYBIT,
             # Exchange.BITGET,
             # Exchange.GATE,
-            # Exchange.ASTER,
+            Exchange.ASTER,
         ]:
             await client.close_connection()
             continue

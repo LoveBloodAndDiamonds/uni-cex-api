@@ -1,6 +1,7 @@
 __all__ = ["UniClient"]
 
 
+import asyncio
 from typing import overload
 
 from unicex._abc import IUniClient
@@ -129,7 +130,16 @@ class UniClient(IUniClient[Client]):
         return adapted_data[symbol] if symbol else adapted_data
 
     async def funding_info(self, symbol: str | None = None) -> FundingInfoItem | FundingInfoDict:
-        raise NotImplementedError("Method will be implemented later.")
+        # Два разных endpoint'а: mark_price — rate + next_time, funding_info — interval
+        mark_data, funding_data = await asyncio.gather(
+            self._client.futures_mark_price(),
+            self._client.futures_funding_info(),
+        )
+        adapted_data = Adapter.funding_info(
+            mark_data=mark_data if isinstance(mark_data, list) else [mark_data],  # type: ignore[arg-type]
+            funding_data=funding_data,
+        )
+        return adapted_data[symbol] if symbol else adapted_data
 
     @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...
