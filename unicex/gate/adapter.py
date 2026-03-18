@@ -9,6 +9,8 @@ from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
     BookDepthDict,
+    FundingInfoDict,
+    FundingInfoItem,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
@@ -160,6 +162,33 @@ class Adapter:
                 if item.get("funding_next_apply") is not None:
                     # funding_next_apply возвращается в секундах, переводим в миллисекунды
                     result[item["name"]] = int(item["funding_next_apply"]) * 1000
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
+
+    @staticmethod
+    def funding_info(tickers_data: list[dict], contracts_data: list[dict]) -> FundingInfoDict:
+        # Строим словари из contracts: interval (сек → ч) и next_time (сек → мс)
+        intervals = {
+            item["name"]: int(item["funding_interval"]) // 3600
+            for item in contracts_data
+            if item.get("funding_interval") is not None
+        }
+        next_times = {
+            item["name"]: int(item["funding_next_apply"]) * 1000
+            for item in contracts_data
+            if item.get("funding_next_apply") is not None
+        }
+        result: FundingInfoDict = {}
+        for item in tickers_data:
+            try:
+                if item.get("funding_rate") is not None:
+                    symbol = item["contract"]
+                    result[symbol] = FundingInfoItem(
+                        rate=float(item["funding_rate"]) * 100,
+                        interval=intervals.get(symbol, 0),
+                        next_time=next_times.get(symbol, 0),
+                    )
             except Exception as e:
                 logger.error(f"Item {item} iteration {type(e)} error: {e}")
         return result

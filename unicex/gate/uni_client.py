@@ -1,6 +1,7 @@
 __all__ = ["UniClient"]
 
 
+import asyncio
 from decimal import Decimal
 from typing import Literal, overload
 
@@ -146,7 +147,13 @@ class UniClient(IUniClient[Client]):
         return adapted_data[symbol] if symbol else adapted_data
 
     async def funding_info(self, symbol: str | None = None) -> FundingInfoItem | FundingInfoDict:
-        raise NotImplementedError("Method will be implemented later.")
+        tickers_data, contracts_data = await asyncio.gather(
+            self._client.futures_tickers(settle="usdt", contract=symbol),
+            self._client.futures_contracts(settle="usdt"),
+        )
+        items = tickers_data if isinstance(tickers_data, list) else [tickers_data]
+        adapted_data = Adapter.funding_info(items, contracts_data)
+        return adapted_data[symbol] if symbol else adapted_data
 
     @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...
