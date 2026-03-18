@@ -10,6 +10,8 @@ from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
     BookDepthDict,
+    FundingInfoDict,
+    FundingInfoItem,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
@@ -144,6 +146,9 @@ class UniClient(IUniClient[Client]):
         raw_data = await self._client.tickers("linear", symbol=symbol)
         adapted_data = Adapter.funding_next_time(raw_data)
         return adapted_data[symbol] if symbol else adapted_data
+
+    async def funding_info(self, symbol: str | None = None) -> FundingInfoItem | FundingInfoDict:
+        raise NotImplementedError("Method will be implemented later.")
 
     @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...
