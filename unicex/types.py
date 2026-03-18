@@ -18,6 +18,8 @@ __all__ = [
     "BookDepthDict",
     "OrderIdDict",
     "PositionInfoDict",
+    "FundingInfoItem",
+    "FundingInfoDict",
 ]
 
 from logging import Logger as LoggingLogger
@@ -277,3 +279,20 @@ class PositionInfoDict(TypedDict):
 
     breakeven_price: NotRequired[float]
     """Цена безубытка."""
+
+
+class FundingInfoItem(TypedDict):
+    """Полная информация о фандинге для одного тикера."""
+
+    rate: float
+    """Текущая ставка фандинга в процентах."""
+
+    interval: int
+    """Интервал списания фандинга в часах."""
+
+    next_time: int
+    """Время в миллисекундах - время следующего списания."""
+
+
+type FundingInfoDict = dict[str, FundingInfoItem]
+"""Полная информация о фандинге для всех тикеров."""

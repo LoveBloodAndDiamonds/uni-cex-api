@@ -34,6 +34,8 @@ __all__ = [
     "BookDepthDict",
     "OrderIdDict",
     "PositionInfoDict",
+    "FundingInfoItem",
+    "FundingInfoDict",
     # Interfaces
     "IUniClient",
     "IUniWebsocketManager",
@@ -150,6 +152,8 @@ from .types import (
     BookDepthDict,
     OrderIdDict,
     PositionInfoDict,
+    FundingInfoItem,
+    FundingInfoDict,
 )
 
 # exchanges
