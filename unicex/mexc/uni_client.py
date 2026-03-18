@@ -6,7 +6,6 @@ from typing import overload
 
 from unicex._abc import IUniClient
 from unicex.enums import Exchange, MarginType, MarketType, OrderSide, OrderType, Timeframe
-from unicex.exceptions import NotSupported
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
@@ -142,7 +141,7 @@ class UniClient(IUniClient[Client]):
     async def funding_next_time(self) -> dict[str, int]: ...
 
     async def funding_next_time(self, symbol: str | None = None) -> dict[str, int] | int:
-        raise NotSupported("funding_next_time is not supported for MEXC")
+        raise NotImplementedError("Method will be implemented later.")
 
     @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...
