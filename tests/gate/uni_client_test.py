@@ -23,23 +23,27 @@ async def main() -> None:
     )
 
     async with c:
-        tickers = await c.futures_tickers()
+        # tickers = await c.futures_tickers()
 
-        for t in tickers:
-            await c.futures_set_leverage(t, leverage=5)
-            await c.futures_set_margin_type(t, MarginType.ISOLATED)
-            print(t)
-    # async with c:
-    #     r = await c.futures_order_create(
-    #         symbol="TRX_USDT",
-    #         side=OrderSide.BUY,
-    #         type=OrderType.MARKET,
-    #         quantity="100",
-    #         reduce_only=True,
-    #     )
-    #     from pprint import pp
+        fi = await c.funding_interval("BDXN_USDT")
+        print(fi)
 
-    #     pp(r)
+        # for t in tickers:
+        #     await c.futures_set_leverage(t, leverage=5)
+        #     await c.futures_set_margin_type(t, MarginType.ISOLATED)
+        #     print(t)
+        return
+        async with c:
+            r = await c.futures_order_create(
+                symbol="TRX_USDT",
+                side=OrderSide.BUY,
+                type=OrderType.MARKET,
+                quantity="100",
+                # reduce_only=True,
+            )
+            from pprint import pp
+
+            pp(r)
 
 
 if __name__ == "__main__":

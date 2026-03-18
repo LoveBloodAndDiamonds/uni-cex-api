@@ -18,12 +18,15 @@ async def main() -> None:
     )
 
     async with c:
-        tickers = await c.futures_tickers()
+        # tickers = await c.futures_tickers()
 
-        for t in tickers:
-            await c.futures_set_leverage(t, leverage=5)
-            await c.futures_set_margin_type(t, MarginType.ISOLATED)
-            print(t)
+        fi = await c.funding_interval()
+        print(fi)
+
+        # for t in tickers:
+        #     await c.futures_set_leverage(t, leverage=5)
+        #     await c.futures_set_margin_type(t, MarginType.ISOLATED)
+        #     print(t)
 
     # async with c:
     #     r = await c.futures_order_create(
