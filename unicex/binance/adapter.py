@@ -79,12 +79,11 @@ class Adapter:
 
     @staticmethod
     def funding_info(mark_data: list[dict], funding_data: list[dict]) -> FundingInfoDict:
-        # Строим словарь интервалов из отдельного endpoint'а funding_info
         intervals = {item["symbol"]: int(item["fundingIntervalHours"]) for item in funding_data}
         return {
             item["symbol"]: FundingInfoItem(
                 rate=float(item["lastFundingRate"]) * 100,
-                interval=intervals.get(item["symbol"]),
+                interval=intervals.get(item["symbol"], 0),
                 next_time=int(item["nextFundingTime"]),
             )
             for item in mark_data

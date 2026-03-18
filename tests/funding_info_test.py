@@ -21,13 +21,14 @@ async def main() -> None:
             # Exchange.GATE,
             # Exchange.ASTER,
         ]:
+            await client.close_connection()
             continue
 
         try:
             funding_info = await client.funding_info()
-            btc_info = funding_info.get("BTCUSDT", None)
+            btc_info = funding_info.get("XRPUSDT", None)
             if btc_info is None:
-                btc_info = funding_info.get("BTC_USDT", 0)
+                btc_info = funding_info.get("XRP_USDT", 0)
             print(f"{e}: {btc_info}")
 
             print(len(funding_info))
