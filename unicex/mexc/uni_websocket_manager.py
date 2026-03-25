@@ -37,13 +37,12 @@ class UniWebsocketManager(IUniWebsocketManager):
         self._adapter = Adapter()
 
     def _is_service_message(self, raw_msg: Any) -> bool:
-        is_sub_msg = raw_msg.get("channel") == "rs.sub.deal" and raw_msg.get("data") == "success"
-
+        is_sub_msg_1 = raw_msg.get("channel") == "rs.sub.deal" and raw_msg.get("data") == "success"
+        is_sub_msg_2 = raw_msg.get("code") == 0 and raw_msg.get("msg", "").startswith("spot@")
         is_pong_1 = raw_msg.get("channel") == "pong"
+        is_pong_2 = raw_msg.get("msg") == "PONG"
 
-        is_pont_2 = raw_msg.get("msg") == "PONG"
-
-        return any([is_sub_msg, is_pong_1, is_pont_2])
+        return any([is_sub_msg_1, is_sub_msg_2, is_pong_1, is_pong_2])
 
     def klines(
         self,

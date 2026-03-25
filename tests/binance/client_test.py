@@ -9,7 +9,8 @@ async def main() -> None:
     """Main entry point for the application."""
     client = await Client.create()
     async with client:
-        r = await client.futures_ticker_book_ticker()
+        # r = await client.
+        r = []
 
         from pprint import pp
 
