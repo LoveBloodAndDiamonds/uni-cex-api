@@ -27,13 +27,15 @@ async def main() -> None:
     #         print(t)
 
     async with c:
-        r = await c.futures_order_create(
-            symbol="TRXUSDT",
-            side=OrderSide.BUY,
-            type=OrderType.MARKET,
-            quantity="100",
-            # reduce_only=True,
-        )
+        r = await c.futures_ticker_24hr()
+        # r = await c.client.futures_get_all_tickers("USDT-FUTURES")
+        # r = await c.futures_order_create(
+        #     symbol="TRXUSDT",
+        #     side=OrderSide.BUY,
+        #     type=OrderType.MARKET,
+        #     quantity="100",
+        #     # reduce_only=True,
+        # )
         from pprint import pp
 
         pp(r)
