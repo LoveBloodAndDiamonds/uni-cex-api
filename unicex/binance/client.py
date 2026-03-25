@@ -1302,7 +1302,8 @@ class Client(BaseClient):
     ) -> list[dict]:
         """Получение информации о позициях на фьючерсах.
 
-        https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Position-Information-V{version}
+        https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Position-Information-V2
+        https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/Position-Information-V3
         """
         url = self._BASE_FUTURES_URL + f"/fapi/v{version}/positionRisk"
         params = {"symbol": symbol}
