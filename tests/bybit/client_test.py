@@ -7,12 +7,17 @@ async def main() -> None:
     """Main entry point for the application."""
     client = await Client.create()
     async with client:
-        r = await client.instruments_info("linear")
+        r = await client.instruments_info("linear", limit=1000)
 
         from pprint import pp
 
         for item in r["result"]["list"]:
             symbol = item["symbol"]
+            # print(symbol)
+
+            # if symbol == "VFYUSDT":
+            # print(item)
+
             deliviry_time = item["deliveryTime"]
 
             if symbol.endswith("USDT"):

@@ -7,7 +7,10 @@ async def main() -> None:
     """Main entry point for the application."""
     client = await Client.create()
     async with client:
+        # r = await client.futures_contracts("usdt", limit=100, offset=100)
         r = await client.futures_contracts("usdt")
+
+        print(len(r))
 
         for i in r:
             symbol = i["name"]
