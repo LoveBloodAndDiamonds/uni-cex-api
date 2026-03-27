@@ -486,6 +486,16 @@ class IUniClient(ABC, Generic[TClient]):
         """
         ...
 
+    @abstractmethod
+    async def futures_delistings(self) -> dict[str, int]:
+        """Возвращает список тикеров, которые будут удалены с биржи.
+
+        Возвращает:
+            `dict[str, int]`: Словарь, в котором ключ - тикер, а значение - время удаления в
+            миллисекундах.
+        """
+        ...
+
     # Private endpoints
 
     @abstractmethod

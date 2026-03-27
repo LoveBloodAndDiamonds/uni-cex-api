@@ -203,6 +203,10 @@ class UniClient(IUniClient[Client]):
         )
         return Adapter.depth(raw_data)
 
+    async def futures_delistings(self) -> dict[str, int]:
+        raw_data = await self._client.instruments_info("linear", limit=1000)
+        return Adapter.futures_delistings(raw_data)
+
     async def futures_order_create(
         self,
         symbol: str,

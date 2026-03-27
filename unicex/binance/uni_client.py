@@ -203,6 +203,10 @@ class UniClient(IUniClient[Client]):
         raw_data = await self._client.futures_depth(symbol=symbol, limit=limit)
         return Adapter.futures_depth(raw_data=raw_data, symbol=symbol)
 
+    async def futures_delistings(self) -> dict[str, int]:
+        exchange_info = await self._client.futures_exchange_info()
+        return Adapter.futures_delistings(exchange_info)
+
     async def futures_order_create(
         self,
         symbol: str,

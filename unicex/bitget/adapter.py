@@ -82,9 +82,9 @@ class Adapter:
     def funding_info(raw_data: Any) -> FundingInfoDict:
         return {
             item["symbol"]: FundingInfoItem(
-                rate=float(item["fundingRate"]) * 100,
-                interval=int(item["fundingRateInterval"]),
-                next_time=int(item["nextUpdate"]),
+                v=float(item["fundingRate"]) * 100,
+                i=int(item["fundingRateInterval"]),
+                T=int(item["nextUpdate"]),
             )
             for item in raw_data["data"]
         }
@@ -166,6 +166,21 @@ class Adapter:
             b=[(float(price), float(quantity)) for price, quantity in data["bids"]],
             a=[(float(price), float(quantity)) for price, quantity in data["asks"]],
         )
+
+    @staticmethod
+    def futures_delistings(contracts: dict) -> dict[str, int]:
+        result = {}
+        for item in contracts["data"]:
+            symbol = item["symbol"]
+            off_time = item["offTime"]
+
+            # offTime == "-1" означает бессрочный контракт
+            if off_time == "-1" or off_time == "":
+                continue
+
+            result[symbol] = int(off_time)
+
+        return result
 
     @staticmethod
     def futures_order_create(raw_data: Any) -> OrderIdDict:

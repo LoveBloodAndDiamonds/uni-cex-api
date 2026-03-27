@@ -2,6 +2,7 @@ import asyncio
 
 from unicex import OrderSide, OrderType, MarginType  # type: ignore
 from unicex.binance import UniClient
+from unicex import IUniClient
 
 from loguru import logger  # type: ignore
 
@@ -18,7 +19,8 @@ async def main() -> None:
     )
 
     # async with c:
-    # tickers = await c.futures_tickers()
+    c: IUniClient
+    tickers = await c.futures_tickers(only_usdt=True)
 
     # fi = await c.funding_interval()
     # print(fi)
@@ -28,22 +30,22 @@ async def main() -> None:
     #     await c.futures_set_margin_type(t, MarginType.ISOLATED)
     #     print(t)
 
-    async with c:
-        while True:
-            import time
+    # async with c:
+    # while True:
+    #     import time
 
-            time.sleep(1)
-            # r = await c.futures_order_create(
-            #     symbol="TRXUSDT",
-            #     side=OrderSide.BUY,
-            #     type=OrderType.MARKET,
-            #     quantity="100",
-            #     reduce_only=True,
-            # )
-            r = await c.client.futures_position_info("BARDUSDT", version="3")
-            from pprint import pp
+    #     time.sleep(1)
+    #     # r = await c.futures_order_create(
+    #     #     symbol="TRXUSDT",
+    #     #     side=OrderSide.BUY,
+    #     #     type=OrderType.MARKET,
+    #     #     quantity="100",
+    #     #     reduce_only=True,
+    #     # )
+    #     r = await c.client.futures_position_info("BARDUSDT", version="3")
+    #     from pprint import pp
 
-            pp(r)
+    #     pp(r)
 
 
 if __name__ == "__main__":

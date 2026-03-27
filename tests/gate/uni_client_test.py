@@ -23,10 +23,12 @@ async def main() -> None:
     )
 
     async with c:
-        # tickers = await c.futures_tickers()
+        tickers = await c.futures_tickers()
 
-        fi = await c.funding_interval("BDXN_USDT")
-        print(fi)
+        print(len(tickers))
+
+        # fi = await c.funding_interval("BDXN_USDT")
+        # print(fi)
 
         # for t in tickers:
         #     await c.futures_set_leverage(t, leverage=5)

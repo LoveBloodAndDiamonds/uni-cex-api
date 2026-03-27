@@ -107,9 +107,9 @@ class Adapter:
             try:
                 if item["fundingRate"] and item["nextFundingTime"]:
                     result[item["symbol"]] = FundingInfoItem(
-                        rate=float(item["fundingRate"]) * 100,
-                        interval=intervals.get(item["symbol"], 0),
-                        next_time=int(item["nextFundingTime"]),
+                        v=float(item["fundingRate"]) * 100,
+                        i=intervals.get(item["symbol"], 0),
+                        T=int(item["nextFundingTime"]),
                     )
             except Exception as e:
                 logger.error(f"Item {item} iteration {type(e)} error: {e}")
@@ -165,6 +165,22 @@ class Adapter:
             b=bids,
             a=asks,
         )
+
+    @staticmethod
+    def futures_delistings(instruments_data: dict) -> dict[str, int]:
+        result = {}
+        for item in instruments_data["result"]["list"]:
+            symbol = item["symbol"]
+            delivery_time = item["deliveryTime"]
+
+            if not symbol.endswith("USDT"):
+                continue
+            if delivery_time == "0":
+                continue
+
+            result[symbol] = int(delivery_time)
+
+        return result
 
     @staticmethod
     def order_create(raw_data: dict) -> OrderIdDict:

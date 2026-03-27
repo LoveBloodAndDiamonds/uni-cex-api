@@ -185,9 +185,9 @@ class Adapter:
                 if item.get("funding_rate") is not None:
                     symbol = item["contract"]
                     result[symbol] = FundingInfoItem(
-                        rate=float(item["funding_rate"]) * 100,
-                        interval=intervals.get(symbol, 0),
-                        next_time=next_times.get(symbol, 0),
+                        v=float(item["funding_rate"]) * 100,
+                        i=intervals.get(symbol, 0),
+                        T=next_times.get(symbol, 0),
                     )
             except Exception as e:
                 logger.error(f"Item {item} iteration {type(e)} error: {e}")
@@ -249,6 +249,21 @@ class Adapter:
             b=bids,
             a=asks,
         )
+
+    @staticmethod
+    def futures_delistings(contracts: list) -> dict[str, int]:
+        result = {}
+        for item in contracts:
+            symbol = item["name"]
+            delisting_time = item.get("delisting_time")
+
+            if not delisting_time:
+                continue
+
+            # delisting_time приходит в секундах, конвертируем в мс
+            result[symbol] = int(delisting_time * 1000)
+
+        return result
 
     @staticmethod
     def futures_order_create(raw_data: dict) -> OrderIdDict:
