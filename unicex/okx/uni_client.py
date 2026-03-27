@@ -185,6 +185,9 @@ class UniClient(IUniClient[Client]):
         raw_data = await self._client.get_order_book(inst_id=symbol, sz=limit)
         return Adapter.futures_depth(raw_data=raw_data, symbol=symbol)
 
+    async def futures_delistings(self) -> dict[str, int]:
+        raise NotImplementedError("Method will be implemented later.")
+
     async def futures_order_create(
         self,
         symbol: str,
@@ -223,6 +226,3 @@ class UniClient(IUniClient[Client]):
         raise NotSupported(
             "Method is not supported by OKX. Margin type can be set when placing an order."
         )
-
-    async def futures_delistings(self) -> dict[str, int]:
-        raise NotImplementedError("Method will be implemented later.")

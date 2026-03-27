@@ -265,5 +265,3 @@ class UniClient(IUniClient[Client]):
         await self._client.set_margin_mode(
             set_margin_mode=margin_type.to_exchange_format(Exchange.BYBIT),  # type: ignore
         )
-
-

@@ -203,6 +203,9 @@ class UniClient(IUniClient[Client]):
         )
         return Adapter.futures_depth(raw_data=raw_data, symbol=symbol)
 
+    async def futures_delistings(self) -> dict[str, int]:
+        raise NotImplementedError("Method will be implemented later.")
+
     async def futures_order_create(
         self,
         symbol: str,
@@ -264,6 +267,3 @@ class UniClient(IUniClient[Client]):
             margin_mode=margin_type.to_exchange_format(Exchange.BITGET),
             product_type="USDT-FUTURES",
         )
-
-    async def futures_delistings(self) -> dict[str, int]:
-        raise NotImplementedError("Method will be implemented later.")

@@ -305,5 +305,3 @@ class UniClient(IUniClient[Client]):
             mode=margin_type.to_exchange_format(Exchange.GATE),
             contract=symbol,
         )
-
-

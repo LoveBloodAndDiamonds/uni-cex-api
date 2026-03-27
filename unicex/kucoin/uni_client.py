@@ -177,6 +177,9 @@ class UniClient(IUniClient[Client]):
             "Method 'futures_depth' will be implemented later. You can open pull request to contribute."
         )
 
+    async def futures_delistings(self) -> dict[str, int]:
+        raise NotImplementedError("Method will be implemented later.")
+
     async def futures_order_create(
         self,
         symbol: str,
@@ -196,7 +199,4 @@ class UniClient(IUniClient[Client]):
         raise NotImplementedError("Method will be implemented later.")
 
     async def futures_set_margin_type(self, symbol: str, margin_type: MarginType) -> None:
-        raise NotImplementedError("Method will be implemented later.")
-
-    async def futures_delistings(self) -> dict[str, int]:
         raise NotImplementedError("Method will be implemented later.")
