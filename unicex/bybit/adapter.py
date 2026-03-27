@@ -178,7 +178,7 @@ class Adapter:
             if delivery_time == "0":
                 continue
 
-            result[symbol.removesuffix("USDT")] = int(delivery_time)
+            result[symbol] = int(delivery_time)
 
         return result
 

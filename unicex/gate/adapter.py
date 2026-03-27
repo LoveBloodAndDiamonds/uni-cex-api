@@ -261,7 +261,7 @@ class Adapter:
                 continue
 
             # delisting_time приходит в секундах, конвертируем в мс
-            result[symbol.removesuffix("_USDT")] = int(delisting_time * 1000)
+            result[symbol] = int(delisting_time * 1000)
 
         return result
 

@@ -140,7 +140,7 @@ class Adapter:
             if delivery_ts == _PERPETUAL_DELIVERY_DATE or delivery_ts <= now:
                 continue
 
-            result[symbol.removesuffix("USDT")] = delivery_ts
+            result[symbol] = delivery_ts
 
         return result
 
