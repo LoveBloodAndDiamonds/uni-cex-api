@@ -24,7 +24,7 @@ def _l1_payload(phantom_agent: dict[str, Any]) -> dict[str, Any]:
 
     Простыми словами:
     Это упаковка данных в формат, который кошелёк сможет подписать.
-    В Ethereum есть стандарт EIP-712 — "structured data signing".
+    В Ethereum есть стандарт EIP-712 - "structured data signing".
     Он позволяет подписывать не просто строку, а структуру (объект),
     чтобы потом её можно было проверить.
 
@@ -92,7 +92,7 @@ def _construct_phantom_agent(hash: bytes, is_mainnet: bool) -> dict[str, Any]:
     Это кусочек данных, который будет подписываться.
     В нём указывается:
     - источник ("a" если это mainnet, "b" если не mainnet)
-    - connectionId — хэш действий.
+    - connectionId - хэш действий.
 
     Пример:
         >>> _construct_phantom_agent(b"\\x01" * 32, True)
@@ -155,7 +155,7 @@ def _sign_inner(wallet: LocalAccount, data: dict[str, Any]) -> dict[str, Any]:
     Простыми словами:
     Берём структуру (payload), кодируем её в формат EIP-712
     и просим кошелёк подписать.
-    Возвращаем r, s, v — стандартные параметры Ethereum-подписи.
+    Возвращаем r, s, v - стандартные параметры Ethereum-подписи.
 
     Пример:
         >>> _sign_inner(wallet, {...})
@@ -204,7 +204,7 @@ def _sign_l1_action(
         active_pool (str | None): адрес пула (если нужен).
         nonce (int): уникальный номер действия.
         expires_after (int | None): срок жизни действия.
-        is_mainnet (bool): True — основная сеть, False — тестовая.
+        is_mainnet (bool): True - основная сеть, False - тестовая.
 
     Возвращает:
         dict:
@@ -301,7 +301,7 @@ def _sign_user_signed_action(
         action (dict): Содержимое действия, которое нужно подписать.
         payload_types (list[dict[str, str]]): Описание полей типа для EIP-712.
         primary_type (str): Основное имя типа, например `"Withdraw"`, `"Transfer"`.
-        is_mainnet (bool): True — подпись для основной сети, False — для тестовой.
+        is_mainnet (bool): True - подпись для основной сети, False - для тестовой.
 
     Возвращает:
         dict:
@@ -309,9 +309,9 @@ def _sign_user_signed_action(
             - s (str): вторая часть подписи
             - v (int): "восстановитель" подписи (27 или 28)
     """
-    # signatureChainId — цепочка, через которую кошелёк делает подпись (не Hyperliquid chain)
+    # signatureChainId - цепочка, через которую кошелёк делает подпись (не Hyperliquid chain)
     action["signatureChainId"] = "0x66eee"
-    # hyperliquidChain — фактическая среда исполнения
+    # hyperliquidChain - фактическая среда исполнения
     action["hyperliquidChain"] = "Mainnet" if is_mainnet else "Testnet"
 
     data = _user_signed_payload(primary_type, payload_types, action)
@@ -394,6 +394,7 @@ class Client(BaseClient):
     """Базовый URL для REST API Hyperliquid."""
 
     _BASE_HEADERS = {"Content-Type": "application/json"}
+    """Базовые заголовки для HTTP-запросов."""
 
     def __init__(
         self,
@@ -411,9 +412,9 @@ class Client(BaseClient):
 
         Параметры:
             session (`aiohttp.ClientSession`): Сессия для выполнения HTTP‑запросов.
-            private_key (`str | bytes | None`): Приватный ключ API для аутентификации (Hyperliquid).
-            wallet_address (`str | None`): Адрес кошелька для аутентификации (Hyperliquid).
-            vault_address (`str | None`): Адрес хранилища для аутентификации (Hyperliquid).
+            private_key (`str | bytes | None`): Приватный ключ API для аутентификации.
+            wallet_address (`str | None`): Адрес кошелька для аутентификации (пока не используется).
+            vault_address (`str | None`): Адрес хранилища для аутентификации.
             logger (`LoggerLike | None`): Логгер для вывода информации.
             max_retries (`int`): Максимальное количество повторных попыток запроса.
             retry_delay (`int | float`): Задержка между повторными попытками, сек.
