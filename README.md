@@ -23,7 +23,7 @@
 
 | Exchange | UniClient (20) | UniWebsocketManager (8) |
 |---|---|---|
-| **Aster** | 19/20 🟡 | 8/8 🟢 |
+| **Aster** | 20/20 🟢 | 8/8 🟢 |
 | **Binance** | 20/20 🟢 | 8/8 🟢 |
 | **Bitget** | 19/20 🟡 | 8/8 🟢 |
 | **Bybit** | 20/20 🟢 | 8/8 🟢 |

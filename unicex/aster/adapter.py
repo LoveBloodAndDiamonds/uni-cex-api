@@ -1,5 +1,6 @@
 __all__ = ["Adapter"]
 
+import time
 from typing import Any
 
 from unicex.types import (
@@ -124,6 +125,27 @@ class Adapter:
             b=[(float(price), float(quantity)) for price, quantity in raw_data["bids"]],
             a=[(float(price), float(quantity)) for price, quantity in raw_data["asks"]],
         )
+
+    @staticmethod
+    def futures_delistings(exchange_info: dict) -> dict[str, int]:
+        # Стандартная дата доставки для бессрочных контрактов (4133404800000 = 2100-12-31)
+        _PERPETUAL_DELIVERY_DATE = 4133404800000
+
+        now = int(time.time() * 1000)
+
+        result = {}
+        for item in exchange_info["symbols"]:
+            symbol = item["symbol"]
+            delivery_ts = item["deliveryDate"]
+
+            if not symbol.endswith("USDT"):
+                continue
+            if delivery_ts == _PERPETUAL_DELIVERY_DATE or delivery_ts <= now:
+                continue
+
+            result[symbol] = delivery_ts
+
+        return result
 
     @staticmethod
     def futures_order_create(raw_data: dict) -> OrderIdDict:
