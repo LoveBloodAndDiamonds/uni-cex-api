@@ -125,9 +125,7 @@ class Client(BaseClient):
 
         return await super()._make_request(method=method, url=url, params=payload, headers=headers)
 
-    async def request(
-        self, method: RequestMethod, url: str, params: dict, data: dict, signed: bool
-    ) -> dict:
+    async def request(self, method: RequestMethod, url: str, params: dict, signed: bool) -> dict:
         """Специальный метод для выполнения запросов на эндпоинты, которые не обернуты в клиенте.
 
         Параметры:
@@ -135,7 +133,6 @@ class Client(BaseClient):
             url (`str`): Полный URL эндпоинта Binance API.
             signed (`bool`): Нужно ли подписывать запрос.
             params (`dict | None`): Query-параметры.
-            data (`dict | None`): Тело запроса.
 
         Возвращает:
             `dict`: Ответ в формате JSON.

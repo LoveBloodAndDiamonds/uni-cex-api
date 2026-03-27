@@ -19,8 +19,8 @@ async def main() -> None:
     )
 
     # async with c:
-    c: IUniClient
-    tickers = await c.futures_tickers(only_usdt=True)
+    tickers = await c.tickers()
+    print(len(tickers))
 
     # fi = await c.funding_interval()
     # print(fi)
