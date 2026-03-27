@@ -480,6 +480,19 @@ class Client(BaseClient):
             timeout=timeout,
         )
 
+    def _resolve_user(self, user: str | None) -> str:
+        """Возвращает адрес пользователя: переданный явно или из wallet_address.
+
+        Используется в query-методах, чтобы не передавать адрес каждый раз вручную.
+        Выбрасывает ValueError, если адрес не задан ни здесь, ни в конструкторе.
+        """
+        resolved = user or self._wallet_address
+        if resolved is None:
+            raise ValueError(
+                "Необходимо передать user или указать wallet_address при создании клиента."
+            )
+        return resolved
+
     async def _make_request(
         self,
         method: Literal["GET", "POST"],
@@ -551,23 +564,26 @@ class Client(BaseClient):
 
         return await self._post_request("/info", data=payload)
 
-    async def perp_meta_and_asset_contexts(self) -> list[Any]:
+    async def perp_meta_and_asset_contexts(self, dex: str | None = None) -> list[Any]:
         """Получение метаданных и контекстов активов перпетуальных контрактов.
 
         https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/perpetuals#retrieve-perpetuals-asset-contexts-includes-mark-price-current-funding-open-interest-etc
         """
-        payload = {"type": "metaAndAssetCtxs"}
+        payload = {
+            "type": "metaAndAssetCtxs",
+            "dex": dex,
+        }
 
         return await self._post_request("/info", data=payload)
 
-    async def perp_account_summary(self, user: str, dex: str | None = None) -> dict:
+    async def perp_account_summary(self, user: str | None = None, dex: str | None = None) -> dict:
         """Получение сводной информации по аккаунту пользователя в перпетуалах.
 
         https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/perpetuals#retrieve-users-perpetuals-account-summary
         """
         payload = {
             "type": "clearinghouseState",
-            "user": user,
+            "user": self._resolve_user(user),
             "dex": dex,
         }
 
@@ -575,9 +591,9 @@ class Client(BaseClient):
 
     async def perp_user_funding_history(
         self,
-        user: str,
         start_time: int,
         end_time: int | None = None,
+        user: str | None = None,
     ) -> list[dict]:
         """Получение истории фондирования пользователя.
 
@@ -585,7 +601,7 @@ class Client(BaseClient):
         """
         payload = {
             "type": "userFunding",
-            "user": user,
+            "user": self._resolve_user(user),
             "startTime": start_time,
             "endTime": end_time,
         }
@@ -594,9 +610,9 @@ class Client(BaseClient):
 
     async def perp_user_non_funding_ledger_updates(
         self,
-        user: str,
         start_time: int,
         end_time: int | None = None,
+        user: str | None = None,
     ) -> list[dict]:
         """Получение нефондировочных обновлений леджера пользователя.
 
@@ -604,7 +620,7 @@ class Client(BaseClient):
         """
         payload = {
             "type": "userNonFundingLedgerUpdates",
-            "user": user,
+            "user": self._resolve_user(user),
             "startTime": start_time,
             "endTime": end_time,
         }
@@ -657,14 +673,14 @@ class Client(BaseClient):
 
         return await self._post_request("/info", data=payload)
 
-    async def perp_active_asset_data(self, user: str, coin: str) -> dict:
+    async def perp_active_asset_data(self, coin: str, user: str | None = None) -> dict:
         """Получение активных параметров актива пользователя в перпетуалах.
 
         https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/perpetuals#retrieve-users-active-asset-data
         """
         payload = {
             "type": "activeAssetData",
-            "user": user,
+            "user": self._resolve_user(user),
             "coin": coin,
         }
 
@@ -682,14 +698,14 @@ class Client(BaseClient):
 
         return await self._post_request("/info", data=payload)
 
-    async def open_orders(self, user: str, dex: str | None = None) -> list[dict]:
+    async def open_orders(self, user: str | None = None, dex: str | None = None) -> list[dict]:
         """Получение списка открытых ордеров пользователя.
 
         https://docs.chainstack.com/reference/hyperliquid-info-openorders
         """
         payload = {
             "type": "openOrders",
-            "user": user,
+            "user": self._resolve_user(user),
             "dex": dex,
         }
 
@@ -704,27 +720,27 @@ class Client(BaseClient):
 
         return await self._post_request("/info", data=payload)
 
-    async def frontend_open_orders(self, user: str, dex: str | None = None) -> list[dict]:
+    async def frontend_open_orders(self, user: str | None = None, dex: str | None = None) -> list[dict]:
         """Получение открытых ордеров в формате фронтенда.
 
         https://docs.chainstack.com/reference/hyperliquid-info-frontendopenorders
         """
         payload = {
             "type": "frontendOpenOrders",
-            "user": user,
+            "user": self._resolve_user(user),
             "dex": dex,
         }
 
         return await self._post_request("/info", data=payload)
 
-    async def liquidatable(self, user: str) -> dict:
+    async def liquidatable(self, user: str | None = None) -> dict:
         """Проверка, подлежит ли аккаунт пользователя ликвидации.
 
         https://docs.chainstack.com/reference/hyperliquid-info-liquidatable
         """
         payload = {
             "type": "liquidatable",
-            "user": user,
+            "user": self._resolve_user(user),
         }
 
         return await self._post_request("/info", data=payload)
@@ -747,98 +763,98 @@ class Client(BaseClient):
 
         return await self._post_request("/info", data=payload)
 
-    async def user_vault_equities(self, user: str) -> list[dict]:
+    async def user_vault_equities(self, user: str | None = None) -> list[dict]:
         """Получение данных об инвестициях пользователя в вулты (vaults).
 
         https://docs.chainstack.com/reference/hyperliquid-info-uservaultequities
         """
         payload = {
             "type": "userVaultEquities",
-            "user": user,
+            "user": self._resolve_user(user),
         }
 
         return await self._post_request("/info", data=payload)
 
-    async def leading_vaults(self, user: str) -> list[dict]:
+    async def leading_vaults(self, user: str | None = None) -> list[dict]:
         """Получение списка вултов (vaults), которыми управляет пользователь.
 
         https://docs.chainstack.com/reference/hyperliquid-info-leadingvaults
         """
         payload = {
             "type": "leadingVaults",
-            "user": user,
+            "user": self._resolve_user(user),
         }
 
         return await self._post_request("/info", data=payload)
 
-    async def extra_agents(self, user: str) -> list[dict]:
+    async def extra_agents(self, user: str | None = None) -> list[dict]:
         """Получение списка дополнительных агентов пользователя.
 
         https://docs.chainstack.com/reference/hyperliquid-info-extraagents
         """
         payload = {
             "type": "extraAgents",
-            "user": user,
+            "user": self._resolve_user(user),
         }
 
         return await self._post_request("/info", data=payload)
 
-    async def sub_accounts(self, user: str) -> list[dict]:
+    async def sub_accounts(self, user: str | None = None) -> list[dict]:
         """Получение списка саб-аккаунтов пользователя.
 
         https://docs.chainstack.com/reference/hyperliquid-info-subaccounts
         """
         payload = {
             "type": "subAccounts",
-            "user": user,
+            "user": self._resolve_user(user),
         }
 
         return await self._post_request("/info", data=payload)
 
-    async def user_fees(self, user: str) -> dict:
+    async def user_fees(self, user: str | None = None) -> dict:
         """Получение информации о торговых комиссиях пользователя.
 
         https://docs.chainstack.com/reference/hyperliquid-info-userfees
         """
         payload = {
             "type": "userFees",
-            "user": user,
+            "user": self._resolve_user(user),
         }
 
         return await self._post_request("/info", data=payload)
 
-    async def user_rate_limit(self, user: str) -> dict:
+    async def user_rate_limit(self, user: str | None = None) -> dict:
         """Получение сведений о лимитах запросов пользователя.
 
         https://docs.chainstack.com/reference/hyperliquid-info-userratelimit
         """
         payload = {
             "type": "userRateLimit",
-            "user": user,
+            "user": self._resolve_user(user),
         }
 
         return await self._post_request("/info", data=payload)
 
-    async def delegations(self, user: str) -> list[dict]:
+    async def delegations(self, user: str | None = None) -> list[dict]:
         """Получение списка делегаций пользователя.
 
         https://docs.chainstack.com/reference/hyperliquid-info-delegations
         """
         payload = {
             "type": "delegations",
-            "user": user,
+            "user": self._resolve_user(user),
         }
 
         return await self._post_request("/info", data=payload)
 
-    async def delegator_summary(self, user: str) -> dict:
+    async def delegator_summary(self, user: str | None = None) -> dict:
         """Получение сводки по делегациям пользователя.
 
         https://docs.chainstack.com/reference/hyperliquid-info-delegator-summary
         """
         payload = {
             "type": "delegatorSummary",
-            "user": user,
+            "user": self._resolve_user(user),
         }
 
         return await self._post_request("/info", data=payload)
@@ -856,26 +872,26 @@ class Client(BaseClient):
 
         return await self._post_request("/info", data=payload)
 
-    async def user_to_multi_sig_signers(self, user: str) -> list[str]:
+    async def user_to_multi_sig_signers(self, user: str | None = None) -> list[str]:
         """Получение списка подписантов мультисиг-кошелька пользователя.
 
         https://docs.chainstack.com/reference/hyperliquid-info-user-to-multi-sig-signers
         """
         payload = {
             "type": "userToMultiSigSigners",
-            "user": user,
+            "user": self._resolve_user(user),
         }
 
         return await self._post_request("/info", data=payload)
 
-    async def user_role(self, user: str) -> dict:
+    async def user_role(self, user: str | None = None) -> dict:
         """Получение информации о роли пользователя в системе.
 
         https://docs.chainstack.com/reference/hyperliquid-info-user-role
         """
         payload = {
             "type": "userRole",
-            "user": user,
+            "user": self._resolve_user(user),
         }
 
         return await self._post_request("/info", data=payload)
@@ -912,7 +928,7 @@ class Client(BaseClient):
 
     async def user_fills(
         self,
-        user: str,
+        user: str | None = None,
         aggregate_by_time: bool | None = None,
     ) -> list[dict]:
         """Получение последних исполнений ордеров пользователя.
@@ -921,7 +937,7 @@ class Client(BaseClient):
         """
         payload = {
             "type": "userFills",
-            "user": user,
+            "user": self._resolve_user(user),
             "aggregateByTime": aggregate_by_time,
         }
 
@@ -929,10 +945,10 @@ class Client(BaseClient):
 
     async def user_fills_by_time(
         self,
-        user: str,
         start_time: int,
         end_time: int | None = None,
         aggregate_by_time: bool | None = None,
+        user: str | None = None,
     ) -> list[dict]:
         """Получение исполнений ордеров пользователя за период.
 
@@ -940,7 +956,7 @@ class Client(BaseClient):
         """
         payload = {
             "type": "userFillsByTime",
-            "user": user,
+            "user": self._resolve_user(user),
             "startTime": start_time,
             "endTime": end_time,
             "aggregateByTime": aggregate_by_time,
@@ -948,14 +964,14 @@ class Client(BaseClient):
 
         return await self._post_request("/info", data=payload)
 
-    async def order_status(self, user: str, oid: int | str) -> dict:
+    async def order_status(self, oid: int | str, user: str | None = None) -> dict:
         """Получение статуса ордера по идентификатору.
 
         https://docs.chainstack.com/reference/hyperliquid-info-order-status
         """
         payload = {
             "type": "orderStatus",
-            "user": user,
+            "user": self._resolve_user(user),
             "oid": oid,
         }
 
@@ -1020,26 +1036,26 @@ class Client(BaseClient):
 
         return await self._post_request("/info", data=payload)
 
-    async def historical_orders(self, user: str) -> list[dict]:
+    async def historical_orders(self, user: str | None = None) -> list[dict]:
         """Получение истории ордеров пользователя.
 
         https://docs.chainstack.com/reference/hyperliquid-info-historical-orders
         """
         payload = {
             "type": "historicalOrders",
-            "user": user,
+            "user": self._resolve_user(user),
         }
 
         return await self._post_request("/info", data=payload)
 
-    async def user_twap_slice_fills(self, user: str) -> list[dict]:
+    async def user_twap_slice_fills(self, user: str | None = None) -> list[dict]:
         """Получение последних TWAP-исполнений пользователя.
 
         https://docs.chainstack.com/reference/hyperliquid-info-user-twap-slice-fills
         """
         payload = {
             "type": "userTwapSliceFills",
-            "user": user,
+            "user": self._resolve_user(user),
         }
 
         return await self._post_request("/info", data=payload)
@@ -1069,38 +1085,131 @@ class Client(BaseClient):
 
         return await self._post_request("/info", data=payload)
 
-    async def portfolio(self, user: str) -> list[list[Any]]:
+    async def portfolio(self, user: str | None = None) -> list[list[Any]]:
         """Получение данных о производительности портфеля пользователя.
 
         https://docs.chainstack.com/reference/hyperliquid-info-portfolio
         """
         payload = {
             "type": "portfolio",
-            "user": user,
+            "user": self._resolve_user(user),
         }
 
         return await self._post_request("/info", data=payload)
 
-    async def referral(self, user: str) -> dict:
+    async def referral(self, user: str | None = None) -> dict:
         """Получение реферальной информации пользователя.
 
         https://docs.chainstack.com/reference/hyperliquid-info-referral
         """
         payload = {
             "type": "referral",
-            "user": user,
+            "user": self._resolve_user(user),
         }
 
         return await self._post_request("/info", data=payload)
 
-    async def delegator_rewards(self, user: str) -> list[dict]:
+    async def delegator_rewards(self, user: str | None = None) -> list[dict]:
         """Получение истории стейкинг-наград пользователя.
 
         https://docs.chainstack.com/reference/hyperliquid-info-delegator-rewards
         """
         payload = {
             "type": "delegatorRewards",
-            "user": user,
+            "user": self._resolve_user(user),
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def delegator_history(self, user: str | None = None) -> list[dict]:
+        """Получение истории стейкинг-операций пользователя.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint
+        """
+        payload = {
+            "type": "delegatorHistory",
+            "user": self._resolve_user(user),
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def user_dex_abstraction(self, user: str | None = None) -> bool:
+        """Проверка статуса DEX-абстракции пользователя.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint
+        """
+        payload = {
+            "type": "userDexAbstraction",
+            "user": self._resolve_user(user),
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def user_abstraction(self, user: str | None = None) -> str:
+        """Получение режима абстракции аккаунта пользователя.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint
+        """
+        payload = {
+            "type": "userAbstraction",
+            "user": self._resolve_user(user),
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def aligned_quote_token_info(self, token: int) -> dict:
+        """Получение состояния aligned quote токена по его индексу.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint
+        """
+        payload = {
+            "type": "alignedQuoteTokenInfo",
+            "token": token,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def borrow_lend_user_state(self, user: str | None = None) -> dict:
+        """Получение состояния borrow/lend позиций пользователя.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint
+        """
+        payload = {
+            "type": "borrowLendUserState",
+            "user": self._resolve_user(user),
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def borrow_lend_reserve_state(self, token: int) -> dict:
+        """Получение состояния borrow/lend резерва по индексу токена.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint
+        """
+        payload = {
+            "type": "borrowLendReserveState",
+            "token": token,
+        }
+
+        return await self._post_request("/info", data=payload)
+
+    async def all_borrow_lend_reserve_states(self) -> list[list[Any]]:
+        """Получение состояния всех borrow/lend резервов.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint
+        """
+        payload = {"type": "allBorrowLendReserveStates"}
+
+        return await self._post_request("/info", data=payload)
+
+    async def approved_builders(self, user: str | None = None) -> list[str]:
+        """Получение списка одобренных пользователем билдеров.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint
+        """
+        payload = {
+            "type": "approvedBuilders",
+            "user": self._resolve_user(user),
         }
 
         return await self._post_request("/info", data=payload)
@@ -1134,14 +1243,14 @@ class Client(BaseClient):
 
         return await self._post_request("/info", data=payload)
 
-    async def spot_token_balances(self, user: str) -> dict:
+    async def spot_token_balances(self, user: str | None = None) -> dict:
         """Получение балансов токенов пользователя на спотовом рынке.
 
         https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/spot#retrieve-a-users-token-balances
         """
         payload = {
             "type": "spotClearinghouseState",
-            "user": user,
+            "user": self._resolve_user(user),
         }
 
         return await self._post_request("/info", data=payload)
@@ -1667,7 +1776,6 @@ class Client(BaseClient):
     async def usd_send(
         self,
         hyperliquid_chain: Literal["Mainnet", "Testnet"],
-        signature_chain_id: str,
         destination: str,
         amount: NumberLike,
         time_ms: int,
@@ -1682,10 +1790,8 @@ class Client(BaseClient):
 
         action = {
             "type": "usdSend",
-            "hyperliquidChain": hyperliquid_chain,
-            "signatureChainId": signature_chain_id,
             "destination": destination,
-            "amount": amount,
+            "amount": str(amount),
             "time": time_ms,
         }
         action_nonce = nonce if nonce is not None else time_ms
@@ -1709,7 +1815,6 @@ class Client(BaseClient):
     async def spot_send(
         self,
         hyperliquid_chain: Literal["Mainnet", "Testnet"],
-        signature_chain_id: str,
         destination: str,
         token: str,
         amount: NumberLike,
@@ -1725,11 +1830,9 @@ class Client(BaseClient):
 
         action = {
             "type": "spotSend",
-            "hyperliquidChain": hyperliquid_chain,
-            "signatureChainId": signature_chain_id,
             "destination": destination,
             "token": token,
-            "amount": amount,
+            "amount": str(amount),
             "time": time_ms,
         }
         action_nonce = nonce if nonce is not None else time_ms
@@ -1753,7 +1856,6 @@ class Client(BaseClient):
     async def initiate_withdrawal(
         self,
         hyperliquid_chain: Literal["Mainnet", "Testnet"],
-        signature_chain_id: str,
         amount: NumberLike,
         time_ms: int,
         destination: str,
@@ -1768,9 +1870,7 @@ class Client(BaseClient):
 
         action = {
             "type": "withdraw3",
-            "hyperliquidChain": hyperliquid_chain,
-            "signatureChainId": signature_chain_id,
-            "amount": amount,
+            "amount": str(amount),
             "time": time_ms,
             "destination": destination,
         }
@@ -1795,7 +1895,6 @@ class Client(BaseClient):
     async def usd_class_transfer(
         self,
         hyperliquid_chain: Literal["Mainnet", "Testnet"],
-        signature_chain_id: str,
         amount: NumberLike,
         to_perp: bool,
         subaccount: str | None = None,
@@ -1807,16 +1906,13 @@ class Client(BaseClient):
         if self._wallet is None:
             raise NotAuthorized("Private key is required for private endpoints.")
 
-        amount_field = amount
-        if subaccount is not None:
-            amount_field = f"{amount} subaccount:{subaccount}"
+        # Формат amount_field: при субаккаунте добавляется суффикс "subaccount:<addr>"
+        amount_field = f"{amount} subaccount:{subaccount}" if subaccount is not None else str(amount)
 
         nonce = int(time.time() * 1000)
 
         action = {
             "type": "usdClassTransfer",
-            "hyperliquidChain": hyperliquid_chain,
-            "signatureChainId": signature_chain_id,
             "amount": amount_field,
             "toPerp": to_perp,
             "nonce": nonce,
@@ -1841,7 +1937,6 @@ class Client(BaseClient):
     async def send_asset(
         self,
         hyperliquid_chain: Literal["Mainnet", "Testnet"],
-        signature_chain_id: str,
         destination: str,
         source_dex: str,
         destination_dex: str,
@@ -1860,13 +1955,11 @@ class Client(BaseClient):
 
         action = {
             "type": "sendAsset",
-            "hyperliquidChain": hyperliquid_chain,
-            "signatureChainId": signature_chain_id,
             "destination": destination,
             "sourceDex": source_dex,
             "destinationDex": destination_dex,
             "token": token,
-            "amount": amount,
+            "amount": str(amount),
             "fromSubAccount": from_subaccount,
             "nonce": nonce_value,
         }
@@ -1891,7 +1984,6 @@ class Client(BaseClient):
     async def staking_deposit(
         self,
         hyperliquid_chain: Literal["Mainnet", "Testnet"],
-        signature_chain_id: str,
         wei_amount: int,
         nonce_value: int,
         nonce: int | None = None,
@@ -1905,8 +1997,6 @@ class Client(BaseClient):
 
         action = {
             "type": "cDeposit",
-            "hyperliquidChain": hyperliquid_chain,
-            "signatureChainId": signature_chain_id,
             "wei": wei_amount,
             "nonce": nonce_value,
         }
@@ -1931,7 +2021,6 @@ class Client(BaseClient):
     async def staking_withdraw(
         self,
         hyperliquid_chain: Literal["Mainnet", "Testnet"],
-        signature_chain_id: str,
         wei_amount: int,
         nonce_value: int,
         nonce: int | None = None,
@@ -1945,8 +2034,6 @@ class Client(BaseClient):
 
         action = {
             "type": "cWithdraw",
-            "hyperliquidChain": hyperliquid_chain,
-            "signatureChainId": signature_chain_id,
             "wei": wei_amount,
             "nonce": nonce_value,
         }
@@ -1971,7 +2058,6 @@ class Client(BaseClient):
     async def token_delegate(
         self,
         hyperliquid_chain: Literal["Mainnet", "Testnet"],
-        signature_chain_id: str,
         validator: str,
         is_undelegate: bool,
         wei_amount: int,
@@ -1987,8 +2073,6 @@ class Client(BaseClient):
 
         action = {
             "type": "tokenDelegate",
-            "hyperliquidChain": hyperliquid_chain,
-            "signatureChainId": signature_chain_id,
             "validator": validator,
             "isUndelegate": is_undelegate,
             "wei": wei_amount,
@@ -2060,7 +2144,6 @@ class Client(BaseClient):
     async def approve_agent(
         self,
         hyperliquid_chain: Literal["Mainnet", "Testnet"],
-        signature_chain_id: str,
         agent_address: str,
         nonce_value: int,
         agent_name: str | None = None,
@@ -2075,8 +2158,6 @@ class Client(BaseClient):
 
         action: dict[str, Any] = {
             "type": "approveAgent",
-            "hyperliquidChain": hyperliquid_chain,
-            "signatureChainId": signature_chain_id,
             "agentAddress": agent_address,
             "nonce": nonce_value,
         }
@@ -2105,7 +2186,6 @@ class Client(BaseClient):
     async def approve_builder_fee(
         self,
         hyperliquid_chain: Literal["Mainnet", "Testnet"],
-        signature_chain_id: str,
         max_fee_rate: str,
         builder_address: str,
         nonce_value: int,
@@ -2120,8 +2200,6 @@ class Client(BaseClient):
 
         action = {
             "type": "approveBuilderFee",
-            "hyperliquidChain": hyperliquid_chain,
-            "signatureChainId": signature_chain_id,
             "maxFeeRate": max_fee_rate,
             "builder": builder_address,
             "nonce": nonce_value,
