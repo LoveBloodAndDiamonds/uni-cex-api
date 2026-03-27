@@ -223,3 +223,6 @@ class UniClient(IUniClient[Client]):
         raise NotSupported(
             "Method is not supported by OKX. Margin type can be set when placing an order."
         )
+
+    async def futures_delistings(self) -> dict[str, int]:
+        raise NotImplementedError("Method will be implemented later.")

@@ -301,3 +301,6 @@ class UniClient(IUniClient[Client]):
             mode=margin_type.to_exchange_format(Exchange.GATE),
             contract=symbol,
         )
+
+    async def futures_delistings(self) -> dict[str, int]:
+        raise NotImplementedError("Method will be implemented later.")

@@ -180,3 +180,6 @@ class UniClient(IUniClient[Client]):
 
     async def futures_set_margin_type(self, symbol: str, margin_type: MarginType) -> None:
         raise NotImplementedError("Method will be implemented later.")
+
+    async def futures_delistings(self) -> dict[str, int]:
+        raise NotImplementedError("Method will be implemented later.")

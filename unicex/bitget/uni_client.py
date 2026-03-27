@@ -264,3 +264,6 @@ class UniClient(IUniClient[Client]):
             margin_mode=margin_type.to_exchange_format(Exchange.BITGET),
             product_type="USDT-FUTURES",
         )
+
+    async def futures_delistings(self) -> dict[str, int]:
+        raise NotImplementedError("Method will be implemented later.")
