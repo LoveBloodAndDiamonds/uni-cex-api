@@ -168,6 +168,21 @@ class Adapter:
         )
 
     @staticmethod
+    def futures_delistings(contracts: dict) -> dict[str, int]:
+        result = {}
+        for item in contracts["data"]:
+            symbol = item["symbol"]
+            off_time = item["offTime"]
+
+            # offTime == "-1" означает бессрочный контракт
+            if off_time == "-1" or off_time == "":
+                continue
+
+            result[symbol] = int(off_time)
+
+        return result
+
+    @staticmethod
     def futures_order_create(raw_data: Any) -> OrderIdDict:
         data = raw_data["data"]
         return OrderIdDict(
