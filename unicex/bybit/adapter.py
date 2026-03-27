@@ -167,6 +167,22 @@ class Adapter:
         )
 
     @staticmethod
+    def futures_delistings(instruments_data: dict) -> dict[str, int]:
+        result = {}
+        for item in instruments_data["result"]["list"]:
+            symbol = item["symbol"]
+            delivery_time = item["deliveryTime"]
+
+            if not symbol.endswith("USDT"):
+                continue
+            if delivery_time == "0":
+                continue
+
+            result[symbol.removesuffix("USDT")] = int(delivery_time)
+
+        return result
+
+    @staticmethod
     def order_create(raw_data: dict) -> OrderIdDict:
         result = raw_data["result"]
         return OrderIdDict(
