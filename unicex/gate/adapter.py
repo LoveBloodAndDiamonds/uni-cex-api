@@ -251,6 +251,21 @@ class Adapter:
         )
 
     @staticmethod
+    def futures_delistings(contracts: list) -> dict[str, int]:
+        result = {}
+        for item in contracts:
+            symbol = item["name"]
+            delisting_time = item.get("delisting_time")
+
+            if not delisting_time:
+                continue
+
+            # delisting_time приходит в секундах, конвертируем в мс
+            result[symbol.removesuffix("_USDT")] = int(delisting_time * 1000)
+
+        return result
+
+    @staticmethod
     def futures_order_create(raw_data: dict) -> OrderIdDict:
         return OrderIdDict(
             t=raw_data["create_time"] * 1000,
