@@ -185,9 +185,9 @@ class Adapter:
                 if item.get("funding_rate") is not None:
                     symbol = item["contract"]
                     result[symbol] = FundingInfoItem(
-                        rate=float(item["funding_rate"]) * 100,
-                        interval=intervals.get(symbol, 0),
-                        next_time=next_times.get(symbol, 0),
+                        v=float(item["funding_rate"]) * 100,
+                        i=intervals.get(symbol, 0),
+                        T=next_times.get(symbol, 0),
                     )
             except Exception as e:
                 logger.error(f"Item {item} iteration {type(e)} error: {e}")

@@ -82,9 +82,9 @@ class Adapter:
     def funding_info(raw_data: Any) -> FundingInfoDict:
         return {
             item["symbol"]: FundingInfoItem(
-                rate=float(item["fundingRate"]) * 100,
-                interval=int(item["fundingRateInterval"]),
-                next_time=int(item["nextUpdate"]),
+                v=float(item["fundingRate"]) * 100,
+                i=int(item["fundingRateInterval"]),
+                T=int(item["nextUpdate"]),
             )
             for item in raw_data["data"]
         }

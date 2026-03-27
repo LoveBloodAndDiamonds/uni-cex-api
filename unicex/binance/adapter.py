@@ -83,9 +83,9 @@ class Adapter:
         intervals = {item["symbol"]: int(item["fundingIntervalHours"]) for item in funding_data}
         return {
             item["symbol"]: FundingInfoItem(
-                rate=float(item["lastFundingRate"]) * 100,
-                interval=intervals.get(item["symbol"], 0),
-                next_time=int(item["nextFundingTime"]),
+                v=float(item["lastFundingRate"]) * 100,
+                i=intervals.get(item["symbol"], 0),
+                T=int(item["nextFundingTime"]),
             )
             for item in mark_data
         }

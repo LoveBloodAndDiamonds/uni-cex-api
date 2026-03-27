@@ -107,9 +107,9 @@ class Adapter:
             try:
                 if item["fundingRate"] and item["nextFundingTime"]:
                     result[item["symbol"]] = FundingInfoItem(
-                        rate=float(item["fundingRate"]) * 100,
-                        interval=intervals.get(item["symbol"], 0),
-                        next_time=int(item["nextFundingTime"]),
+                        v=float(item["fundingRate"]) * 100,
+                        i=intervals.get(item["symbol"], 0),
+                        T=int(item["nextFundingTime"]),
                     )
             except Exception as e:
                 logger.error(f"Item {item} iteration {type(e)} error: {e}")
