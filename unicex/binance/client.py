@@ -23,14 +23,6 @@ class Client(BaseClient):
     _RECV_WINDOW: int = 5000
     """Стандартный интервал времени для получения ответа от сервера."""
 
-    @staticmethod
-    def _normalize_bool_params(params: dict[str, Any]) -> dict[str, Any]:
-        """Преобразует bool-параметры в строки "true"/"false"."""
-        return {
-            k: ("true" if isinstance(v, bool) and v else "false" if isinstance(v, bool) else v)
-            for k, v in params.items()
-        }
-
     def _get_headers(self, method: RequestMethod) -> dict:
         """Возвращает заголовки для запросов к Binance API."""
         headers = {"Accept": "application/json"}
@@ -39,6 +31,14 @@ class Client(BaseClient):
         if method in ["POST", "PUT", "DELETE"]:
             headers.update({"Content-Type": "application/x-www-form-urlencoded"})
         return headers
+
+    @staticmethod
+    def _normalize_bool_params(params: dict[str, Any]) -> dict[str, Any]:
+        """Преобразует bool-параметры в строки "true"/"false"."""
+        return {
+            k: ("true" if isinstance(v, bool) and v else "false" if isinstance(v, bool) else v)
+            for k, v in params.items()
+        }
 
     def _prepare_payload(
         self,
@@ -123,7 +123,12 @@ class Client(BaseClient):
         if not signed:
             return await super()._make_request(method=method, url=url, **payload)
 
-        return await super()._make_request(method=method, url=url, params=payload, headers=headers)
+        return await super()._make_request(
+            method=method,
+            url=url,
+            params=payload,
+            headers=headers,
+        )
 
     async def request(self, method: RequestMethod, url: str, params: dict, signed: bool) -> dict:
         """Специальный метод для выполнения запросов на эндпоинты, которые не обернуты в клиенте.
