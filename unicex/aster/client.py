@@ -28,6 +28,14 @@ class Client(BaseClient):
             headers["Content-Type"] = "application/x-www-form-urlencoded"
         return headers
 
+    @staticmethod
+    def _normalize_bool_params(params: dict[str, Any]) -> dict[str, Any]:
+        """Преобразует bool-параметры в строки "true"/"false"."""
+        return {
+            k: ("true" if isinstance(v, bool) and v else "false" if isinstance(v, bool) else v)
+            for k, v in params.items()
+        }
+
     def _prepare_payload(
         self,
         *,
@@ -35,8 +43,29 @@ class Client(BaseClient):
         signed: bool,
         params: dict[str, Any] | None,
     ) -> tuple[dict[str, Any], dict[str, Any]]:
-        """Подготавливает параметры запроса."""
+        """Подготавливает payload и заголовки для запроса.
+
+        Если signed=True:
+            - добавляет подпись и все обязательные параметры в заголовки
+
+        Если signed=False:
+            - возвращает только отфильтрованные params.
+
+        Параметры:
+            method (`RequestMethod`): Метод запроса.
+            signed (`bool`): Нужно ли подписывать запрос.
+            params (`dict | None`): Параметры для query string.
+
+        Возвращает:
+            tuple:
+                - payload (`dict`): Параметры/тело запроса с подписью (если нужно).
+                - headers (`dict | None`): Заголовки для запроса или None.
+        """
+        # Фильтруем параметры от None значений и нормализуем bool для aiohttp/yarl.
         params = filter_params(params) if params else {}
+        params = self._normalize_bool_params(params)
+
+        # Получаем заголовки для запроса
         headers = self._get_headers(method)
 
         if not signed:
@@ -67,7 +96,23 @@ class Client(BaseClient):
         *,
         params: dict[str, Any] | None = None,
     ) -> Any:
-        """Выполняет HTTP-запрос к эндпоинтам Aster API."""
+        """Выполняет HTTP-запрос к эндпоинтам Binance API.
+
+        Если signed=True, формируется подпись для приватных endpoint'ов:
+            - Если метод запроса "GET" — подпись добавляется в параметры запроса.
+            - Если метод запроса "POST" | "PUT" | "DELETE" — подпись добавляется в тело запроса.
+
+        Если signed=False, запрос отправляется как публичный.
+
+        Параметры:
+            method (`str`): HTTP метод ("GET", "POST", "DELETE" и т.д.).
+            url (`str`): Полный URL эндпоинта Binance API.
+            signed (`bool`): Нужно ли подписывать запрос.
+            params (`dict | None`): Query-параметры.
+
+        Возвращает:
+            `dict`: Ответ в формате JSON.
+        """
         payload, headers = self._prepare_payload(method=method, signed=signed, params=params)
 
         if not signed:
