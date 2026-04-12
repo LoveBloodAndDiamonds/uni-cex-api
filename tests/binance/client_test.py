@@ -14,17 +14,11 @@ async def main() -> None:
         api_secret=os.getenv("BINANCE_API_SECRET"),
     )
     async with client:
-        r = await client.request(
-            "GET", "https://api.binance.com" + "/sapi/v1/margin/allPairs", {}, True
-        )
+        r = await client.futures_depth(symbol="BTCUSDT", limit=1000)
 
-        total = []
-        for item in r:
-            # print(item)
-            if item["quote"] == "USDT":
-                total.append(item)
+        from pprint import pp
 
-        pp(len(total))
+        pp(r)
 
 
 if __name__ == "__main__":
