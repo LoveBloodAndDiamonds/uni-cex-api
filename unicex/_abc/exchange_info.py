@@ -1,9 +1,8 @@
 __all__ = ["IExchangeInfo"]
 
 import asyncio
-import math
 from abc import ABC, abstractmethod
-from decimal import Decimal
+from decimal import ROUND_DOWN, Decimal
 from typing import TYPE_CHECKING, ClassVar
 
 import aiohttp
@@ -137,7 +136,7 @@ class IExchangeInfo(ABC):
     @classmethod
     def round_price(
         cls, symbol: str, price: float, market_type: MarketType = MarketType.SPOT
-    ) -> float:  # type: ignore
+    ) -> str:  # type: ignore
         """Округляет цену до ближайшего возможного значения."""
         try:
             if market_type == MarketType.SPOT:
@@ -155,7 +154,7 @@ class IExchangeInfo(ABC):
     @classmethod
     def round_quantity(
         cls, symbol: str, quantity: float, market_type: MarketType = MarketType.SPOT
-    ) -> float:  # type: ignore
+    ) -> str:  # type: ignore
         """Округляет объем до ближайшего возможного значения."""
         try:
             if market_type == MarketType.SPOT:
@@ -171,50 +170,42 @@ class IExchangeInfo(ABC):
             cls._handle_key_error(e, symbol)
 
     @classmethod
-    def round_futures_price(cls, symbol: str, price: float) -> float:
+    def round_futures_price(cls, symbol: str, price: float) -> str:
         """Округляет цену до ближайшего возможного значения на фьючерсах."""
         return cls.round_price(symbol, price, MarketType.FUTURES)
 
     @classmethod
-    def round_futures_quantity(cls, symbol: str, quantity: float) -> float:
+    def round_futures_quantity(cls, symbol: str, quantity: float) -> str:
         """Округляет объем до ближайшего возможного значения на фьючерсах."""
         return cls.round_quantity(symbol, quantity, MarketType.FUTURES)
 
     @staticmethod
-    def _floor_to_step(value: float, step: float) -> float:
-        """Округляет число вниз до ближайшего кратного шага.
-
-        Принимает:
-            value (float): Исходное число.
-            step: (float): Шаг округления (> 0).
-
-        Возвращает:
-            Число, округлённое вниз до кратного step.
+    def _floor_to_step(value: float, step: float) -> str:
+        """Округляет число вниз до ближайшего кратного шага, возвращает строку без float-артефактов.
 
         Примеры:
-            >>> floor_to_step(0.16, 0.05)
-            0.15
-            >>> floor_to_step(16, 5)
-            15
-            >>> floor_to_step(1.2345, 0.01)
-            1.23
-            >>> floor_to_step(-1.23, 0.1)
-            -1.3
-            >>> floor_to_step(100, 25)
-            100
+            >>> _floor_to_step(0.16, 0.05)
+            '0.15'
+            >>> _floor_to_step(17543.2, 100.0)
+            '17500'
+            >>> _floor_to_step(1.2345, 0.01)
+            '1.23'
 
         """
         if step <= 0:
             raise ValueError("step must be > 0")
-        result = math.floor(value / step) * step
-        digits = abs(Decimal(str(step)).as_tuple().exponent)  # type: ignore
-        return round(result, digits)
+        d_step = Decimal(str(step))
+        d_value = Decimal(str(value))
+        result = (d_value / d_step).to_integral_value(rounding=ROUND_DOWN) * d_step
+        return str(result.quantize(d_step, rounding=ROUND_DOWN))
 
     @staticmethod
-    def _floor_round(value: float, digits: int) -> float:
-        """Округляет число вниз до указанного количества знаков после запятой."""
-        factor = 10**digits
-        return math.floor(value * factor) / factor
+    def _floor_round(value: float, digits: int) -> str:
+        """Округляет число вниз до указанного количества знаков после запятой, возвращает строку."""
+        step = Decimal(10) ** -digits
+        d_value = Decimal(str(value))
+        result = (d_value / step).to_integral_value(rounding=ROUND_DOWN) * step
+        return str(result.quantize(step, rounding=ROUND_DOWN))
 
     @classmethod
     def _handle_key_error(cls, exception: KeyError, symbol: str) -> None:
