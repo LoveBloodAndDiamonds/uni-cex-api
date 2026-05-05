@@ -18,8 +18,14 @@ class WebsocketManager:
     _BASE_SPOT_URL: str = "wss://stream.binance.com:9443"
     """Базовый URL для вебсокета на спот."""
 
-    _BASE_FUTURES_URL: str = "wss://fstream.binance.com"
-    """Базовый URL для вебсокета на фьючерсы."""
+    _BASE_FUTURES_PUBLIC_URL: str = "wss://fstream.binance.com/public"
+    """Фьючерсы: высокочастотные публичные стримы (depth, bookTicker)."""
+
+    _BASE_FUTURES_MARKET_URL: str = "wss://fstream.binance.com/market"
+    """Фьючерсы: обычные рыночные стримы (aggTrade, markPrice, kline, ticker и др.)."""
+
+    _BASE_FUTURES_PRIVATE_URL: str = "wss://fstream.binance.com/private"
+    """Фьючерсы: приватные стримы (пользовательские данные, listenKey)."""
 
     def __init__(self, client: Client | None = None, **ws_kwargs: Any) -> None:
         """Инициализирует менеджер вебсокетов для Binance.
@@ -463,7 +469,7 @@ class WebsocketManager:
         """
         url = self._generate_stream_url(
             type="trade",
-            url=self._BASE_FUTURES_URL,
+            url=self._BASE_FUTURES_MARKET_URL,
             symbol=symbol,
             symbols=symbols,
             require_symbol=True,
@@ -490,7 +496,7 @@ class WebsocketManager:
         """
         url = self._generate_stream_url(
             type="aggTrade",
-            url=self._BASE_FUTURES_URL,
+            url=self._BASE_FUTURES_MARKET_URL,
             symbol=symbol,
             symbols=symbols,
             require_symbol=True,
@@ -519,7 +525,7 @@ class WebsocketManager:
         """
         url = self._generate_stream_url(
             type=f"kline_{interval}",
-            url=self._BASE_FUTURES_URL,
+            url=self._BASE_FUTURES_MARKET_URL,
             symbol=symbol,
             symbols=symbols,
             require_symbol=True,
@@ -546,7 +552,7 @@ class WebsocketManager:
         """
         url = self._generate_stream_url(
             type="miniTicker",
-            url=self._BASE_FUTURES_URL,
+            url=self._BASE_FUTURES_MARKET_URL,
             symbol=symbol,
             symbols=symbols,
             require_symbol=True,
@@ -564,7 +570,7 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        url = self._generate_stream_url(type="!miniTicker@arr", url=self._BASE_FUTURES_URL)
+        url = self._generate_stream_url(type="!miniTicker@arr", url=self._BASE_FUTURES_MARKET_URL)
         return Websocket(callback=callback, url=url, **self._ws_kwargs)
 
     def futures_symbol_ticker(
@@ -587,7 +593,7 @@ class WebsocketManager:
         """
         url = self._generate_stream_url(
             type="ticker",
-            url=self._BASE_FUTURES_URL,
+            url=self._BASE_FUTURES_MARKET_URL,
             symbol=symbol,
             symbols=symbols,
             require_symbol=True,
@@ -605,7 +611,7 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        url = self._generate_stream_url(type="!ticker@arr", url=self._BASE_FUTURES_URL)
+        url = self._generate_stream_url(type="!ticker@arr", url=self._BASE_FUTURES_MARKET_URL)
         return Websocket(callback=callback, url=url, **self._ws_kwargs)
 
     def futures_symbol_book_ticker(
@@ -628,7 +634,7 @@ class WebsocketManager:
         """
         url = self._generate_stream_url(
             type="bookTicker",
-            url=self._BASE_FUTURES_URL,
+            url=self._BASE_FUTURES_PUBLIC_URL,
             symbol=symbol,
             symbols=symbols,
             require_symbol=True,
@@ -646,7 +652,7 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        url = self._generate_stream_url(type="!bookTicker", url=self._BASE_FUTURES_URL)
+        url = self._generate_stream_url(type="!bookTicker", url=self._BASE_FUTURES_PUBLIC_URL)
         return Websocket(callback=callback, url=url, **self._ws_kwargs)
 
     def futures_partial_book_depth(
@@ -673,7 +679,7 @@ class WebsocketManager:
         """
         url = self._generate_stream_url(
             type=f"depth{levels}" + (f"@{update_speed}" if update_speed else ""),
-            url=self._BASE_FUTURES_URL,
+            url=self._BASE_FUTURES_PUBLIC_URL,
             symbol=symbol,
             symbols=symbols,
             require_symbol=True,
@@ -702,7 +708,7 @@ class WebsocketManager:
         """
         url = self._generate_stream_url(
             type="depth" + (f"@{update_speed}" if update_speed else ""),
-            url=self._BASE_FUTURES_URL,
+            url=self._BASE_FUTURES_PUBLIC_URL,
             symbol=symbol,
             symbols=symbols,
             require_symbol=True,
@@ -725,7 +731,7 @@ class WebsocketManager:
         """
         url = self._generate_stream_url(
             type="!markPrice" + (f"@{update_speed}" if update_speed else ""),
-            url=self._BASE_FUTURES_URL,
+            url=self._BASE_FUTURES_MARKET_URL,
         )
         return Websocket(callback=callback, url=url, **self._ws_kwargs)
 
@@ -751,7 +757,7 @@ class WebsocketManager:
         """
         url = self._generate_stream_url(
             type="markPrice" + (f"@{update_speed}" if update_speed else ""),
-            url=self._BASE_FUTURES_URL,
+            url=self._BASE_FUTURES_MARKET_URL,
             symbol=symbol,
             symbols=symbols,
             require_symbol=True,
@@ -780,7 +786,7 @@ class WebsocketManager:
         """
         url = self._generate_stream_url(
             type=f"{pair.lower()}_{contract_type}@continuousKline_{interval}",
-            url=self._BASE_FUTURES_URL,
+            url=self._BASE_FUTURES_MARKET_URL,
         )
         return Websocket(callback=callback, url=url, **self._ws_kwargs)
 
@@ -804,7 +810,7 @@ class WebsocketManager:
         """
         url = self._generate_stream_url(
             type="forceOrder",
-            url=self._BASE_FUTURES_URL,
+            url=self._BASE_FUTURES_MARKET_URL,
             symbol=symbol,
             symbols=symbols,
             require_symbol=True,
@@ -822,7 +828,7 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        url = self._generate_stream_url(type="!forceOrder@arr", url=self._BASE_FUTURES_URL)
+        url = self._generate_stream_url(type="!forceOrder@arr", url=self._BASE_FUTURES_MARKET_URL)
         return Websocket(callback=callback, url=url, **self._ws_kwargs)
 
     def futures_composite_index(
@@ -845,7 +851,7 @@ class WebsocketManager:
         """
         url = self._generate_stream_url(
             type="compositeIndex",
-            url=self._BASE_FUTURES_URL,
+            url=self._BASE_FUTURES_MARKET_URL,
             symbol=symbol,
             symbols=symbols,
             require_symbol=True,
@@ -863,7 +869,7 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        url = self._generate_stream_url(type="!contractInfo", url=self._BASE_FUTURES_URL)
+        url = self._generate_stream_url(type="!contractInfo", url=self._BASE_FUTURES_MARKET_URL)
         return Websocket(callback=callback, url=url, **self._ws_kwargs)
 
     def futures_multi_assets_index(self, callback: CallbackType) -> Websocket:
@@ -877,7 +883,7 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        url = self._generate_stream_url(type="!assetIndex@arr", url=self._BASE_FUTURES_URL)
+        url = self._generate_stream_url(type="!assetIndex@arr", url=self._BASE_FUTURES_MARKET_URL)
         return Websocket(callback=callback, url=url, **self._ws_kwargs)
 
     def futures_user_data_stream(self, callback: CallbackType) -> UserWebsocket:
@@ -897,16 +903,38 @@ class WebsocketManager:
             callback=callback, client=self.client, type="FUTURES", **self._ws_kwargs
         )
 
-    def futures_multiplex_socket(self, callback: CallbackType, streams: str) -> Websocket:
-        """Создает вебсокет для мультиплексирования нескольких стримов в один.
+    def futures_multiplex_public_socket(self, callback: CallbackType, streams: str) -> Websocket:
+        """Создает комбинированный вебсокет для публичных стримов (depth, bookTicker).
+
+        https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            streams (`str`): Строка с перечислением стримов.
+            streams (`str`): Стримы через `/`, например: `btcusdt@depth/ethusdt@bookTicker`.
 
         Возвращает:
-            `Websocket`: Вебсокет для получения информации о пользовательских данных.
+            `Websocket`: Объект для управления вебсокет соединением.
         """
         return Websocket(
-            callback=callback, url=self._BASE_FUTURES_URL + "?" + streams, **self._ws_kwargs
+            callback=callback,
+            url=f"{self._BASE_FUTURES_PUBLIC_URL}/stream?streams={streams}",
+            **self._ws_kwargs,
+        )
+
+    def futures_multiplex_market_socket(self, callback: CallbackType, streams: str) -> Websocket:
+        """Создает комбинированный вебсокет для рыночных стримов (aggTrade, markPrice, kline и др.).
+
+        https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            streams (`str`): Стримы через `/`, например: `btcusdt@aggTrade/ethusdt@markPrice`.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        return Websocket(
+            callback=callback,
+            url=f"{self._BASE_FUTURES_MARKET_URL}/stream?streams={streams}",
+            **self._ws_kwargs,
         )
