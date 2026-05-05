@@ -12,13 +12,10 @@ async def callback(lq: list[TradeDict]) -> None:
 
 async def main() -> None:
     """Main entry point for the application."""
-    c = await UniClient.create()
-
-    async with c:
-        tickers = await c.futures_tickers()
+    tickers = ["BTCUSDT", "ETHUSDT"]
 
     manager = WebsocketManager()
-    ws = manager.liquidation_order(callback=callback, symbols=tickers)
+    ws = manager.futures_agg_trade(callback=callback, symbols=tickers)
     await ws.start()
 
 
