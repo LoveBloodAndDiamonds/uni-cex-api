@@ -26,6 +26,9 @@ class Client(BaseClient):
     _BASE_FUTURES_URL: str = "https://fapi.asterdex.com"
     """Базовый URL для REST API Aster Futures."""
 
+    _BASE_SPOT_URL: str = "https://sapi.asterdex.com"
+    """Базовый URL для REST API Aster Spot."""
+
     _SIGN_CHAIN_ID: int = 1666
     """ChainId, используемый в EIP-712 домене при подписи запросов Aster V3."""
 
@@ -975,3 +978,454 @@ class Client(BaseClient):
         url = "https://www.asterdex.com/bapi/future/v1/public/future/aster/ticker/pair"
 
         return await super()._make_request("GET", url, headers=self._get_headers("GET"))
+
+    # topic: spot market data endpoints
+
+    async def ping(self) -> dict:
+        """Проверка подключения к спотовому REST API.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/ping"
+
+        return await self._make_request("GET", url)
+
+    async def server_time(self) -> dict:
+        """Получение серверного времени спотового рынка.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/time"
+
+        return await self._make_request("GET", url)
+
+    async def exchange_info(self) -> dict:
+        """Получение торговых правил и информации о спотовых символах.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/exchangeInfo"
+
+        return await self._make_request("GET", url)
+
+    async def depth(self, symbol: str, limit: int | None = None) -> dict:
+        """Получение книги ордеров на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/depth"
+        params = {"symbol": symbol, "limit": limit}
+
+        return await self._make_request("GET", url, params=params)
+
+    async def trades(self, symbol: str, limit: int | None = None) -> list[dict]:
+        """Получение последних сделок на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/trades"
+        params = {"symbol": symbol, "limit": limit}
+
+        return await self._make_request("GET", url, params=params)
+
+    async def historical_trades(
+        self, symbol: str, limit: int | None = None, from_id: int | None = None
+    ) -> list[dict]:
+        """Получение исторических сделок на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/historicalTrades"
+        params = {"symbol": symbol, "limit": limit, "fromId": from_id}
+
+        return await self._make_request("GET", url, params=params)
+
+    async def agg_trades(
+        self,
+        symbol: str,
+        from_id: int | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+    ) -> list[dict]:
+        """Получение агрегированных сделок на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/aggTrades"
+        params = {
+            "symbol": symbol,
+            "fromId": from_id,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", url, params=params)
+
+    async def klines(
+        self,
+        symbol: str,
+        interval: str,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+    ) -> list[list]:
+        """Получение исторических свечей на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/klines"
+        params = {
+            "symbol": symbol,
+            "interval": interval,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", url, params=params)
+
+    async def ticker_24hr(self, symbol: str | None = None) -> dict | list[dict]:
+        """Получение статистики изменения цен за 24 часа на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/ticker/24hr"
+        params = {"symbol": symbol}
+
+        return await self._make_request("GET", url, params=params)
+
+    async def ticker_price(self, symbol: str | None = None) -> dict | list[dict]:
+        """Получение последней цены тикера(ов) на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/ticker/price"
+        params = {"symbol": symbol}
+
+        return await self._make_request("GET", url, params=params)
+
+    async def ticker_book_ticker(self, symbol: str | None = None) -> dict | list[dict]:
+        """Получение лучших цен bid/ask в книге ордеров на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/ticker/bookTicker"
+        params = {"symbol": symbol}
+
+        return await self._make_request("GET", url, params=params)
+
+    async def commission_rate(self, symbol: str) -> dict:
+        """Получение комиссионных ставок по символу на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/commissionRate"
+        params = {"symbol": symbol}
+
+        return await self._make_request("GET", url, True, params=params)
+
+    # topic: spot account/trade endpoints
+
+    async def noop(self) -> dict:
+        """Отменяет ранее отправленные, ещё не выполненные транзакции (nonce должен совпадать).
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/noop"
+
+        return await self._make_request("POST", url, True)
+
+    async def order_create(
+        self,
+        symbol: str,
+        side: Literal["BUY", "SELL"],
+        type: Literal[
+            "LIMIT",
+            "MARKET",
+            "STOP",
+            "STOP_MARKET",
+            "TAKE_PROFIT",
+            "TAKE_PROFIT_MARKET",
+        ],
+        time_in_force: str | None = None,
+        quantity: NumberLike | None = None,
+        quote_order_qty: NumberLike | None = None,
+        price: NumberLike | None = None,
+        new_client_order_id: str | None = None,
+        stop_price: NumberLike | None = None,
+    ) -> dict:
+        """Создание нового ордера на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/order"
+        params = {
+            "symbol": symbol,
+            "side": side,
+            "type": type,
+            "timeInForce": time_in_force,
+            "quantity": quantity,
+            "quoteOrderQty": quote_order_qty,
+            "price": price,
+            "newClientOrderId": new_client_order_id,
+            "stopPrice": stop_price,
+        }
+
+        return await self._make_request("POST", url, True, params=params)
+
+    async def order_cancel(
+        self, symbol: str, order_id: int | None = None, orig_client_order_id: str | None = None
+    ) -> dict:
+        """Отмена активного ордера на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/order"
+        params = {
+            "symbol": symbol,
+            "orderId": order_id,
+            "origClientOrderId": orig_client_order_id,
+        }
+
+        return await self._make_request("DELETE", url, True, params=params)
+
+    async def order_get(
+        self, symbol: str, order_id: int | None = None, orig_client_order_id: str | None = None
+    ) -> dict:
+        """Получение информации об ордере на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/order"
+        params = {
+            "symbol": symbol,
+            "orderId": order_id,
+            "origClientOrderId": orig_client_order_id,
+        }
+
+        return await self._make_request("GET", url, True, params=params)
+
+    async def order_open(
+        self, symbol: str, order_id: int | None = None, orig_client_order_id: str | None = None
+    ) -> dict:
+        """Получение активного ордера на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/openOrder"
+        params = {
+            "symbol": symbol,
+            "orderId": order_id,
+            "origClientOrderId": orig_client_order_id,
+        }
+
+        return await self._make_request("GET", url, True, params=params)
+
+    async def orders_open(self, symbol: str | None = None) -> list[dict]:
+        """Получение всех активных ордеров на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/openOrders"
+        params = {"symbol": symbol}
+
+        return await self._make_request("GET", url, True, params=params)
+
+    async def orders_cancel_all(
+        self,
+        symbol: str,
+        order_id_list: list[int] | None = None,
+        orig_client_order_id_list: list[str] | None = None,
+    ) -> dict:
+        """Отмена всех активных ордеров на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/allOpenOrders"
+        params = {"symbol": symbol}
+
+        if order_id_list:
+            params["orderIdList"] = json.dumps(order_id_list, separators=(",", ":"))
+
+        if orig_client_order_id_list:
+            params["origClientOrderIdList"] = json.dumps(
+                orig_client_order_id_list, separators=(",", ":")
+            )
+
+        return await self._make_request("DELETE", url, True, params=params)
+
+    async def orders_all(
+        self,
+        symbol: str,
+        order_id: int | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+    ) -> list[dict]:
+        """Получение всех ордеров на споте (активных, отменённых, исполненных).
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/allOrders"
+        params = {
+            "symbol": symbol,
+            "orderId": order_id,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", url, True, params=params)
+
+    async def account(self) -> dict:
+        """Получение информации о спотовом аккаунте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/account"
+
+        return await self._make_request("GET", url, True)
+
+    async def my_trades(
+        self,
+        symbol: str | None = None,
+        order_id: int | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        from_id: int | None = None,
+        limit: int | None = None,
+    ) -> list[dict]:
+        """Получение истории торгов аккаунта на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/userTrades"
+        params = {
+            "symbol": symbol,
+            "orderId": order_id,
+            "startTime": start_time,
+            "endTime": end_time,
+            "fromId": from_id,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", url, True, params=params)
+
+    async def transaction_history(
+        self,
+        asset: str | None = None,
+        type: str | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+    ) -> list[dict]:
+        """Получение истории транзакций спотового аккаунта.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/transactionHistory"
+        params = {
+            "asset": asset,
+            "type": type,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", url, True, params=params)
+
+    async def asset_transfer(
+        self, amount: NumberLike, asset: str, client_tran_id: str, kind_type: str
+    ) -> dict:
+        """Перевод средств между спотовым и фьючерсным кошельками.
+
+        kind_type: FUTURE_SPOT (фьючерс -> спот) / SPOT_FUTURE (спот -> фьючерс).
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/asset/wallet/transfer"
+        params = {
+            "amount": amount,
+            "asset": asset,
+            "clientTranId": client_tran_id,
+            "kindType": kind_type,
+        }
+
+        return await self._make_request("POST", url, True, params=params)
+
+    async def withdraw_fee(self, chain_id: str, asset: str) -> dict:
+        """Получение оценки комиссии за вывод средств со спота.
+
+        chain_id: 1(ETH), 56(BSC), 42161(Arbitrum).
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/aster/withdraw/estimateFee"
+        params = {"chainId": chain_id, "asset": asset}
+
+        return await self._make_request("GET", url, True, params=params)
+
+    async def withdraw(
+        self,
+        chain_id: str,
+        asset: str,
+        amount: NumberLike,
+        fee: NumberLike,
+        receiver: str,
+        nonce: str,
+        user_signature: str,
+    ) -> dict:
+        """Вывод средств со спотового аккаунта.
+
+        chain_id: 1(ETH), 56(BSC), 42161(Arbitrum).
+
+        Эндпоинт требует отдельную EIP-712 подпись действия (домен "Aster", тип "Action"),
+        которую вызывающий код должен сформировать заранее и передать в user_signature
+        вместе с соответствующим nonce (микросекунды). Сам запрос дополнительно
+        подписывается стандартной подписью V3.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/aster/user-withdraw"
+        params = {
+            "chainId": chain_id,
+            "asset": asset,
+            "amount": amount,
+            "fee": fee,
+            "receiver": receiver,
+            "nonce": nonce,
+            "userSignature": user_signature,
+        }
+
+        return await self._make_request("POST", url, True, params=params)
+
+    # topic: spot user data streams
+
+    async def listen_key(self) -> dict:
+        """Создание ключа прослушивания спотового пользовательского вебсокета.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/listenKey"
+
+        return await self._make_request("POST", url, True)
+
+    async def renew_listen_key(self) -> dict:
+        """Продление ключа прослушивания спотового пользовательского вебсокета.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/listenKey"
+
+        return await self._make_request("PUT", url, True)
+
+    async def close_listen_key(self) -> dict:
+        """Закрытие ключа прослушивания спотового пользовательского вебсокета.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/listenKey"
+
+        return await self._make_request("DELETE", url, True)

@@ -1,4 +1,4 @@
-__all__ = ["UserWebsocket"]
+__all__ = ["UserWebsocket", "SpotUserWebsocket"]
 
 import asyncio
 from collections.abc import Awaitable, Callable
@@ -189,3 +189,31 @@ class UserWebsocket:
     async def _close_listen_key(self) -> None:
         """Закрывает listenKey."""
         await self._client.futures_close_listen_key()
+
+
+class SpotUserWebsocket(UserWebsocket):
+    """Пользовательский вебсокет Aster Spot с авто-продлением listenKey.
+
+    Отличается от фьючерсного только базовым URL и набором эндпоинтов listenKey
+    (спотовые методы клиента). Вся логика подключения/keepalive наследуется без изменений.
+    """
+
+    _BASE_FUTURES_URL: str = "wss://sstream.asterdex.com"
+    """Базовый URL для спотового пользовательского вебсокета Aster."""
+
+    async def _create_listen_key(self) -> str:
+        """Создает новый спотовый listenKey."""
+        response = await self._client.listen_key()
+        key = response.get("listenKey") if isinstance(response, dict) else None
+        if not key:
+            raise RuntimeError(f"Can not create listenKey: {response}")
+        return key
+
+    async def _renew_listen_key(self) -> dict:
+        """Продлевает спотовый listenKey."""
+        response = await self._client.renew_listen_key()
+        return response if isinstance(response, dict) else {}
+
+    async def _close_listen_key(self) -> None:
+        """Закрывает спотовый listenKey."""
+        await self._client.close_listen_key()

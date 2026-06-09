@@ -16,6 +16,9 @@ class WebsocketManager:
     _BASE_URL: str = "wss://fstream.asterdex.com"
     """Базовый URL для вебсокетов Aster Futures."""
 
+    _BASE_SPOT_URL: str = "wss://sstream.asterdex.com"
+    """Базовый URL для вебсокетов Aster Spot."""
+
     def __init__(self, client: Client | None = None, **ws_kwargs: Any) -> None:
         """Инициализирует менеджер вебсокетов для Aster.
 
@@ -32,6 +35,7 @@ class WebsocketManager:
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
         require_symbol: bool = False,
+        base_url: str | None = None,
     ) -> str:
         """Генерирует URL для вебсокета Aster. Параметры symbol и symbols не могут быть использованы вместе.
 
@@ -40,20 +44,24 @@ class WebsocketManager:
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
             require_symbol (`bool`): Требуется ли символ для подписки.
+            base_url (`str | None`): Базовый URL вебсокета. По умолчанию фьючерсный `_BASE_URL`.
 
         Возвращает:
             `str`: URL для вебсокета.
         """
+        # По умолчанию используем фьючерсный базовый URL (обратная совместимость).
+        base_url = base_url or self._BASE_URL
+
         if symbol and symbols:
             raise ValueError("Parameters symbol and symbols cannot be used together")
         if require_symbol and not (symbol or symbols):
             raise ValueError("Either symbol or symbols must be provided")
         if symbol:
-            return f"{self._BASE_URL}/ws/{symbol.lower()}@{type}"
+            return f"{base_url}/ws/{symbol.lower()}@{type}"
         if symbols:
             streams = "/".join(f"{s.lower()}@{type}" for s in symbols)
-            return f"{self._BASE_URL}/stream?streams={streams}"
-        return f"{self._BASE_URL}/ws/{type}"
+            return f"{base_url}/stream?streams={streams}"
+        return f"{base_url}/ws/{type}"
 
     def futures_agg_trade(
         self,
@@ -400,4 +408,274 @@ class WebsocketManager:
             url = f"{self._BASE_URL}/stream?{streams}"
         else:
             url = f"{self._BASE_URL}/stream?streams={streams}"
+        return Websocket(callback=callback, url=url, **self._ws_kwargs)
+
+    # topic: spot market data streams
+
+    def trade(
+        self,
+        callback: CallbackType,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для получения сделок (tick-by-tick) на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        url = self._generate_stream_url(
+            type="trade",
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
+            base_url=self._BASE_SPOT_URL,
+        )
+        return Websocket(callback=callback, url=url, **self._ws_kwargs)
+
+    def agg_trade(
+        self,
+        callback: CallbackType,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для получения агрегированных сделок на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        url = self._generate_stream_url(
+            type="aggTrade",
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
+            base_url=self._BASE_SPOT_URL,
+        )
+        return Websocket(callback=callback, url=url, **self._ws_kwargs)
+
+    def klines(
+        self,
+        callback: CallbackType,
+        interval: str,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для получения свечей на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            interval (`str`): Временной интервал свечей.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        url = self._generate_stream_url(
+            type=f"kline_{interval}",
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
+            base_url=self._BASE_SPOT_URL,
+        )
+        return Websocket(callback=callback, url=url, **self._ws_kwargs)
+
+    def symbol_mini_ticker(
+        self,
+        callback: CallbackType,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для мини‑статистики тикера за последние 24 часа на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        url = self._generate_stream_url(
+            type="miniTicker",
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
+            base_url=self._BASE_SPOT_URL,
+        )
+        return Websocket(callback=callback, url=url, **self._ws_kwargs)
+
+    def mini_ticker(self, callback: CallbackType) -> Websocket:
+        """Создает вебсокет для мини‑статистики всех тикеров за последние 24 часа на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        url = self._generate_stream_url(type="!miniTicker@arr", base_url=self._BASE_SPOT_URL)
+        return Websocket(callback=callback, url=url, **self._ws_kwargs)
+
+    def symbol_ticker(
+        self,
+        callback: CallbackType,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для расширенной статистики тикера за последние 24 часа на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        url = self._generate_stream_url(
+            type="ticker",
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
+            base_url=self._BASE_SPOT_URL,
+        )
+        return Websocket(callback=callback, url=url, **self._ws_kwargs)
+
+    def ticker(self, callback: CallbackType) -> Websocket:
+        """Создает вебсокет для расширенной статистики всех тикеров за последние 24 часа на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        url = self._generate_stream_url(type="!ticker@arr", base_url=self._BASE_SPOT_URL)
+        return Websocket(callback=callback, url=url, **self._ws_kwargs)
+
+    def symbol_book_ticker(
+        self,
+        callback: CallbackType,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для получения лучших бид/аск по символам на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        url = self._generate_stream_url(
+            type="bookTicker",
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
+            base_url=self._BASE_SPOT_URL,
+        )
+        return Websocket(callback=callback, url=url, **self._ws_kwargs)
+
+    def book_ticker(self, callback: CallbackType) -> Websocket:
+        """Создает вебсокет для получения лучших бид/аск по всем символам на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        url = self._generate_stream_url(type="!bookTicker", base_url=self._BASE_SPOT_URL)
+        return Websocket(callback=callback, url=url, **self._ws_kwargs)
+
+    def partial_book_depth(
+        self,
+        callback: CallbackType,
+        levels: str,
+        update_speed: str | None = None,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для получения стакана глубиной N уровней на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            levels (`str`): Глубина стакана (уровни).
+            update_speed (`str | None`): Скорость обновления стакана ("100ms" | "500ms"). По умолчанию: "250ms".
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        stream_type = f"depth{levels}" + (f"@{update_speed}" if update_speed else "")
+        url = self._generate_stream_url(
+            type=stream_type,
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
+            base_url=self._BASE_SPOT_URL,
+        )
+        return Websocket(callback=callback, url=url, **self._ws_kwargs)
+
+    def diff_depth(
+        self,
+        callback: CallbackType,
+        update_speed: str | None = None,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для получения событий изменения стакана (без лимита глубины) на споте.
+
+        https://docs.asterdex.com/product/aster-spot/api/api-documentation
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            update_speed (`str | None`): Скорость обновления стакана ("100ms" | "500ms"). По умолчанию: "250ms".
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        stream_type = "depth" + (f"@{update_speed}" if update_speed else "")
+        url = self._generate_stream_url(
+            type=stream_type,
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
+            base_url=self._BASE_SPOT_URL,
+        )
         return Websocket(callback=callback, url=url, **self._ws_kwargs)

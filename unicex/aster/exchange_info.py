@@ -14,8 +14,30 @@ class ExchangeInfo(IExchangeInfo):
 
     @classmethod
     async def _load_spot_exchange_info(cls, session: aiohttp.ClientSession) -> None:
-        # В документации Aster нет спотового API, поэтому не загружаем данные.
-        cls._tickers_info = {}
+        exchange_info = await Client(session).exchange_info()
+        tickers_info: dict[str, TickerInfoItem] = {}
+        for symbol_info in exchange_info.get("symbols", []):
+            try:
+                filters = {
+                    flt["filterType"]: flt
+                    for flt in symbol_info.get("filters", [])
+                    if "filterType" in flt
+                }
+                price_filter = filters["PRICE_FILTER"]
+                lot_size_filter = filters["LOT_SIZE"]
+                tickers_info[symbol_info["symbol"]] = TickerInfoItem(
+                    tick_step=float(price_filter["tickSize"]),
+                    tick_precision=None,
+                    size_step=float(lot_size_filter["stepSize"]),
+                    size_precision=None,
+                    contract_size=1,
+                )
+            except Exception as e:
+                cls._logger.error(
+                    f"{type(e)} creating TickerInfoItem for element={symbol_info}: {e}"
+                )
+
+        cls._tickers_info = tickers_info
 
     @classmethod
     async def _load_futures_exchange_info(cls, session: aiohttp.ClientSession) -> None:

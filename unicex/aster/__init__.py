@@ -4,6 +4,7 @@ __all__ = [
     "Client",
     "UniClient",
     "UserWebsocket",
+    "SpotUserWebsocket",
     "WebsocketManager",
     "UniWebsocketManager",
     "ExchangeInfo",
@@ -13,7 +14,7 @@ from .client import Client
 from .exchange_info import ExchangeInfo
 from .uni_client import UniClient
 from .uni_websocket_manager import UniWebsocketManager
-from .user_websocket import UserWebsocket
+from .user_websocket import SpotUserWebsocket, UserWebsocket
 from .websocket_manager import WebsocketManager
 
 

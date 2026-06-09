@@ -30,6 +30,12 @@ async def main() -> None:
     """Прогоняет все публичные методы UniClient по очереди."""
     c = await UniClient.create()
     async with c:
+        # Спотовые методы (ранее кидали NotSupported)
+        await _run("tickers (spot)", c.tickers())
+        await _run("last_price (spot)", c.last_price())
+        await _run("ticker_24hr (spot)", c.ticker_24hr())
+        await _run("klines (spot)", c.klines(SYMBOL, "1h", limit=3))
+
         # Методы без аргументов / с дефолтами
         await _run("futures_tickers", c.futures_tickers())
         await _run("futures_last_price", c.futures_last_price())
