@@ -2,7 +2,9 @@ __all__ = ["UniClient"]
 
 
 import asyncio
-from typing import overload
+from typing import Self, overload
+
+import aiohttp
 
 from unicex._abc import IUniClient
 from unicex.enums import Exchange, MarginType, OrderSide, OrderType, Timeframe
@@ -14,6 +16,7 @@ from unicex.types import (
     FundingInfoDict,
     FundingInfoItem,
     KlineDict,
+    LoggerLike,
     OpenInterestDict,
     OpenInterestItem,
     OrderIdDict,
@@ -27,6 +30,57 @@ from .client import Client
 
 class UniClient(IUniClient[Client]):
     """Унифицированный клиент для работы с Aster API."""
+
+    def __init__(
+        self,
+        session: aiohttp.ClientSession,
+        private_key: str | bytes | None = None,
+        logger: LoggerLike | None = None,
+        max_retries: int = 3,
+        retry_delay: int | float = 0.1,
+        proxies: list[str] | None = None,
+        timeout: int = 10,
+    ) -> None:
+        """Инициализация клиента.
+
+        Параметры:
+            session (`aiohttp.ClientSession`): Сессия для выполнения HTTP‑запросов.
+            private_key (`str | bytes | None`): Приватный ключ API-кошелька для подписи запросов (Aster).
+            logger (`LoggerLike | None`): Логгер для вывода информации.
+            max_retries (`int`): Максимальное количество повторных попыток запроса.
+            retry_delay (`int | float`): Задержка между повторными попытками, сек.
+            proxies (`list[str] | None`): Список HTTP(S)‑прокси для циклического использования.
+            timeout (`int`): Максимальное время ожидания ответа от сервера, сек.
+        """
+        self._client: Client = self._client_cls(
+            private_key=private_key,
+            session=session,
+            logger=logger,
+            max_retries=max_retries,
+            retry_delay=retry_delay,
+            proxies=proxies,
+            timeout=timeout,
+        )
+
+    @classmethod
+    async def create(
+        cls,
+        private_key: str | bytes | None = None,
+        logger: LoggerLike | None = None,
+        max_retries: int = 3,
+        retry_delay: int | float = 0.1,
+        proxies: list[str] | None = None,
+        timeout: int = 10,
+    ) -> Self:
+        return cls(
+            session=aiohttp.ClientSession(),
+            private_key=private_key,
+            logger=logger,
+            max_retries=max_retries,
+            retry_delay=retry_delay,
+            proxies=proxies,
+            timeout=timeout,
+        )
 
     @property
     def _client_cls(self) -> type[Client]:

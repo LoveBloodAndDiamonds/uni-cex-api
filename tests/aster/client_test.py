@@ -1,10 +1,7 @@
 import asyncio
-
-from unicex.aster import Client
-
-
 from datetime import datetime
 
+from unicex.aster import Client
 
 tickers = []
 
@@ -16,7 +13,6 @@ async def main() -> None:
         r = await client.futures_exchange_info()
         # r = await client.exchange_info()
 
-        from pprint import pp
 
         # pp(r["symbols"])
 

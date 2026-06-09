@@ -2,28 +2,123 @@ __all__ = ["Client"]
 
 import json
 import time
-from typing import Any, Literal
+import urllib.parse
+from typing import Any, Literal, Self
+
+import aiohttp
+from eth_account import Account
+from eth_account.messages import encode_typed_data
+from eth_account.signers.local import LocalAccount
 
 from unicex._base import BaseClient
 from unicex.exceptions import NotAuthorized
-from unicex.types import NumberLike, RequestMethod
-from unicex.utils import dict_to_query_string, filter_params, generate_hmac_sha256_signature
+from unicex.types import LoggerLike, NumberLike, RequestMethod
+from unicex.utils import filter_params
 
 
 class Client(BaseClient):
-    """Клиент для работы с Aster API."""
+    """Клиент для работы с Aster API.
+
+    Использует авторизацию Aster V3: запросы подписываются приватным ключом
+    API-кошелька (EIP-712), вместо устаревшей схемы API key + HMAC.
+    """
 
     _BASE_FUTURES_URL: str = "https://fapi.asterdex.com"
     """Базовый URL для REST API Aster Futures."""
 
-    _RECV_WINDOW: int = 5000
-    """Стандартный интервал времени для получения ответа от сервера."""
+    _SIGN_CHAIN_ID: int = 1666
+    """ChainId, используемый в EIP-712 домене при подписи запросов Aster V3."""
+
+    _SIGN_DOMAIN_NAME: str = "AsterSignTransaction"
+    """Имя EIP-712 домена для подписи запросов Aster V3."""
+
+    def __init__(
+        self,
+        session: aiohttp.ClientSession,
+        private_key: str | bytes | None = None,
+        logger: LoggerLike | None = None,
+        max_retries: int = 3,
+        retry_delay: int | float = 0.1,
+        proxies: list[str] | None = None,
+        timeout: int = 10,
+    ) -> None:
+        """Инициализация клиента.
+
+        Параметры:
+            session (`aiohttp.ClientSession`): Сессия для выполнения HTTP‑запросов.
+            private_key (`str | bytes | None`): Приватный ключ API-кошелька для подписи запросов.
+            logger (`LoggerLike | None`): Логгер для вывода информации.
+            max_retries (`int`): Максимальное количество повторных попыток запроса.
+            retry_delay (`int | float`): Задержка между повторными попытками, сек.
+            proxies (`list[str] | None`): Список HTTP(S)‑прокси для циклического использования.
+            timeout (`int`): Максимальное время ожидания ответа от сервера, сек.
+        """
+        super().__init__(
+            session=session,
+            logger=logger,
+            max_retries=max_retries,
+            retry_delay=retry_delay,
+            proxies=proxies,
+            timeout=timeout,
+        )
+
+        # Кошелёк API формируется из приватного ключа. Его адрес используется как signer.
+        self._wallet: LocalAccount | None = None
+        self._signer: str | None = None
+        if private_key is not None:
+            # private_key может быть hex-строкой ("0x...") или байтами
+            self._wallet = Account.from_key(private_key)
+            self._signer = self._wallet.address
+
+        # Последний выданный nonce (микросекунды) для гарантии строгого возрастания.
+        self._last_nonce = 0
+
+    @classmethod
+    async def create(
+        cls,
+        private_key: str | bytes | None = None,
+        session: aiohttp.ClientSession | None = None,
+        logger: LoggerLike | None = None,
+        max_retries: int = 3,
+        retry_delay: int | float = 0.1,
+        proxies: list[str] | None = None,
+        timeout: int = 10,
+    ) -> Self:
+        """Создаёт инстанцию клиента.
+
+        Параметры:
+            private_key (`str | bytes | None`): Приватный ключ API-кошелька для подписи запросов.
+            session (`aiohttp.ClientSession | None`): Сессия для HTTP‑запросов (если не передана, будет создана).
+            logger (`LoggerLike | None`): Логгер для вывода информации.
+            max_retries (`int`): Максимум повторов при ошибках запроса.
+            retry_delay (`int | float`): Задержка между повторами, сек.
+            proxies (`list[str] | None`): Список HTTP(S)‑прокси.
+            timeout (`int`): Таймаут ответа сервера, сек.
+
+        Возвращает:
+            `Self`: Созданный экземпляр клиента.
+        """
+        return cls(
+            session=session or aiohttp.ClientSession(),
+            private_key=private_key,
+            logger=logger,
+            max_retries=max_retries,
+            retry_delay=retry_delay,
+            proxies=proxies,
+            timeout=timeout,
+        )
+
+    def is_authorized(self) -> bool:
+        """Проверяет наличие приватного ключа для доступа к приватным эндпоинтам.
+
+        Возвращает:
+            `bool`: Признак наличия приватного ключа.
+        """
+        return self._wallet is not None
 
     def _get_headers(self, method: RequestMethod) -> dict[str, str]:
         """Возвращает заголовки для запросов к Aster API."""
         headers = {"Accept": "application/json"}
-        if self._api_key:  # type: ignore[attr-defined]
-            headers["X-MBX-APIKEY"] = self._api_key  # type: ignore[attr-defined]
         if method in {"POST", "PUT", "DELETE"}:
             headers["Content-Type"] = "application/x-www-form-urlencoded"
         return headers
@@ -36,57 +131,77 @@ class Client(BaseClient):
             for k, v in params.items()
         }
 
-    def _prepare_payload(
-        self,
-        *,
-        method: RequestMethod,
-        signed: bool,
-        params: dict[str, Any] | None,
-    ) -> tuple[dict[str, Any], dict[str, Any]]:
-        """Подготавливает payload и заголовки для запроса.
+    def _get_nonce(self) -> int:
+        """Возвращает строго возрастающий nonce в микросекундах.
 
-        Если signed=True:
-            - добавляет подпись и все обязательные параметры в заголовки
+        Aster отклоняет повторно использованный nonce, поэтому при совпадении
+        времени с предыдущим запросом значение инкрементируется.
+        """
+        nonce = int(time.time() * 1_000_000)
+        if nonce <= self._last_nonce:
+            nonce = self._last_nonce + 1
+        self._last_nonce = nonce
+        return nonce
 
-        Если signed=False:
-            - возвращает только отфильтрованные params.
+    def _sign(self, msg: str) -> str:
+        """Подписывает строку msg по схеме EIP-712 (Aster V3) приватным ключом.
 
         Параметры:
-            method (`RequestMethod`): Метод запроса.
-            signed (`bool`): Нужно ли подписывать запрос.
-            params (`dict | None`): Параметры для query string.
+            msg (`str`): Строка (url-encoded параметры запроса), которую нужно подписать.
 
         Возвращает:
-            tuple:
-                - payload (`dict`): Параметры/тело запроса с подписью (если нужно).
-                - headers (`dict | None`): Заголовки для запроса или None.
+            `str`: Подпись в hex-формате с префиксом 0x.
         """
-        # Фильтруем параметры от None значений и нормализуем bool для aiohttp/yarl.
-        params = filter_params(params) if params else {}
-        params = self._normalize_bool_params(params)
+        # Структура EIP-712: домен AsterSignTransaction + тип Message с единственным полем msg.
+        typed_data = {
+            "types": {
+                "EIP712Domain": [
+                    {"name": "name", "type": "string"},
+                    {"name": "version", "type": "string"},
+                    {"name": "chainId", "type": "uint256"},
+                    {"name": "verifyingContract", "type": "address"},
+                ],
+                "Message": [{"name": "msg", "type": "string"}],
+            },
+            "primaryType": "Message",
+            "domain": {
+                "name": self._SIGN_DOMAIN_NAME,
+                "version": "1",
+                "chainId": self._SIGN_CHAIN_ID,
+                "verifyingContract": "0x0000000000000000000000000000000000000000",
+            },
+            "message": {"msg": msg},
+        }
 
-        # Получаем заголовки для запроса
-        headers = self._get_headers(method)
+        encoded = encode_typed_data(full_message=typed_data)
+        signed = self._wallet.sign_message(encoded)  # type: ignore[union-attr]
 
-        if not signed:
-            return {"params": params}, headers
+        sig = signed.signature.hex()
+        return sig if sig.startswith("0x") else f"0x{sig}"
 
+    def _build_signed_query(self, params: dict[str, Any]) -> str:
+        """Формирует подписанную query string для приватных эндпоинтов V3.
+
+        Добавляет signer и nonce, кодирует параметры, подписывает строку и
+        дописывает параметр signature.
+
+        Параметры:
+            params (`dict`): Бизнес-параметры запроса (уже отфильтрованные).
+
+        Возвращает:
+            `str`: Готовая query string вида "a=1&...&signer=...&nonce=...&signature=...".
+        """
         if not self.is_authorized():
-            raise NotAuthorized("Api key and api secret is required to private endpoints")
+            raise NotAuthorized("Private key is required for private endpoints.")
 
-        payload = {**params}
-        payload["timestamp"] = int(time.time() * 1000)
-        payload["recvWindow"] = self._RECV_WINDOW
+        # signer и nonce обязательны для подписи Aster V3.
+        params = {**params, "signer": self._signer, "nonce": str(self._get_nonce())}
 
-        # Подпись формируем по query string без параметра signature.
-        query_string = dict_to_query_string(payload)
-        payload["signature"] = generate_hmac_sha256_signature(
-            self._api_secret,  # type: ignore[attr-defined]
-            query_string,
-            "hex",
-        )
+        # Подпись формируется по той же строке, что и отправляется на сервер.
+        msg = urllib.parse.urlencode(params)
+        signature = self._sign(msg)
 
-        return payload, headers
+        return f"{msg}&signature={signature}"
 
     async def _make_request(
         self,
@@ -96,34 +211,36 @@ class Client(BaseClient):
         *,
         params: dict[str, Any] | None = None,
     ) -> Any:
-        """Выполняет HTTP-запрос к эндпоинтам Binance API.
+        """Выполняет HTTP-запрос к эндпоинтам Aster API.
 
-        Если signed=True, формируется подпись для приватных endpoint'ов:
-            - Если метод запроса "GET" — подпись добавляется в параметры запроса.
-            - Если метод запроса "POST" | "PUT" | "DELETE" — подпись добавляется в тело запроса.
+        Если signed=True, параметры подписываются по схеме Aster V3 (EIP-712) и
+        отправляются вместе с signer/nonce/signature в query string запроса.
 
         Если signed=False, запрос отправляется как публичный.
 
         Параметры:
             method (`str`): HTTP метод ("GET", "POST", "DELETE" и т.д.).
-            url (`str`): Полный URL эндпоинта Binance API.
+            url (`str`): Полный URL эндпоинта Aster API.
             signed (`bool`): Нужно ли подписывать запрос.
             params (`dict | None`): Query-параметры.
 
         Возвращает:
             `dict`: Ответ в формате JSON.
         """
-        payload, headers = self._prepare_payload(method=method, signed=signed, params=params)
+        # Фильтруем None и нормализуем bool в строки "true"/"false".
+        params = filter_params(params) if params else {}
+        params = self._normalize_bool_params(params)
+        headers = self._get_headers(method)
 
         if not signed:
-            return await super()._make_request(method=method, url=url, headers=headers, **payload)
+            return await super()._make_request(
+                method=method, url=url, params=params, headers=headers
+            )
 
-        return await super()._make_request(
-            method=method,
-            url=url,
-            params=payload,
-            headers=headers,
-        )
+        # Приватный запрос: вшиваем подписанную query string прямо в URL,
+        # чтобы отправляемая строка в точности совпадала с подписанной.
+        query = self._build_signed_query(params)
+        return await super()._make_request(method=method, url=f"{url}?{query}", headers=headers)
 
     async def request(
         self, method: RequestMethod, url: str, params: dict, data: dict, signed: bool
@@ -141,7 +258,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#test-connectivity
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/ping"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/ping"
 
         return await self._make_request("GET", url)
 
@@ -150,7 +267,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#check-server-time
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/time"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/time"
 
         return await self._make_request("GET", url)
 
@@ -159,7 +276,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#exchange-information
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/exchangeInfo"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/exchangeInfo"
 
         return await self._make_request("GET", url)
 
@@ -168,7 +285,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#order-book
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/depth"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/depth"
         params = {"symbol": symbol, "limit": limit}
 
         return await self._make_request("GET", url, params=params)
@@ -178,7 +295,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#recent-trades-list
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/trades"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/trades"
         params = {"symbol": symbol, "limit": limit}
 
         return await self._make_request("GET", url, params=params)
@@ -190,7 +307,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#old-trades-lookup-market_data
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/historicalTrades"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/historicalTrades"
         params = {"symbol": symbol, "limit": limit, "fromId": from_id}
 
         return await self._make_request("GET", url, params=params)
@@ -207,7 +324,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#compressed-aggregate-trades-list
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/aggTrades"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/aggTrades"
         params = {
             "symbol": symbol,
             "fromId": from_id,
@@ -230,7 +347,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#kline-candlestick-data
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/klines"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/klines"
         params = {
             "symbol": symbol,
             "interval": interval,
@@ -253,7 +370,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#index-price-kline-candlestick-data
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/indexPriceKlines"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/indexPriceKlines"
         params = {
             "pair": pair,
             "interval": interval,
@@ -276,7 +393,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#mark-price-kline-candlestick-data
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/markPriceKlines"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/markPriceKlines"
         params = {
             "symbol": symbol,
             "interval": interval,
@@ -292,7 +409,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#mark-price
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/premiumIndex"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/premiumIndex"
         params = {"symbol": symbol}
 
         return await self._make_request("GET", url, params=params)
@@ -308,7 +425,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#get-funding-rate-history
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/fundingRate"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/fundingRate"
         params = {
             "symbol": symbol,
             "startTime": start_time,
@@ -335,7 +452,7 @@ class Client(BaseClient):
             ]
         ```
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/fundingInfo"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/fundingInfo"
 
         return await self._make_request("GET", url)
 
@@ -344,7 +461,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#id-24hr-ticker-price-change-statistics
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/ticker/24hr"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/ticker/24hr"
         params = {"symbol": symbol}
 
         return await self._make_request("GET", url, params=params)
@@ -354,7 +471,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#symbol-price-ticker
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/ticker/price"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/ticker/price"
         params = {"symbol": symbol}
 
         return await self._make_request("GET", url, params=params)
@@ -364,7 +481,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#symbol-order-book-ticker
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/ticker/bookTicker"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/ticker/bookTicker"
         params = {"symbol": symbol}
 
         return await self._make_request("GET", url, params=params)
@@ -376,7 +493,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#change-position-mode-trade
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/positionSide/dual"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/positionSide/dual"
         params = {"dualSidePosition": dual_side_position}
 
         return await self._make_request("POST", url, True, params=params)
@@ -386,7 +503,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#get-current-position-mode-user_data
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/positionSide/dual"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/positionSide/dual"
 
         return await self._make_request("GET", url, True)
 
@@ -395,7 +512,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#change-multi-assets-mode-trade
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/multiAssetsMargin"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/multiAssetsMargin"
         params = {"multiAssetsMargin": multi_assets_margin}
 
         return await self._make_request("POST", url, True, params=params)
@@ -405,7 +522,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#get-current-multi-assets-mode-user_data
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/multiAssetsMargin"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/multiAssetsMargin"
 
         return await self._make_request("GET", url, True)
 
@@ -440,7 +557,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#new-order-trade
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/order"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/order"
         params = {
             "symbol": symbol,
             "side": side,
@@ -467,7 +584,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#place-multiple-orders-trade
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/batchOrders"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/batchOrders"
         params = {
             "batchOrders": json.dumps(orders, separators=(",", ":")),
         }
@@ -484,7 +601,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#query-order-user_data
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/order"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/order"
         params = {
             "symbol": symbol,
             "orderId": order_id,
@@ -500,7 +617,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#cancel-order-trade
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/order"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/order"
         params = {
             "symbol": symbol,
             "orderId": order_id,
@@ -514,7 +631,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#cancel-all-open-orders-trade
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/allOpenOrders"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/allOpenOrders"
         params = {"symbol": symbol}
 
         return await self._make_request("DELETE", url, True, params=params)
@@ -529,7 +646,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#cancel-multiple-orders-trade
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/batchOrders"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/batchOrders"
         params = {"symbol": symbol}
 
         if order_id_list:
@@ -551,7 +668,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#auto-cancel-all-open-orders-trade
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/countdownCancelAll"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/countdownCancelAll"
         params = {
             "symbol": symbol,
             "countdownTime": countdown_time,
@@ -569,7 +686,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#query-current-open-order-user_data
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/openOrder"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/openOrder"
         params = {
             "symbol": symbol,
             "orderId": order_id,
@@ -583,7 +700,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#current-all-open-orders-user_data
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/openOrders"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/openOrders"
         params = {"symbol": symbol}
 
         return await self._make_request("GET", url, True, params=params)
@@ -600,7 +717,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#all-orders-user_data
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/allOrders"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/allOrders"
         params = {
             "symbol": symbol,
             "orderId": order_id,
@@ -616,7 +733,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#futures-account-balance-v2-user_data
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v2/balance"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/balance"
 
         return await self._make_request("GET", url, True)
 
@@ -625,7 +742,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#account-information-v4-user_data
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v4/account"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/accountWithJoinMargin"
 
         return await self._make_request("GET", url, True)
 
@@ -634,7 +751,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#change-initial-leverage-trade
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/leverage"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/leverage"
         params = {"symbol": symbol, "leverage": leverage}
 
         return await self._make_request("POST", url, True, params=params)
@@ -644,7 +761,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#change-margin-type-trade
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/marginType"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/marginType"
         params = {"symbol": symbol, "marginType": margin_type}
 
         return await self._make_request("POST", url, True, params=params)
@@ -660,7 +777,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#modify-isolated-position-margin-trade
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/positionMargin"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/positionMargin"
         params = {
             "symbol": symbol,
             "positionSide": position_side,
@@ -682,7 +799,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#get-position-margin-change-history-trade
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/positionMargin/history"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/positionMargin/history"
         params = {
             "symbol": symbol,
             "type": type,
@@ -698,7 +815,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#position-information-v2-user_data
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v2/positionRisk"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/positionRisk"
         params = {"symbol": symbol}
 
         return await self._make_request("GET", url, True, params=params)
@@ -715,7 +832,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#account-trade-list-user_data
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/userTrades"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/userTrades"
         params = {
             "symbol": symbol,
             "startTime": start_time,
@@ -738,7 +855,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#get-income-historyuser_data
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/income"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/income"
         params = {
             "symbol": symbol,
             "incomeType": income_type,
@@ -754,7 +871,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#notional-and-leverage-brackets-user_data
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/leverageBracket"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/leverageBracket"
         params = {"symbol": symbol}
 
         return await self._make_request("GET", url, True, params=params)
@@ -764,7 +881,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#position-adl-quantile-estimation-user_data
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/adlQuantile"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/adlQuantile"
         params = {"symbol": symbol}
 
         return await self._make_request("GET", url, True, params=params)
@@ -781,7 +898,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#users-force-orders-user_data
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/forceOrders"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/forceOrders"
         params = {
             "symbol": symbol,
             "autoCloseType": auto_close_type,
@@ -797,7 +914,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#user-commission-rate-user_data
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/commissionRate"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/commissionRate"
         params = {"symbol": symbol}
 
         return await self._make_request("GET", url, True, params=params)
@@ -809,27 +926,27 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#start-user-data-stream-user_stream
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/listenKey"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/listenKey"
 
-        return await super()._make_request("POST", url, headers=self._get_headers("POST"))
+        return await self._make_request("POST", url, True)
 
     async def futures_renew_listen_key(self) -> dict:
         """Обновление ключа прослушивания для подключения к пользовательскому вебсокету.
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#keepalive-user-data-stream-user_stream
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/listenKey"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/listenKey"
 
-        return await super()._make_request("PUT", url, headers=self._get_headers("PUT"))
+        return await self._make_request("PUT", url, True)
 
     async def futures_close_listen_key(self) -> dict:
         """Закрытие ключа прослушивания для подключения к пользовательскому вебсокету.
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#close-user-data-stream-user_stream
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v1/listenKey"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/listenKey"
 
-        return await super()._make_request("DELETE", url, headers=self._get_headers("DELETE"))
+        return await self._make_request("DELETE", url, True)
 
     async def open_interest(self) -> dict:
         """Секретный эндпоинт откопанный в недрах фронтенда asterdex.com разработчиком @RushanWork.

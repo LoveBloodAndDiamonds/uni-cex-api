@@ -1,9 +1,8 @@
 import asyncio
-
-from unicex.aster import UniWebsocketManager, UniClient  # type: ignore # noqa
-from unicex.types import PartialBookDepthDict, BestBidAskDict  # type: ignore # noqa
 from time import time
 
+from unicex.aster import UniClient, UniWebsocketManager  # type: ignore # noqa
+from unicex.types import BestBidAskDict, PartialBookDepthDict  # type: ignore # noqa
 
 # async def callback(event: PartialBookDepthDict) -> None:
 #     """Выводит ликвидации в консоль."""

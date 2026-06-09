@@ -101,6 +101,55 @@ if __name__ == "__main__":
 
 ```
 
+### Пример: Авторизация и приватные методы
+
+Для приватных эндпоинтов (баланс, позиции, ордера) клиент создаётся с ключами.
+Большинство бирж используют `api_key` + `api_secret` (Bitget, OKX, Kucoin — дополнительно `api_passphrase`),
+а **Aster** и **Hyperliquid** авторизуются приватным ключом кошелька `private_key` (Web3-подпись).
+
+```python
+import asyncio
+
+from unicex import Exchange, get_uni_client
+from unicex.enums import OrderSide, OrderType
+
+
+async def main() -> None:
+    """Пример создания авторизованных клиентов и вызова приватных методов."""
+    # 🔑 Биржи с API-ключами (Binance, Bybit, Mexc, Gateio, ...)
+    binance = await get_uni_client(Exchange.BINANCE).create(
+        api_key="...",
+        api_secret="...",
+    )
+
+    # 🔑 Bitget / OKX / Kucoin дополнительно требуют api_passphrase
+    okx = await get_uni_client(Exchange.OKX).create(
+        api_key="...",
+        api_secret="...",
+        api_passphrase="...",
+    )
+
+    # 🔑 Aster и Hyperliquid — авторизация приватным ключом кошелька (EIP-712)
+    aster = await get_uni_client(Exchange.ASTER).create(
+        private_key="0x...",
+    )
+
+    # Приватные методы доступны в едином формате на всех биржах:
+    await aster.futures_position_info("BTCUSDT")
+    await aster.futures_set_leverage("BTCUSDT", leverage=10)
+    await aster.futures_order_create(
+        symbol="BTCUSDT",
+        side=OrderSide.BUY,
+        type=OrderType.LIMIT,
+        quantity="0.001",
+        price="50000",
+    )
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
 ### Пример: Получение данных в реальном времени через Websocket API
 
 ```python
