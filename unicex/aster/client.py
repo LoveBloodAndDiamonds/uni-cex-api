@@ -70,8 +70,9 @@ class Client(BaseClient):
         self._signer: str | None = None
         if private_key is not None:
             # private_key может быть hex-строкой ("0x...") или байтами
-            self._wallet = Account.from_key(private_key)
-            self._signer = self._wallet.address
+            wallet = Account.from_key(private_key)
+            self._wallet = wallet
+            self._signer = wallet.address
 
         # Последний выданный nonce (микросекунды) для гарантии строгого возрастания.
         self._last_nonce = 0
