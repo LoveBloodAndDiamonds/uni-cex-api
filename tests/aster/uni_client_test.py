@@ -1,12 +1,10 @@
 import asyncio
-
-from unicex.aster import UniClient
-
-from unicex import *
-
 import os
 
 from loguru import logger
+
+from unicex import *
+from unicex.aster import UniClient
 
 logger.remove()
 
@@ -14,8 +12,7 @@ logger.remove()
 async def main() -> None:
     """Main entry point for the application."""
     c = await UniClient.create(
-        api_key=os.environ.get("ASTER_API_KEY"),
-        api_secret=os.environ.get("ASTER_API_SECRET"),
+        private_key=os.environ.get("ASTER_PRIVATE_KEY"),
     )
 
     # async with c:

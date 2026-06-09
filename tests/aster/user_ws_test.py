@@ -1,10 +1,9 @@
 import asyncio
-
-from unicex.aster import UserWebsocket, Client
 import os
-from unicex.enums import Timeframe
-from unicex.types import TradeDict
+
 from loguru import logger
+
+from unicex.aster import Client, UserWebsocket
 
 logger.remove()
 import sys
@@ -20,7 +19,7 @@ async def callback(msg) -> None:
 async def main() -> None:
     """Main entry point for the application."""
     client = await Client.create(
-        api_key=os.getenv("ASTER_API_KEY"), api_secret=os.getenv("ASTER_API_SECRET"), logger=logger
+        private_key=os.getenv("ASTER_PRIVATE_KEY"), logger=logger
     )
     ws = UserWebsocket(callback=callback, client=client, logger=logger)
     await ws.start()

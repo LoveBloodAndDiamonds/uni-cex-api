@@ -2,11 +2,13 @@ __all__ = ["UniClient"]
 
 
 import asyncio
-from typing import overload
+from typing import Self, overload
+
+import aiohttp
 
 from unicex._abc import IUniClient
 from unicex.enums import Exchange, MarginType, OrderSide, OrderType, Timeframe
-from unicex.exceptions import NotSupported, ResponseError
+from unicex.exceptions import ResponseError
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
@@ -14,6 +16,7 @@ from unicex.types import (
     FundingInfoDict,
     FundingInfoItem,
     KlineDict,
+    LoggerLike,
     OpenInterestDict,
     OpenInterestItem,
     OrderIdDict,
@@ -28,26 +31,80 @@ from .client import Client
 class UniClient(IUniClient[Client]):
     """Унифицированный клиент для работы с Aster API."""
 
+    def __init__(
+        self,
+        session: aiohttp.ClientSession,
+        private_key: str | bytes | None = None,
+        logger: LoggerLike | None = None,
+        max_retries: int = 3,
+        retry_delay: int | float = 0.1,
+        proxies: list[str] | None = None,
+        timeout: int = 10,
+    ) -> None:
+        """Инициализация клиента.
+
+        Параметры:
+            session (`aiohttp.ClientSession`): Сессия для выполнения HTTP‑запросов.
+            private_key (`str | bytes | None`): Приватный ключ API-кошелька для подписи запросов (Aster).
+            logger (`LoggerLike | None`): Логгер для вывода информации.
+            max_retries (`int`): Максимальное количество повторных попыток запроса.
+            retry_delay (`int | float`): Задержка между повторными попытками, сек.
+            proxies (`list[str] | None`): Список HTTP(S)‑прокси для циклического использования.
+            timeout (`int`): Максимальное время ожидания ответа от сервера, сек.
+        """
+        self._client: Client = self._client_cls(
+            private_key=private_key,
+            session=session,
+            logger=logger,
+            max_retries=max_retries,
+            retry_delay=retry_delay,
+            proxies=proxies,
+            timeout=timeout,
+        )
+
+    @classmethod
+    async def create(
+        cls,
+        private_key: str | bytes | None = None,
+        logger: LoggerLike | None = None,
+        max_retries: int = 3,
+        retry_delay: int | float = 0.1,
+        proxies: list[str] | None = None,
+        timeout: int = 10,
+    ) -> Self:
+        return cls(
+            session=aiohttp.ClientSession(),
+            private_key=private_key,
+            logger=logger,
+            max_retries=max_retries,
+            retry_delay=retry_delay,
+            proxies=proxies,
+            timeout=timeout,
+        )
+
     @property
     def _client_cls(self) -> type[Client]:
         return Client
 
     async def tickers(self, only_usdt: bool = True) -> list[str]:
-        raise NotSupported("Spot market data is not supported for Aster")
+        raw_data = await self._client.ticker_price()
+        return Adapter.tickers(raw_data=raw_data, only_usdt=only_usdt)  # type: ignore[arg-type] | raw_data is list[dict] if symbol param is not omitted
 
     async def futures_tickers(self, only_usdt: bool = True) -> list[str]:
         raw_data = await self._client.futures_ticker_price()
         return Adapter.tickers(raw_data=raw_data, only_usdt=only_usdt)  # type: ignore[arg-type] | raw_data is list[dict] if symbol param is not omitted
 
     async def last_price(self) -> dict[str, float]:
-        raise NotSupported("Spot market data is not supported for Aster")
+        raw_data = await self._client.ticker_price()
+        return Adapter.last_price(raw_data)  # type: ignore[arg-type] | raw_data is list[dict] if symbol param is not omitted
 
     async def futures_last_price(self) -> dict[str, float]:
         raw_data = await self._client.futures_ticker_price()
         return Adapter.last_price(raw_data)  # type: ignore[arg-type] | raw_data is list[dict] if symbol param is not omitted
 
     async def ticker_24hr(self) -> TickerDailyDict:
-        raise NotSupported("Spot market data is not supported for Aster")
+        raw_data = await self._client.ticker_24hr()
+        return Adapter.ticker_24hr(raw_data=raw_data)  # type: ignore[arg-type] | raw_data is list[dict] if symbol param is not omitted
 
     async def futures_ticker_24hr(self) -> TickerDailyDict:
         raw_data = await self._client.futures_ticker_24hr()
@@ -61,7 +118,19 @@ class UniClient(IUniClient[Client]):
         start_time: int | None = None,
         end_time: int | None = None,
     ) -> list[KlineDict]:
-        raise NotSupported("Spot market data is not supported for Aster")
+        interval = (
+            interval.to_exchange_format(Exchange.ASTER)
+            if isinstance(interval, Timeframe)
+            else interval
+        )
+        raw_data = await self._client.klines(
+            symbol=symbol,
+            interval=interval,
+            limit=limit,
+            start_time=start_time,
+            end_time=end_time,
+        )
+        return Adapter.klines(raw_data=raw_data, symbol=symbol)
 
     async def futures_klines(
         self,

@@ -6,7 +6,6 @@ from typing import Any
 from unicex._abc import IUniWebsocketManager
 from unicex._base import Websocket
 from unicex.enums import Exchange, Timeframe
-from unicex.exceptions import NotSupported
 from unicex.types import LoggerLike
 from unicex.utils import validate_allowed_kwargs
 
@@ -45,7 +44,13 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        raise NotSupported("Spot market data is not supported for Aster")
+        wrapper = self._make_wrapper(self._adapter.Klines_message, callback)
+        return self._websocket_manager.klines(
+            callback=wrapper,
+            symbol=symbol,
+            symbols=symbols,
+            interval=timeframe.to_exchange_format(Exchange.ASTER),
+        )
 
     def futures_klines(
         self,
@@ -68,7 +73,8 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        raise NotSupported("Spot market data is not supported for Aster")
+        wrapper = self._make_wrapper(self._adapter.trades_message, callback)
+        return self._websocket_manager.trade(callback=wrapper, symbol=symbol, symbols=symbols)
 
     def aggtrades(
         self,
@@ -76,7 +82,8 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
     ) -> Websocket:
-        raise NotSupported("Spot market data is not supported for Aster")
+        wrapper = self._make_wrapper(self._adapter.trades_message, callback)
+        return self._websocket_manager.agg_trade(callback=wrapper, symbol=symbol, symbols=symbols)
 
     def futures_trades(
         self,

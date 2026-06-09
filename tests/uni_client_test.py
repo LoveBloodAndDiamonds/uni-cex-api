@@ -39,15 +39,15 @@ test_all_timeframes = False
 
 # Какие биржи тестировать
 exchanges = [
-    Exchange.HYPERLIQUID,
-    Exchange.MEXC,
-    Exchange.BYBIT,
-    Exchange.BINANCE,
-    Exchange.BITGET,
-    Exchange.OKX,
-    Exchange.GATE,
-    Exchange.KUCOIN,
-    Exchange.BINGX,
+    # Exchange.HYPERLIQUID,
+    # Exchange.MEXC,
+    # Exchange.BYBIT,
+    # Exchange.BINANCE,
+    # Exchange.BITGET,
+    # Exchange.OKX,
+    # Exchange.GATE,
+    # Exchange.KUCOIN,
+    # Exchange.BINGX,
     Exchange.ASTER,
 ]
 
