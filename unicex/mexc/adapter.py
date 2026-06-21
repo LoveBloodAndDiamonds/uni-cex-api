@@ -136,6 +136,8 @@ class Adapter:
         volumes = data["vol"]
         amounts = data["amount"]
 
+        contract_size = Adapter._get_contract_size(symbol)
+
         klines: list[KlineDict] = []
 
         for kline_time, open_, high, low, close, volume, amount in zip(
@@ -160,7 +162,7 @@ class Adapter:
                     h=float(high),
                     l=float(low),
                     c=float(close),
-                    v=float(volume),
+                    v=float(volume) * contract_size,
                     q=float(amount),
                     T=None,
                     x=None,
