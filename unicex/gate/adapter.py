@@ -116,6 +116,7 @@ class Adapter:
 
     @staticmethod
     def futures_klines(raw_data: list[dict], symbol: str) -> list[KlineDict]:
+        contract_size = Adapter._get_contract_size(symbol)
         return [
             KlineDict(
                 s=symbol,
@@ -124,7 +125,7 @@ class Adapter:
                 h=float(kline["h"]),
                 l=float(kline["l"]),
                 c=float(kline["c"]),
-                v=float(kline["v"]),
+                v=float(kline["v"]) * contract_size,
                 q=float(kline["sum"]),  # "sum" = объем в $ (quote volume)
                 T=None,
                 x=None,
