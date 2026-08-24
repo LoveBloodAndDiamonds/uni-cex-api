@@ -154,6 +154,8 @@ class Adapter:
                 A=float(item["askSz"]),
             )
             for item in raw_data["data"]
+            # Bitget отдает null в полях стакана для контрактов без заявок - пропускаем их
+            if all(item[key] is not None for key in ("bidPr", "bidSz", "askPr", "askSz"))
         }
 
     @staticmethod
