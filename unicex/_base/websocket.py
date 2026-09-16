@@ -193,7 +193,7 @@ class Websocket:
 
         # Запускаем healthcheck
         if self._no_message_reconnect_timeout:
-            self._tasks.append(asyncio.create_task(self._healthcheck_task()))
+            self._tasks.append(asyncio.create_task(self._healthcheck_task(conn)))
 
         # Запускаем воркеров
         for _ in range(self._worker_count):
@@ -267,17 +267,23 @@ class Websocket:
                 return
             await asyncio.sleep(self._ping_interval)
 
-    async def _healthcheck_task(self) -> None:
-        """Следит за таймаутом получения сообщений."""
+    async def _healthcheck_task(self, conn: ClientConnection) -> None:
+        """Следит за таймаутом получения сообщений и закрывает зависшее соединение."""
         if not self._no_message_reconnect_timeout:
             return
 
         while self._running:
             if time.monotonic() - self._last_message_time > self._no_message_reconnect_timeout:
                 self._logger.error(
-                    f"No messages in {self._no_message_reconnect_timeout} seconds, restarting... Was connected to {self._url} with args {self._subscription_messages}"
+                    f"No messages in {self._no_message_reconnect_timeout} seconds, reconnecting... Was connected to {self._url} with args {self._subscription_messages}"
                 )
-                await self.restart()
+
+                # Закрываем зависшее соединение вместо self.restart().
+                # recv() в _connect получит ConnectionClosed, отработает ветка finally,
+                # и цикл `async for` сам поднимет новое соединение.
+                # Вызов restart() здесь приводил к дублю: старый _connect продолжал
+                # висеть на recv(), а start() открывал вторую подписку поверх него.
+                await conn.close()
                 return
             await asyncio.sleep(1)
 
