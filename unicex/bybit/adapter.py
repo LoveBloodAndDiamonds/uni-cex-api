@@ -279,7 +279,8 @@ class Adapter:
             LiquidationDict(
                 t=liquidation["T"],
                 s=liquidation["s"],
-                S="SHORT" if str(liquidation["S"]) == "buy" else "LONG",
+                # У Bybit "S" — сторона позиции, а не ордера: "Buy" значит, что ликвидирован лонг
+                S="LONG" if str(liquidation["S"]) == "Buy" else "SHORT",
                 v=float(liquidation["v"]),
                 p=float(liquidation["p"]),
             )
