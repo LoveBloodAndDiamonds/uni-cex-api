@@ -23,6 +23,16 @@ from unicex.types import (
 from .adapter import Adapter
 from .client import Client
 
+_LONG_SHORT_PERIODS: dict[str, str] = {
+    "5m": "5m",
+    "15m": "15m",
+    "30m": "30m",
+    "1h": "1h",
+    "4h": "4h",
+    "1d": "1Dutc",
+}
+"""Маппинг унифицированного периода соотношения лонгов и шортов в формат Bitget."""
+
 
 class UniClient(IUniClient[Client]):
     """Унифицированный клиент для работы с Bitget API."""
@@ -173,7 +183,22 @@ class UniClient(IUniClient[Client]):
     async def long_short_ratio_history(
         self, symbol: str, period: LongShortPeriod = "5m", limit: int = 30
     ) -> list[LongShortRatioItem]:
-        raise NotImplementedError("Method will be implemented later.")
+        """История соотношения лонгов и шортов по всем аккаунтам (`account-long-short`).
+
+        Лимит: 1 запрос в секунду с одного IP. Эндпоинт не принимает `limit` и всегда
+        отдаёт последние 30 точек, поэтому больше 30 точек получить нельзя.
+        """
+        bitget_period = _LONG_SHORT_PERIODS.get(period)
+        if bitget_period is None:
+            raise ValueError(
+                f"Invalid period for bitget long/short ratio: {period}. "
+                f"Valid values: {list(_LONG_SHORT_PERIODS)}"
+            )
+        raw_data = await self._client.futures_account_long_short(
+            symbol=symbol, period=bitget_period
+        )
+        adapted_data = Adapter.long_short_ratio(raw_data)
+        return adapted_data[-limit:] if limit > 0 else []
 
     @overload
     async def futures_best_bid_ask(self, symbol: str) -> BestBidAskItem: ...

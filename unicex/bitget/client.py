@@ -1313,6 +1313,23 @@ class Client(BaseClient):
         }
         return await self._make_request("GET", "/api/v2/mix/market/open-interest", params=params)
 
+    async def futures_account_long_short(
+        self,
+        symbol: str,
+        period: str | None = None,
+    ) -> dict:
+        """Получить соотношение лонгов и шортов по аккаунтам.
+
+        https://www.bitget.com/api-doc/common/apidata/Account-Long-Short
+        """
+        params = {
+            "symbol": symbol,
+            "period": period,
+        }
+        return await self._make_request(
+            "GET", "/api/v2/mix/market/account-long-short", params=params
+        )
+
     async def futures_get_next_funding_time(
         self,
         symbol: str,
