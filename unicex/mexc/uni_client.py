@@ -13,6 +13,8 @@ from unicex.types import (
     FundingInfoDict,
     FundingInfoItem,
     KlineDict,
+    LongShortPeriod,
+    LongShortRatioItem,
     OpenInterestDict,
     OpenInterestItem,
     OrderIdDict,
@@ -163,6 +165,14 @@ class UniClient(IUniClient[Client]):
         if symbol:
             return adapted_data[symbol]
         return adapted_data
+
+    async def long_short_ratio_history(
+        self, symbol: str, period: LongShortPeriod = "5m", limit: int = 30
+    ) -> list[LongShortRatioItem]:
+        raise NotImplementedError(
+            "Method `long_short_ratio_history` cannot be implemented for Mexc: "
+            "public futures API has no long/short account ratio endpoint."
+        )
 
     @overload
     async def futures_best_bid_ask(self, symbol: str) -> BestBidAskItem: ...

@@ -14,6 +14,8 @@ from unicex.types import (
     FundingInfoDict,
     FundingInfoItem,
     KlineDict,
+    LongShortPeriod,
+    LongShortRatioItem,
     OpenInterestItem,
     OrderIdDict,
     PositionInfoDict,
@@ -169,6 +171,11 @@ class UniClient(IUniClient[Client]):
             raise ValueError("Symbol is required for binance open interest")
         raw_data = await self._client.open_interest(symbol=symbol)
         return Adapter.open_interest(raw_data)
+
+    async def long_short_ratio_history(
+        self, symbol: str, period: LongShortPeriod = "5m", limit: int = 30
+    ) -> list[LongShortRatioItem]:
+        raise NotImplementedError("Method will be implemented later.")
 
     @overload
     async def futures_best_bid_ask(self, symbol: str) -> BestBidAskItem: ...

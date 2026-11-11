@@ -11,6 +11,8 @@ from unicex.types import (
     FundingInfoDict,
     FundingInfoItem,
     KlineDict,
+    LongShortPeriod,
+    LongShortRatioItem,
     OpenInterestDict,
     OpenInterestItem,
     OrderIdDict,
@@ -167,6 +169,11 @@ class UniClient(IUniClient[Client]):
         raw_data = await self._client.futures_get_all_tickers("USDT-FUTURES")
         adapted_data = Adapter.open_interest(raw_data)
         return adapted_data[symbol] if symbol else adapted_data
+
+    async def long_short_ratio_history(
+        self, symbol: str, period: LongShortPeriod = "5m", limit: int = 30
+    ) -> list[LongShortRatioItem]:
+        raise NotImplementedError("Method will be implemented later.")
 
     @overload
     async def futures_best_bid_ask(self, symbol: str) -> BestBidAskItem: ...

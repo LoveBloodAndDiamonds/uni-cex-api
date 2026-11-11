@@ -12,6 +12,8 @@ from unicex.types import (
     FundingInfoDict,
     FundingInfoItem,
     KlineDict,
+    LongShortPeriod,
+    LongShortRatioItem,
     OpenInterestDict,
     OpenInterestItem,
     OrderIdDict,
@@ -162,6 +164,14 @@ class UniClient(IUniClient[Client]):
         raw_data = await self._client.open_interest()
         adapted_data = Adapter.open_interest(raw_data)
         return adapted_data[symbol] if symbol else adapted_data
+
+    async def long_short_ratio_history(
+        self, symbol: str, period: LongShortPeriod = "5m", limit: int = 30
+    ) -> list[LongShortRatioItem]:
+        raise NotImplementedError(
+            "Method `long_short_ratio_history` cannot be implemented for Kucoin: "
+            "public futures API has no long/short account ratio endpoint."
+        )
 
     async def futures_best_bid_ask(
         self, symbol: str | None = None

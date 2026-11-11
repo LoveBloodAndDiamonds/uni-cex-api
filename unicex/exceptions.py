@@ -33,6 +33,13 @@ class AdapterError(UniCexException):
 
 
 @dataclass
+class EmptyResponseError(UniCexException):
+    """Исключение, возникающее, когда биржа вернула пустой ответ там, где ожидались данные."""
+
+    pass
+
+
+@dataclass
 class QueueOverflowError(UniCexException):
     """Исключение, возникающее при переполнении очереди сообщений."""
 

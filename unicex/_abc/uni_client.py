@@ -8,7 +8,7 @@ import aiohttp
 
 from unicex._base import BaseClient
 from unicex.enums import MarginType, OrderSide, OrderType, Timeframe
-from unicex.exceptions import NotAuthorized
+from unicex.exceptions import EmptyResponseError, NotAuthorized
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
@@ -17,6 +17,8 @@ from unicex.types import (
     FundingInfoItem,
     KlineDict,
     LoggerLike,
+    LongShortPeriod,
+    LongShortRatioItem,
     OpenInterestDict,
     OpenInterestItem,
     OrderIdDict,
@@ -441,6 +443,55 @@ class IUniClient(ABC, Generic[TClient]):
             `OpenInterestItem | OpenInterestDict`: Если тикер передан - словарь со временем и объемом
                 открытого интереса в монетах. Если нет передан - то словарь, в котором ключ - тикер,
                 а значение - словарь с временем и объемом открытого интереса в монетах.
+        """
+        ...
+
+    async def long_short_ratio(
+        self, symbol: str, period: LongShortPeriod = "5m"
+    ) -> LongShortRatioItem:
+        """Возвращает последнюю доступную точку соотношения лонгов и шортов по аккаунтам.
+
+        Источник — все аккаунты (не топ-трейдеры и не тейкеры), поэтому значения
+        сопоставимы между биржами. Поддерживается на биржах: BINANCE, BYBIT, GATE, OKX, BITGET.
+        На остальных биржах выбрасывается `NotImplementedError`.
+
+        Параметры:
+            symbol (`str`): Название фьючерсного тикера в формате биржи (как в `open_interest`).
+            period (`LongShortPeriod`): Период агрегации: "5m", "15m", "30m", "1h", "4h", "1d".
+
+        Возвращает:
+            `LongShortRatioItem`: Словарь с началом периода в миллисекундах, долями
+                аккаунтов в лонге и шорте (от 0 до 1) и их соотношением.
+
+        Исключения:
+            `EmptyResponseError`: Биржа не вернула ни одной точки.
+        """
+        history = await self.long_short_ratio_history(symbol=symbol, period=period, limit=1)
+        if not history:
+            raise EmptyResponseError(
+                f"{type(self).__module__}: exchange returned no long/short ratio data "
+                f"for symbol={symbol!r}, period={period!r}"
+            )
+        return history[-1]
+
+    @abstractmethod
+    async def long_short_ratio_history(
+        self, symbol: str, period: LongShortPeriod = "5m", limit: int = 30
+    ) -> list[LongShortRatioItem]:
+        """Возвращает историю соотношения лонгов и шортов по аккаунтам.
+
+        Источник — все аккаунты (не топ-трейдеры и не тейкеры), поэтому значения
+        сопоставимы между биржами. Поддерживается на биржах: BINANCE, BYBIT, GATE, OKX, BITGET.
+        На остальных биржах выбрасывается `NotImplementedError`.
+
+        Параметры:
+            symbol (`str`): Название фьючерсного тикера в формате биржи (как в `open_interest`).
+            period (`LongShortPeriod`): Период агрегации: "5m", "15m", "30m", "1h", "4h", "1d".
+            limit (`int`): Количество последних точек. Максимум зависит от биржи:
+                BINANCE и BYBIT — 500, OKX — 100, BITGET — 30.
+
+        Возвращает:
+            `list[LongShortRatioItem]`: Список точек, отсортированный от старых к новым.
         """
         ...
 

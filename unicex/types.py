@@ -20,6 +20,8 @@ __all__ = [
     "PositionInfoDict",
     "FundingInfoItem",
     "FundingInfoDict",
+    "LongShortPeriod",
+    "LongShortRatioItem",
 ]
 
 from logging import Logger as LoggingLogger
@@ -32,6 +34,9 @@ type LoggerLike = LoggingLogger | loguru.Logger
 
 type RequestMethod = Literal["GET", "POST", "PUT", "DELETE", "PATCH"]
 """Типы методов HTTP запросов."""
+
+type LongShortPeriod = Literal["5m", "15m", "30m", "1h", "4h", "1d"]
+"""Период агрегации соотношения лонгов и шортов."""
 
 type NumberLike = str | int | float
 """
@@ -126,6 +131,22 @@ class OpenInterestItem(TypedDict):
 
 type OpenInterestDict = dict[str, OpenInterestItem]
 """Модель открытого интереса."""
+
+
+class LongShortRatioItem(TypedDict):
+    """Соотношение лонгов и шортов по аккаунтам за один период."""
+
+    t: int
+    """Начало периода. В миллисекундах."""
+
+    long: float
+    """Доля аккаунтов в лонге, от 0 до 1."""
+
+    short: float
+    """Доля аккаунтов в шорте, от 0 до 1."""
+
+    ratio: float
+    """Соотношение лонгов к шортам: long / short."""
 
 
 class LiquidationDict(TypedDict):
