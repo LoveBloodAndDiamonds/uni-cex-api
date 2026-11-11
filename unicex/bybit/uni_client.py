@@ -26,6 +26,16 @@ from unicex.types import (
 from .adapter import Adapter
 from .client import Client
 
+_LONG_SHORT_PERIODS: dict[str, str] = {
+    "5m": "5min",
+    "15m": "15min",
+    "30m": "30min",
+    "1h": "1h",
+    "4h": "4h",
+    "1d": "1d",
+}
+"""Маппинг унифицированного периода соотношения лонгов и шортов в формат Bybit."""
+
 
 class UniClient(IUniClient[Client]):
     """Унифицированный клиент для работы с Bybit API."""
@@ -175,7 +185,21 @@ class UniClient(IUniClient[Client]):
     async def long_short_ratio_history(
         self, symbol: str, period: LongShortPeriod = "5m", limit: int = 30
     ) -> list[LongShortRatioItem]:
-        raise NotImplementedError("Method will be implemented later.")
+        """История соотношения лонгов и шортов по всем аккаунтам (`/v5/market/account-ratio`).
+
+        Лимит: общий IP-лимит публичных эндпоинтов Bybit — 600 запросов за 5 секунд.
+        `limit` до 500. Bybit отдаёт точки от новых к старым, адаптер разворачивает порядок.
+        """
+        bybit_period = _LONG_SHORT_PERIODS.get(period)
+        if bybit_period is None:
+            raise ValueError(
+                f"Invalid period for bybit long/short ratio: {period}. "
+                f"Valid values: {list(_LONG_SHORT_PERIODS)}"
+            )
+        raw_data = await self._client.long_short_ratio(
+            category="linear", symbol=symbol, period=bybit_period, limit=limit
+        )
+        return Adapter.long_short_ratio(raw_data)
 
     @overload
     async def futures_best_bid_ask(self, symbol: str) -> BestBidAskItem: ...
