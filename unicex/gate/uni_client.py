@@ -28,6 +28,16 @@ from .adapter import Adapter
 from .client import Client
 from .exchange_info import ExchangeInfo
 
+_LONG_SHORT_PERIODS: dict[str, str] = {
+    "5m": "5m",
+    "15m": "15m",
+    "30m": "30m",
+    "1h": "1h",
+    "4h": "4h",
+    "1d": "1d",
+}
+"""Маппинг унифицированного периода соотношения лонгов и шортов в формат Gate."""
+
 
 class UniClient(IUniClient[Client]):
     """Унифицированный клиент для работы с Gateio API."""
@@ -177,7 +187,26 @@ class UniClient(IUniClient[Client]):
     async def long_short_ratio_history(
         self, symbol: str, period: LongShortPeriod = "5m", limit: int = 30
     ) -> list[LongShortRatioItem]:
-        raise NotImplementedError("Method will be implemented later.")
+        """История соотношения лонгов и шортов по всем аккаунтам (`contract_stats`).
+
+        Доли считаются из `long_users` и `short_users`, `ratio` — поле `lsr_account`.
+        Лимит: 200 запросов за 10 секунд с одного IP на публичный эндпоинт.
+        """
+        gate_period = _LONG_SHORT_PERIODS.get(period)
+        if gate_period is None:
+            raise ValueError(
+                f"Invalid period for gate long/short ratio: {period}. "
+                f"Valid values: {list(_LONG_SHORT_PERIODS)}"
+            )
+        if limit <= 0:
+            return []
+        # Gate отдает точки за окно `limit * period` от текущего момента, поэтому сразу после
+        # границы периода, пока новая точка не опубликована, приходит на одну точку меньше.
+        raw_data = await self._client.futures_contract_stats(
+            settle="usdt", contract=symbol, interval=gate_period, limit=limit + 1
+        )
+        adapted_data = Adapter.long_short_ratio(raw_data)  # type: ignore[reportArgumentType]
+        return adapted_data[-limit:]
 
     @overload
     async def futures_best_bid_ask(self, symbol: str) -> BestBidAskItem: ...
