@@ -21,18 +21,18 @@
 
 ### 2) Унифицированный слой
 
-| Exchange | UniClient (20) | UniWebsocketManager (8) |
-|---|---|---|
-| **Aster** | 20/20 🟢 | 8/8 🟢 |
-| **Binance** | 20/20 🟢 | 8/8 🟢 |
-| **Bitget** | 20/20 🟢 | 8/8 🟢 |
-| **Bybit** | 20/20 🟢 | 8/8 🟢 |
-| **Gateio** | 20/20 🟢 | 8/8 🟢 |
-| **Hyperliquid** | 11/20 🟡 | 8/8 🟢 |
-| **Mexc** | 12/20 🟡 | 6/8 🟡 |
-| **Okx** | 16/20 🟡 | 8/8 🟢 |
-| **Kucoin** | 11/20 🟡 | 0/8 🔴 |
-| **BingX** | 11/20 🟡 | 4/8 🟡 |
+| Exchange | UniClient (22) | UniWebsocketManager (8) | Long/Short ratio |
+|---|---|---|---|
+| **Aster** | 20/22 🟡 | 8/8 🟢 | 🔴 |
+| **Binance** | 22/22 🟢 | 8/8 🟢 | 🟢 |
+| **Bitget** | 22/22 🟢 | 8/8 🟢 | 🟢 |
+| **Bybit** | 22/22 🟢 | 8/8 🟢 | 🟢 |
+| **Gateio** | 22/22 🟢 | 8/8 🟢 | 🟢 |
+| **Hyperliquid** | 11/22 🟡 | 8/8 🟢 | 🔴 |
+| **Mexc** | 12/22 🟡 | 6/8 🟡 | 🔴 |
+| **Okx** | 18/22 🟡 | 8/8 🟢 | 🟢 |
+| **Kucoin** | 11/22 🟡 | 0/8 🔴 | 🔴 |
+| **BingX** | 11/22 🟡 | 4/8 🟡 | 🔴 |
 
 
 **Расшифровка колонок (1 таблица):**
@@ -45,8 +45,9 @@
 
 **Расшифровка колонок (2 таблица):**
 
-- **UniClient (19)** - Количество реализованных методов из интерфейса `IUniClient`.
+- **UniClient (22)** - Количество реализованных методов из интерфейса `IUniClient`.
 - **UniWebsocketManager (8)** - Количество реализованных методов из интерфейса `IUniWebsocketManager`.
+- **Long/Short ratio** - Поддержка `long_short_ratio` и `long_short_ratio_history` (соотношение лонгов и шортов по всем аккаунтам). 🔴 - у биржи нет такого публичного эндпоинта, метод бросает `NotImplementedError`.
 ---
 
 ## 🚀 Быстрый старт
@@ -94,6 +95,7 @@ async def main() -> None:
     await client.klines("BTCUSDT", Timeframe.MIN_5)  # свечи спота
     await client.futures_klines("BTCUSDT", Timeframe.HOUR_1)  # свечи фьючерсов
     await client.funding_rate()  # ставка финансирования
+    await client.long_short_ratio("BTCUSDT")  # доля лонгов/шортов по аккаунтам (futures)
 
 
 if __name__ == "__main__":
