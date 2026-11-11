@@ -12,6 +12,7 @@ from unicex.types import (
     FundingInfoItem,
     KlineDict,
     LiquidationDict,
+    LongShortRatioItem,
     OpenInterestItem,
     OrderIdDict,
     PositionInfoDict,
@@ -142,6 +143,26 @@ class Adapter:
             v=float(raw_data["openInterest"]),
             u="coins",
         )
+
+    @staticmethod
+    def long_short_ratio(raw_data: list[dict]) -> list[LongShortRatioItem]:
+        result: list[LongShortRatioItem] = []
+        for item in raw_data:
+            try:
+                long = float(item["longAccount"])
+                short = float(item["shortAccount"])
+                result.append(
+                    LongShortRatioItem(
+                        t=int(item["timestamp"]),
+                        long=long,
+                        short=short,
+                        ratio=float(item["longShortRatio"]) if short else float("inf"),
+                    )
+                )
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        result.sort(key=lambda x: x["t"])
+        return result
 
     @staticmethod
     def futures_best_bid_ask(raw_data: list[dict]) -> BestBidAskDict:

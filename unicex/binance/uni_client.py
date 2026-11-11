@@ -25,6 +25,16 @@ from unicex.types import (
 from .adapter import Adapter
 from .client import Client
 
+_LONG_SHORT_PERIODS: dict[str, str] = {
+    "5m": "5m",
+    "15m": "15m",
+    "30m": "30m",
+    "1h": "1h",
+    "4h": "4h",
+    "1d": "1d",
+}
+"""Маппинг унифицированного периода соотношения лонгов и шортов в формат Binance."""
+
 
 class UniClient(IUniClient[Client]):
     """Унифицированный клиент для работы с Binance API."""
@@ -175,7 +185,21 @@ class UniClient(IUniClient[Client]):
     async def long_short_ratio_history(
         self, symbol: str, period: LongShortPeriod = "5m", limit: int = 30
     ) -> list[LongShortRatioItem]:
-        raise NotImplementedError("Method will be implemented later.")
+        """История соотношения лонгов и шортов по всем аккаунтам (`globalLongShortAccountRatio`).
+
+        Лимит: 1000 запросов за 5 минут с одного IP на эндпоинты `/futures/data/*`.
+        Данные обновляются раз в 5 минут, доступны только за последние 30 дней, `limit` до 500.
+        """
+        binance_period = _LONG_SHORT_PERIODS.get(period)
+        if binance_period is None:
+            raise ValueError(
+                f"Invalid period for binance long/short ratio: {period}. "
+                f"Valid values: {list(_LONG_SHORT_PERIODS)}"
+            )
+        raw_data = await self._client.futures_global_long_short_ratio(
+            symbol=symbol, period=binance_period, limit=limit
+        )
+        return Adapter.long_short_ratio(raw_data)
 
     @overload
     async def futures_best_bid_ask(self, symbol: str) -> BestBidAskItem: ...
