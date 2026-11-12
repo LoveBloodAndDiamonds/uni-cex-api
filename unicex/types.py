@@ -20,7 +20,6 @@ __all__ = [
     "PositionInfoDict",
     "FundingInfoItem",
     "FundingInfoDict",
-    "LongShortPeriod",
     "LongShortRatioItem",
 ]
 
@@ -34,9 +33,6 @@ type LoggerLike = LoggingLogger | loguru.Logger
 
 type RequestMethod = Literal["GET", "POST", "PUT", "DELETE", "PATCH"]
 """Типы методов HTTP запросов."""
-
-type LongShortPeriod = Literal["5m", "15m", "30m", "1h", "4h", "1d"]
-"""Период агрегации соотношения лонгов и шортов."""
 
 type NumberLike = str | int | float
 """

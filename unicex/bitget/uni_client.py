@@ -11,7 +11,6 @@ from unicex.types import (
     FundingInfoDict,
     FundingInfoItem,
     KlineDict,
-    LongShortPeriod,
     LongShortRatioItem,
     OpenInterestDict,
     OpenInterestItem,
@@ -19,19 +18,10 @@ from unicex.types import (
     PositionInfoDict,
     TickerDailyDict,
 )
+from unicex.utils import validate_long_short_period
 
 from .adapter import Adapter
 from .client import Client
-
-_LONG_SHORT_PERIODS: dict[str, str] = {
-    "5m": "5m",
-    "15m": "15m",
-    "30m": "30m",
-    "1h": "1h",
-    "4h": "4h",
-    "1d": "1Dutc",
-}
-"""Маппинг унифицированного периода соотношения лонгов и шортов в формат Bitget."""
 
 
 class UniClient(IUniClient[Client]):
@@ -181,19 +171,16 @@ class UniClient(IUniClient[Client]):
         return adapted_data[symbol] if symbol else adapted_data
 
     async def long_short_ratio_history(
-        self, symbol: str, period: LongShortPeriod = "5m", limit: int = 30
+        self, symbol: str, period: Timeframe = Timeframe.MIN_5, limit: int = 30
     ) -> list[LongShortRatioItem]:
         """История соотношения лонгов и шортов по всем аккаунтам (`account-long-short`).
 
         Лимит: 1 запрос в секунду с одного IP. Эндпоинт не принимает `limit` и всегда
         отдаёт последние 30 точек, поэтому больше 30 точек получить нельзя.
         """
-        bitget_period = _LONG_SHORT_PERIODS.get(period)
-        if bitget_period is None:
-            raise ValueError(
-                f"Invalid period for bitget long/short ratio: {period}. "
-                f"Valid values: {list(_LONG_SHORT_PERIODS)}"
-            )
+        validate_long_short_period(period)
+        # "1d" и "1D" Bitget не принимает, дневной период по UTC - "1Dutc"
+        bitget_period = {Timeframe.DAY_1: "1Dutc"}.get(period, period.value)
         raw_data = await self._client.futures_account_long_short(
             symbol=symbol, period=bitget_period
         )

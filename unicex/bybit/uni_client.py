@@ -14,7 +14,6 @@ from unicex.types import (
     FundingInfoDict,
     FundingInfoItem,
     KlineDict,
-    LongShortPeriod,
     LongShortRatioItem,
     OpenInterestDict,
     OpenInterestItem,
@@ -22,19 +21,10 @@ from unicex.types import (
     PositionInfoDict,
     TickerDailyDict,
 )
+from unicex.utils import validate_long_short_period
 
 from .adapter import Adapter
 from .client import Client
-
-_LONG_SHORT_PERIODS: dict[str, str] = {
-    "5m": "5min",
-    "15m": "15min",
-    "30m": "30min",
-    "1h": "1h",
-    "4h": "4h",
-    "1d": "1d",
-}
-"""Маппинг унифицированного периода соотношения лонгов и шортов в формат Bybit."""
 
 
 class UniClient(IUniClient[Client]):
@@ -183,19 +173,19 @@ class UniClient(IUniClient[Client]):
         return adapted_data[symbol] if symbol else adapted_data
 
     async def long_short_ratio_history(
-        self, symbol: str, period: LongShortPeriod = "5m", limit: int = 30
+        self, symbol: str, period: Timeframe = Timeframe.MIN_5, limit: int = 30
     ) -> list[LongShortRatioItem]:
         """История соотношения лонгов и шортов по всем аккаунтам (`/v5/market/account-ratio`).
 
         Лимит: общий IP-лимит публичных эндпоинтов Bybit — 600 запросов за 5 секунд.
         `limit` до 500. Bybit отдаёт точки от новых к старым, адаптер разворачивает порядок.
         """
-        bybit_period = _LONG_SHORT_PERIODS.get(period)
-        if bybit_period is None:
-            raise ValueError(
-                f"Invalid period for bybit long/short ratio: {period}. "
-                f"Valid values: {list(_LONG_SHORT_PERIODS)}"
-            )
+        validate_long_short_period(period)
+        bybit_period = {
+            Timeframe.MIN_5: "5min",
+            Timeframe.MIN_15: "15min",
+            Timeframe.MIN_30: "30min",
+        }.get(period, period.value)
         raw_data = await self._client.long_short_ratio(
             category="linear", symbol=symbol, period=bybit_period, limit=limit
         )

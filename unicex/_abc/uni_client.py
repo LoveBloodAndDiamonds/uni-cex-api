@@ -17,7 +17,6 @@ from unicex.types import (
     FundingInfoItem,
     KlineDict,
     LoggerLike,
-    LongShortPeriod,
     LongShortRatioItem,
     OpenInterestDict,
     OpenInterestItem,
@@ -447,7 +446,7 @@ class IUniClient(ABC, Generic[TClient]):
         ...
 
     async def long_short_ratio(
-        self, symbol: str, period: LongShortPeriod = "5m"
+        self, symbol: str, period: Timeframe = Timeframe.MIN_5
     ) -> LongShortRatioItem:
         """Возвращает последнюю доступную точку соотношения лонгов и шортов по аккаунтам.
 
@@ -457,7 +456,7 @@ class IUniClient(ABC, Generic[TClient]):
 
         Параметры:
             symbol (`str`): Название фьючерсного тикера в формате биржи (как в `open_interest`).
-            period (`LongShortPeriod`): Период агрегации: "5m", "15m", "30m", "1h", "4h", "1d".
+            period (`Timeframe`): Период агрегации: MIN_5, MIN_15, MIN_30, HOUR_1, HOUR_4, DAY_1.
 
         Возвращает:
             `LongShortRatioItem`: Словарь с началом периода в миллисекундах, долями
@@ -476,7 +475,7 @@ class IUniClient(ABC, Generic[TClient]):
 
     @abstractmethod
     async def long_short_ratio_history(
-        self, symbol: str, period: LongShortPeriod = "5m", limit: int = 30
+        self, symbol: str, period: Timeframe = Timeframe.MIN_5, limit: int = 30
     ) -> list[LongShortRatioItem]:
         """Возвращает историю соотношения лонгов и шортов по аккаунтам.
 
@@ -486,7 +485,7 @@ class IUniClient(ABC, Generic[TClient]):
 
         Параметры:
             symbol (`str`): Название фьючерсного тикера в формате биржи (как в `open_interest`).
-            period (`LongShortPeriod`): Период агрегации: "5m", "15m", "30m", "1h", "4h", "1d".
+            period (`Timeframe`): Период агрегации: MIN_5, MIN_15, MIN_30, HOUR_1, HOUR_4, DAY_1.
             limit (`int`): Количество последних точек. Максимум зависит от биржи:
                 BINANCE и BYBIT — 500, OKX — 100, BITGET — 30.
 

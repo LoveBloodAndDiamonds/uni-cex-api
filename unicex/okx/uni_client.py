@@ -13,7 +13,6 @@ from unicex.types import (
     FundingInfoDict,
     FundingInfoItem,
     KlineDict,
-    LongShortPeriod,
     LongShortRatioItem,
     OpenInterestDict,
     OpenInterestItem,
@@ -21,19 +20,10 @@ from unicex.types import (
     PositionInfoDict,
     TickerDailyDict,
 )
+from unicex.utils import validate_long_short_period
 
 from .adapter import Adapter
 from .client import Client
-
-_LONG_SHORT_PERIODS: dict[str, str] = {
-    "5m": "5m",
-    "15m": "15m",
-    "30m": "30m",
-    "1h": "1H",
-    "4h": "4H",
-    "1d": "1Dutc",  # "1D" выравнивается по UTC+8, "1Dutc" - по UTC, как на других биржах
-}
-"""Маппинг унифицированного периода соотношения лонгов и шортов в формат OKX."""
 
 
 class UniClient(IUniClient[Client]):
@@ -171,19 +161,20 @@ class UniClient(IUniClient[Client]):
         return adapted_data
 
     async def long_short_ratio_history(
-        self, symbol: str, period: LongShortPeriod = "5m", limit: int = 30
+        self, symbol: str, period: Timeframe = Timeframe.MIN_5, limit: int = 30
     ) -> list[LongShortRatioItem]:
         """История соотношения лонгов и шортов по всем аккаунтам для контракта (`rubik/stat`).
 
         OKX отдаёт только соотношение, доли `long` и `short` вычисляются из него.
         Лимит: 5 запросов за 2 секунды с одного IP. `limit` до 100.
         """
-        okx_period = _LONG_SHORT_PERIODS.get(period)
-        if okx_period is None:
-            raise ValueError(
-                f"Invalid period for okx long/short ratio: {period}. "
-                f"Valid values: {list(_LONG_SHORT_PERIODS)}"
-            )
+        validate_long_short_period(period)
+        # "1D" на OKX считается по UTC+8, "1Dutc" - по UTC, как на других биржах
+        okx_period = {
+            Timeframe.HOUR_1: "1H",
+            Timeframe.HOUR_4: "4H",
+            Timeframe.DAY_1: "1Dutc",
+        }.get(period, period.value)
         raw_data = await self._client.get_long_short_account_ratio_contract(
             inst_id=symbol, period=okx_period, limit=limit
         )

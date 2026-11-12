@@ -12,7 +12,6 @@ from unicex.types import (
     FundingInfoDict,
     FundingInfoItem,
     KlineDict,
-    LongShortPeriod,
     LongShortRatioItem,
     OpenInterestDict,
     OpenInterestItem,
@@ -149,7 +148,7 @@ class UniClient(IUniClient[Client]):
         return Adapter.open_interest(raw_data)
 
     async def long_short_ratio_history(
-        self, symbol: str, period: LongShortPeriod = "5m", limit: int = 30
+        self, symbol: str, period: Timeframe = Timeframe.MIN_5, limit: int = 30
     ) -> list[LongShortRatioItem]:
         raise NotImplementedError(
             "Method `long_short_ratio_history` cannot be implemented for BingX: "
