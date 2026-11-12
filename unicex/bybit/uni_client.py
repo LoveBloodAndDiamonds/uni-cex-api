@@ -14,12 +14,14 @@ from unicex.types import (
     FundingInfoDict,
     FundingInfoItem,
     KlineDict,
+    LongShortRatioItem,
     OpenInterestDict,
     OpenInterestItem,
     OrderIdDict,
     PositionInfoDict,
     TickerDailyDict,
 )
+from unicex.utils import validate_long_short_period
 
 from .adapter import Adapter
 from .client import Client
@@ -169,6 +171,25 @@ class UniClient(IUniClient[Client]):
         raw_data = await self._client.tickers("linear")
         adapted_data = Adapter.open_interest(raw_data)
         return adapted_data[symbol] if symbol else adapted_data
+
+    async def long_short_ratio_history(
+        self, symbol: str, period: Timeframe = Timeframe.MIN_5, limit: int = 30
+    ) -> list[LongShortRatioItem]:
+        """История соотношения лонгов и шортов по всем аккаунтам (`/v5/market/account-ratio`).
+
+        Лимит: общий IP-лимит публичных эндпоинтов Bybit — 600 запросов за 5 секунд.
+        `limit` до 500. Bybit отдаёт точки от новых к старым, адаптер разворачивает порядок.
+        """
+        validate_long_short_period(period)
+        bybit_period = {
+            Timeframe.MIN_5: "5min",
+            Timeframe.MIN_15: "15min",
+            Timeframe.MIN_30: "30min",
+        }.get(period, period.value)
+        raw_data = await self._client.long_short_ratio(
+            category="linear", symbol=symbol, period=bybit_period, limit=limit
+        )
+        return Adapter.long_short_ratio(raw_data)
 
     @overload
     async def futures_best_bid_ask(self, symbol: str) -> BestBidAskItem: ...

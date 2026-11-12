@@ -20,6 +20,7 @@ __all__ = [
     "PositionInfoDict",
     "FundingInfoItem",
     "FundingInfoDict",
+    "LongShortRatioItem",
 ]
 
 from logging import Logger as LoggingLogger
@@ -126,6 +127,22 @@ class OpenInterestItem(TypedDict):
 
 type OpenInterestDict = dict[str, OpenInterestItem]
 """Модель открытого интереса."""
+
+
+class LongShortRatioItem(TypedDict):
+    """Соотношение лонгов и шортов по аккаунтам за один период."""
+
+    t: int
+    """Начало периода. В миллисекундах."""
+
+    long: float
+    """Доля аккаунтов в лонге, от 0 до 1."""
+
+    short: float
+    """Доля аккаунтов в шорте, от 0 до 1."""
+
+    ratio: float
+    """Соотношение лонгов к шортам: long / short."""
 
 
 class LiquidationDict(TypedDict):

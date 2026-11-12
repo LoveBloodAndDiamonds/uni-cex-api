@@ -1,5 +1,7 @@
 from typing import Any
 
+from loguru import logger
+
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
@@ -7,6 +9,7 @@ from unicex.types import (
     FundingInfoDict,
     FundingInfoItem,
     KlineDict,
+    LongShortRatioItem,
     OpenInterestDict,
     OpenInterestItem,
     OrderIdDict,
@@ -140,6 +143,26 @@ class Adapter:
             )
             for i in raw_data["data"]
         }
+
+    @staticmethod
+    def long_short_ratio(raw_data: dict) -> list[LongShortRatioItem]:
+        result: list[LongShortRatioItem] = []
+        for item in raw_data["data"]:
+            try:
+                long = float(item["longAccountRatio"])
+                short = float(item["shortAccountRatio"])
+                result.append(
+                    LongShortRatioItem(
+                        t=int(item["ts"]),
+                        long=long,
+                        short=short,
+                        ratio=float(item["longShortAccountRatio"]) if short else float("inf"),
+                    )
+                )
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        result.sort(key=lambda x: x["t"])
+        return result
 
     @staticmethod
     def futures_best_bid_ask(raw_data: Any) -> BestBidAskDict:

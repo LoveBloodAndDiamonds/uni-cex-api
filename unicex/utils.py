@@ -13,6 +13,7 @@ __all__ = [
     "validate_single_symbol_args",
     "validate_allowed_kwargs",
     "validate_order_identifiers",
+    "validate_long_short_period",
 ]
 
 import base64
@@ -25,7 +26,7 @@ from functools import wraps
 from typing import Any, Literal
 from urllib.parse import urlencode
 
-from unicex.enums import Exchange, MarketType
+from unicex.enums import Exchange, MarketType, Timeframe
 from unicex.exceptions import AdapterError
 
 
@@ -288,3 +289,27 @@ def validate_order_identifiers(order_id: str | None, client_order_id: str | None
     """Проверяет, что передан хотя бы один идентификатор ордера."""
     if not order_id and not client_order_id:
         raise ValueError("Either order_id or client_order_id must be provided.")
+
+
+def validate_long_short_period(period: Timeframe) -> None:
+    """Проверяет, что период поддерживается методами соотношения лонгов и шортов на всех биржах.
+
+    Параметры:
+      period (`Timeframe`): Период агрегации.
+
+    Возвращает:
+      `None`: Ничего не возвращает, выбрасывает ValueError при неподдерживаемом периоде.
+    """
+    supported = (
+        Timeframe.MIN_5,
+        Timeframe.MIN_15,
+        Timeframe.MIN_30,
+        Timeframe.HOUR_1,
+        Timeframe.HOUR_4,
+        Timeframe.DAY_1,
+    )
+    if period not in supported:
+        raise ValueError(
+            f"Invalid period for long/short ratio: {period}. "
+            f"Valid values: {[str(item) for item in supported]}"
+        )

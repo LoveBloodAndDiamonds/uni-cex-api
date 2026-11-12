@@ -2862,3 +2862,31 @@ class Client(BaseClient):
             endpoint="/api/v5/public/market-data-history",
             params=params,
         )
+
+    # topic: Trading Statistics
+
+    async def get_long_short_account_ratio_contract(
+        self,
+        inst_id: str,
+        period: str | None = None,
+        begin: int | None = None,
+        end: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Получение соотношения лонгов и шортов по аккаунтам для контракта.
+
+        https://www.okx.com/docs-v5/en/#trading-statistics-rest-api-get-contract-long-short-ratio
+        """
+        params = {
+            "instId": inst_id,
+            "period": period,
+            "begin": begin,
+            "end": end,
+            "limit": limit,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/rubik/stat/contracts/long-short-account-ratio-contract",
+            params=params,
+        )

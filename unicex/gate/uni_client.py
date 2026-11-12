@@ -15,12 +15,14 @@ from unicex.types import (
     FundingInfoDict,
     FundingInfoItem,
     KlineDict,
+    LongShortRatioItem,
     OpenInterestDict,
     OpenInterestItem,
     OrderIdDict,
     PositionInfoDict,
     TickerDailyDict,
 )
+from unicex.utils import validate_long_short_period
 
 from .adapter import Adapter
 from .client import Client
@@ -171,6 +173,25 @@ class UniClient(IUniClient[Client]):
         if symbol:
             return adapted_data[symbol]
         return adapted_data
+
+    async def long_short_ratio_history(
+        self, symbol: str, period: Timeframe = Timeframe.MIN_5, limit: int = 30
+    ) -> list[LongShortRatioItem]:
+        """История соотношения лонгов и шортов по всем аккаунтам (`contract_stats`).
+
+        Доли считаются из `long_users` и `short_users`, `ratio` — поле `lsr_account`.
+        Лимит: 200 запросов за 10 секунд с одного IP на публичный эндпоинт.
+        """
+        validate_long_short_period(period)
+        if limit <= 0:
+            return []
+        # Gate отдает точки за окно `limit * period` от текущего момента, поэтому сразу после
+        # границы периода, пока новая точка не опубликована, приходит на одну точку меньше.
+        raw_data = await self._client.futures_contract_stats(
+            settle="usdt", contract=symbol, interval=period.value, limit=limit + 1
+        )
+        adapted_data = Adapter.long_short_ratio(raw_data)  # type: ignore[reportArgumentType]
+        return adapted_data[-limit:]
 
     @overload
     async def futures_best_bid_ask(self, symbol: str) -> BestBidAskItem: ...

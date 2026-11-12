@@ -14,11 +14,13 @@ from unicex.types import (
     FundingInfoDict,
     FundingInfoItem,
     KlineDict,
+    LongShortRatioItem,
     OpenInterestItem,
     OrderIdDict,
     PositionInfoDict,
     TickerDailyDict,
 )
+from unicex.utils import validate_long_short_period
 
 from .adapter import Adapter
 from .client import Client
@@ -169,6 +171,20 @@ class UniClient(IUniClient[Client]):
             raise ValueError("Symbol is required for binance open interest")
         raw_data = await self._client.open_interest(symbol=symbol)
         return Adapter.open_interest(raw_data)
+
+    async def long_short_ratio_history(
+        self, symbol: str, period: Timeframe = Timeframe.MIN_5, limit: int = 30
+    ) -> list[LongShortRatioItem]:
+        """История соотношения лонгов и шортов по всем аккаунтам (`globalLongShortAccountRatio`).
+
+        Лимит: 1000 запросов за 5 минут с одного IP на эндпоинты `/futures/data/*`.
+        Данные обновляются раз в 5 минут, доступны только за последние 30 дней, `limit` до 500.
+        """
+        validate_long_short_period(period)
+        raw_data = await self._client.futures_global_long_short_ratio(
+            symbol=symbol, period=period.value, limit=limit
+        )
+        return Adapter.long_short_ratio(raw_data)
 
     @overload
     async def futures_best_bid_ask(self, symbol: str) -> BestBidAskItem: ...

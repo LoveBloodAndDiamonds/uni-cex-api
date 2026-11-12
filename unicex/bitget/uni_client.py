@@ -11,12 +11,14 @@ from unicex.types import (
     FundingInfoDict,
     FundingInfoItem,
     KlineDict,
+    LongShortRatioItem,
     OpenInterestDict,
     OpenInterestItem,
     OrderIdDict,
     PositionInfoDict,
     TickerDailyDict,
 )
+from unicex.utils import validate_long_short_period
 
 from .adapter import Adapter
 from .client import Client
@@ -167,6 +169,23 @@ class UniClient(IUniClient[Client]):
         raw_data = await self._client.futures_get_all_tickers("USDT-FUTURES")
         adapted_data = Adapter.open_interest(raw_data)
         return adapted_data[symbol] if symbol else adapted_data
+
+    async def long_short_ratio_history(
+        self, symbol: str, period: Timeframe = Timeframe.MIN_5, limit: int = 30
+    ) -> list[LongShortRatioItem]:
+        """История соотношения лонгов и шортов по всем аккаунтам (`account-long-short`).
+
+        Лимит: 1 запрос в секунду с одного IP. Эндпоинт не принимает `limit` и всегда
+        отдаёт последние 30 точек, поэтому больше 30 точек получить нельзя.
+        """
+        validate_long_short_period(period)
+        # "1d" и "1D" Bitget не принимает, дневной период по UTC - "1Dutc"
+        bitget_period = {Timeframe.DAY_1: "1Dutc"}.get(period, period.value)
+        raw_data = await self._client.futures_account_long_short(
+            symbol=symbol, period=bitget_period
+        )
+        adapted_data = Adapter.long_short_ratio(raw_data)
+        return adapted_data[-limit:] if limit > 0 else []
 
     @overload
     async def futures_best_bid_ask(self, symbol: str) -> BestBidAskItem: ...

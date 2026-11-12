@@ -32,7 +32,18 @@ tests_config = {
     "funding_rate": True,
     "single_funding_rate": True,
     "futures_best_bid_ask": True,
+    "long_short_ratio": True,
+    "long_short_ratio_history": True,
 }
+
+# Биржи, на которых реализован long_short_ratio
+long_short_exchanges = [
+    Exchange.BINANCE,
+    Exchange.BYBIT,
+    Exchange.GATE,
+    Exchange.OKX,
+    Exchange.BITGET,
+]
 
 # Тестировать ли все таймфреймы?
 test_all_timeframes = False
@@ -134,6 +145,16 @@ async def test_exchange(exchange: Exchange) -> dict:
             )
         if should_run("futures_best_bid_ask"):
             results["futures_best_bid_ask"] = await safe_call(exchange, client.futures_best_bid_ask)
+
+        ls_symbol = symbol_to_exchange_format("BTCUSDT", exchange, MarketType.FUTURES)
+        if should_run("long_short_ratio") and exchange in long_short_exchanges:
+            results["long_short_ratio"] = await safe_call(
+                exchange, client.long_short_ratio, symbol=ls_symbol
+            )
+        if should_run("long_short_ratio_history") and exchange in long_short_exchanges:
+            results["long_short_ratio_history"] = await safe_call(
+                exchange, client.long_short_ratio_history, symbol=ls_symbol, limit=3
+            )
 
     finally:
         try:

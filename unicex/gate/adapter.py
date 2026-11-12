@@ -12,6 +12,7 @@ from unicex.types import (
     FundingInfoDict,
     FundingInfoItem,
     KlineDict,
+    LongShortRatioItem,
     OpenInterestDict,
     OpenInterestItem,
     OrderIdDict,
@@ -206,6 +207,27 @@ class Adapter:
                 )
             except Exception as e:
                 logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
+
+    @staticmethod
+    def long_short_ratio(raw_data: list[dict]) -> list[LongShortRatioItem]:
+        result: list[LongShortRatioItem] = []
+        for item in raw_data:
+            try:
+                long_users = float(item["long_users"])
+                short_users = float(item["short_users"])
+                long = long_users / (long_users + short_users)
+                result.append(
+                    LongShortRatioItem(
+                        t=int(item["time"]) * 1000,
+                        long=long,
+                        short=1 - long,
+                        ratio=float(item["lsr_account"]) if short_users else float("inf"),
+                    )
+                )
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        result.sort(key=lambda x: x["t"])
         return result
 
     @staticmethod

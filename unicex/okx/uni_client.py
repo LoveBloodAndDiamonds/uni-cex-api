@@ -13,12 +13,14 @@ from unicex.types import (
     FundingInfoDict,
     FundingInfoItem,
     KlineDict,
+    LongShortRatioItem,
     OpenInterestDict,
     OpenInterestItem,
     OrderIdDict,
     PositionInfoDict,
     TickerDailyDict,
 )
+from unicex.utils import validate_long_short_period
 
 from .adapter import Adapter
 from .client import Client
@@ -157,6 +159,26 @@ class UniClient(IUniClient[Client]):
         if symbol:
             return adapted_data[symbol]
         return adapted_data
+
+    async def long_short_ratio_history(
+        self, symbol: str, period: Timeframe = Timeframe.MIN_5, limit: int = 30
+    ) -> list[LongShortRatioItem]:
+        """История соотношения лонгов и шортов по всем аккаунтам для контракта (`rubik/stat`).
+
+        OKX отдаёт только соотношение, доли `long` и `short` вычисляются из него.
+        Лимит: 5 запросов за 2 секунды с одного IP. `limit` до 100.
+        """
+        validate_long_short_period(period)
+        # "1D" на OKX считается по UTC+8, "1Dutc" - по UTC, как на других биржах
+        okx_period = {
+            Timeframe.HOUR_1: "1H",
+            Timeframe.HOUR_4: "4H",
+            Timeframe.DAY_1: "1Dutc",
+        }.get(period, period.value)
+        raw_data = await self._client.get_long_short_account_ratio_contract(
+            inst_id=symbol, period=okx_period, limit=limit
+        )
+        return Adapter.long_short_ratio(raw_data)
 
     @overload
     async def futures_best_bid_ask(self, symbol: str) -> BestBidAskItem: ...

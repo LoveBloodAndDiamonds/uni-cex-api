@@ -3,11 +3,14 @@ __all__ = ["Adapter"]
 
 from typing import Any
 
+from loguru import logger
+
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
     BookDepthDict,
     KlineDict,
+    LongShortRatioItem,
     OpenInterestDict,
     OpenInterestItem,
     TickerDailyDict,
@@ -132,6 +135,27 @@ class Adapter:
             )
             for item in raw_data["data"]
         }
+
+    @staticmethod
+    def long_short_ratio(raw_data: dict) -> list[LongShortRatioItem]:
+        result: list[LongShortRatioItem] = []
+        for item in raw_data["data"]:
+            try:
+                ts, raw_ratio = item[0], item[1]
+                ratio = float(raw_ratio)
+                # OKX отдает только ratio = long / short, доли восстанавливаются из него
+                result.append(
+                    LongShortRatioItem(
+                        t=int(ts),
+                        long=ratio / (1 + ratio),
+                        short=1 / (1 + ratio),
+                        ratio=ratio,
+                    )
+                )
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        result.sort(key=lambda x: x["t"])
+        return result
 
     @staticmethod
     def futures_best_bid_ask(raw_data: dict) -> BestBidAskDict:
