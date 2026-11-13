@@ -1495,7 +1495,7 @@ class Client(BaseClient):
     async def futures_historical_trades(
         self, symbol: str, limit: int | None = None, from_id: int | None = None
     ) -> list[dict]:
-        """Получение исторических сделок.
+        """Получение исторических сделок (вес 200, только за последний месяц).
 
         https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Old-Trades-Lookup
         """
@@ -1512,7 +1512,7 @@ class Client(BaseClient):
         end_time: int | None = None,
         limit: int | None = None,
     ) -> list[dict]:
-        """Получение агрегированных сделок на фьючерсах.
+        """Агрегированные сделки на фьючерсах (окно startTime–endTime не больше часа, данные за 48 ч).
 
         https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Aggregate-Trades-List
         """
@@ -1607,7 +1607,7 @@ class Client(BaseClient):
         end_time: int | None = None,
         limit: int | None = None,
     ) -> list[dict]:
-        """Получение истории ставок финансирования.
+        """История ставок финансирования (`rateType`: `Regular` или `Special` — дивидендный фандинг TradFi).
 
         https://developers.binance.com/docs/derivatives/usds-margined-futures/market-data/rest-api/Get-Funding-Rate-History
         """
@@ -2129,7 +2129,7 @@ class Client(BaseClient):
         end_time: int | None = None,
         limit: int | None = None,
     ) -> list[dict]:
-        """Получение истории принудительных ордеров пользователя.
+        """История принудительных ордеров (ликвидации и ADL; без startTime — 7 дней до endTime).
 
         https://developers.binance.com/docs/derivatives/usds-margined-futures/account/rest-api/User-s-Force-Orders
         """
