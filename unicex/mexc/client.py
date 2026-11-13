@@ -1,6 +1,7 @@
 __all__ = ["Client"]
 
 
+import json
 import time
 from typing import Any
 
@@ -16,8 +17,8 @@ class Client(BaseClient):
     _BASE_SPOT_URL: str = "https://api.mexc.com"
     """Базовый URL для REST API MEXC."""
 
-    _BASE_FUTURES_URL: str = "https://contract.mexc.com"
-    """Базовый URL для фьючерсного REST API MEXC."""
+    _BASE_FUTURES_URL: str = "https://api.mexc.com"
+    """Базовый URL для фьючерсного REST API MEXC (с 2026-01-19; `contract.mexc.com` — старый домен)."""
 
     _RECV_WINDOW: str = "5000"
     """Стандартный интервал времени для получения ответа от сервера."""
@@ -85,6 +86,61 @@ class Client(BaseClient):
             method=method,
             url=url,
             params=payload,
+            headers=headers,
+        )
+
+    async def _make_futures_request(
+        self,
+        method: RequestMethod,
+        endpoint: str,
+        *,
+        params: dict[str, Any] | None = None,
+        data: dict[str, Any] | list[Any] | None = None,
+    ) -> Any:
+        """Выполняет приватный запрос к фьючерсному API MEXC.
+
+        Подпись: hex(HMAC-SHA256(secret, apiKey + Request-Time + paramString)), где
+        paramString — отсортированная query string для GET/DELETE и JSON-тело для POST.
+        Заголовки: `ApiKey`, `Request-Time`, `Signature`, `Recv-Window`.
+
+        Параметры:
+            method (`str`): HTTP метод.
+            endpoint (`str`): Путь эндпоинта (например, `/api/v1/private/order/create`).
+            params (`dict | None`): Query-параметры (GET/DELETE).
+            data (`dict | list | None`): Тело запроса (POST).
+
+        Возвращает:
+            `dict`: Ответ в формате JSON.
+        """
+        if not self.is_authorized():
+            raise NotAuthorized("Api key and api secret is required to private endpoints")
+
+        query = filter_params(params) if params else {}
+        query = {k: str(v).lower() if isinstance(v, bool) else v for k, v in sorted(query.items())}
+        if isinstance(data, dict):
+            data = filter_params(data)
+        body = json.dumps(data, separators=(",", ":")) if data is not None else ""
+        param_string = body if method == "POST" else "&".join(f"{k}={v}" for k, v in query.items())
+
+        timestamp = str(int(time.time() * 1000))
+        signature = generate_hmac_sha256_signature(
+            self._api_secret,  # type: ignore[arg-type]
+            f"{self._api_key}{timestamp}{param_string}",
+            "hex",
+        )
+        headers = {
+            "ApiKey": self._api_key,
+            "Request-Time": timestamp,
+            "Signature": signature,
+            "Recv-Window": self._RECV_WINDOW,
+            "Content-Type": "application/json",
+        }
+        return await BaseClient._make_request(
+            self,
+            method=method,
+            url=self._BASE_FUTURES_URL + endpoint,
+            params=query,
+            data=body if method == "POST" else None,
             headers=headers,
         )
 
@@ -256,6 +312,26 @@ class Client(BaseClient):
 
         return await self._make_request(
             "GET", self._BASE_SPOT_URL + "/api/v3/ticker/bookTicker", params=params
+        )
+
+    async def symbol_offline(self) -> dict:
+        """Получение списка делистнутых спотовых символов.
+
+        https://www.mexc.com/api-docs/spot-v3/market-data-endpoints
+        """
+        return await self._make_request("GET", self._BASE_SPOT_URL + "/api/v3/symbol/offline")
+
+    async def announcements(
+        self, language: str | None = None, page: int | None = None, limit: int | None = None
+    ) -> dict:
+        """Получение объявлений биржи (`limit` — от 10, иначе ошибка 600).
+
+        https://www.mexc.com/api-docs/spot-v3/change-log
+        """
+        params = {"language": language, "page": page, "limit": limit}
+
+        return await self._make_request(
+            "GET", self._BASE_SPOT_URL + "/api/v3/announcements", params=params
         )
 
     # topic: Spot Account/Trade
@@ -564,6 +640,39 @@ class Client(BaseClient):
             "DELETE", self._BASE_SPOT_URL + "/api/v3/strategy/group/uid", params=params, signed=True
         )
 
+    async def cancel_all_orders(self) -> dict:
+        """Отмена всех активных ордеров по всем символам.
+
+        https://www.mexc.com/api-docs/spot-v3/change-log
+        """
+        return await self._make_request(
+            "DELETE", self._BASE_SPOT_URL + "/api/v3/order/all", signed=True
+        )
+
+    async def api_key_info(self, access_key: str | None = None) -> dict:
+        """Получение информации об API-ключе (права, IP whitelist, срок действия).
+
+        https://www.mexc.com/api-docs/spot-v3/change-log
+        """
+        params = {"accessKey": access_key}
+
+        return await self._make_request(
+            "GET", self._BASE_SPOT_URL + "/api/v3/apiKeyInfo", params=params, signed=True
+        )
+
+    async def api_key_info_update(
+        self, apikey: str, ip_white_list: str | None = None, note: str | None = None
+    ) -> dict:
+        """Изменение IP whitelist и заметки API-ключа.
+
+        https://www.mexc.com/api-docs/spot-v3/change-log
+        """
+        params = {"apikey": apikey, "ipWhiteList": ip_white_list, "note": note}
+
+        return await self._make_request(
+            "POST", self._BASE_SPOT_URL + "/api/v3/apiKeyInfo", params=params, signed=True
+        )
+
     # topic: Websocket User Data Streams
 
     async def create_listen_key(self) -> dict:
@@ -674,14 +783,15 @@ class Client(BaseClient):
             "GET", self._BASE_FUTURES_URL + f"/api/v1/contract/fair_price/{symbol}"
         )
 
-    async def futures_funding_rate(self, symbol: str) -> dict:
-        """Получение текущей ставки финансирования контракта.
+    async def futures_funding_rate(self, symbol: str | None = None) -> dict:
+        """Получение текущей ставки финансирования (без `symbol` — по всем контрактам).
 
         https://www.mexc.com/api-docs/futures/market-endpoints
         """
-        return await self._make_request(
-            "GET", self._BASE_FUTURES_URL + f"/api/v1/contract/funding_rate/{symbol}"
+        path = (
+            f"/api/v1/contract/funding_rate/{symbol}" if symbol else "/api/v1/contract/funding_rate"
         )
+        return await self._make_request("GET", self._BASE_FUTURES_URL + path)
 
     async def futures_kline(
         self,
@@ -821,6 +931,17 @@ class Client(BaseClient):
             "GET", self._BASE_FUTURES_URL + "/api/v1/contract/funding_rate/history", params=params
         )
 
+    async def futures_contract_detail_country(self, symbol: str | None = None) -> dict:
+        """Получение ограничений контрактов по странам (макс. плечо и т.п.).
+
+        https://www.mexc.com/api-docs/futures/update-log
+        """
+        params = {"symbol": symbol}
+
+        return await self._make_request(
+            "GET", self._BASE_FUTURES_URL + "/api/v1/contract/detail/country", params=params
+        )
+
     # topic: Futures Account and trading endpoints
 
     async def futures_account_assets(self) -> dict:
@@ -828,19 +949,410 @@ class Client(BaseClient):
 
         https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
         """
-        return await self._make_request(
-            "GET",
-            self._BASE_FUTURES_URL + "/api/v1/private/account/assets",
-            signed=True,
-        )
+        return await self._make_futures_request("GET", "/api/v1/private/account/assets")
 
     async def futures_account_asset(self, currency: str) -> dict:
         """Получение баланса по одной валюте фьючерсного аккаунта.
 
         https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
         """
-        return await self._make_request(
-            "GET",
-            self._BASE_FUTURES_URL + f"/api/v1/private/account/asset/{currency}",
-            signed=True,
+        return await self._make_futures_request("GET", f"/api/v1/private/account/asset/{currency}")
+
+    # topic: Futures trading endpoints
+
+    async def futures_order_create(
+        self,
+        symbol: str,
+        vol: NumberLike,
+        side: int,
+        type: int,
+        open_type: int,
+        price: NumberLike | None = None,
+        leverage: int | None = None,
+        position_id: int | None = None,
+        external_oid: str | None = None,
+        stop_loss_price: NumberLike | None = None,
+        take_profit_price: NumberLike | None = None,
+        loss_trend: int | None = None,
+        profit_trend: int | None = None,
+        price_protect: int | None = None,
+        position_mode: int | None = None,
+        reduce_only: bool | None = None,
+        stp_mode: int | None = None,
+        market_ceiling: bool | None = None,
+        vol_way: int | None = None,
+    ) -> dict:
+        """Создание ордера на фьючерсах.
+
+        `vol` — в контрактах (`vol_way=2` — в базовом активе). `side`: 1 открыть лонг,
+        2 закрыть шорт, 3 открыть шорт, 4 закрыть лонг. `type`: 1 лимит, 2 post-only,
+        3 IOC, 4 FOK, 5 рыночный, 6 рыночный→лимит. `open_type`: 1 изолированная, 2 кросс.
+
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
+        """
+        data = {
+            "symbol": symbol,
+            "price": price,
+            "vol": vol,
+            "leverage": leverage,
+            "side": side,
+            "type": type,
+            "openType": open_type,
+            "positionId": position_id,
+            "externalOid": external_oid,
+            "stopLossPrice": stop_loss_price,
+            "takeProfitPrice": take_profit_price,
+            "lossTrend": loss_trend,
+            "profitTrend": profit_trend,
+            "priceProtect": price_protect,
+            "positionMode": position_mode,
+            "reduceOnly": reduce_only,
+            "stpMode": stp_mode,
+            "marketCeiling": market_ceiling,
+            "volWay": vol_way,
+        }
+
+        return await self._make_futures_request("POST", "/api/v1/private/order/create", data=data)
+
+    async def futures_orders_create_batch(self, orders: list[dict]) -> dict:
+        """Пакетное создание ордеров на фьючерсах (поля — как в `futures_order_create`, camelCase).
+
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
+        """
+        data = [filter_params(order) for order in orders]
+
+        return await self._make_futures_request(
+            "POST", "/api/v1/private/order/submit_batch", data=data
+        )
+
+    async def futures_order_cancel(self, order_ids: list[int | str]) -> dict:
+        """Отмена ордеров по ID (до 50 за запрос).
+
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
+        """
+        return await self._make_futures_request(
+            "POST", "/api/v1/private/order/cancel", data=list(order_ids)
+        )
+
+    async def futures_order_cancel_with_external(self, symbol: str, external_oid: str) -> dict:
+        """Отмена ордера по внешнему ID.
+
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
+        """
+        data = {"symbol": symbol, "externalOid": external_oid}
+
+        return await self._make_futures_request(
+            "POST", "/api/v1/private/order/cancel_with_external", data=data
+        )
+
+    async def futures_orders_cancel_all(self, symbol: str | None = None) -> dict:
+        """Отмена всех ордеров (по символу или всех).
+
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
+        """
+        data = {"symbol": symbol}
+
+        return await self._make_futures_request(
+            "POST", "/api/v1/private/order/cancel_all", data=data
+        )
+
+    async def futures_order_change_limit(
+        self, order_id: int | str, price: NumberLike, vol: NumberLike
+    ) -> dict:
+        """Изменение цены и объёма лимитного ордера.
+
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
+        """
+        data = {"orderId": order_id, "price": price, "vol": vol}
+
+        return await self._make_futures_request(
+            "POST", "/api/v1/private/order/change_limit_order", data=data
+        )
+
+    async def futures_order_get(self, order_id: int | str) -> dict:
+        """Получение ордера по ID.
+
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
+        """
+        return await self._make_futures_request("GET", f"/api/v1/private/order/get/{order_id}")
+
+    async def futures_order_get_external(self, symbol: str, external_oid: str) -> dict:
+        """Получение ордера по внешнему ID.
+
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
+        """
+        return await self._make_futures_request(
+            "GET", f"/api/v1/private/order/external/{symbol}/{external_oid}"
+        )
+
+    async def futures_orders_batch_query(self, order_ids: list[int | str]) -> dict:
+        """Получение ордеров по списку ID (до 50).
+
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
+        """
+        params = {"order_ids": ",".join(map(str, order_ids))}
+
+        return await self._make_futures_request(
+            "GET", "/api/v1/private/order/batch_query", params=params
+        )
+
+    async def futures_orders_open(
+        self, symbol: str | None = None, page_num: int | None = None, page_size: int | None = None
+    ) -> dict:
+        """Получение активных ордеров (с 2025-12-02 вместо `order/open_orders`).
+
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
+        """
+        path = "/api/v1/private/order/list/open_orders"
+        if symbol:
+            path += f"/{symbol}"
+        params = {"page_num": page_num, "page_size": page_size}
+
+        return await self._make_futures_request("GET", path, params=params)
+
+    async def futures_orders_history(
+        self,
+        symbol: str | None = None,
+        states: str | None = None,
+        category: str | None = None,
+        side: int | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        page_num: int | None = None,
+        page_size: int | None = None,
+    ) -> dict:
+        """Получение истории ордеров.
+
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
+        """
+        params = {
+            "symbol": symbol,
+            "states": states,
+            "category": category,
+            "side": side,
+            "start_time": start_time,
+            "end_time": end_time,
+            "page_num": page_num,
+            "page_size": page_size,
+        }
+
+        return await self._make_futures_request(
+            "GET", "/api/v1/private/order/list/history_orders", params=params
+        )
+
+    async def futures_order_deals(
+        self,
+        symbol: str | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        page_num: int | None = None,
+        page_size: int | None = None,
+    ) -> dict:
+        """Получение истории исполнений (сделок) по ордерам.
+
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
+        """
+        params = {
+            "symbol": symbol,
+            "start_time": start_time,
+            "end_time": end_time,
+            "page_num": page_num,
+            "page_size": page_size,
+        }
+
+        return await self._make_futures_request(
+            "GET", "/api/v1/private/order/list/order_deals/v3", params=params
+        )
+
+    async def futures_order_deal_details(self, order_id: int | str) -> dict:
+        """Получение исполнений по ордеру.
+
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
+        """
+        return await self._make_futures_request(
+            "GET", f"/api/v1/private/order/deal_details/{order_id}"
+        )
+
+    async def futures_open_order_total_count(self) -> dict:
+        """Получение количества активных ордеров.
+
+        https://www.mexc.com/api-docs/futures/update-log
+        """
+        return await self._make_futures_request(
+            "GET", "/api/v1/private/order/open_order_total_count"
+        )
+
+    async def futures_positions_open(
+        self, symbol: str | None = None, position_id: int | None = None
+    ) -> dict:
+        """Получение открытых позиций.
+
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
+        """
+        params = {"symbol": symbol, "positionId": position_id}
+
+        return await self._make_futures_request(
+            "GET", "/api/v1/private/position/open_positions", params=params
+        )
+
+    async def futures_positions_history(
+        self,
+        symbol: str | None = None,
+        type: int | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        page_num: int | None = None,
+        page_size: int | None = None,
+    ) -> dict:
+        """Получение истории позиций.
+
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
+        """
+        params = {
+            "symbol": symbol,
+            "type": type,
+            "start_time": start_time,
+            "end_time": end_time,
+            "page_num": page_num,
+            "page_size": page_size,
+        }
+
+        return await self._make_futures_request(
+            "GET", "/api/v1/private/position/list/history_positions", params=params
+        )
+
+    async def futures_funding_records(
+        self,
+        symbol: str | None = None,
+        position_id: int | None = None,
+        page_num: int | None = None,
+        page_size: int | None = None,
+    ) -> dict:
+        """Получение истории списаний фандинга.
+
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
+        """
+        params = {
+            "symbol": symbol,
+            "position_id": position_id,
+            "page_num": page_num,
+            "page_size": page_size,
+        }
+
+        return await self._make_futures_request(
+            "GET", "/api/v1/private/position/funding_records", params=params
+        )
+
+    async def futures_leverage(self, symbol: str) -> dict:
+        """Получение плеча по контракту.
+
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
+        """
+        params = {"symbol": symbol}
+
+        return await self._make_futures_request(
+            "GET", "/api/v1/private/position/leverage", params=params
+        )
+
+    async def futures_change_leverage(
+        self,
+        leverage: int,
+        position_id: int | None = None,
+        open_type: int | None = None,
+        symbol: str | None = None,
+        position_type: int | None = None,
+    ) -> dict:
+        """Изменение плеча (по позиции или по символу с `open_type`/`position_type`).
+
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
+        """
+        data = {
+            "positionId": position_id,
+            "leverage": leverage,
+            "openType": open_type,
+            "symbol": symbol,
+            "positionType": position_type,
+        }
+
+        return await self._make_futures_request(
+            "POST", "/api/v1/private/position/change_leverage", data=data
+        )
+
+    async def futures_position_mode(self) -> dict:
+        """Получение режима позиций (1 hedge, 2 one-way).
+
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
+        """
+        return await self._make_futures_request("GET", "/api/v1/private/position/position_mode")
+
+    async def futures_change_position_mode(self, position_mode: int) -> dict:
+        """Изменение режима позиций (1 hedge, 2 one-way).
+
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
+        """
+        data = {"positionMode": position_mode}
+
+        return await self._make_futures_request(
+            "POST", "/api/v1/private/position/change_position_mode", data=data
+        )
+
+    async def futures_change_margin(self, position_id: int, amount: NumberLike, type: str) -> dict:
+        """Изменение маржи позиции (`type`: ADD / SUB).
+
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
+        """
+        data = {"positionId": position_id, "amount": amount, "type": type}
+
+        return await self._make_futures_request(
+            "POST", "/api/v1/private/position/change_margin", data=data
+        )
+
+    async def futures_close_all_positions(self) -> dict:
+        """Закрытие всех открытых позиций.
+
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
+        """
+        return await self._make_futures_request("POST", "/api/v1/private/position/close_all")
+
+    async def futures_change_multi_asset_mode(self, is_multi_asset_mode: bool) -> dict:
+        """Включение/выключение мультиактивного режима.
+
+        https://www.mexc.com/api-docs/futures/update-log
+        """
+        flag = "true" if is_multi_asset_mode else "false"
+        return await self._make_futures_request(
+            "POST", f"/api/v1/private/multiAssets/changeMultiAssetMode/{flag}"
+        )
+
+    async def futures_subaccount_leverage(self, sub_account: str, symbol: str) -> dict:
+        """Получение плеча субаккаунта по контракту.
+
+        https://www.mexc.com/api-docs/futures/update-log
+        """
+        params = {"subAccount": sub_account, "symbol": symbol}
+
+        return await self._make_futures_request(
+            "GET", "/api/v1/private/position/leverage/subaccount", params=params
+        )
+
+    async def futures_subaccount_position_mode(self, sub_account: str) -> dict:
+        """Получение режима позиций субаккаунта.
+
+        https://www.mexc.com/api-docs/futures/update-log
+        """
+        params = {"subAccount": sub_account}
+
+        return await self._make_futures_request(
+            "GET", "/api/v1/private/position/position_mode/subaccount", params=params
+        )
+
+    async def futures_tiered_fee_rate(self, symbol: str | None = None) -> dict:
+        """Получение ступенчатых комиссий.
+
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints
+        """
+        params = {"symbol": symbol}
+
+        return await self._make_futures_request(
+            "GET", "/api/v1/private/account/tiered_fee_rate/v2", params=params
         )

@@ -37,7 +37,8 @@ class UniWebsocketManager(IUniWebsocketManager):
         self._adapter = Adapter()
 
     def _is_service_message(self, raw_msg: Any) -> bool:
-        is_sub_msg_1 = raw_msg.get("channel") == "rs.sub.deal" and raw_msg.get("data") == "success"
+        # Ответы на подписку фьючерсов: rs.sub.deal, rs.sub.kline, rs.sub.depth и т.д.
+        is_sub_msg_1 = str(raw_msg.get("channel", "")).startswith("rs.")
         is_sub_msg_2 = raw_msg.get("code") == 0 and raw_msg.get("msg", "").startswith("spot@")
         is_pong_1 = raw_msg.get("channel") == "pong"
         is_pong_2 = raw_msg.get("msg") == "PONG"

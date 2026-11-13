@@ -1,6 +1,6 @@
 __all__ = ["UniClient"]
 
-
+import asyncio
 import time
 from typing import overload
 
@@ -23,6 +23,7 @@ from unicex.types import (
 
 from .adapter import Adapter
 from .client import Client
+from .exchange_info import ExchangeInfo
 
 
 class UniClient(IUniClient[Client]):
@@ -132,7 +133,9 @@ class UniClient(IUniClient[Client]):
     async def funding_interval(self) -> dict[str, int]: ...
 
     async def funding_interval(self, symbol: str | None = None) -> dict[str, int] | int:
-        raise NotImplementedError("This method will be implemented in a future release")
+        raw_data = await self._client.futures_funding_rate(symbol)
+        adapted_data = Adapter.funding_interval(raw_data)
+        return adapted_data[symbol] if symbol else adapted_data
 
     @overload
     async def funding_next_time(self, symbol: str) -> int: ...
@@ -144,10 +147,23 @@ class UniClient(IUniClient[Client]):
     async def funding_next_time(self) -> dict[str, int]: ...
 
     async def funding_next_time(self, symbol: str | None = None) -> dict[str, int] | int:
-        raise NotImplementedError("Method will be implemented later.")
+        raw_data = await self._client.futures_funding_rate(symbol)
+        adapted_data = Adapter.funding_next_time(raw_data)
+        return adapted_data[symbol] if symbol else adapted_data
+
+    @overload
+    async def funding_info(self, symbol: str) -> FundingInfoItem: ...
+
+    @overload
+    async def funding_info(self, symbol: None) -> FundingInfoDict: ...
+
+    @overload
+    async def funding_info(self) -> FundingInfoDict: ...
 
     async def funding_info(self, symbol: str | None = None) -> FundingInfoItem | FundingInfoDict:
-        raise NotImplementedError("Method will be implemented later.")
+        raw_data = await self._client.futures_funding_rate(symbol)
+        adapted_data = Adapter.funding_info(raw_data)
+        return adapted_data[symbol] if symbol else adapted_data
 
     @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...
@@ -194,9 +210,21 @@ class UniClient(IUniClient[Client]):
         symbol: str,
         limit: int,
     ) -> BookDepthDict:
-        raise NotImplementedError(
-            "Method 'futures_depth' will be implemented later. You can open pull request to contribute."
-        )
+        if not 1 <= limit <= 1000:
+            raise ValueError(
+                f"Invalid limit for mexc futures depth: {limit}. Valid range: [1, 1000]"
+            )
+        loaded = getattr(ExchangeInfo, "_futures_tickers_info", None) or {}
+        if symbol in loaded:
+            raw_data = await self._client.futures_depth(symbol=symbol, limit=limit)
+            contract_size = loaded[symbol]["contract_size"] or 1
+        else:
+            raw_data, detail = await asyncio.gather(
+                self._client.futures_depth(symbol=symbol, limit=limit),
+                self._client.futures_contract_detail(symbol),
+            )
+            contract_size = Adapter.contract_sizes(detail)[symbol]
+        return Adapter.futures_depth(raw_data, symbol=symbol, contract_size=contract_size)
 
     async def futures_delistings(self) -> dict[str, int]:
         raise NotImplementedError("Method will be implemented later.")

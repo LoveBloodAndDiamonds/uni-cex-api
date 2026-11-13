@@ -22,7 +22,7 @@ class WebsocketManager:
     _SPOT_URL: str = "wss://wbs-api.mexc.com/ws"
     """Базовый URL для вебсокета на спот."""
 
-    _FUTURES_URL: str = "wss://contract.mexc.com/edge"
+    _FUTURES_URL: str = "wss://contract.mexc.com/edge"  # WS остался на contract.mexc.com
     """Базовый URL для вебсокета на фьючерсы."""
 
     class _MexcProtobufDecoder:
@@ -402,8 +402,10 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
+        # reduce=False: с 2026-11-11 MEXC может агрегировать сделки за период (reduce=true по
+        # умолчанию для Protobuf); явный false гарантирует каждую сделку отдельно
         subscription_messages = self._generate_futures_subscription_message(
-            topic="sub.deal", symbol=symbol, symbols=symbols
+            topic="sub.deal", symbol=symbol, symbols=symbols, reduce=False
         )
         return self._create_futures_websocket(callback, subscription_messages)
 
