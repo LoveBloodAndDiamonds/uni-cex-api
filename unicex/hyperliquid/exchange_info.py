@@ -90,8 +90,15 @@ class ExchangeInfo(IExchangeInfo):
     def resolve_spot_ident(cls, symbol: str) -> str:
         cls._check_loaded()
 
-        # Находим индекс по тикеру
-        idx = next(k for k, v in cls._spot_idx_to_name.items() if v == symbol)
+        # Пары, у которых базовый токен называется symbol
+        pairs = [
+            u
+            for u in cls._spot_meta["universe"]
+            if cls._spot_idx_to_name.get(u["tokens"][0]) == symbol
+        ]
+        if not pairs:
+            return symbol
 
-        # Возвращаем внутренний идентификатор вида "@142"
-        return next(k for k, v in cls._spot_ident_to_idx.items() if v == idx)
+        # Одному названию может соответствовать несколько пар (HYPE/USDC, HYPE/USDT0, ...),
+        # берем пару к USDC (токен 0). Возвращаем идентификатор вида "@142" или "PURR/USDC"
+        return min(pairs, key=lambda u: u["tokens"][1] != 0)["name"]

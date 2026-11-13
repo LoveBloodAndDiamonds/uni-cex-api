@@ -26,6 +26,7 @@ from unicex.utils import batched_list
 
 from .adapter import Adapter
 from .client import Client
+from .exchange_info import ExchangeInfo
 
 
 class UniClient(IUniClient[Client]):
@@ -151,13 +152,18 @@ class UniClient(IUniClient[Client]):
             if isinstance(interval, Timeframe)
             else interval
         )
+        if resolve_symbols:
+            try:
+                symbol = ExchangeInfo.resolve_spot_ident(symbol)
+            except ValueError:
+                pass  # ExchangeInfo не загружен: tickers() отдает символы в формате биржи
         raw_data = await self._client.candle_snapshot(
             coin=symbol,
             interval=interval,
             start_time=start_time,  # type: ignore[reportArgumentType]
             end_time=end_time,  # type: ignore[reportArgumentType]
         )
-        adapted_klines = Adapter.futures_klines(raw_data)
+        adapted_klines = Adapter.klines(raw_data, resolve_symbols=resolve_symbols)
         return adapted_klines[-limit:] if limit else adapted_klines
 
     async def futures_klines(

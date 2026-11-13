@@ -10,6 +10,7 @@ from unicex.types import LoggerLike
 
 from .adapter import Adapter
 from .client import Client
+from .exchange_info import ExchangeInfo
 from .uni_client import UniClient
 from .websocket_manager import WebsocketManager
 
@@ -47,6 +48,12 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbols: Sequence[str] | None = None,
         resolve_symbols: bool = True,
     ) -> Websocket:
+        if resolve_symbols:
+            try:
+                symbol = symbol and ExchangeInfo.resolve_spot_ident(symbol)
+                symbols = symbols and [ExchangeInfo.resolve_spot_ident(s) for s in symbols]
+            except ValueError:
+                pass  # ExchangeInfo не загружен: tickers() отдает символы в формате биржи
         wrapper = self._make_wrapper(
             lambda raw_msg: self._adapter.klines_message(
                 raw_msg=raw_msg,
@@ -83,6 +90,12 @@ class UniWebsocketManager(IUniWebsocketManager):
         symbols: Sequence[str] | None = None,
         resolve_symbols: bool = True,
     ) -> Websocket:
+        if resolve_symbols:
+            try:
+                symbol = symbol and ExchangeInfo.resolve_spot_ident(symbol)
+                symbols = symbols and [ExchangeInfo.resolve_spot_ident(s) for s in symbols]
+            except ValueError:
+                pass  # ExchangeInfo не загружен: tickers() отдает символы в формате биржи
         wrapper = self._make_wrapper(
             lambda raw_msg: self._adapter.trades_message(
                 raw_msg=raw_msg,

@@ -14,7 +14,14 @@ from unittest.mock import patch
 from eth_account import Account
 from loguru import logger
 
-from unicex.hyperliquid import Client, UniClient, WebsocketManager
+from unicex.enums import Timeframe
+from unicex.hyperliquid import (
+    Client,
+    ExchangeInfo,
+    UniClient,
+    UniWebsocketManager,
+    WebsocketManager,
+)
 
 logger.remove()
 
@@ -166,6 +173,37 @@ async def check_public() -> None:
             len(depth["b"]) == 10 and depth["b"][0][0] < depth["a"][0][0],
             "futures_depth",
             f"bid={depth['b'][0]} ask={depth['a'][0]}",
+        )
+
+        daily = await u.ticker_24hr(resolve_symbols=False)
+        check(
+            set(daily) <= set(await u.tickers(resolve_symbols=False)), "ticker_24hr keys in tickers"
+        )
+
+        raw = await u.klines("@142", Timeframe.MIN_1, limit=5)
+        check(len(raw) == 5 and raw[0]["s"] == "@142", "spot klines by coin without ExchangeInfo")
+
+        await ExchangeInfo.load_exchange_info()
+        ubtc = await u.klines("UBTC", Timeframe.MIN_1, limit=5)
+        check(
+            len(ubtc) == 5 and ubtc[0]["s"] == "UBTC" and ubtc[-1]["c"] == raw[-1]["c"],
+            "spot klines by name resolve to coin",
+            str(ubtc[-1]),
+        )
+        names = await u.tickers()
+        daily = await u.ticker_24hr()
+        check(
+            set(daily) <= set(names)
+            and ExchangeInfo.resolve_spot_ident("HYPE") == "@107"
+            and ExchangeInfo.resolve_spot_ident("PURR") == "PURR/USDC",
+            "spot names resolve to coins (USDC pair)",
+        )
+        ws = UniWebsocketManager().aggtrades(noop, symbols=["UBTC", "HYPE", "@1"])
+        check(
+            '"coin": "@142"' in str(ws._subscription_messages)
+            and '"coin": "HYPE"' not in str(ws._subscription_messages),
+            "WS spot aggtrades subscribes by coin",
+            str(ws._subscription_messages),
         )
 
         try:
