@@ -109,6 +109,8 @@ if __name__ == "__main__":
 Большинство бирж используют `api_key` + `api_secret` (Bitget, OKX, Kucoin — дополнительно `api_passphrase`),
 а **Aster** и **Hyperliquid** авторизуются приватным ключом кошелька `private_key` (Web3-подпись).
 
+> **Aster:** с 2026-09-01 приватные V3-эндпоинты доступны только после депозита на основной кошелёк — иначе `ResponseError` с кодом `-5050` (`DEPOSIT_REQUIRED`).
+
 ```python
 import asyncio
 

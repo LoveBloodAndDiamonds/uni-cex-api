@@ -11,7 +11,7 @@ from eth_account.messages import encode_typed_data
 from eth_account.signers.local import LocalAccount
 
 from unicex._base import BaseClient
-from unicex.exceptions import NotAuthorized
+from unicex.exceptions import NotAuthorized, ResponseError
 from unicex.types import LoggerLike, NumberLike, RequestMethod
 from unicex.utils import filter_params
 
@@ -44,6 +44,7 @@ class Client(BaseClient):
         retry_delay: int | float = 0.1,
         proxies: list[str] | None = None,
         timeout: int = 10,
+        nonce_window: int | None = None,
     ) -> None:
         """Инициализация клиента.
 
@@ -55,6 +56,8 @@ class Client(BaseClient):
             retry_delay (`int | float`): Задержка между повторными попытками, сек.
             proxies (`list[str] | None`): Список HTTP(S)‑прокси для циклического использования.
             timeout (`int`): Максимальное время ожидания ответа от сервера, сек.
+            nonce_window (`int | None`): Срок жизни изменяющих запросов в мс (1–60000), считая
+                от их nonce. Не обработанный вовремя запрос отклоняется с ошибкой `-4227`.
         """
         super().__init__(
             session=session,
@@ -76,6 +79,7 @@ class Client(BaseClient):
 
         # Последний выданный nonce (микросекунды) для гарантии строгого возрастания.
         self._last_nonce = 0
+        self._nonce_window = nonce_window
 
     @classmethod
     async def create(
@@ -87,6 +91,7 @@ class Client(BaseClient):
         retry_delay: int | float = 0.1,
         proxies: list[str] | None = None,
         timeout: int = 10,
+        nonce_window: int | None = None,
     ) -> Self:
         """Создаёт инстанцию клиента.
 
@@ -98,6 +103,7 @@ class Client(BaseClient):
             retry_delay (`int | float`): Задержка между повторами, сек.
             proxies (`list[str] | None`): Список HTTP(S)‑прокси.
             timeout (`int`): Таймаут ответа сервера, сек.
+            nonce_window (`int | None`): Срок жизни изменяющих запросов в мс (1–60000).
 
         Возвращает:
             `Self`: Созданный экземпляр клиента.
@@ -110,7 +116,13 @@ class Client(BaseClient):
             retry_delay=retry_delay,
             proxies=proxies,
             timeout=timeout,
+            nonce_window=nonce_window,
         )
+
+    @property
+    def last_nonce(self) -> int:
+        """Nonce последнего подписанного запроса (нужен для guarded-отмены размещённого ордера)."""
+        return self._last_nonce
 
     def is_authorized(self) -> bool:
         """Проверяет наличие приватного ключа для доступа к приватным эндпоинтам.
@@ -183,7 +195,7 @@ class Client(BaseClient):
         sig = signed.signature.hex()
         return sig if sig.startswith("0x") else f"0x{sig}"
 
-    def _build_signed_query(self, params: dict[str, Any]) -> str:
+    def _build_signed_query(self, params: dict[str, Any], nonce: int | None = None) -> str:
         """Формирует подписанную query string для приватных эндпоинтов V3.
 
         Добавляет signer и nonce, кодирует параметры, подписывает строку и
@@ -191,6 +203,7 @@ class Client(BaseClient):
 
         Параметры:
             params (`dict`): Бизнес-параметры запроса (уже отфильтрованные).
+            nonce (`int | None`): Явный nonce (для guarded-отмены — nonce исходного ордера).
 
         Возвращает:
             `str`: Готовая query string вида "a=1&...&signer=...&nonce=...&signature=...".
@@ -199,7 +212,8 @@ class Client(BaseClient):
             raise NotAuthorized("Private key is required for private endpoints.")
 
         # signer и nonce обязательны для подписи Aster V3.
-        params = {**params, "signer": self._signer, "nonce": str(self._get_nonce())}
+        nonce = nonce if nonce is not None else self._get_nonce()
+        params = {**params, "signer": self._signer, "nonce": str(nonce)}
 
         # Подпись формируется по той же строке, что и отправляется на сервер.
         msg = urllib.parse.urlencode(params)
@@ -214,6 +228,7 @@ class Client(BaseClient):
         signed: bool = False,
         *,
         params: dict[str, Any] | None = None,
+        nonce: int | None = None,
     ) -> Any:
         """Выполняет HTTP-запрос к эндпоинтам Aster API.
 
@@ -227,6 +242,7 @@ class Client(BaseClient):
             url (`str`): Полный URL эндпоинта Aster API.
             signed (`bool`): Нужно ли подписывать запрос.
             params (`dict | None`): Query-параметры.
+            nonce (`int | None`): Явный nonce для подписи (по умолчанию — новый).
 
         Возвращает:
             `dict`: Ответ в формате JSON.
@@ -243,8 +259,31 @@ class Client(BaseClient):
 
         # Приватный запрос: вшиваем подписанную query string прямо в URL,
         # чтобы отправляемая строка в точности совпадала с подписанной.
-        query = self._build_signed_query(params)
+        # nonceWindow действует только на изменяющие запросы, которые идут через sequencer
+        if self._nonce_window is not None and method != "GET" and "nonceWindow" not in params:
+            params["nonceWindow"] = self._nonce_window
+        query = self._build_signed_query(params, nonce)
         return await super()._make_request(method=method, url=f"{url}?{query}", headers=headers)
+
+    def _validate_response(
+        self, status_code: int, response_text: str, response_json: dict[str, Any]
+    ) -> None:
+        """Выбрасывает ResponseError, если биржа вернула ошибку с HTTP 200.
+
+        Ошибки Aster имеют отрицательный числовой `code` (например, `-5050 DEPOSIT_REQUIRED`:
+        приватные V3-эндпоинты доступны только после депозита на основной кошелёк).
+        """
+        if not isinstance(response_json, dict):
+            return
+        code = response_json.get("code")
+        if isinstance(code, int) and code < 0:
+            raise ResponseError(
+                response_json.get("msg", ""),
+                code=str(code),
+                status_code=status_code,
+                response_text=response_text,
+                response_json=response_json,
+            )
 
     async def request(
         self, method: RequestMethod, url: str, params: dict, data: dict, signed: bool
@@ -439,10 +478,9 @@ class Client(BaseClient):
 
         return await self._make_request("GET", url, params=params)
 
-    async def futures_funding_info(self) -> list[dict]:
-        """Получение информации о ставках финансирования.
+    async def futures_funding_info(self, symbol: str | None = None) -> list[dict]:
+        """Получение настроек фандинга: интервал, ограничения ставки.
 
-        Этого эндпоинта нет в официальной документации.
         Пример ответа:
             ```[
                 {
@@ -457,8 +495,9 @@ class Client(BaseClient):
         ```
         """
         url = self._BASE_FUTURES_URL + "/fapi/v3/fundingInfo"
+        params = {"symbol": symbol}
 
-        return await self._make_request("GET", url)
+        return await self._make_request("GET", url, params=params)
 
     async def futures_ticker_24hr(self, symbol: str | None = None) -> dict | list[dict]:
         """Получение статистики изменения цен и объема за 24 часа.
@@ -489,6 +528,40 @@ class Client(BaseClient):
         params = {"symbol": symbol}
 
         return await self._make_request("GET", url, params=params)
+
+    async def futures_index_references(self, symbol: str) -> dict:
+        """Состав индексной цены: биржи и их веса.
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/indexreferences"
+        params = {
+            "symbol": symbol,
+        }
+
+        return await self._make_request("GET", url, params=params)
+
+    async def futures_remaining_openable_notional(self, symbol: str, leverage: int) -> dict:
+        """Оставшийся нотионал, доступный для открытия при заданном плече.
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/remainingOpenableNotionalValue"
+        params = {
+            "symbol": symbol,
+            "leverage": leverage,
+        }
+
+        return await self._make_request("GET", url, params=params)
+
+    async def futures_asset_logos(self) -> dict:
+        """Ссылки на логотипы всех активов.
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/common/asset/all-asset-logo"
+
+        return await self._make_request("GET", url)
 
     # topic: futures account/trade endpoints
 
@@ -556,6 +629,8 @@ class Client(BaseClient):
         working_type: Literal["MARK_PRICE", "CONTRACT_PRICE"] | None = None,
         price_protect: Literal["TRUE", "FALSE"] | None = None,
         new_order_resp_type: str | None = None,
+        peg_price_type: Literal["COUNTERPARTY_1", "QUEUE_1"] | None = None,
+        stp_mode: Literal["EXPIRE_TAKER", "EXPIRE_MAKER", "EXPIRE_BOTH"] | None = None,
     ) -> dict:
         """Создание нового ордера на фьючерсах.
 
@@ -579,6 +654,8 @@ class Client(BaseClient):
             "workingType": working_type,
             "priceProtect": price_protect,
             "newOrderRespType": new_order_resp_type,
+            "pegPriceType": peg_price_type,
+            "stpMode": stp_mode,
         }
 
         return await self._make_request("POST", url, True, params=params)
@@ -776,6 +853,7 @@ class Client(BaseClient):
         position_side: str | None,
         amount: NumberLike,
         type: int,
+        client_tran_id: str | None = None,
     ) -> dict:
         """Изменение изолированной маржи позиции.
 
@@ -787,6 +865,7 @@ class Client(BaseClient):
             "positionSide": position_side,
             "amount": amount,
             "type": type,
+            "clientTranId": client_tran_id,
         }
 
         return await self._make_request("POST", url, True, params=params)
@@ -831,6 +910,7 @@ class Client(BaseClient):
         end_time: int | None = None,
         from_id: int | None = None,
         limit: int | None = None,
+        order_id: int | None = None,
     ) -> list[dict]:
         """Получение истории торгов на фьючерсах.
 
@@ -843,6 +923,7 @@ class Client(BaseClient):
             "endTime": end_time,
             "fromId": from_id,
             "limit": limit,
+            "orderId": order_id,
         }
 
         return await self._make_request("GET", url, True, params=params)
@@ -875,7 +956,7 @@ class Client(BaseClient):
 
         https://docs.asterdex.com/product/aster-perpetuals/api/api-documentation#notional-and-leverage-brackets-user_data
         """
-        url = self._BASE_FUTURES_URL + "/fapi/v3/leverageBracket"
+        url = self._BASE_FUTURES_URL + "/fapi/v3/leverageBrackets"
         params = {"symbol": symbol}
 
         return await self._make_request("GET", url, True, params=params)
@@ -922,6 +1003,580 @@ class Client(BaseClient):
         params = {"symbol": symbol}
 
         return await self._make_request("GET", url, True, params=params)
+
+    async def futures_order_modify(
+        self,
+        symbol: str,
+        quantity: NumberLike,
+        price: NumberLike,
+        order_id: int | None = None,
+        orig_client_order_id: str | None = None,
+        side: str | None = None,
+    ) -> dict:
+        """Изменение лимитного ордера.
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/order"
+        params = {
+            "orderId": order_id,
+            "origClientOrderId": orig_client_order_id,
+            "symbol": symbol,
+            "side": side,
+            "quantity": quantity,
+            "price": price,
+        }
+
+        return await self._make_request("PUT", url, signed=True, params=params)
+
+    async def futures_batch_orders_modify(self, batch_orders: list[Any]) -> dict:
+        """Пакетное изменение лимитных ордеров.
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/batchOrders"
+        params = {
+            "batchOrders": json.dumps(batch_orders, separators=(",", ":")),
+        }
+
+        return await self._make_request("PUT", url, signed=True, params=params)
+
+    async def futures_chase_order_create(
+        self,
+        symbol: str,
+        side: str,
+        quantity_unit: str,
+        quantity: NumberLike,
+        position_side: str | None = None,
+        reduce_only: str | None = None,
+        chase_offset: NumberLike | None = None,
+        chase_offset_type: str | None = None,
+        max_chase_offset: NumberLike | None = None,
+        max_chase_offset_type: str | None = None,
+        time_in_force: str | None = None,
+        client_strategy_id: str | None = None,
+    ) -> dict:
+        """Размещение chase-ордера (лимитный ордер, следующий за лучшей ценой).
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/chase"
+        params = {
+            "symbol": symbol,
+            "side": side,
+            "positionSide": position_side,
+            "quantityUnit": quantity_unit,
+            "quantity": quantity,
+            "reduceOnly": reduce_only,
+            "chaseOffset": chase_offset,
+            "chaseOffsetType": chase_offset_type,
+            "maxChaseOffset": max_chase_offset,
+            "maxChaseOffsetType": max_chase_offset_type,
+            "timeInForce": time_in_force,
+            "clientStrategyId": client_strategy_id,
+        }
+
+        return await self._make_request("POST", url, signed=True, params=params)
+
+    async def futures_strategy_order_create(
+        self,
+        strategy_type: str,
+        sub_order_list: list[Any],
+        client_strategy_id: str | None = None,
+        builder: str | None = None,
+        fee_rate: NumberLike | None = None,
+    ) -> dict:
+        """Размещение стратегического ордера.
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/placeStrategyOrder"
+        params = {
+            "clientStrategyId": client_strategy_id,
+            "strategyType": strategy_type,
+            "subOrderList": json.dumps(sub_order_list, separators=(",", ":")),
+            "builder": builder,
+            "feeRate": fee_rate,
+        }
+
+        return await self._make_request("POST", url, signed=True, params=params)
+
+    async def futures_strategy_order_update(
+        self,
+        strategy_id: int,
+        strategy_type: str,
+        sub_order_list: list[Any],
+    ) -> dict:
+        """Изменение стратегического ордера.
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/updateStrategyOrder"
+        params = {
+            "strategyId": strategy_id,
+            "strategyType": strategy_type,
+            "subOrderList": json.dumps(sub_order_list, separators=(",", ":")),
+        }
+
+        return await self._make_request("POST", url, signed=True, params=params)
+
+    async def futures_strategy_open_orders(
+        self,
+        strategy_type: str,
+        strategy_id: int | None = None,
+        client_strategy_id: str | None = None,
+    ) -> dict:
+        """Активные стратегические ордера.
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/strategyOpenOrder"
+        params = {
+            "strategyId": strategy_id,
+            "clientStrategyId": client_strategy_id,
+            "strategyType": strategy_type,
+        }
+
+        return await self._make_request("GET", url, signed=True, params=params)
+
+    async def futures_strategy_orders_history(
+        self,
+        strategy_type: str,
+        strategy_id: int | None = None,
+        client_strategy_id: str | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """История стратегических ордеров.
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/strategyHistoryOrder"
+        params = {
+            "strategyId": strategy_id,
+            "clientStrategyId": client_strategy_id,
+            "strategyType": strategy_type,
+            "startTime": start_time,
+            "endTime": end_time,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", url, signed=True, params=params)
+
+    async def futures_stp_mode_change(self, stp_mode: str) -> dict:
+        """Изменение режима защиты от самоисполнения (STP).
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/stpMode"
+        params = {
+            "stpMode": stp_mode,
+        }
+
+        return await self._make_request("POST", url, signed=True, params=params)
+
+    async def futures_stp_mode(self) -> dict:
+        """Текущий режим защиты от самоисполнения (STP).
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/stpMode"
+
+        return await self._make_request("GET", url, signed=True)
+
+    async def futures_mmp_update(
+        self,
+        symbol: str,
+        window_time_in_milliseconds: int,
+        frozen_time_in_milliseconds: int,
+        qty_limit: int | None = None,
+        value_limit: int | None = None,
+        delta_limit: int | None = None,
+    ) -> dict:
+        """Настройка защиты маркет-мейкера (MMP).
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/mmp"
+        params = {
+            "symbol": symbol,
+            "windowTimeInMilliseconds": window_time_in_milliseconds,
+            "frozenTimeInMilliseconds": frozen_time_in_milliseconds,
+            "qtyLimit": qty_limit,
+            "valueLimit": value_limit,
+            "deltaLimit": delta_limit,
+        }
+
+        return await self._make_request("POST", url, signed=True, params=params)
+
+    async def futures_mmp(self, symbol: str | None = None) -> dict:
+        """Настройки защиты маркет-мейкера (MMP).
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/mmp"
+        params = {
+            "symbol": symbol,
+        }
+
+        return await self._make_request("GET", url, signed=True, params=params)
+
+    async def futures_mmp_delete(self, symbol: str) -> dict:
+        """Удаление настроек защиты маркет-мейкера (MMP).
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/mmp"
+        params = {
+            "symbol": symbol,
+        }
+
+        return await self._make_request("DELETE", url, signed=True, params=params)
+
+    async def futures_mmp_reset(self, symbol: str) -> dict:
+        """Сброс срабатывания защиты маркет-мейкера (MMP).
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/mmpReset"
+        params = {
+            "symbol": symbol,
+        }
+
+        return await self._make_request("POST", url, signed=True, params=params)
+
+    async def futures_noop(self) -> dict:
+        """Пустое действие для инвалидации ожидающих nonce.
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/noop"
+
+        return await self._make_request("POST", url, signed=True)
+
+    async def futures_asset_exchange(self) -> dict:
+        """Ручной обмен активов в режиме мультиактивной маржи.
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/assetExchange"
+
+        return await self._make_request("POST", url, signed=True)
+
+    async def futures_income_page(
+        self,
+        symbol: str | None = None,
+        income_type: str | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """История доходов с постраничной навигацией.
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/incomePage"
+        params = {
+            "symbol": symbol,
+            "incomeType": income_type,
+            "startTime": start_time,
+            "endTime": end_time,
+            "page": page,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", url, signed=True, params=params)
+
+    async def futures_referral_invitee_info(self, address: str) -> dict:
+        """Информация о приглашённом пользователе.
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/referral/inviteeInfo"
+        params = {
+            "address": address,
+        }
+
+        return await self._make_request("GET", url, signed=True, params=params)
+
+    async def futures_direct_announcements(
+        self,
+        page: int | None = None,
+        size: int | None = None,
+    ) -> dict:
+        """Персональные объявления пользователя.
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/announcement/direct"
+        params = {
+            "page": page,
+            "size": size,
+        }
+
+        return await self._make_request("GET", url, signed=True, params=params)
+
+    async def futures_direct_announcement(self, id: int) -> dict:
+        """Персональное объявление по идентификатору.
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/announcement/directById"
+        params = {
+            "id": id,
+        }
+
+        return await self._make_request("GET", url, signed=True, params=params)
+
+    async def futures_builder_approved_users(
+        self,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Пользователи, подтвердившие builder-код.
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/builder/approvedUserList"
+        params = {
+            "startTime": start_time,
+            "endTime": end_time,
+            "page": page,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", url, signed=True, params=params)
+
+    async def futures_builder_user_accounts(
+        self,
+        user_addresses: str | None = None,
+        symbol: str | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Аккаунты пользователей builder-кода.
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/builder/userAccounts"
+        params = {
+            "userAddresses": user_addresses,
+            "symbol": symbol,
+            "page": page,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", url, signed=True, params=params)
+
+    async def futures_builder_user_orders(
+        self,
+        user_addresses: str | None = None,
+        symbol: str | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Ордера пользователей builder-кода.
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/builder/userAllOrders"
+        params = {
+            "userAddresses": user_addresses,
+            "symbol": symbol,
+            "startTime": start_time,
+            "endTime": end_time,
+            "page": page,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", url, signed=True, params=params)
+
+    async def futures_builder_user_balances(
+        self,
+        user_addresses: str | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Балансы пользователей builder-кода.
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/builder/userBalances"
+        params = {
+            "userAddresses": user_addresses,
+            "page": page,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", url, signed=True, params=params)
+
+    async def futures_builder_user_commission_rates(
+        self,
+        symbol: str,
+        user_addresses: str | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Ставки комиссии пользователей builder-кода.
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/builder/userCommissionRates"
+        params = {
+            "userAddresses": user_addresses,
+            "symbol": symbol,
+            "page": page,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", url, signed=True, params=params)
+
+    async def futures_builder_user_commissions(
+        self,
+        user_addresses: str | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Комиссии builder-кода по сделкам пользователей.
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/builder/userCommissions"
+        params = {
+            "userAddresses": user_addresses,
+            "startTime": start_time,
+            "endTime": end_time,
+            "page": page,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", url, signed=True, params=params)
+
+    async def futures_builder_user_open_orders(
+        self,
+        user_addresses: str | None = None,
+        symbol: str | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Активные ордера пользователей builder-кода.
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/builder/userOpenOrders"
+        params = {
+            "userAddresses": user_addresses,
+            "symbol": symbol,
+            "page": page,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", url, signed=True, params=params)
+
+    async def futures_builder_user_positions(
+        self,
+        user_addresses: str | None = None,
+        symbol: str | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Позиции пользователей builder-кода.
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/builder/userPositionRisk"
+        params = {
+            "userAddresses": user_addresses,
+            "symbol": symbol,
+            "page": page,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", url, signed=True, params=params)
+
+    async def futures_builder_user_trades(
+        self,
+        user_addresses: str | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Сделки пользователей builder-кода.
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/builder/userTrades"
+        params = {
+            "userAddresses": user_addresses,
+            "startTime": start_time,
+            "endTime": end_time,
+            "page": page,
+            "limit": limit,
+        }
+
+        return await self._make_request("GET", url, signed=True, params=params)
+
+    async def futures_guarded_order_cancel(
+        self,
+        symbol: str,
+        order_nonce: int,
+        order_id: int | None = None,
+        orig_client_order_id: str | None = None,
+    ) -> dict:
+        """Отмена ордера с защитой по nonce, с которым ордер был размещён (`client.last_nonce`).
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/guardedCancelOrder"
+        params = {
+            "symbol": symbol,
+            "orderId": order_id,
+            "origClientOrderId": orig_client_order_id,
+        }
+
+        return await self._make_request("DELETE", url, True, params=params, nonce=order_nonce)
+
+    async def futures_guarded_batch_orders_cancel(
+        self,
+        symbol: str,
+        order_nonce: int,
+        order_id_list: list[int] | None = None,
+        orig_client_order_id_list: list[str] | None = None,
+    ) -> dict:
+        """Отмена нескольких ордеров с защитой по nonce, с которым они были размещены.
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/guardedBatchOrders"
+        params = {
+            "symbol": symbol,
+            "orderIdList": json.dumps(order_id_list, separators=(",", ":"))
+            if order_id_list
+            else None,
+            "origClientOrderIdList": json.dumps(orig_client_order_id_list, separators=(",", ":"))
+            if orig_client_order_id_list
+            else None,
+        }
+
+        return await self._make_request("DELETE", url, True, params=params, nonce=order_nonce)
+
+    async def futures_account_without_join_margin(self) -> dict:
+        """Информация об аккаунте без учёта мультиактивной маржи (`joinMargin=false`).
+
+        https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-futures-api-v3.md
+        """
+        url = self._BASE_FUTURES_URL + "/fapi/v3/account"
+
+        return await self._make_request("GET", url, True)
 
     # topic: futures user data streams
 
@@ -1097,6 +1752,16 @@ class Client(BaseClient):
 
         return await self._make_request("GET", url, params=params)
 
+    async def ticker_opt_24hr(self, symbol: str | None = None) -> dict | list[dict]:
+        """Альтернативная статистика за 24 часа на споте (формат с `ticker_id`, `last_price`).
+
+        В документации упомянут без описания: https://github.com/asterdex/api-docs/blob/master/V3(Recommended)/EN/aster-finance-spot-api-v3.md
+        """
+        url = self._BASE_SPOT_URL + "/api/v3/ticker/opt/24hr"
+        params = {"symbol": symbol}
+
+        return await self._make_request("GET", url, params=params)
+
     async def ticker_price(self, symbol: str | None = None) -> dict | list[dict]:
         """Получение последней цены тикера(ов) на споте.
 
@@ -1156,8 +1821,11 @@ class Client(BaseClient):
         price: NumberLike | None = None,
         new_client_order_id: str | None = None,
         stop_price: NumberLike | None = None,
+        self_trading_protection_mode: Literal[1, 2, 4, 8] | None = None,
     ) -> dict:
         """Создание нового ордера на споте.
+
+        self_trading_protection_mode: 1 (NONE), 2 (CANCEL_TAKER), 4 (CANCEL_MAKER), 8 (CANCEL_BOTH).
 
         https://docs.asterdex.com/product/aster-spot/api/api-documentation
         """
@@ -1172,6 +1840,7 @@ class Client(BaseClient):
             "price": price,
             "newClientOrderId": new_client_order_id,
             "stopPrice": stop_price,
+            "selfTradingProtectionMode": self_trading_protection_mode,
         }
 
         return await self._make_request("POST", url, True, params=params)
@@ -1375,7 +2044,7 @@ class Client(BaseClient):
         amount: NumberLike,
         fee: NumberLike,
         receiver: str,
-        nonce: str,
+        user_nonce: str,
         user_signature: str,
     ) -> dict:
         """Вывод средств со спотового аккаунта.
@@ -1384,7 +2053,7 @@ class Client(BaseClient):
 
         Эндпоинт требует отдельную EIP-712 подпись действия (домен "Aster", тип "Action"),
         которую вызывающий код должен сформировать заранее и передать в user_signature
-        вместе с соответствующим nonce (микросекунды). Сам запрос дополнительно
+        вместе с соответствующим user_nonce (микросекунды). Сам запрос дополнительно
         подписывается стандартной подписью V3.
 
         https://docs.asterdex.com/product/aster-spot/api/api-documentation
@@ -1396,7 +2065,7 @@ class Client(BaseClient):
             "amount": amount,
             "fee": fee,
             "receiver": receiver,
-            "nonce": nonce,
+            "userNonce": user_nonce,
             "userSignature": user_signature,
         }
 
@@ -1413,20 +2082,22 @@ class Client(BaseClient):
 
         return await self._make_request("POST", url, True)
 
-    async def renew_listen_key(self) -> dict:
+    async def renew_listen_key(self, listen_key: str | None = None) -> dict:
         """Продление ключа прослушивания спотового пользовательского вебсокета.
 
         https://docs.asterdex.com/product/aster-spot/api/api-documentation
         """
         url = self._BASE_SPOT_URL + "/api/v3/listenKey"
+        params = {"listenKey": listen_key}
 
-        return await self._make_request("PUT", url, True)
+        return await self._make_request("PUT", url, True, params=params)
 
-    async def close_listen_key(self) -> dict:
+    async def close_listen_key(self, listen_key: str | None = None) -> dict:
         """Закрытие ключа прослушивания спотового пользовательского вебсокета.
 
         https://docs.asterdex.com/product/aster-spot/api/api-documentation
         """
         url = self._BASE_SPOT_URL + "/api/v3/listenKey"
+        params = {"listenKey": listen_key}
 
-        return await self._make_request("DELETE", url, True)
+        return await self._make_request("DELETE", url, True, params=params)
