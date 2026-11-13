@@ -2,9 +2,14 @@ __all__ = ["Adapter"]
 
 from typing import Any
 
+from loguru import logger
+
 from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
+    BookDepthDict,
+    FundingInfoDict,
+    FundingInfoItem,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
@@ -37,11 +42,20 @@ class Adapter:
 
     @staticmethod
     def last_price(raw_data: list[dict]) -> dict[str, float]:
-        return {item["symbol"]: float(item["lastPrice"]) for item in raw_data}
+        # Нулевая цена — у пар без сделок / выведенных из торговли, это не «последняя цена»
+        return {
+            item["symbol"]: float(item["lastPrice"])
+            for item in raw_data
+            if item.get("lastPrice") and float(item["lastPrice"]) > 0
+        }
 
     @staticmethod
     def futures_last_price(raw_data: dict) -> dict[str, float]:
-        return {item["symbol"]: float(item["lastPrice"]) for item in raw_data["data"]}
+        return {
+            item["symbol"]: float(item["lastPrice"])
+            for item in raw_data["data"]
+            if item.get("lastPrice") and float(item["lastPrice"]) > 0
+        }
 
     @staticmethod
     def ticker_24hr(raw_data: list[dict]) -> TickerDailyDict:
@@ -85,6 +99,63 @@ class Adapter:
             for item in raw_data["data"]
             if "fundingRate" in item  # В некоторых элементах item нет ключа 'fundingRate'
         }
+
+    @staticmethod
+    def _funding_items(raw_data: dict) -> list[dict]:
+        data = raw_data["data"]
+        return data if isinstance(data, list) else [data]
+
+    @staticmethod
+    def funding_interval(raw_data: dict) -> dict[str, int]:
+        result = {}
+        for item in Adapter._funding_items(raw_data):
+            try:
+                result[item["symbol"]] = int(item["collectCycle"])
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
+
+    @staticmethod
+    def funding_next_time(raw_data: dict) -> dict[str, int]:
+        result = {}
+        for item in Adapter._funding_items(raw_data):
+            try:
+                result[item["symbol"]] = int(item["nextSettleTime"])
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
+
+    @staticmethod
+    def funding_info(raw_data: dict) -> FundingInfoDict:
+        result = {}
+        for item in Adapter._funding_items(raw_data):
+            try:
+                result[item["symbol"]] = FundingInfoItem(
+                    v=float(item["fundingRate"]) * 100,
+                    i=int(item.get("collectCycle") or 0),
+                    T=int(item.get("nextSettleTime") or 0),
+                )
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
+
+    @staticmethod
+    def futures_depth(raw_data: dict, symbol: str, contract_size: float) -> BookDepthDict:
+        # Уровень: [цена, объём в контрактах, число ордеров]
+        data = raw_data["data"]
+        return BookDepthDict(
+            s=symbol,
+            t=int(data["timestamp"]),
+            u=int(data.get("version") or 0),
+            b=[(float(item[0]), float(item[1]) * contract_size) for item in data["bids"]],
+            a=[(float(item[0]), float(item[1]) * contract_size) for item in data["asks"]],
+        )
+
+    @staticmethod
+    def contract_sizes(raw_data: dict) -> dict[str, float]:
+        data = raw_data["data"]
+        items = data if isinstance(data, list) else [data]
+        return {item["symbol"]: float(item["contractSize"]) for item in items}
 
     @staticmethod
     def futures_best_bid_ask(raw_data: dict) -> BestBidAskDict:
@@ -195,13 +266,13 @@ class Adapter:
         return [
             KlineDict(
                 s=data["symbol"],
-                t=data["t"] * 1000,
-                o=data["o"],
-                h=data["h"],
-                l=data["l"],
-                c=data["c"],
-                v=data["q"],  # Контракты
-                q=data["a"],
+                t=int(data["t"]) * 1000,
+                o=float(data["o"]),
+                h=float(data["h"]),
+                l=float(data["l"]),
+                c=float(data["c"]),
+                v=float(data["q"]) * Adapter._get_contract_size(data["symbol"]),
+                q=float(data["a"]),
                 T=None,
                 x=None,
             )
@@ -211,7 +282,7 @@ class Adapter:
     def trades_message(raw_msg: Any) -> list[TradeDict]:
         return [
             TradeDict(
-                t=trade["time"],
+                t=int(trade["time"]),
                 s=raw_msg["symbol"],
                 S="BUY" if trade["tradeType"] == 1 else "SELL",
                 p=float(trade["price"]),
@@ -219,7 +290,7 @@ class Adapter:
             )
             for trade in sorted(
                 raw_msg["publicAggreDeals"]["deals"],
-                key=lambda item: item["time"],
+                key=lambda item: int(item["time"]),
             )
         ]
 

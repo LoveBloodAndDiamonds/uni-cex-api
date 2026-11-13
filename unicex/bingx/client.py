@@ -320,6 +320,24 @@ class Client(BaseClient):
 
         return await self._make_request("GET", "/openApi/swap/v1/tradingRules", params=params)
 
+    async def futures_trading_schedule(self, symbol: str | None = None) -> dict[str, Any]:
+        """Получение расписания торговых сессий TradFi-контрактов.
+
+        https://bingx-api.github.io/docs-v3/#/en/Swap/Market%20Data/Trading%20Schedule
+        """
+        params = {"symbol": symbol}
+
+        return await self._make_request(
+            "GET", "/openApi/swap/v1/quote/tradingSchedule", params=params
+        )
+
+    async def futures_server_time(self) -> dict[str, Any]:
+        """Получение серверного времени.
+
+        https://bingx-api.github.io/docs-v3/#/en/Swap/Market%20Data/Get%20Server%20Time
+        """
+        return await self._make_request("GET", "/openApi/swap/v2/server/time")
+
     async def symbols(
         self,
         symbol: str | None = None,

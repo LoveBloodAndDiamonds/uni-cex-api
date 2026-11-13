@@ -7,6 +7,7 @@ from typing import Any, Self
 
 import aiohttp
 from loguru import logger as _logger
+from yarl import URL
 
 from unicex.exceptions import ResponseError
 from unicex.types import LoggerLike, RequestMethod
@@ -114,18 +115,19 @@ class BaseClient:
     async def _make_request(
         self,
         method: RequestMethod,
-        url: str,
+        url: str | URL,
         params: dict[str, Any] | None = None,
-        data: dict[str, Any] | None = None,
+        data: dict[str, Any] | list[Any] | str | None = None,
         headers: dict[str, Any] | None = None,
     ) -> Any:
         """Выполняет HTTP‑запрос к API биржи.
 
         Параметры:
             method (`RequestMethod`): HTTP‑метод запроса.
-            url (`str`): Полный URL API.
+            url (`str | URL`): Полный URL API. `yarl.URL(..., encoded=True)` отправляется без перекодирования.
             params (`dict[str, Any] | None`): Параметры запроса (query string).
-            data (`dict[str, Any] | None`): Тело запроса для POST/PUT.
+            data (`dict | list | str | None`): Тело запроса для POST/PUT. Строка отправляется как есть
+                (нужно, когда биржа подписывает точную строку тела).
             headers (`dict[str, Any] | None`): Заголовки запроса.
 
         Возвращает:
@@ -135,6 +137,10 @@ class BaseClient:
             f"Request: {method} {url} | Params: {params} | Data: {data} | Headers: {headers}"
         )
 
+        body: dict[str, Any] = {}
+        if method in {"POST", "PUT"}:
+            body = {"data": data} if isinstance(data, str) else {"json": data}
+
         errors = []
         for attempt in range(1, self._max_retries + 1):
             try:
@@ -142,7 +148,7 @@ class BaseClient:
                     method=method,
                     url=url,
                     params=params,
-                    json=data if method in {"POST", "PUT"} else None,  # Передача тела запроса
+                    **body,  # Тело запроса: json=... или готовая строка data=...
                     headers=headers,
                     proxy=next(self._proxies_cycle) if self._proxies_cycle else None,
                     timeout=aiohttp.ClientTimeout(total=self._timeout) if self._timeout else None,

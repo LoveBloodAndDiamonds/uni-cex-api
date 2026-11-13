@@ -1,5 +1,6 @@
 __all__ = ["UniClient"]
 
+import asyncio
 from typing import Self, overload
 
 import aiohttp
@@ -118,8 +119,8 @@ class UniClient(IUniClient[Client]):
         return Adapter.last_price(raw_data, resolve_symbols=resolve_symbols)
 
     async def futures_last_price(self) -> dict[str, float]:
-        raw_data = await self._client.all_mids()
-        return Adapter.futures_last_price(raw_data)
+        raw_data, meta = await asyncio.gather(self._client.all_mids(), self._client.perp_metadata())
+        return Adapter.futures_last_price(raw_data, meta)
 
     async def ticker_24hr(self, resolve_symbols: bool = True) -> TickerDailyDict:
         raw_data = await self._client.spot_meta_and_asset_contexts()
@@ -212,7 +213,10 @@ class UniClient(IUniClient[Client]):
     async def funding_interval(self) -> dict[str, int]: ...
 
     async def funding_interval(self, symbol: str | None = None) -> dict[str, int] | int:
-        raise NotImplementedError("This method will be implemented in a future release")
+        info = await self.funding_info()
+        if symbol:
+            return info[symbol]["i"]
+        return {s: item["i"] for s, item in info.items()}
 
     @overload
     async def funding_next_time(self, symbol: str) -> int: ...
@@ -224,10 +228,26 @@ class UniClient(IUniClient[Client]):
     async def funding_next_time(self) -> dict[str, int]: ...
 
     async def funding_next_time(self, symbol: str | None = None) -> dict[str, int] | int:
-        raise NotImplementedError("Method will be implemented later.")
+        info = await self.funding_info()
+        if symbol:
+            return info[symbol]["T"]
+        return {s: item["T"] for s, item in info.items()}
+
+    @overload
+    async def funding_info(self, symbol: str) -> FundingInfoItem: ...
+
+    @overload
+    async def funding_info(self, symbol: None) -> FundingInfoDict: ...
+
+    @overload
+    async def funding_info(self) -> FundingInfoDict: ...
 
     async def funding_info(self, symbol: str | None = None) -> FundingInfoItem | FundingInfoDict:
-        raise NotImplementedError("Method will be implemented later.")
+        meta, predicted = await asyncio.gather(
+            self._client.perp_metadata(), self._client.perp_predicted_fundings()
+        )
+        adapted_data = Adapter.funding_info(meta, predicted)
+        return adapted_data[symbol] if symbol else adapted_data
 
     @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...
@@ -264,12 +284,15 @@ class UniClient(IUniClient[Client]):
         symbol: str,
         limit: int,
     ) -> BookDepthDict:
-        raise NotImplementedError(
-            "Method 'futures_depth' will be implemented later. You can open pull request to contribute."
-        )
+        raw_data = await self._client.l2_book(coin=symbol)
+        return Adapter.futures_depth(raw_data, limit)
 
     async def futures_delistings(self) -> dict[str, int]:
-        raise NotImplementedError("Method will be implemented later.")
+        raise NotImplementedError(
+            "Method `futures_delistings` cannot be implemented for Hyperliquid: "
+            "API does not publish scheduled delisting times "
+            "(already delisted assets are marked `isDelisted` and excluded from `futures_tickers`)."
+        )
 
     async def futures_order_create(
         self,

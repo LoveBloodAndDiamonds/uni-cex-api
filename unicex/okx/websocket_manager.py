@@ -15,8 +15,8 @@ type CallbackType = Callable[[Any], Awaitable[None]]
 class WebsocketManager:
     """Менеджер асинхронных вебсокетов для Okx."""
 
-    _BASE_URL: str = "wss://ws.okx.com:8443/ws"
-    """Базовый URL вебсокетов на Okx."""
+    _BASE_URL: str = "wss://ws.okx.com/ws"
+    """Базовый URL вебсокетов на Okx (порт 8443 выведен: 2026-10-31 публичный, 2026-11-16 colo)."""
 
     _PUBLIC_URL: str = _BASE_URL + "/v5/public"
     """Публичный URL вебсокетов на Okx."""
@@ -661,16 +661,27 @@ class WebsocketManager:
     def order_book(
         self,
         callback: CallbackType,
-        channel: Literal["books", "books5", "bbo-tbt", "books50-l2-tbt", "books-l2-tbt"],
+        channel: Literal[
+            "books",
+            "books5",
+            "bbo-tbt",
+            "books50-l2-tbt",
+            "books-l2-tbt",
+            "books-rpi",
+            "bbo-rpi-tbt",
+        ],
         inst_id: str | list[str],
     ) -> Websocket:
         """Создает вебсокет для получения данных ордербука.
 
         https://www.okx.com/docs-v5/en/#order-book-trading-market-data-ws-order-book-channel
 
+        `checksum` в `books*` с 2026-06-23 всегда `0` — для контроля целостности
+        используйте `seqId`/`prevSeqId`. `books-rpi` и `bbo-rpi-tbt` включают RPI-ордера.
+
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            channel (`Literal["books", "books5", "bbo-tbt", "books50-l2-tbt", "books-l2-tbt"]`): Тип канала ордербука.
+            channel (`Literal["books", "books5", "bbo-tbt", "books50-l2-tbt", "books-l2-tbt", "books-rpi", "bbo-rpi-tbt"]`): Тип канала ордербука.
             inst_id (`str | list[str]`): ID инструмента или список ID (например, "BTC-USDT").
 
         Возвращает:

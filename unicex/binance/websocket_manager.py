@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable, Sequence
 from typing import Any
 
 from unicex._base import Websocket
-from unicex.exceptions import NotAuthorized
+from unicex.exceptions import NotAuthorized, NotSupported
 
 from .client import Client
 from .user_websocket import UserWebsocket
@@ -249,18 +249,23 @@ class WebsocketManager:
         return Websocket(callback=callback, url=url, **self._ws_kwargs)
 
     def ticker(self, callback: CallbackType) -> Websocket:
-        """Создает вебсокет для получения расширенной статистики всех тикеров за последние 24 ч.
+        """Стрим `!ticker@arr` (все тикеры за 24 ч) выведен Binance 2026-03-26.
 
-        https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams#all-market-tickers-stream
+        https://developers.binance.com/docs/binance-spot-api-docs/CHANGELOG
+
+        Используйте `mini_ticker` (`!miniTicker@arr`), `rolling_window_ticker(window="1d")`
+        (`!ticker_1d@arr`) или `symbol_ticker` (`<symbol>@ticker`).
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
 
         Возвращает:
-            `Websocket`: Объект для управления вебсокет соединением.
+            `Websocket`: Не возвращает — всегда выбрасывает `NotSupported`.
         """
-        url = self._generate_stream_url(type="!ticker@arr", url=self._BASE_SPOT_URL)
-        return Websocket(callback=callback, url=url, **self._ws_kwargs)
+        raise NotSupported(
+            "Binance retired the spot !ticker@arr stream on 2026-03-26. "
+            "Use mini_ticker(), rolling_window_ticker(window='1d') or symbol_ticker() instead."
+        )
 
     def symbol_rolling_window_ticker(
         self,
@@ -420,33 +425,107 @@ class WebsocketManager:
         )
         return Websocket(callback=callback, url=url, **self._ws_kwargs)
 
-    def user_data_stream(self, callback: CallbackType) -> UserWebsocket:
+    def user_data_stream(
+        self,
+        callback: CallbackType,
+        event_filter: dict[str, list[str]] | None = None,
+    ) -> UserWebsocket:
         """Создает вебсокет для получения информации о пользовательских данных.
+
+        Подписка идёт через WebSocket API (`userDataStream.subscribe.signature`):
+        спотовый listenKey Binance удалил 2026-02-20.
 
         https://developers.binance.com/docs/binance-spot-api-docs/user-data-stream
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            event_filter (`dict[str, list[str]] | None`): Фильтр событий по ключам `e`, `s`, `a`, `x`,
+                например `{"e": ["executionReport"], "s": ["BTCUSDT"]}`.
 
         Возвращает:
             `UserWebsocket`: Объект для управления вебсокет соединением.
         """
         if not self.client or not self.client.is_authorized():
             raise NotAuthorized("You must provide authorized client.")
-        return UserWebsocket(callback=callback, client=self.client, type="SPOT", **self._ws_kwargs)
+        return UserWebsocket(
+            callback=callback,
+            client=self.client,
+            type="SPOT",
+            event_filter=event_filter,
+            **self._ws_kwargs,
+        )
 
-    def multiplex_socket(self, callback: CallbackType, streams: str) -> Websocket:
-        """Создает вебсокет для мультиплексирования нескольких стримов в один.
+    def reference_price(
+        self,
+        callback: CallbackType,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для получения референсной цены символа.
+
+        https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams#reference-price-streams
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
-            streams (`str`): Строка с перечислением стримов.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
 
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
+        url = self._generate_stream_url(
+            type="referencePrice",
+            url=self._BASE_SPOT_URL,
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
+        )
+        return Websocket(callback=callback, url=url, **self._ws_kwargs)
+
+    def block_trade(
+        self,
+        callback: CallbackType,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для получения блочных сделок.
+
+        https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams#block-trade-streams
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        url = self._generate_stream_url(
+            type="blockTrade",
+            url=self._BASE_SPOT_URL,
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
+        )
+        return Websocket(callback=callback, url=url, **self._ws_kwargs)
+
+    def multiplex_socket(self, callback: CallbackType, streams: str) -> Websocket:
+        """Создает вебсокет для мультиплексирования нескольких стримов в один.
+
+        https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams#general-wss-information
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            streams (`str`): Стримы через `/`, например: `btcusdt@trade/ethusdt@aggTrade`.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        streams = streams.lstrip("?").removeprefix("streams=")
         return Websocket(
-            callback=callback, url=self._BASE_SPOT_URL + "?" + streams, **self._ws_kwargs
+            callback=callback,
+            url=f"{self._BASE_SPOT_URL}/stream?streams={streams}",
+            **self._ws_kwargs,
         )
 
     def futures_trade(
@@ -457,7 +536,9 @@ class WebsocketManager:
     ) -> Websocket:
         """Создает вебсокет для получения сделок.
 
-        https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/Aggregate-Trade-Streams
+        https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/Trade-Streams
+
+        С 2026-04-23 стрим `@trade` доступен только на `/public`.
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
@@ -469,7 +550,7 @@ class WebsocketManager:
         """
         url = self._generate_stream_url(
             type="trade",
-            url=self._BASE_FUTURES_MARKET_URL,
+            url=self._BASE_FUTURES_PUBLIC_URL,
             symbol=symbol,
             symbols=symbols,
             require_symbol=True,
@@ -715,6 +796,47 @@ class WebsocketManager:
         )
         return Websocket(callback=callback, url=url, **self._ws_kwargs)
 
+    def futures_rpi_diff_depth(
+        self,
+        callback: CallbackType,
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+    ) -> Websocket:
+        """Создает вебсокет для получения изменений книги ордеров с RPI-ордерами (500 мс).
+
+        https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/RPI-Diff-Book-Depth-Streams
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        url = self._generate_stream_url(
+            type="rpiDepth@500ms",
+            url=self._BASE_FUTURES_PUBLIC_URL,
+            symbol=symbol,
+            symbols=symbols,
+            require_symbol=True,
+        )
+        return Websocket(callback=callback, url=url, **self._ws_kwargs)
+
+    def futures_trading_session(self, callback: CallbackType) -> Websocket:
+        """Создает вебсокет торговых сессий базовых рынков TradFi-контрактов (раз в секунду).
+
+        https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/Trading-Session-Stream
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        url = self._generate_stream_url(type="tradingSession", url=self._BASE_FUTURES_MARKET_URL)
+        return Websocket(callback=callback, url=url, **self._ws_kwargs)
+
     def futures_mark_price(
         self, callback: CallbackType, update_speed: str | None = None
     ) -> Websocket:
@@ -800,6 +922,9 @@ class WebsocketManager:
 
         https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/Liquidation-Order-Streams
 
+        С 2026-04-10 за каждые 1000 мс приходит **крупнейшая** ликвидация по символу
+        (раньше — последняя). Это снимок, а не полный поток ликвидаций.
+
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             symbol (`str | None`): Один символ для подписки.
@@ -821,6 +946,9 @@ class WebsocketManager:
         """Создает вебсокет для получения всех ликвидационных ордеров по рынку.
 
         https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/All-Market-Liquidation-Order-Streams
+
+        С 2026-04-10 за каждые 1000 мс приходит **крупнейшая** ликвидация по каждому символу
+        (раньше — последняя). Это снимок, а не полный поток ликвидаций.
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
@@ -904,7 +1032,7 @@ class WebsocketManager:
         )
 
     def futures_multiplex_public_socket(self, callback: CallbackType, streams: str) -> Websocket:
-        """Создает комбинированный вебсокет для публичных стримов (depth, bookTicker).
+        """Создает комбинированный вебсокет для публичных стримов (trade, depth, bookTicker, rpiDepth).
 
         https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams
 

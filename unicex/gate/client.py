@@ -442,6 +442,7 @@ class Client(BaseClient):
         side: str | None = None,
         account: str | None = None,
         action_mode: str | None = None,
+        trade_quote: bool | None = None,
     ) -> dict:
         """Отмена всех открытых ордеров по заданным условиям.
 
@@ -452,6 +453,7 @@ class Client(BaseClient):
             "side": side,
             "account": account,
             "action_mode": action_mode,
+            "trade_quote": trade_quote,
         }
 
         return await self._make_request("DELETE", "/api/v4/spot/orders", params=params, signed=True)
@@ -706,11 +708,125 @@ class Client(BaseClient):
             "DELETE", f"/api/v4/spot/price_orders/{order_id}", signed=True
         )
 
+    async def server_time(self) -> Any:
+        """Получение серверного времени.
+
+        https://www.gate.com/docs/developers/apiv4/en/#get-server-current-time
+        """
+        return await self._make_request("GET", "/api/v4/spot/time")
+
+    async def rpi_order_book(
+        self,
+        currency_pair: str,
+        interval: str | None = None,
+        limit: int | None = None,
+        with_id: bool | None = None,
+    ) -> Any:
+        """Получение книги ордеров с RPI-ордерами.
+
+        https://www.gate.com/docs/developers/apiv4/en/#get-the-rpi-order-book
+        """
+        params = {
+            "currency_pair": currency_pair,
+            "interval": interval,
+            "limit": limit,
+            "with_id": with_id,
+        }
+
+        return await self._make_request("GET", "/api/v4/spot/rpi_order_book", params=params)
+
+    async def pov_order_create(
+        self,
+        currency_pair: str,
+        side: str,
+        amount: str,
+        participation_rate: int,
+        ttl: str,
+        limit_price: str | None = None,
+        trigger_price: str | None = None,
+        text: str | None = None,
+    ) -> Any:
+        """Создание POV-ордера (percentage-of-volume).
+
+        https://www.gate.com/docs/developers/apiv4/en/#create-a-spot-percentage-of-volume-pov-strategy-order
+        """
+        data = {
+            "currency_pair": currency_pair,
+            "side": side,
+            "amount": amount,
+            "participation_rate": participation_rate,
+            "ttl": ttl,
+            "limit_price": limit_price,
+            "trigger_price": trigger_price,
+            "text": text,
+        }
+
+        return await self._make_request("POST", "/api/v4/spot/pov_orders", signed=True, data=data)
+
+    async def pov_orders(
+        self,
+        status: str,
+        currency_pair: str | None = None,
+        side: str | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> Any:
+        """Получение списка POV-ордеров.
+
+        https://www.gate.com/docs/developers/apiv4/en/#list-spot-pov-orders
+        """
+        params = {
+            "currency_pair": currency_pair,
+            "status": status,
+            "side": side,
+            "page": page,
+            "limit": limit,
+        }
+
+        return await self._make_request(
+            "GET",
+            "/api/v4/spot/pov_orders",
+            signed=True,
+            params=params,
+        )
+
+    async def pov_orders_cancel(self, currency_pair: str | None = None) -> Any:
+        """Отмена POV-ордеров.
+
+        https://www.gate.com/docs/developers/apiv4/en/#cancel-spot-pov-orders
+        """
+        params = {"currency_pair": currency_pair}
+
+        return await self._make_request(
+            "DELETE",
+            "/api/v4/spot/pov_orders",
+            signed=True,
+            params=params,
+        )
+
+    async def pov_order(self, order_id: str) -> Any:
+        """Получение POV-ордера.
+
+        https://www.gate.com/docs/developers/apiv4/en/#query-spot-pov-order-details
+        """
+        return await self._make_request("GET", f"/api/v4/spot/pov_orders/{order_id}", signed=True)
+
+    async def pov_order_cancel(self, order_id: str) -> Any:
+        """Отмена POV-ордера.
+
+        https://www.gate.com/docs/developers/apiv4/en/#cancel-a-spot-pov-order
+        """
+        return await self._make_request(
+            "DELETE",
+            f"/api/v4/spot/pov_orders/{order_id}",
+            signed=True,
+        )
+
     # topic: Futures
 
     async def futures_contracts(
         self,
-        settle: Literal["usdt", "btc"],
+        settle: Literal["usdt", "btc", "usd1"],
         limit: int | None = None,
         offset: int | None = None,
     ) -> list[dict]:
@@ -1001,13 +1117,18 @@ class Client(BaseClient):
         holding: bool | None = None,
         limit: int | None = None,
         offset: int | None = None,
+        positions_limit: int | None = None,
     ) -> dict:
         """Получение списка позиций пользователя.
+
+        С 2026-07-02 (v4.106.104) лимит передаётся как `positions_limit` (1–100, без него —
+        все позиции). `limit` оставлен для совместимости и уходит в оба параметра.
 
         https://www.gate.com/docs/developers/apiv4/en/#get-user-position-list
         """
         params = {
             "holding": holding,
+            "positions_limit": positions_limit if positions_limit is not None else limit,
             "limit": limit,
             "offset": offset,
         }
@@ -1275,6 +1396,7 @@ class Client(BaseClient):
         side: str | None = None,
         exclude_reduce_only: bool | None = None,
         text: str | None = None,
+        action_mode: str | None = None,
     ) -> dict:
         """Отмена всех открытых фьючерсных ордеров по контракту.
 
@@ -1285,6 +1407,7 @@ class Client(BaseClient):
             "side": side,
             "exclude_reduce_only": exclude_reduce_only,
             "text": text,
+            "action_mode": action_mode,
         }
 
         return await self._make_request(
@@ -1350,13 +1473,16 @@ class Client(BaseClient):
         self,
         settle: str,
         order_id: str,
+        action_mode: str | None = None,
     ) -> dict:
         """Отмена конкретного фьючерсного ордера.
 
         https://www.gate.com/docs/developers/apiv4/en/#cancel-single-order
         """
+        params = {"action_mode": action_mode}
+
         return await self._make_request(
-            "DELETE", f"/api/v4/futures/{settle}/orders/{order_id}", signed=True
+            "DELETE", f"/api/v4/futures/{settle}/orders/{order_id}", params=params, signed=True
         )
 
     async def futures_amend_order(
@@ -1683,4 +1809,571 @@ class Client(BaseClient):
         """
         return await self._make_request(
             "DELETE", f"/api/v4/futures/{settle}/price_orders/{order_id}", signed=True
+        )
+
+    # topic: Futures (extra)
+
+    async def futures_contracts_all(
+        self,
+        settle: str,
+        limit: int | None = None,
+        offset: int | None = None,
+    ) -> Any:
+        """Получение всех контрактов, включая делистнутые.
+
+        https://www.gate.com/docs/developers/apiv4/en/#query-all-contract-information-including-delisted
+        """
+        params = {"limit": limit, "offset": offset}
+
+        return await self._make_request(
+            "GET",
+            f"/api/v4/futures/{settle}/contracts_all",
+            params=params,
+        )
+
+    async def futures_rpi_order_book(
+        self,
+        settle: str,
+        contract: str,
+        interval: str | None = None,
+        limit: int | None = None,
+        with_id: bool | None = None,
+    ) -> Any:
+        """Получение книги ордеров с RPI-ордерами.
+
+        https://www.gate.com/docs/developers/apiv4/en/#query-futures-rpi-order-book
+        """
+        params = {"contract": contract, "interval": interval, "limit": limit, "with_id": with_id}
+
+        return await self._make_request(
+            "GET",
+            f"/api/v4/futures/{settle}/rpi_order_book",
+            params=params,
+        )
+
+    async def futures_adl_risk_states(self, settle: str) -> Any:
+        """Получение уровней риска ADL по всем контрактам.
+
+        https://www.gate.com/docs/developers/apiv4/en/#list-market-level-adl-risk-states
+        """
+        return await self._make_request("GET", f"/api/v4/futures/{settle}/adl_risk_states")
+
+    async def futures_funding_rates_batch(self, settle: str, contracts: list[Any]) -> Any:
+        """Пакетное получение истории ставок финансирования.
+
+        https://www.gate.com/docs/developers/apiv4/en/#batch-query-historical-funding-rate-data-for-perpetual-contracts
+        """
+        data = {
+            "contracts": contracts,
+        }
+
+        return await self._make_request(
+            "POST",
+            f"/api/v4/futures/{settle}/funding_rates",
+            data=data,
+        )
+
+    async def futures_positions_timerange(
+        self,
+        settle: str,
+        contract: str,
+        from_: str | None = None,
+        to: int | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+    ) -> Any:
+        """Получение истории позиций за период.
+
+        https://www.gate.com/docs/developers/apiv4/en/#get-user-s-historical-position-information-list-by-time
+        """
+        params = {"contract": contract, "from": from_, "to": to, "limit": limit, "offset": offset}
+
+        return await self._make_request(
+            "GET",
+            f"/api/v4/futures/{settle}/positions_timerange",
+            signed=True,
+            params=params,
+        )
+
+    async def futures_set_position_mode(self, settle: str, position_mode: str) -> Any:
+        """Изменение режима позиций (single / dual / dual_plus), замена dual_mode.
+
+        https://www.gate.com/docs/developers/apiv4/en/#set-position-holding-mode-replacing-the-dual-mode-interface
+        """
+        params = {"position_mode": position_mode}
+
+        return await self._make_request(
+            "POST",
+            f"/api/v4/futures/{settle}/set_position_mode",
+            signed=True,
+            params=params,
+        )
+
+    async def futures_get_leverage(
+        self,
+        settle: str,
+        contract: str,
+        pos_margin_mode: str,
+        dual_side: str,
+    ) -> Any:
+        """Получение плеча для указанного режима.
+
+        https://www.gate.com/docs/developers/apiv4/en/#get-leverage-information-for-specified-mode
+        """
+        params = {"pos_margin_mode": pos_margin_mode, "dual_side": dual_side}
+
+        return await self._make_request(
+            "GET",
+            f"/api/v4/futures/{settle}/get_leverage/{contract}",
+            signed=True,
+            params=params,
+        )
+
+    async def futures_set_contract_leverage(
+        self,
+        settle: str,
+        contract: str,
+        leverage: str,
+        margin_mode: str,
+        dual_side: str | None = None,
+    ) -> Any:
+        """Изменение плеча для указанного режима маржи.
+
+        https://www.gate.com/docs/developers/apiv4/en/#update-leverage-for-specified-mode
+        """
+        params = {"leverage": leverage, "margin_mode": margin_mode, "dual_side": dual_side}
+
+        return await self._make_request(
+            "POST",
+            f"/api/v4/futures/{settle}/positions/{contract}/set_leverage",
+            signed=True,
+            params=params,
+        )
+
+    async def futures_price_order_amend(
+        self,
+        settle: str,
+        order_id: str,
+        size: int | None = None,
+        amount: str | None = None,
+        price: str | None = None,
+        trigger_price: str | None = None,
+        price_type: int | None = None,
+        auto_size: str | None = None,
+        close: bool | None = None,
+    ) -> Any:
+        """Изменение триггерного ордера.
+
+        https://www.gate.com/docs/developers/apiv4/en/#modify-a-single-auto-order
+        """
+        data = {
+            "settle": settle,
+            "order_id": int(order_id),
+            "size": size,
+            "amount": amount,
+            "price": price,
+            "trigger_price": trigger_price,
+            "price_type": price_type,
+            "auto_size": auto_size,
+            "close": close,
+        }
+
+        return await self._make_request(
+            "PUT",
+            f"/api/v4/futures/{settle}/price_orders/amend/{order_id}",
+            signed=True,
+            data=data,
+        )
+
+    async def futures_bbo_order_create(
+        self,
+        settle: str,
+        contract: str,
+        size: int,
+        direction: str,
+        level: int,
+        iceberg: int | None = None,
+        close: bool | None = None,
+        is_close: bool | None = None,
+        reduce_only: bool | None = None,
+        is_reduce_only: bool | None = None,
+        is_liq: bool | None = None,
+        tif: str | None = None,
+        left: int | None = None,
+        fill_price: str | None = None,
+        text: str | None = None,
+        tkfr: str | None = None,
+        mkfr: str | None = None,
+        refu: int | None = None,
+        auto_size: str | None = None,
+        stp_id: int | None = None,
+        stp_act: str | None = None,
+        amend_text: str | None = None,
+        pid: int | None = None,
+    ) -> Any:
+        """Создание BBO-ордера (по уровню лучшей цены).
+
+        https://www.gate.com/docs/developers/apiv4/en/#level-based-bbo-contract-order-placement
+        """
+        data = {
+            "contract": contract,
+            "size": size,
+            "direction": direction,
+            "iceberg": iceberg,
+            "level": level,
+            "close": close,
+            "is_close": is_close,
+            "reduce_only": reduce_only,
+            "is_reduce_only": is_reduce_only,
+            "is_liq": is_liq,
+            "tif": tif,
+            "left": left,
+            "fill_price": fill_price,
+            "text": text,
+            "tkfr": tkfr,
+            "mkfr": mkfr,
+            "refu": refu,
+            "auto_size": auto_size,
+            "stp_id": stp_id,
+            "stp_act": stp_act,
+            "amend_text": amend_text,
+            "pid": pid,
+        }
+
+        return await self._make_request(
+            "POST",
+            f"/api/v4/futures/{settle}/bbo_orders",
+            signed=True,
+            data=data,
+        )
+
+    async def futures_trail_order_create(
+        self,
+        settle: str,
+        contract: str,
+        amount: str,
+        price_type: int,
+        activation_price: str | None = None,
+        is_gte: bool | None = None,
+        price_offset: str | None = None,
+        reduce_only: bool | None = None,
+        position_related: bool | None = None,
+        text: str | None = None,
+        pos_margin_mode: str | None = None,
+        position_mode: str | None = None,
+    ) -> Any:
+        """Создание трейлинг-ордера.
+
+        https://www.gate.com/docs/developers/apiv4/en/#create-trail-order
+        """
+        data = {
+            "contract": contract,
+            "amount": amount,
+            "activation_price": activation_price,
+            "is_gte": is_gte,
+            "price_type": price_type,
+            "price_offset": price_offset,
+            "reduce_only": reduce_only,
+            "position_related": position_related,
+            "text": text,
+            "pos_margin_mode": pos_margin_mode,
+            "position_mode": position_mode,
+        }
+
+        return await self._make_request(
+            "POST",
+            f"/api/v4/futures/{settle}/autoorder/v1/trail/create",
+            signed=True,
+            data=data,
+        )
+
+    async def futures_trail_order_update(
+        self,
+        settle: str,
+        id_: int,
+        amount: str | None = None,
+        activation_price: str | None = None,
+        is_gte_str: str | None = None,
+        price_type: int | None = None,
+        price_offset: str | None = None,
+    ) -> Any:
+        """Изменение трейлинг-ордера.
+
+        https://www.gate.com/docs/developers/apiv4/en/#update-trail-order
+        """
+        data = {
+            "id": id_,
+            "amount": amount,
+            "activation_price": activation_price,
+            "is_gte_str": is_gte_str,
+            "price_type": price_type,
+            "price_offset": price_offset,
+        }
+
+        return await self._make_request(
+            "POST",
+            f"/api/v4/futures/{settle}/autoorder/v1/trail/update",
+            signed=True,
+            data=data,
+        )
+
+    async def futures_trail_order_stop(
+        self,
+        settle: str,
+        id_: int | None = None,
+        text: str | None = None,
+    ) -> Any:
+        """Остановка трейлинг-ордера.
+
+        https://www.gate.com/docs/developers/apiv4/en/#terminate-trail-order
+        """
+        data = {
+            "id": id_,
+            "text": text,
+        }
+
+        return await self._make_request(
+            "POST",
+            f"/api/v4/futures/{settle}/autoorder/v1/trail/stop",
+            signed=True,
+            data=data,
+        )
+
+    async def futures_trail_orders_stop_all(
+        self,
+        settle: str,
+        contract: str | None = None,
+        related_position: int | None = None,
+    ) -> Any:
+        """Пакетная остановка трейлинг-ордеров.
+
+        https://www.gate.com/docs/developers/apiv4/en/#batch-terminate-trail-orders
+        """
+        data = {
+            "contract": contract,
+            "related_position": related_position,
+        }
+
+        return await self._make_request(
+            "POST",
+            f"/api/v4/futures/{settle}/autoorder/v1/trail/stop_all",
+            signed=True,
+            data=data,
+        )
+
+    async def futures_trail_orders(
+        self,
+        settle: str,
+        contract: str | None = None,
+        is_finished: bool | None = None,
+        start_at: int | None = None,
+        end_at: int | None = None,
+        page_num: int | None = None,
+        page_size: int | None = None,
+        sort_by: int | None = None,
+        hide_cancel: bool | None = None,
+        related_position: int | None = None,
+        sort_by_trigger: bool | None = None,
+        reduce_only: int | None = None,
+        side: int | None = None,
+    ) -> Any:
+        """Получение списка трейлинг-ордеров.
+
+        https://www.gate.com/docs/developers/apiv4/en/#get-trail-order-list
+        """
+        params = {
+            "contract": contract,
+            "is_finished": is_finished,
+            "start_at": start_at,
+            "end_at": end_at,
+            "page_num": page_num,
+            "page_size": page_size,
+            "sort_by": sort_by,
+            "hide_cancel": hide_cancel,
+            "related_position": related_position,
+            "sort_by_trigger": sort_by_trigger,
+            "reduce_only": reduce_only,
+            "side": side,
+        }
+
+        return await self._make_request(
+            "GET",
+            f"/api/v4/futures/{settle}/autoorder/v1/trail/list",
+            signed=True,
+            params=params,
+        )
+
+    async def futures_trail_order_detail(self, settle: str, id_: int) -> Any:
+        """Получение трейлинг-ордера.
+
+        https://www.gate.com/docs/developers/apiv4/en/#get-trail-order-details
+        """
+        params = {"id": id_}
+
+        return await self._make_request(
+            "GET",
+            f"/api/v4/futures/{settle}/autoorder/v1/trail/detail",
+            signed=True,
+            params=params,
+        )
+
+    async def futures_trail_order_change_log(
+        self,
+        settle: str,
+        id_: int,
+        page_num: int | None = None,
+        page_size: int | None = None,
+    ) -> Any:
+        """Получение истории изменений трейлинг-ордера.
+
+        https://www.gate.com/docs/developers/apiv4/en/#get-trail-order-user-modification-records
+        """
+        params = {"id": id_, "page_num": page_num, "page_size": page_size}
+
+        return await self._make_request(
+            "GET",
+            f"/api/v4/futures/{settle}/autoorder/v1/trail/change_log",
+            signed=True,
+            params=params,
+        )
+
+    async def futures_chase_order_create(
+        self,
+        settle: str,
+        contract: str,
+        amount: str,
+        price_limit: str,
+        offset_limit: str | None = None,
+        reduce_only: bool | None = None,
+        text: str | None = None,
+        is_dual_mode: bool | None = None,
+        price_type: int | None = None,
+        price_gap_type: int | None = None,
+        price_gap_value: str | None = None,
+        pos_margin_mode: str | None = None,
+        position_mode: str | None = None,
+    ) -> Any:
+        """Создание chase-ордера.
+
+        https://www.gate.com/docs/developers/apiv4/en/#create-a-chase-order
+        """
+        data = {
+            "contract": contract,
+            "settle": settle,
+            "amount": amount,
+            "price_limit": price_limit,
+            "offset_limit": offset_limit,
+            "reduce_only": reduce_only,
+            "text": text,
+            "is_dual_mode": is_dual_mode,
+            "price_type": price_type,
+            "price_gap_type": price_gap_type,
+            "price_gap_value": price_gap_value,
+            "pos_margin_mode": pos_margin_mode,
+            "position_mode": position_mode,
+        }
+
+        return await self._make_request(
+            "POST",
+            f"/api/v4/futures/{settle}/autoorder/v1/chase/create",
+            signed=True,
+            data=data,
+        )
+
+    async def futures_chase_order_stop(
+        self,
+        settle: str,
+        id_: str | None = None,
+        text: str | None = None,
+    ) -> Any:
+        """Остановка chase-ордера.
+
+        https://www.gate.com/docs/developers/apiv4/en/#stop-a-chase-order
+        """
+        data = {
+            "id": id_,
+            "text": text,
+            "settle": settle,
+        }
+
+        return await self._make_request(
+            "POST",
+            f"/api/v4/futures/{settle}/autoorder/v1/chase/stop",
+            signed=True,
+            data=data,
+        )
+
+    async def futures_chase_orders_stop_all(
+        self,
+        settle: str,
+        contract: str | None = None,
+        pos_margin_mode: str | None = None,
+    ) -> Any:
+        """Пакетная остановка chase-ордеров.
+
+        https://www.gate.com/docs/developers/apiv4/en/#stop-chase-orders-in-batch
+        """
+        data = {
+            "contract": contract,
+            "settle": settle,
+            "pos_margin_mode": pos_margin_mode,
+        }
+
+        return await self._make_request(
+            "POST",
+            f"/api/v4/futures/{settle}/autoorder/v1/chase/stop_all",
+            signed=True,
+            data=data,
+        )
+
+    async def futures_chase_orders(
+        self,
+        settle: str,
+        sort_by: int,
+        contract: str | None = None,
+        is_finished: bool | None = None,
+        start_at: int | None = None,
+        end_at: int | None = None,
+        page_num: int | None = None,
+        page_size: int | None = None,
+        hide_cancel: bool | None = None,
+        reduce_only: int | None = None,
+        side: int | None = None,
+    ) -> Any:
+        """Получение списка chase-ордеров.
+
+        https://www.gate.com/docs/developers/apiv4/en/#list-chase-orders
+        """
+        params = {
+            "contract": contract,
+            "is_finished": is_finished,
+            "start_at": start_at,
+            "end_at": end_at,
+            "page_num": page_num,
+            "page_size": page_size,
+            "sort_by": sort_by,
+            "hide_cancel": hide_cancel,
+            "reduce_only": reduce_only,
+            "side": side,
+        }
+
+        return await self._make_request(
+            "GET",
+            f"/api/v4/futures/{settle}/autoorder/v1/chase/list",
+            signed=True,
+            params=params,
+        )
+
+    async def futures_chase_order_detail(self, settle: str, id_: str) -> Any:
+        """Получение chase-ордера.
+
+        https://www.gate.com/docs/developers/apiv4/en/#get-chase-order-detail
+        """
+        params = {"id": id_}
+
+        return await self._make_request(
+            "GET",
+            f"/api/v4/futures/{settle}/autoorder/v1/chase/detail",
+            signed=True,
+            params=params,
         )

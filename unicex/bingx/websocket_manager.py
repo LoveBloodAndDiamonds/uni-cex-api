@@ -3,6 +3,7 @@ __all__ = ["WebsocketManager"]
 
 import gzip
 import json
+import uuid
 from collections.abc import Awaitable, Callable, Sequence
 from typing import Any, Literal
 
@@ -67,16 +68,15 @@ class WebsocketManager:
 
         Параметры:
             data_types (`Sequence[str]`): Список топиков для подписки.
-            req_id (`str | None`): Опциональный идентификатор запроса.
+            req_id (`str | None`): Идентификатор запроса (по умолчанию — случайный UUID).
 
         Возвращает:
             `list[str]`: Список JSON-строк с сообщениями для подписки.
         """
         messages = []
         for data_type in data_types:
-            message = {"reqType": "sub", "dataType": data_type}
-            if req_id:
-                message["id"] = req_id
+            # Без `id` спотовый сервер отвечает `100400 reqType or dataType missing`
+            message = {"id": req_id or str(uuid.uuid4()), "reqType": "sub", "dataType": data_type}
             messages.append(json.dumps(message))
         return messages
 

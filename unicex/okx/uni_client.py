@@ -70,11 +70,12 @@ class UniClient(IUniClient[Client]):
             if isinstance(interval, Timeframe)
             else interval
         )
+        # В OKX `after` — записи старше ts, `before` — новее ts
         raw_data = await self._client.get_candlesticks(
             inst_id=symbol,
             bar=interval,
-            after=start_time,
-            before=end_time,
+            after=end_time,
+            before=start_time,
             limit=limit,
         )
         return Adapter.klines(raw_data=raw_data, symbol=symbol)
@@ -92,11 +93,12 @@ class UniClient(IUniClient[Client]):
             if isinstance(interval, Timeframe)
             else interval
         )
+        # В OKX `after` — записи старше ts, `before` — новее ts
         raw_data = await self._client.get_candlesticks(
             inst_id=symbol,
             bar=interval,
-            after=start_time,
-            before=end_time,
+            after=end_time,
+            before=start_time,
             limit=limit,
         )
         return Adapter.klines(raw_data=raw_data, symbol=symbol)
@@ -139,10 +141,23 @@ class UniClient(IUniClient[Client]):
     async def funding_next_time(self) -> dict[str, int]: ...
 
     async def funding_next_time(self, symbol: str | None = None) -> dict[str, int] | int:
-        raise NotImplementedError("Method will be implemented later.")
+        raw_data = await self._client.get_funding_rate(symbol or "ANY")
+        adapted_data = Adapter.funding_next_time(raw_data)
+        return adapted_data[symbol] if symbol else adapted_data
+
+    @overload
+    async def funding_info(self, symbol: str) -> FundingInfoItem: ...
+
+    @overload
+    async def funding_info(self, symbol: None) -> FundingInfoDict: ...
+
+    @overload
+    async def funding_info(self) -> FundingInfoDict: ...
 
     async def funding_info(self, symbol: str | None = None) -> FundingInfoItem | FundingInfoDict:
-        raise NotImplementedError("Method will be implemented later.")
+        raw_data = await self._client.get_funding_rate(symbol or "ANY")
+        adapted_data = Adapter.funding_info(raw_data)
+        return adapted_data[symbol] if symbol else adapted_data
 
     @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...
@@ -208,7 +223,8 @@ class UniClient(IUniClient[Client]):
         return Adapter.futures_depth(raw_data=raw_data, symbol=symbol)
 
     async def futures_delistings(self) -> dict[str, int]:
-        raise NotImplementedError("Method will be implemented later.")
+        raw_data = await self._client.get_instruments(inst_type="SWAP")
+        return Adapter.futures_delistings(raw_data)
 
     async def futures_order_create(
         self,

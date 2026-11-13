@@ -36,6 +36,10 @@ class UniWebsocketManager(IUniWebsocketManager):
         self._websocket_manager = WebsocketManager(self._client, **ws_kwargs)  # type: ignore
         self._adapter = Adapter()
 
+    def _is_service_message(self, raw_msg: Any) -> bool:
+        # Ответы на подписку: {"code":0,"id":...,"msg":"SUCCESS"} или {"dataType":"","data":null}
+        return not raw_msg.get("dataType") or raw_msg.get("data") is None
+
     def klines(
         self,
         callback: CallbackType,

@@ -37,7 +37,8 @@ class UniWebsocketManager(IUniWebsocketManager):
         self._adapter = Adapter()
 
     def _is_service_message(self, raw_msg: Any) -> bool:
-        return raw_msg.get("event") == "subscribe"
+        # notice — уведомления сервера (например, о выводе порта/переподключении)
+        return raw_msg.get("event") in ("subscribe", "notice")
 
     def _normalize_symbol(
         self,
