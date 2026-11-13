@@ -1,6 +1,7 @@
 __all__ = ["Client"]
 
 import time
+import warnings
 from typing import Any, Literal, Self
 
 import aiohttp
@@ -379,6 +380,13 @@ APPROVE_AGENT_SIGN_TYPES = [
     {"name": "nonce", "type": "uint64"},
 ]
 
+USER_SET_ABSTRACTION_SIGN_TYPES = [
+    {"name": "hyperliquidChain", "type": "string"},
+    {"name": "user", "type": "address"},
+    {"name": "abstraction", "type": "string"},
+    {"name": "nonce", "type": "uint64"},
+]
+
 APPROVE_BUILDER_FEE_SIGN_TYPES = [
     {"name": "hyperliquidChain", "type": "string"},
     {"name": "maxFeeRate", "type": "string"},
@@ -540,6 +548,52 @@ class Client(BaseClient):
         """
         return await self._post_request(endpoint, data=data)
 
+    async def _post_l1_action(
+        self,
+        action: dict[str, Any],
+        nonce: int | None = None,
+        expires_after: int | None = None,
+        vault_address: str | None = None,
+    ) -> dict:
+        """Подписывает L1-действие и отправляет его на `/exchange`."""
+        if self._wallet is None:
+            raise NotAuthorized("Private key is required for private endpoints.")
+
+        effective_vault = vault_address or self._vault_address
+        action_nonce = nonce if nonce is not None else int(time.time() * 1000)
+        signature = _sign_l1_action(
+            self._wallet, action, effective_vault, action_nonce, expires_after
+        )
+        payload: dict[str, Any] = {
+            "action": action,
+            "nonce": action_nonce,
+            "signature": signature,
+        }
+        if effective_vault is not None:
+            payload["vaultAddress"] = effective_vault
+        if expires_after is not None:
+            payload["expiresAfter"] = expires_after
+
+        return await self._post_request("/exchange", data=payload)
+
+    @staticmethod
+    def _normalize_modify(modify: dict[str, Any]) -> dict[str, Any]:
+        """Проверяет и нормализует элемент модификации ордера (`oid` + `order`)."""
+        missing_keys = {"oid", "order"} - modify.keys()
+        if missing_keys:
+            missing = ", ".join(sorted(missing_keys))
+            raise ValueError(f"modify entry is missing required fields: {missing}")
+        order = dict(modify["order"])
+        missing_order_keys = {"a", "b", "p", "s", "r", "t"} - order.keys()
+        if missing_order_keys:
+            missing = ", ".join(sorted(missing_order_keys))
+            raise ValueError(f"order payload is missing required fields: {missing}")
+        order["p"] = str(order["p"])
+        order["s"] = str(order["s"])
+        if order.get("c") is None:
+            order.pop("c", None)
+        return {"oid": modify["oid"], "order": order}
+
     # topic: Info endpoint
     # topic: Futures
 
@@ -698,6 +752,51 @@ class Client(BaseClient):
 
         return await self._post_request("/info", data=payload)
 
+    async def all_perp_metas(self) -> list[dict]:
+        """Метаданные перпетуальных контрактов всех DEX (основной и HIP-3).
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/perpetuals#retrieve-all-perpetuals-metadata-universe-and-margin-tables
+        """
+        payload = {"type": "allPerpMetas"}
+
+        return await self._post_request("/info", data=payload)
+
+    async def perp_dex_status(self, dex: str = "") -> dict:
+        """Статус перпетуального DEX (`""` — основной DEX).
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/perpetuals#get-perp-market-status
+        """
+        payload = {"type": "perpDexStatus", "dex": dex}
+
+        return await self._post_request("/info", data=payload)
+
+    async def perp_annotation(self, coin: str) -> dict:
+        """Категория и описание перпетуального контракта.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/perpetuals#retrieve-perp-annotation
+        """
+        payload = {"type": "perpAnnotation", "coin": coin}
+
+        return await self._post_request("/info", data=payload)
+
+    async def perp_categories(self) -> list[list[str]]:
+        """Категории перпетуальных контрактов.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/perpetuals#retrieve-perp-categories
+        """
+        payload = {"type": "perpCategories"}
+
+        return await self._post_request("/info", data=payload)
+
+    async def perp_concise_annotations(self) -> list[list[Any]]:
+        """Краткие аннотации всех перпетуальных контрактов.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/perpetuals#retrieve-concise-perp-annotations
+        """
+        payload = {"type": "perpConciseAnnotations"}
+
+        return await self._post_request("/info", data=payload)
+
     async def open_orders(self, user: str | None = None, dex: str | None = None) -> list[dict]:
         """Получение списка открытых ордеров пользователя.
 
@@ -720,7 +819,9 @@ class Client(BaseClient):
 
         return await self._post_request("/info", data=payload)
 
-    async def frontend_open_orders(self, user: str | None = None, dex: str | None = None) -> list[dict]:
+    async def frontend_open_orders(
+        self, user: str | None = None, dex: str | None = None
+    ) -> list[dict]:
         """Получение открытых ордеров в формате фронтенда.
 
         https://docs.chainstack.com/reference/hyperliquid-info-frontendopenorders
@@ -905,12 +1006,26 @@ class Client(BaseClient):
 
         return await self._post_request("/info", data=payload)
 
-    async def web_data2(self) -> dict:
-        """Получение агрегированных данных для веб-интерфейса.
+    async def web_data3(self, user: str | None = None) -> dict:
+        """Получение агрегированных данных пользователя для веб-интерфейса.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket/subscriptions
+        """
+        payload = {"type": "webData3", "user": self._resolve_user(user)}
+
+        return await self._post_request("/info", data=payload)
+
+    async def web_data2(self, user: str | None = None) -> dict:
+        """Получение агрегированных данных пользователя (устарело, используйте `web_data3`).
 
         https://docs.chainstack.com/reference/hyperliquid-info-web-data2
         """
-        payload = {"type": "webData2"}
+        warnings.warn(
+            "webData2 is no longer documented by Hyperliquid, use web_data3",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        payload = {"type": "webData2", "user": self._resolve_user(user)}
 
         return await self._post_request("/info", data=payload)
 
@@ -1288,6 +1403,42 @@ class Client(BaseClient):
 
         return await self._post_request("/info", data=payload)
 
+    async def outcome_meta(self) -> dict:
+        """Метаданные outcome-рынков (HIP-4).
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/spot#retrieve-outcome-metadata
+        """
+        payload = {"type": "outcomeMeta"}
+
+        return await self._post_request("/info", data=payload)
+
+    async def outcome_templates(self) -> list[dict]:
+        """Шаблоны outcome-рынков (HIP-4).
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/spot#retrieve-outcome-templates
+        """
+        payload = {"type": "outcomeTemplates"}
+
+        return await self._post_request("/info", data=payload)
+
+    async def settled_outcome(self, outcome: int) -> dict:
+        """Результат рассчитанного outcome-рынка (HIP-4).
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/spot#retrieve-settled-outcome
+        """
+        payload = {"type": "settledOutcome", "outcome": outcome}
+
+        return await self._post_request("/info", data=payload)
+
+    async def outcome_deployer_limits(self, venue: str) -> dict:
+        """Лимиты деплоера outcome-рынков для площадки (HIP-4).
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/spot#retrieve-outcome-deployer-limits
+        """
+        payload = {"type": "outcomeDeployerLimits", "venue": venue}
+
+        return await self._post_request("/info", data=payload)
+
     # topic: Exchange endpoint
 
     async def place_order(
@@ -1594,94 +1745,60 @@ class Client(BaseClient):
         order_type: Literal["limit", "trigger"],
         order_body: dict[str, Any],
         client_order_id: str | None = None,
+        always_place: bool = False,
         nonce: int | None = None,
         expires_after: int | None = None,
         vault_address: str | None = None,
     ) -> dict:
         """Модификация существующего ордера.
 
+        `always_place=True` — новый ордер выставляется, даже если отмена старого не удалась.
+
         https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#modify-an-order
         """
         order_payload: dict[str, Any] = {
             "a": asset,
             "b": is_buy,
-            "p": str(price),
-            "s": str(size),
+            "p": price,
+            "s": size,
             "r": reduce_only,
             "t": {order_type: order_body},
+            "c": client_order_id,
         }
-        if client_order_id is not None:
-            order_payload["c"] = client_order_id
+        action: dict[str, Any] = {
+            "type": "modify",
+            **self._normalize_modify({"oid": order_id, "order": order_payload}),
+        }
+        if always_place:  # Биржа отклоняет действие с явным a=false
+            action["a"] = True
 
-        return await self.batch_modify_orders(
-            modifies=[{"oid": order_id, "order": order_payload}],
-            nonce=nonce,
-            expires_after=expires_after,
-            vault_address=vault_address,
-        )
+        return await self._post_l1_action(action, nonce, expires_after, vault_address)
 
     async def batch_modify_orders(
         self,
         modifies: list[dict[str, Any]],
+        always_place: bool = False,
         nonce: int | None = None,
         expires_after: int | None = None,
         vault_address: str | None = None,
     ) -> dict:
         """Пакетная модификация ордеров.
 
+        `always_place=True` — новые ордера выставляются, даже если отмена старых не удалась.
+
         https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#modify-multiple-orders
         """
         if not modifies:
             raise ValueError("modifies must not be empty")
-        if self._wallet is None:
-            raise NotAuthorized("Private key is required for private endpoints.")
 
-        normalized: list[dict[str, Any]] = []
-        for modify in modifies:
-            missing_keys = {"oid", "order"} - modify.keys()
-            if missing_keys:
-                missing = ", ".join(sorted(missing_keys))
-                raise ValueError(f"modify entry is missing required fields: {missing}")
-            order = dict(modify["order"])
-            required_order_keys = {"a", "b", "p", "s", "r", "t"}
-            missing_order_keys = required_order_keys - order.keys()
-            if missing_order_keys:
-                missing = ", ".join(sorted(missing_order_keys))
-                raise ValueError(f"order payload is missing required fields: {missing}")
-            order["p"] = str(order["p"])
-            order["s"] = str(order["s"])
-            if order.get("c") is None:
-                order.pop("c", None)
-            normalized.append(
-                {
-                    "oid": modify["oid"],
-                    "order": order,
-                }
-            )
-
-        action = {"type": "batchModify", "modifies": normalized}
-
-        effective_vault = vault_address or self._vault_address
-        action_nonce = nonce if nonce is not None else int(time.time() * 1000)
-        signature = _sign_l1_action(
-            self._wallet,
-            action,
-            effective_vault,
-            action_nonce,
-            expires_after,
-        )
-
-        payload: dict[str, Any] = {
-            "action": action,
-            "nonce": action_nonce,
-            "signature": signature,
+        action: dict[str, Any] = {
+            "type": "batchModify",
+            "modifies": [self._normalize_modify(modify) for modify in modifies],
         }
-        if effective_vault is not None:
-            payload["vaultAddress"] = effective_vault
-        if expires_after is not None:
-            payload["expiresAfter"] = expires_after
+        if always_place:  # Биржа отклоняет действие с явным a=false
+            action["a"] = True
 
-        return await self._post_request("/exchange", data=payload)
+        return await self._post_l1_action(action, nonce, expires_after, vault_address)
 
     async def update_leverage(
         self,
@@ -1907,7 +2024,9 @@ class Client(BaseClient):
             raise NotAuthorized("Private key is required for private endpoints.")
 
         # Формат amount_field: при субаккаунте добавляется суффикс "subaccount:<addr>"
-        amount_field = f"{amount} subaccount:{subaccount}" if subaccount is not None else str(amount)
+        amount_field = (
+            f"{amount} subaccount:{subaccount}" if subaccount is not None else str(amount)
+        )
 
         nonce = int(time.time() * 1000)
 
@@ -2390,5 +2509,166 @@ class Client(BaseClient):
             payload["vaultAddress"] = effective_vault
         if expires_after is not None:
             payload["expiresAfter"] = expires_after
+
+        return await self._post_request("/exchange", data=payload)
+
+    async def top_up_isolated_only_margin(
+        self,
+        asset: int,
+        leverage: NumberLike,
+        nonce: int | None = None,
+        expires_after: int | None = None,
+        vault_address: str | None = None,
+    ) -> dict:
+        """Изменение маржи изолированной позиции до целевого плеча.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#update-isolated-margin
+        """
+        action = {"type": "topUpIsolatedOnlyMargin", "asset": asset, "leverage": str(leverage)}
+
+        return await self._post_l1_action(action, nonce, expires_after, vault_address)
+
+    async def place_trailing_stop_order(
+        self,
+        asset: int,
+        is_buy: bool,
+        size: NumberLike,
+        reduce_only: bool,
+        retracement_pct: str | None = None,
+        retracement_px: NumberLike | None = None,
+        activation_price: NumberLike | None = None,
+        nonce: int | None = None,
+        expires_after: int | None = None,
+        vault_address: str | None = None,
+    ) -> dict:
+        """Размещение трейлинг-стопа: откат в процентах (`"1.5%"`) или в цене.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#place-a-trailing-stop-order
+        """
+        if (retracement_pct is None) == (retracement_px is None):
+            raise ValueError("Exactly one of retracement_pct or retracement_px is required")
+
+        retracement = (
+            {"pct": retracement_pct} if retracement_pct is not None else {"px": str(retracement_px)}
+        )
+        action = {
+            "type": "trailingStop",
+            "asset": asset,
+            "isBuy": is_buy,
+            "sz": str(size),
+            "reduceOnly": reduce_only,
+            "retracement": retracement,
+            "activationPx": str(activation_price) if activation_price is not None else None,
+        }
+
+        return await self._post_l1_action(action, nonce, expires_after, vault_address)
+
+    async def agent_send_asset(
+        self,
+        destination: str,
+        source_dex: str,
+        destination_dex: str,
+        token: str,
+        amount: NumberLike,
+        from_subaccount: str = "",
+        nonce: int | None = None,
+        expires_after: int | None = None,
+    ) -> dict:
+        """Перевод токена между DEX и спотом, подписываемый API-кошельком (агентом).
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#agent-send-asset
+        """
+        action_nonce = nonce if nonce is not None else int(time.time() * 1000)
+        action = {
+            "type": "agentSendAsset",
+            "destination": destination,
+            "sourceDex": source_dex,
+            "destinationDex": destination_dex,
+            "token": token,
+            "amount": str(amount),
+            "fromSubAccount": from_subaccount,
+            "nonce": action_nonce,
+        }
+
+        return await self._post_l1_action(action, action_nonce, expires_after)
+
+    async def staking_deposit_agent(
+        self,
+        wei_amount: int,
+        nonce: int | None = None,
+        expires_after: int | None = None,
+    ) -> dict:
+        """Депозит нативного токена в стейкинг, подписываемый API-кошельком (агентом).
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#deposit-into-staking-agent
+        """
+        action = {"type": "cDeposit2", "wei": wei_amount}
+
+        return await self._post_l1_action(action, nonce, expires_after)
+
+    async def hip3_liquidator_transfer(
+        self,
+        dex: str,
+        notional: int,
+        is_deposit: bool,
+        nonce: int | None = None,
+        expires_after: int | None = None,
+    ) -> dict:
+        """Депозит или вывод из backstop-ликвидатора HIP-3 DEX (`ntl` в 1e-6 котируемого токена).
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#deposit-or-withdraw-from-an-hip-3-dexs-backstop-liquidator
+        """
+        action = {
+            "type": "hip3LiquidatorTransfer",
+            "dex": dex,
+            "ntl": notional,
+            "isDeposit": is_deposit,
+        }
+
+        return await self._post_l1_action(action, nonce, expires_after)
+
+    async def agent_set_abstraction(
+        self,
+        abstraction: Literal["i", "u", "p"],
+        nonce: int | None = None,
+        expires_after: int | None = None,
+    ) -> dict:
+        """Режим аккаунта через API-кошелёк: `i` — disabled, `u` — unified, `p` — portfolio margin.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#set-user-abstraction-agent
+        """
+        action = {"type": "agentSetAbstraction", "abstraction": abstraction}
+
+        return await self._post_l1_action(action, nonce, expires_after)
+
+    async def user_set_abstraction(
+        self,
+        hyperliquid_chain: Literal["Mainnet", "Testnet"],
+        abstraction: Literal["disabled", "unifiedAccount", "portfolioMargin"],
+        user: str | None = None,
+        nonce: int | None = None,
+    ) -> dict:
+        """Режим аккаунта: обычный, единый (unified) или портфельная маржа.
+
+        https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#set-user-abstraction
+        """
+        if self._wallet is None:
+            raise NotAuthorized("Private key is required for private endpoints.")
+
+        action_nonce = nonce if nonce is not None else int(time.time() * 1000)
+        action = {
+            "type": "userSetAbstraction",
+            "user": self._resolve_user(user).lower(),
+            "abstraction": abstraction,
+            "nonce": action_nonce,
+        }
+        signature = _sign_user_signed_action(
+            self._wallet,
+            action,
+            USER_SET_ABSTRACTION_SIGN_TYPES,
+            "HyperliquidTransaction:UserSetAbstraction",
+            hyperliquid_chain == "Mainnet",
+        )
+        payload = {"action": action, "nonce": action_nonce, "signature": signature}
 
         return await self._post_request("/exchange", data=payload)

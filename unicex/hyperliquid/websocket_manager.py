@@ -1,6 +1,9 @@
 __all__ = ["WebsocketManager"]
 
+import base64
 import json
+import warnings
+import zlib
 from collections.abc import Awaitable, Callable
 from typing import Any
 
@@ -85,8 +88,20 @@ class WebsocketManager:
             **self._ws_kwargs,
         )
 
-    def web_data2(self, callback: CallbackType, user: str) -> Websocket:
-        """Создает вебсокет для получения веб-данных пользователя.
+    def _subscribe(
+        self, callback: CallbackType, subscription_type: str, **params: Any
+    ) -> Websocket:
+        """Создает вебсокет с одной подпиской (параметры со значением None не передаются)."""
+        params = {k: v for k, v in params.items() if v is not None}
+        return Websocket(
+            callback=callback,
+            url=self._URL,
+            subscription_messages=[self._create_subscription_message(subscription_type, **params)],
+            **self._ws_kwargs,
+        )
+
+    def web_data3(self, callback: CallbackType, user: str) -> Websocket:
+        """Создает вебсокет для получения агрегированных данных пользователя (для веб-интерфейса).
 
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
@@ -95,13 +110,137 @@ class WebsocketManager:
         Возвращает:
             `Websocket`: Объект для управления вебсокет соединением.
         """
-        subscription_message = self._create_subscription_message("webData2", user=user)
-        return Websocket(
-            callback=callback,
-            url=self._URL,
-            subscription_messages=[subscription_message],
-            **self._ws_kwargs,
+        return self._subscribe(callback, "webData3", user=user)
+
+    def web_data2(self, callback: CallbackType, user: str) -> Websocket:
+        """Создает вебсокет для получения веб-данных пользователя (устарело, используйте `web_data3`).
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            user (`str`): Адрес пользователя.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        warnings.warn(
+            "webData2 is no longer documented by Hyperliquid, use web_data3",
+            DeprecationWarning,
+            stacklevel=2,
         )
+        return self._subscribe(callback, "webData2", user=user)
+
+    def twap_states(self, callback: CallbackType, user: str, dex: str | None = None) -> Websocket:
+        """Создает вебсокет для получения состояний TWAP-ордеров пользователя.
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            user (`str`): Адрес пользователя.
+            dex (`str | None`): Perp dex. Если не указан, используется первый perp dex.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        return self._subscribe(callback, "twapStates", user=user, dex=dex)
+
+    def clearinghouse_state(
+        self, callback: CallbackType, user: str, dex: str | None = None
+    ) -> Websocket:
+        """Создает вебсокет для получения состояния перпетуального аккаунта пользователя.
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            user (`str`): Адрес пользователя.
+            dex (`str | None`): Perp dex. Если не указан, используется первый perp dex.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        return self._subscribe(callback, "clearinghouseState", user=user, dex=dex)
+
+    def open_orders(self, callback: CallbackType, user: str, dex: str | None = None) -> Websocket:
+        """Создает вебсокет для получения открытых ордеров пользователя.
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            user (`str`): Адрес пользователя.
+            dex (`str | None`): Perp dex. Если не указан, используется первый perp dex.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        return self._subscribe(callback, "openOrders", user=user, dex=dex)
+
+    def spot_state(
+        self, callback: CallbackType, user: str, is_portfolio_margin: bool | None = None
+    ) -> Websocket:
+        """Создает вебсокет для получения спотовых балансов пользователя.
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            user (`str`): Адрес пользователя.
+            is_portfolio_margin (`bool | None`): Аккаунт в режиме портфельной маржи (Опционально).
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        return self._subscribe(
+            callback, "spotState", user=user, isPortfolioMargin=is_portfolio_margin
+        )
+
+    def all_dexs_clearinghouse_state(self, callback: CallbackType, user: str) -> Websocket:
+        """Создает вебсокет для получения состояния аккаунта пользователя по всем perp dex.
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            user (`str`): Адрес пользователя.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        return self._subscribe(callback, "allDexsClearinghouseState", user=user)
+
+    def all_dexs_asset_ctxs(self, callback: CallbackType) -> Websocket:
+        """Создает вебсокет для получения контекстов активов (mark, funding, OI) по всем perp dex.
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        return self._subscribe(callback, "allDexsAssetCtxs")
+
+    def outcome_meta_updates(self, callback: CallbackType) -> Websocket:
+        """Создает вебсокет для получения обновлений метаданных outcome-рынков (HIP-4).
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        return self._subscribe(callback, "outcomeMetaUpdates")
+
+    def fast_asset_ctxs(self, callback: CallbackType) -> Websocket:
+        """Создает вебсокет для быстрых обновлений контекстов активов по всем perp dex.
+
+        Биржа присылает `data` как base64 + raw DEFLATE; в callback приходит уже распакованный
+        словарь. Первое сообщение — снапшот, далее только изменившиеся монеты и поля.
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+
+        async def _decoding_callback(msg: Any) -> None:
+            if isinstance(msg, dict) and isinstance(msg.get("data"), str):
+                raw = zlib.decompress(base64.b64decode(msg["data"]), wbits=-15)
+                msg = {**msg, "data": json.loads(raw)}
+            await callback(msg)
+
+        return self._subscribe(_decoding_callback, "fastAssetCtxs")
 
     def candle(
         self,

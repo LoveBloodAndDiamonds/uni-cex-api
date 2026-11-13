@@ -5,6 +5,8 @@ import time
 from unicex.types import (
     BestBidAskItem,
     BookDepthDict,
+    FundingInfoDict,
+    FundingInfoItem,
     KlineDict,
     OpenInterestDict,
     OpenInterestItem,
@@ -39,22 +41,26 @@ class Adapter:
         ]
 
     @staticmethod
+    def _is_spot_mid(token: str) -> bool:
+        # Спот: "@<index>" и исторический "PURR/USDC"; "#<id>" — outcome-рынки HIP-4
+        return token.startswith("@") or "/" in token
+
+    @staticmethod
     def futures_tickers(raw_data: dict) -> list[str]:
-        return Adapter.tickers(raw_data, resolve_symbols=False)
+        return [item["name"] for item in raw_data["universe"] if not item.get("isDelisted")]
 
     @staticmethod
     def last_price(raw_data: dict, resolve_symbols: bool = True) -> dict[str, float]:
         return {
             Adapter._resolve_spot_symbol(token, resolve_symbols): float(price)
             for token, price in raw_data.items()
-            if token.startswith("@")
+            if Adapter._is_spot_mid(token)
         }
 
     @staticmethod
-    def futures_last_price(raw_data: dict) -> dict[str, float]:
-        return {
-            token: float(price) for token, price in raw_data.items() if not token.startswith("@")
-        }
+    def futures_last_price(raw_data: dict, meta: dict) -> dict[str, float]:
+        active = set(Adapter.futures_tickers(meta))
+        return {token: float(price) for token, price in raw_data.items() if token in active}
 
     @staticmethod
     def ticker_24hr(raw_data: list, resolve_symbols: bool = True) -> TickerDailyDict:
@@ -98,6 +104,8 @@ class Adapter:
         result: TickerDailyDict = {}
 
         for i, item in enumerate(metrics):
+            if universe[i].get("isDelisted"):
+                continue
             try:
                 prev_day_px = float(item.get("prevDayPx", 0) or "0")
                 oracle_px = float(item.get("oraclePx", 0) or "0")
@@ -146,8 +154,28 @@ class Adapter:
         return {
             universe[i]["name"]: float(item["funding"]) * 100
             for i, item in enumerate(metrics)
-            if item.get("funding") is not None
+            if item.get("funding") is not None and not universe[i].get("isDelisted")
         }
+
+    @staticmethod
+    def funding_info(meta: dict, predicted_fundings: list) -> FundingInfoDict:
+        active = set(Adapter.futures_tickers(meta))
+        now = int(time.time() * 1000)
+        result: FundingInfoDict = {}
+        for coin, venues in predicted_fundings:
+            hl = dict(venues).get("HlPerp")
+            if coin not in active or not hl:
+                continue
+            interval = int(hl.get("fundingIntervalHours") or 0)
+            next_time = int(hl.get("nextFundingTime") or 0)
+            # Биржа отдает начало текущего периода (уже в прошлом) — сдвигаем на интервал вперед
+            if interval and 0 < next_time <= now:
+                step = interval * 3_600_000
+                next_time += ((now - next_time) // step + 1) * step
+            result[coin] = FundingInfoItem(
+                v=float(hl["fundingRate"]) * 100, i=interval, T=next_time
+            )
+        return result
 
     @staticmethod
     def open_interest(raw_data: list) -> OpenInterestDict:
@@ -160,7 +188,14 @@ class Adapter:
                 u="coins",
             )
             for i, item in enumerate(metrics)
+            if not universe[i].get("isDelisted")
         }
+
+    @staticmethod
+    def futures_depth(raw_data: dict, limit: int) -> BookDepthDict:
+        return Adapter.partial_book_depth_message({"data": raw_data}, limit, resolve_symbols=False)[
+            0
+        ]
 
     @staticmethod
     def klines_message(raw_msg: dict, resolve_symbols: bool = True) -> list[KlineDict]:
