@@ -1097,7 +1097,7 @@ class Client(BaseClient):
         coin: str,
         n_sig_figs: Literal[2, 3, 4, 5] | None = None,
         mantissa: Literal[1, 2, 5] | None = None,
-    ) -> list[list[dict]]:
+    ) -> dict:
         """Получение снапшота стакана уровня L2 для актива.
 
         https://docs.chainstack.com/reference/hyperliquid-info-l2-book

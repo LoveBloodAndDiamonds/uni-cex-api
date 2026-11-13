@@ -147,7 +147,7 @@ class UserWebsocket:
             self._listen_key = await self._create_listen_key()
             # Продление запускается до подключения: `Websocket.start()` блокирует до остановки.
             self._keepalive_task = asyncio.create_task(self._keepalive_loop())
-            await self._start_ws(self._create_ws_url(self._type, self._listen_key))
+            await self._start_ws(self._create_ws_url("FUTURES", self._listen_key))
         except Exception:
             self._running = False
             await self._stop_keepalive_task()

@@ -174,7 +174,7 @@ class Client(BaseClient):
         Возвращает:
             `Any`: Ответ API в формате JSON (`dict` или `list`), как вернул сервер.
         """
-        url, params, data, headers = self._prepare_request_params(
+        url, params, body, headers = self._prepare_request_params(
             method=method,
             endpoint=endpoint,
             signed=signed,
@@ -185,7 +185,7 @@ class Client(BaseClient):
             method=method,
             url=url,
             params=params,
-            data=data,
+            data=body,
             headers=headers,
         )
 
