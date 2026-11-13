@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable, Sequence
 from typing import Any, Literal
 
 from unicex._base import Websocket
-from unicex.utils import validate_single_symbol_args
+from unicex.utils import batched_list, validate_single_symbol_args
 
 from .client import Client
 
@@ -44,22 +44,31 @@ class WebsocketManager:
     def _generate_subscription_message(
         self,
         topics: Sequence[str],
+        category: Literal["spot", "linear", "inverse", "option"],
         req_id: str | None = None,
     ) -> list[str]:
-        """Сформировать сообщение для подписки на вебсокет.
+        """Сформировать сообщения для подписки на вебсокет.
+
+        Спот принимает не больше 10 топиков в одном запросе подписки (иначе молча отказывает),
+        поэтому для спота топики разбиваются на несколько сообщений в рамках одного соединения.
 
         Параметры:
             topics (`Sequence[str]`): Список топиков для подписки.
+            category (`Literal["spot", "linear", "inverse", "option"]`): Категория рынка.
             req_id (`str | None`): Опциональный идентификатор запроса.
 
         Возвращает:
             `list[str]`: Список JSON строк для отправки.
         """
-        message = {"op": "subscribe", "args": list(topics)}
-        if req_id:
-            message["req_id"] = req_id
+        batches = batched_list(topics, 10) if category == "spot" else [list(topics)]
+        messages = []
+        for batch in batches:
+            message = {"op": "subscribe", "args": batch}
+            if req_id:
+                message["req_id"] = req_id
+            messages.append(json.dumps(message))
 
-        return [json.dumps(message)]
+        return messages
 
     def _get_url_for_category(
         self, category: Literal["spot", "linear", "inverse", "option", "private"]
@@ -115,7 +124,7 @@ class WebsocketManager:
         tickers = [symbol] if symbol else symbols
         topics = [f"orderbook.{depth}.{ticker.upper()}" for ticker in tickers]  # type: ignore
 
-        subscription_messages = self._generate_subscription_message(topics, req_id)
+        subscription_messages = self._generate_subscription_message(topics, category, req_id)
         url = self._get_url_for_category(category)
 
         return Websocket(
@@ -141,7 +150,7 @@ class WebsocketManager:
         return Websocket(
             callback=callback,
             url=self._get_url_for_category(category),
-            subscription_messages=self._generate_subscription_message(topics, req_id),
+            subscription_messages=self._generate_subscription_message(topics, category, req_id),
             **self._ws_kwargs,
         )
 
@@ -246,7 +255,9 @@ class WebsocketManager:
         return Websocket(
             callback=callback,
             url=self._get_url_for_category(category),
-            subscription_messages=self._generate_subscription_message([f"adlAlert.{coin}"], req_id),
+            subscription_messages=self._generate_subscription_message(
+                [f"adlAlert.{coin}"], category, req_id
+            ),
             **self._ws_kwargs,
         )
 
@@ -273,7 +284,7 @@ class WebsocketManager:
             callback=callback,
             url=self._get_url_for_category(category),
             subscription_messages=self._generate_subscription_message(
-                [f"insurance.{pool}"], req_id
+                [f"insurance.{pool}"], category, req_id
             ),
             **self._ws_kwargs,
         )
@@ -309,7 +320,7 @@ class WebsocketManager:
         tickers = [symbol] if symbol else symbols
         topics = [f"kline.{interval}.{ticker.upper()}" for ticker in tickers]  # type: ignore
 
-        subscription_messages = self._generate_subscription_message(topics, req_id)
+        subscription_messages = self._generate_subscription_message(topics, category, req_id)
         url = self._get_url_for_category(category)
 
         return Websocket(
@@ -346,7 +357,7 @@ class WebsocketManager:
         tickers = [symbol] if symbol else symbols
         topics = [f"publicTrade.{ticker.upper()}" for ticker in tickers]  # type: ignore
 
-        subscription_messages = self._generate_subscription_message(topics, req_id)
+        subscription_messages = self._generate_subscription_message(topics, category, req_id)
         url = self._get_url_for_category(category)
 
         return Websocket(
@@ -383,7 +394,7 @@ class WebsocketManager:
         tickers = [symbol] if symbol else symbols
         topics = [f"tickers.{ticker.upper()}" for ticker in tickers]  # type: ignore
 
-        subscription_messages = self._generate_subscription_message(topics, req_id)
+        subscription_messages = self._generate_subscription_message(topics, category, req_id)
         url = self._get_url_for_category(category)
 
         return Websocket(
@@ -428,7 +439,7 @@ class WebsocketManager:
         tickers = [symbol] if symbol else symbols
         topics = [f"liquidation.{ticker.upper()}" for ticker in tickers]  # type: ignore
 
-        subscription_messages = self._generate_subscription_message(topics, req_id)
+        subscription_messages = self._generate_subscription_message(topics, category, req_id)
         url = self._get_url_for_category(category)
 
         return Websocket(
@@ -465,7 +476,7 @@ class WebsocketManager:
         tickers = [symbol] if symbol else symbols
         topics = [f"allLiquidation.{ticker.upper()}" for ticker in tickers]  # type: ignore
 
-        subscription_messages = self._generate_subscription_message(topics, req_id)
+        subscription_messages = self._generate_subscription_message(topics, category, req_id)
         url = self._get_url_for_category(category)
 
         return Websocket(

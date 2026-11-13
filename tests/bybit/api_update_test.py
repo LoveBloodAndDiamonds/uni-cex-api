@@ -4,6 +4,7 @@
 """
 
 import asyncio
+import json
 import time
 import warnings
 
@@ -84,10 +85,26 @@ async def noop(_msg) -> None:  # noqa: ANN001
     """Пустой callback."""
 
 
+SPOT_20 = [
+    "BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "BNBUSDT", "ADAUSDT",
+    "LINKUSDT", "LTCUSDT", "AVAXUSDT", "DOTUSDT", "TRXUSDT", "SUIUSDT", "TONUSDT",
+    "NEARUSDT", "APTUSDT", "ARBUSDT", "PEPEUSDT", "AAVEUSDT", "MNTUSDT",
+]  # fmt: skip
+
+
 async def check_ws() -> None:
     """Новые публичные WS-каналы."""
     m = WebsocketManager()
+    spot = m.trade(noop, "spot", symbols=SPOT_20)
+    sizes = [len(json.loads(x)["args"]) for x in spot._subscription_messages]
+    linear = m.trade(noop, "linear", symbols=SPOT_20)._subscription_messages
+    check(
+        sizes == [10, 10] and len(linear) == 1,
+        "spot subscribe split by 10 args, linear in one message",
+        str(sizes),
+    )
     streams = {
+        "trade spot x20": spot,
         "orderbook depth=1000": m.orderbook(noop, "linear", depth=1000, symbol="BTCUSDT"),
         "full_orderbook": m.full_orderbook(noop, "linear", symbol="BTCUSDT"),
         "orderbook_rpi": m.orderbook_rpi(noop, "linear", symbol="BTCUSDT"),
