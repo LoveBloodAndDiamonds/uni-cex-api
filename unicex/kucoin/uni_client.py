@@ -1,6 +1,7 @@
 __all__ = ["UniClient"]
 
 
+import asyncio
 from typing import overload
 
 from unicex._abc import IUniClient
@@ -22,6 +23,7 @@ from unicex.types import (
 
 from .adapter import Adapter
 from .client import Client
+from .exchange_info import ExchangeInfo
 
 
 class UniClient(IUniClient[Client]):
@@ -30,6 +32,14 @@ class UniClient(IUniClient[Client]):
     @property
     def _client_cls(self) -> type[Client]:
         return Client
+
+    async def _contract_sizes(self, symbol: str | None = None) -> dict[str, float]:
+        """Размеры контрактов: из ExchangeInfo, а если он не загружен — запросом инструментов."""
+        loaded = getattr(ExchangeInfo, "_futures_tickers_info", None) or {}
+        if (symbol and symbol in loaded) or (not symbol and loaded):
+            return {}
+        raw_data = await self._client.symbol("FUTURES", symbol)
+        return Adapter.contract_sizes(raw_data)
 
     async def tickers(self, only_usdt: bool = True) -> list[str]:
         raw_data = await self._client.ticker("SPOT")
@@ -108,20 +118,35 @@ class UniClient(IUniClient[Client]):
             if isinstance(interval, Timeframe)
             else interval
         )
-        raw_data = await self._client.kline(
-            trade_type="FUTURES",
-            symbol=symbol,
-            interval=interval,
-            start_at=self.to_seconds(start_time),
-            end_at=self.to_seconds(end_time),
+        raw_data, sizes = await asyncio.gather(
+            self._client.kline(
+                trade_type="FUTURES",
+                symbol=symbol,
+                interval=interval,
+                start_at=self.to_seconds(start_time),
+                end_at=self.to_seconds(end_time),
+            ),
+            self._contract_sizes(symbol),
         )
-        return Adapter.klines(raw_data=raw_data, symbol=symbol)
+        return Adapter.klines(
+            raw_data=raw_data,
+            symbol=symbol,
+            contract_size=Adapter._contract_size(symbol, sizes),
+        )
+
+    @overload
+    async def funding_rate(self, symbol: str) -> float: ...
+
+    @overload
+    async def funding_rate(self, symbol: None) -> dict[str, float]: ...
+
+    @overload
+    async def funding_rate(self) -> dict[str, float]: ...
 
     async def funding_rate(self, symbol: str | None = None) -> dict[str, float] | float:
-        if not symbol:
-            raise ValueError("Symbol is required to fetch Kucoin funding rate")
         raw_data = await self._client.funding_rate(symbol=symbol)
-        return Adapter.funding_rate(raw_data)
+        adapted_data = Adapter.funding_rate(raw_data)
+        return adapted_data[symbol] if symbol else adapted_data
 
     @overload
     async def funding_interval(self, symbol: str) -> int: ...
@@ -133,7 +158,9 @@ class UniClient(IUniClient[Client]):
     async def funding_interval(self) -> dict[str, int]: ...
 
     async def funding_interval(self, symbol: str | None = None) -> dict[str, int] | int:
-        raise NotImplementedError("This method will be implemented in a future release")
+        raw_data = await self._client.funding_rate(symbol=symbol)
+        adapted_data = Adapter.funding_interval(raw_data)
+        return adapted_data[symbol] if symbol else adapted_data
 
     @overload
     async def funding_next_time(self, symbol: str) -> int: ...
@@ -145,10 +172,23 @@ class UniClient(IUniClient[Client]):
     async def funding_next_time(self) -> dict[str, int]: ...
 
     async def funding_next_time(self, symbol: str | None = None) -> dict[str, int] | int:
-        raise NotImplementedError("Method will be implemented later.")
+        raw_data = await self._client.funding_rate(symbol=symbol)
+        adapted_data = Adapter.funding_next_time(raw_data)
+        return adapted_data[symbol] if symbol else adapted_data
+
+    @overload
+    async def funding_info(self, symbol: str) -> FundingInfoItem: ...
+
+    @overload
+    async def funding_info(self, symbol: None) -> FundingInfoDict: ...
+
+    @overload
+    async def funding_info(self) -> FundingInfoDict: ...
 
     async def funding_info(self, symbol: str | None = None) -> FundingInfoItem | FundingInfoDict:
-        raise NotImplementedError("Method will be implemented later.")
+        raw_data = await self._client.funding_rate(symbol=symbol)
+        adapted_data = Adapter.funding_info(raw_data)
+        return adapted_data[symbol] if symbol else adapted_data
 
     @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...
@@ -160,8 +200,8 @@ class UniClient(IUniClient[Client]):
     async def open_interest(self) -> OpenInterestDict: ...
 
     async def open_interest(self, symbol: str | None = None) -> OpenInterestItem | OpenInterestDict:
-        raw_data = await self._client.open_interest()
-        adapted_data = Adapter.open_interest(raw_data)
+        raw_data, sizes = await asyncio.gather(self._client.open_interest(), self._contract_sizes())
+        adapted_data = Adapter.open_interest(raw_data, sizes)
         return adapted_data[symbol] if symbol else adapted_data
 
     async def long_short_ratio_history(
@@ -172,22 +212,44 @@ class UniClient(IUniClient[Client]):
             "public futures API has no long/short account ratio endpoint."
         )
 
+    @overload
+    async def futures_best_bid_ask(self, symbol: str) -> BestBidAskItem: ...
+
+    @overload
+    async def futures_best_bid_ask(self, symbol: None) -> BestBidAskDict: ...
+
+    @overload
+    async def futures_best_bid_ask(self) -> BestBidAskDict: ...
+
     async def futures_best_bid_ask(
         self, symbol: str | None = None
     ) -> BestBidAskItem | BestBidAskDict:
-        raise NotImplementedError("Method `futures_best_bid_ask` will be implemented later")
+        raw_data, sizes = await asyncio.gather(
+            self._client.ticker("FUTURES", symbol), self._contract_sizes(symbol)
+        )
+        adapted_data = Adapter.futures_best_bid_ask(raw_data, sizes)
+        return adapted_data[symbol] if symbol else adapted_data
 
     async def futures_depth(
         self,
         symbol: str,
         limit: int,
     ) -> BookDepthDict:
-        raise NotImplementedError(
-            "Method 'futures_depth' will be implemented later. You can open pull request to contribute."
+        if not 1 <= limit <= 1000:
+            raise ValueError(
+                f"Invalid limit for kucoin futures depth: {limit}. Valid range: [1, 1000]"
+            )
+        raw_data, sizes = await asyncio.gather(
+            self._client.orderbook(symbol=symbol, trade_type="FUTURES", limit=str(limit)),
+            self._contract_sizes(symbol),
+        )
+        return Adapter.futures_depth(
+            raw_data, symbol=symbol, contract_size=Adapter._contract_size(symbol, sizes)
         )
 
     async def futures_delistings(self) -> dict[str, int]:
-        raise NotImplementedError("Method will be implemented later.")
+        raw_data = await self._client.symbol("FUTURES")
+        return Adapter.futures_delistings(raw_data)
 
     async def futures_order_create(
         self,
