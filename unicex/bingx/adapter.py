@@ -1,8 +1,16 @@
 __all__ = ["Adapter"]
 
+import time
 from typing import Any
 
+from loguru import logger
+
 from unicex.types import (
+    BestBidAskDict,
+    BestBidAskItem,
+    BookDepthDict,
+    FundingInfoDict,
+    FundingInfoItem,
     KlineDict,
     LiquidationDict,
     OpenInterestItem,
@@ -55,6 +63,105 @@ class Adapter:
                 result[item["symbol"]] = float(item["lastFundingRate"]) * 100
             elif "fundingRate" in item and item["fundingRate"] != "":
                 result[item["symbol"]] = float(item["fundingRate"]) * 100
+        return result
+
+    @staticmethod
+    def _premium_items(raw_data: dict) -> list[dict]:
+        data = raw_data["data"]
+        return data if isinstance(data, list) else [data]
+
+    @staticmethod
+    def funding_interval(raw_data: dict) -> dict[str, int]:
+        result = {}
+        for item in Adapter._premium_items(raw_data):
+            try:
+                result[item["symbol"]] = int(item["fundingIntervalHours"])
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
+
+    @staticmethod
+    def funding_next_time(raw_data: dict) -> dict[str, int]:
+        result = {}
+        for item in Adapter._premium_items(raw_data):
+            try:
+                result[item["symbol"]] = int(item["nextFundingTime"])
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
+
+    @staticmethod
+    def funding_info(raw_data: dict) -> FundingInfoDict:
+        result = {}
+        for item in Adapter._premium_items(raw_data):
+            try:
+                result[item["symbol"]] = FundingInfoItem(
+                    v=float(item["lastFundingRate"]) * 100,
+                    i=int(item.get("fundingIntervalHours") or 0),
+                    T=int(item.get("nextFundingTime") or 0),
+                )
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
+
+    @staticmethod
+    def futures_best_bid_ask(raw_data: dict) -> BestBidAskDict:
+        # Без символа — из списка 24h-тикеров, с символом — из bookTicker
+        data = raw_data["data"]
+        result = {}
+        if isinstance(data, dict) and "book_ticker" in data:
+            item = data["book_ticker"]
+            result[item["symbol"]] = BestBidAskItem(
+                s=item["symbol"],
+                t=int(item["time"]),
+                u=int(item.get("lastUpdateId") or 0),
+                b=float(item["bid_price"]),
+                B=float(item["bid_qty"]),
+                a=float(item["ask_price"]),
+                A=float(item["ask_qty"]),
+            )
+            return result
+        for item in data if isinstance(data, list) else [data]:
+            try:
+                if not (item.get("bidPrice") and item.get("askPrice")):
+                    continue
+                result[item["symbol"]] = BestBidAskItem(
+                    s=item["symbol"],
+                    t=int(item["closeTime"]),
+                    u=0,
+                    b=float(item["bidPrice"]),
+                    B=float(item["bidQty"]),
+                    a=float(item["askPrice"]),
+                    A=float(item["askQty"]),
+                )
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
+
+    @staticmethod
+    def futures_depth(raw_data: dict, symbol: str) -> BookDepthDict:
+        # bids/asks — в монетах (совпадают с bidsCoin/asksCoin)
+        data = raw_data["data"]
+        return BookDepthDict(
+            s=symbol,
+            t=int(data["T"]),
+            u=0,
+            b=[(float(p), float(v)) for p, v in data["bids"]],
+            a=[(float(p), float(v)) for p, v in data["asks"]],
+        )
+
+    @staticmethod
+    def futures_delistings(raw_data: dict) -> dict[str, int]:
+        # offTime — время отключения контракта, 0 — не запланировано
+        now = int(time.time() * 1000)
+        result = {}
+        for item in raw_data["data"]:
+            try:
+                off_time = int(item.get("offTime") or 0)
+                if off_time > now:
+                    result[item["symbol"]] = off_time
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
         return result
 
     @staticmethod
@@ -133,6 +240,9 @@ class Adapter:
 
     @staticmethod
     def trades_message(msg: Any) -> list[TradeDict]:
+        # Фьючерсы присылают список сделок, спот — одну сделку объектом
+        data = msg["data"]
+        trades = data if isinstance(data, list) else [data]
         return [
             TradeDict(
                 t=int(trade["T"]),
@@ -142,7 +252,7 @@ class Adapter:
                 v=float(trade["q"]),
             )
             for trade in sorted(
-                msg["data"],
+                trades,
                 key=lambda x: int(x["T"]),
             )
         ]

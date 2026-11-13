@@ -115,7 +115,9 @@ class UniClient(IUniClient[Client]):
     async def funding_interval(self) -> dict[str, int]: ...
 
     async def funding_interval(self, symbol: str | None = None) -> dict[str, int] | int:
-        raise NotImplementedError("This method will be implemented in a future release")
+        raw_data = await self._client.futures_mark_price(symbol=symbol)
+        adapted_data = Adapter.funding_interval(raw_data)
+        return adapted_data[symbol] if symbol else adapted_data
 
     @overload
     async def funding_next_time(self, symbol: str) -> int: ...
@@ -127,10 +129,23 @@ class UniClient(IUniClient[Client]):
     async def funding_next_time(self) -> dict[str, int]: ...
 
     async def funding_next_time(self, symbol: str | None = None) -> dict[str, int] | int:
-        raise NotImplementedError("Method will be implemented later.")
+        raw_data = await self._client.futures_mark_price(symbol=symbol)
+        adapted_data = Adapter.funding_next_time(raw_data)
+        return adapted_data[symbol] if symbol else adapted_data
+
+    @overload
+    async def funding_info(self, symbol: str) -> FundingInfoItem: ...
+
+    @overload
+    async def funding_info(self, symbol: None) -> FundingInfoDict: ...
+
+    @overload
+    async def funding_info(self) -> FundingInfoDict: ...
 
     async def funding_info(self, symbol: str | None = None) -> FundingInfoItem | FundingInfoDict:
-        raise NotImplementedError("Method will be implemented later.")
+        raw_data = await self._client.futures_mark_price(symbol=symbol)
+        adapted_data = Adapter.funding_info(raw_data)
+        return adapted_data[symbol] if symbol else adapted_data
 
     @overload
     async def open_interest(self, symbol: str) -> OpenInterestItem: ...
@@ -155,22 +170,40 @@ class UniClient(IUniClient[Client]):
             "public swap API has no long/short account ratio endpoint."
         )
 
+    @overload
+    async def futures_best_bid_ask(self, symbol: str) -> BestBidAskItem: ...
+
+    @overload
+    async def futures_best_bid_ask(self, symbol: None) -> BestBidAskDict: ...
+
+    @overload
+    async def futures_best_bid_ask(self) -> BestBidAskDict: ...
+
     async def futures_best_bid_ask(
         self, symbol: str | None = None
     ) -> BestBidAskItem | BestBidAskDict:
-        raise NotImplementedError("Method `futures_best_bid_ask` will be implemented later")
+        if symbol:
+            raw_data = await self._client.futures_book_ticker(symbol=symbol)
+            return Adapter.futures_best_bid_ask(raw_data)[symbol]
+        raw_data = await self._client.futures_ticker_24hr()
+        return Adapter.futures_best_bid_ask(raw_data)
 
     async def futures_depth(
         self,
         symbol: str,
         limit: int,
     ) -> BookDepthDict:
-        raise NotImplementedError(
-            "Method 'futures_depth' will be implemented later. You can open pull request to contribute."
-        )
+        valid_limits = {5, 10, 20, 50, 100, 500, 1000}
+        if limit not in valid_limits:
+            raise ValueError(
+                f"Invalid limit for bingx futures depth: {limit}. Valid values: {sorted(valid_limits)}"
+            )
+        raw_data = await self._client.futures_order_book(symbol=symbol, limit=limit)
+        return Adapter.futures_depth(raw_data, symbol=symbol)
 
     async def futures_delistings(self) -> dict[str, int]:
-        raise NotImplementedError("Method will be implemented later.")
+        raw_data = await self._client.futures_contracts()
+        return Adapter.futures_delistings(raw_data)
 
     async def futures_order_create(
         self,
