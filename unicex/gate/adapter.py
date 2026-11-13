@@ -116,8 +116,10 @@ class Adapter:
         ]
 
     @staticmethod
-    def futures_klines(raw_data: list[dict], symbol: str) -> list[KlineDict]:
-        contract_size = Adapter._get_contract_size(symbol)
+    def futures_klines(
+        raw_data: list[dict], symbol: str, contract_size: float | None = None
+    ) -> list[KlineDict]:
+        contract_size = contract_size or Adapter._get_contract_size(symbol)
         return [
             KlineDict(
                 s=symbol,
@@ -236,7 +238,10 @@ class Adapter:
         for item in raw_data:
             try:
                 contract = item["contract"]
-                contract_size = Adapter._get_contract_size(contract)
+                # quanto_multiplier есть прямо в тикере — ExchangeInfo не нужен
+                contract_size = float(item.get("quanto_multiplier") or 0) or (
+                    Adapter._get_contract_size(contract)
+                )
                 result[contract] = BestBidAskItem(
                     s=contract,
                     t=int(time.time() * 1000),
@@ -251,8 +256,10 @@ class Adapter:
         return result
 
     @staticmethod
-    def futures_depth(raw_data: dict, symbol: str) -> BookDepthDict:
-        contract_size = Adapter._get_contract_size(symbol)
+    def futures_depth(
+        raw_data: dict, symbol: str, contract_size: float | None = None
+    ) -> BookDepthDict:
+        contract_size = contract_size or Adapter._get_contract_size(symbol)
         bids = []
         asks = []
         for item in raw_data["bids"]:
@@ -374,7 +381,7 @@ class Adapter:
         trade = raw_msg["result"]
         return [
             TradeDict(
-                t=trade["create_time_ms"],
+                t=int(float(trade["create_time_ms"])),
                 s=trade["currency_pair"],
                 S=trade["side"].upper(),
                 p=float(trade["price"]),
@@ -386,7 +393,7 @@ class Adapter:
     def futures_trades_message(raw_msg: Any) -> list[TradeDict]:
         return [
             TradeDict(
-                t=item["create_time_ms"],
+                t=int(float(item["create_time_ms"])),
                 s=item["contract"],
                 S="BUY" if float(item["size"]) > 0 else "SELL",
                 p=float(item["price"]),

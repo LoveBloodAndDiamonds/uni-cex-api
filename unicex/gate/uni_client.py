@@ -95,15 +95,18 @@ class UniClient(IUniClient[Client]):
             if isinstance(interval, Timeframe)
             else interval
         )
-        raw_data = await self._client.futures_candlesticks(
-            settle="usdt",
-            contract=symbol,
-            interval=interval,
-            limit=limit,
-            from_time=self._to_seconds(start_time),
-            to_time=self._to_seconds(end_time),
+        raw_data, contract_size = await asyncio.gather(
+            self._client.futures_candlesticks(
+                settle="usdt",
+                contract=symbol,
+                interval=interval,
+                limit=limit,
+                from_time=self._to_seconds(start_time),
+                to_time=self._to_seconds(end_time),
+            ),
+            self._contract_size(symbol),
         )
-        return Adapter.futures_klines(raw_data=raw_data, symbol=symbol)  # type: ignore[reportArgumentType]
+        return Adapter.futures_klines(raw_data=raw_data, symbol=symbol, contract_size=contract_size)  # type: ignore[reportArgumentType]
 
     @overload
     async def funding_rate(self, symbol: str) -> float: ...
@@ -209,6 +212,15 @@ class UniClient(IUniClient[Client]):
         adapted_data = Adapter.futures_best_bid_ask(raw_data=raw_data)  # type: ignore[reportArgumentType]
         return adapted_data[symbol] if symbol else adapted_data
 
+    async def _contract_size(self, symbol: str) -> float | None:
+        """Размер контракта из ExchangeInfo, а если он не загружен — из тикера контракта."""
+        loaded = getattr(ExchangeInfo, "_futures_tickers_info", None) or {}
+        if symbol in loaded:
+            return None  # адаптер возьмёт из ExchangeInfo
+        raw_data = await self._client.futures_tickers(settle="usdt", contract=symbol)
+        items = raw_data if isinstance(raw_data, list) else [raw_data]
+        return float(items[0]["quanto_multiplier"])
+
     @staticmethod
     def _to_seconds(value: int | None) -> int | None:
         if value is None:
@@ -222,13 +234,16 @@ class UniClient(IUniClient[Client]):
         symbol: str,
         limit: int,
     ) -> BookDepthDict:
-        raw_data = await self._client.futures_order_book(
-            settle="usdt",
-            contract=symbol,
-            limit=limit,
-            with_id="true",  # type: ignore
+        raw_data, contract_size = await asyncio.gather(
+            self._client.futures_order_book(
+                settle="usdt",
+                contract=symbol,
+                limit=limit,
+                with_id="true",  # type: ignore
+            ),
+            self._contract_size(symbol),
         )
-        return Adapter.futures_depth(raw_data=raw_data, symbol=symbol)
+        return Adapter.futures_depth(raw_data=raw_data, symbol=symbol, contract_size=contract_size)
 
     async def futures_delistings(self) -> dict[str, int]:
         raw_data = await self._client.futures_contracts("usdt")
