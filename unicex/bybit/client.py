@@ -2,6 +2,7 @@ __all__ = ["Client"]
 
 import json
 import time
+import warnings
 from typing import Any, Literal
 
 from unicex._base import BaseClient
@@ -268,6 +269,7 @@ class Client(BaseClient):
         base_coin: str | None = None,
         limit: int | None = None,
         cursor: str | None = None,
+        symbol_type: str | None = None,
     ) -> dict:
         """Информация об инструментах.
 
@@ -280,6 +282,7 @@ class Client(BaseClient):
             "baseCoin": base_coin,
             "limit": limit,
             "cursor": cursor,
+            "symbolType": symbol_type,
         }
 
         return await self._make_request("GET", "/v5/market/instruments-info", params=params)
@@ -594,6 +597,115 @@ class Client(BaseClient):
 
         return await self._make_request("GET", "/v5/market/fee-group-info", params=params)
 
+    async def full_orderbook(self, category: str, symbol: str) -> dict:
+        """Получение полной книги ордеров (до 10 000 уровней).
+
+        https://bybit-exchange.github.io/docs/v5/market/full-ob
+        """
+        params = {
+            "category": category,
+            "symbol": symbol,
+        }
+
+        return await self._make_request("GET", "/v5/market/full_orderbook", params=params)
+
+    async def instrument_summary(
+        self,
+        category: str,
+        symbol: str | None = None,
+        symbol_type: str | None = None,
+        market_region: str | None = None,
+        base_coin: str | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """Получение сводки по инструменту.
+
+        https://bybit-exchange.github.io/docs/v5/market/instrument-summary
+        """
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "symbolType": symbol_type,
+            "marketRegion": market_region,
+            "baseCoin": base_coin,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return await self._make_request("GET", "/v5/market/instrument-summary", params=params)
+
+    async def corporate_action(
+        self,
+        category: str | None = None,
+        base_coin: str | None = None,
+        action_type: str | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """Получение корпоративных действий.
+
+        https://bybit-exchange.github.io/docs/v5/market/corporate-action
+        """
+        params = {
+            "category": category,
+            "baseCoin": base_coin,
+            "actionType": action_type,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return await self._make_request("GET", "/v5/market/corporate-action", params=params)
+
+    async def option_base_coins(self, underlying_type: str | None = None) -> dict:
+        """Получение базовых монет опционов.
+
+        https://bybit-exchange.github.io/docs/v5/market/option-base-coins
+        """
+        params = {
+            "underlyingType": underlying_type,
+        }
+
+        return await self._make_request("GET", "/v5/market/option-base-coins", params=params)
+
+    async def announcements(
+        self,
+        locale: str,
+        type_: str | None = None,
+        tag: str | None = None,
+        page: int | None = None,
+        limit: int | None = None,
+    ) -> dict:
+        """Получение объявлений.
+
+        https://bybit-exchange.github.io/docs/v5/announcement
+        """
+        params = {
+            "locale": locale,
+            "type": type_,
+            "tag": tag,
+            "page": page,
+            "limit": limit,
+        }
+
+        return await self._make_request(
+            "GET",
+            "/v5/announcements/index",
+            params=params,
+        )
+
+    async def system_status(self, id: str | None = None, state: str | None = None) -> dict:
+        """Получение статуса системы и плановых работ.
+
+        https://bybit-exchange.github.io/docs/v5/system-status
+        """
+        params = {
+            "id": id,
+            "state": state,
+        }
+
+        return await self._make_request("GET", "/v5/system/status", params=params)
+
     # topic: trade
 
     async def create_order(
@@ -629,6 +741,9 @@ class Client(BaseClient):
         sl_limit_price: str | None = None,
         tp_order_type: str | None = None,
         sl_order_type: str | None = None,
+        bbo_level: str | None = None,
+        bbo_side_type: str | None = None,
+        rpi_taker_access: bool | None = None,
     ) -> dict:
         """Создание ордера.
 
@@ -666,6 +781,9 @@ class Client(BaseClient):
             "slLimitPrice": sl_limit_price,
             "tpOrderType": tp_order_type,
             "slOrderType": sl_order_type,
+            "bboLevel": bbo_level,
+            "bboSideType": bbo_side_type,
+            "rpiTakerAccess": rpi_taker_access,
         }
 
         return await self._make_request("POST", "/v5/order/create", params=params, signed=True)
@@ -840,6 +958,7 @@ class Client(BaseClient):
         exec_type: str | None = None,
         limit: int | None = None,
         cursor: str | None = None,
+        settle_coin: str | None = None,
     ) -> dict:
         """История сделок (execution list).
 
@@ -856,6 +975,7 @@ class Client(BaseClient):
             "execType": exec_type,
             "limit": limit,
             "cursor": cursor,
+            "settleCoin": settle_coin,
         }
 
         return await self._make_request("GET", "/v5/execution/list", params=params, signed=True)
@@ -1073,7 +1193,14 @@ class Client(BaseClient):
         """Переключение кросс/изолированной маржи для символа.
 
         https://bybit-exchange.github.io/docs/v5/position/cross-isolate
+
+        Устарело: Bybit перенёс эндпоинт в раздел Abandoned, будет удалён в unicex 1.0.
         """
+        warnings.warn(
+            "Bybit moved /v5/position/switch-isolated to Abandoned Endpoints; it will be removed in unicex 1.0.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         params = {
             "category": category,
             "symbol": symbol,
@@ -1327,7 +1454,14 @@ class Client(BaseClient):
         """Установка режима TP/SL по умолчанию для символа.
 
         https://bybit-exchange.github.io/docs/v5/position/tpsl-mode
+
+        Устарело: Bybit перенёс эндпоинт в раздел Abandoned, будет удалён в unicex 1.0.
         """
+        warnings.warn(
+            "Bybit moved /v5/position/set-tpsl-mode to Abandoned Endpoints; it will be removed in unicex 1.0.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         params = {
             "category": category,
             "symbol": symbol,
@@ -1348,7 +1482,14 @@ class Client(BaseClient):
         """Установка лимита риска позиции.
 
         https://bybit-exchange.github.io/docs/v5/position/set-risk-limit
+
+        Устарело: Bybit перенёс эндпоинт в раздел Abandoned, будет удалён в unicex 1.0.
         """
+        warnings.warn(
+            "Bybit moved /v5/position/set-risk-limit to Abandoned Endpoints; it will be removed in unicex 1.0.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         params = {
             "category": category,
             "symbol": symbol,
@@ -1358,6 +1499,23 @@ class Client(BaseClient):
 
         return await self._make_request(
             "POST", "/v5/position/set-risk-limit", params=params, signed=True
+        )
+
+    async def position_symbol_info(self, category: str, symbol: str | None = None) -> dict:
+        """Получение плеча по символам.
+
+        https://bybit-exchange.github.io/docs/v5/position/batch-lvg
+        """
+        params = {
+            "category": category,
+            "symbol": symbol,
+        }
+
+        return await self._make_request(
+            "GET",
+            "/v5/position/symbol-info",
+            params=params,
+            signed=True,
         )
 
     # topic: pre-upgrade
@@ -1722,6 +1880,7 @@ class Client(BaseClient):
         end_time: int | None = None,
         limit: int | None = None,
         cursor: str | None = None,
+        trans_sub_type: str | None = None,
     ) -> dict:
         """Транзакционный лог Unified аккаунта.
 
@@ -1737,6 +1896,7 @@ class Client(BaseClient):
             "endTime": end_time,
             "limit": limit,
             "cursor": cursor,
+            "transSubType": trans_sub_type,
         }
 
         return await self._make_request(
@@ -1756,7 +1916,14 @@ class Client(BaseClient):
         """Транзакционный лог деривативного кошелька.
 
         https://bybit-exchange.github.io/docs/v5/account/contract-transaction-log
+
+        Устарело: Bybit перенёс эндпоинт в раздел Abandoned, будет удалён в unicex 1.0.
         """
+        warnings.warn(
+            "Bybit moved /v5/account/contract-transaction-log to Abandoned Endpoints; it will be removed in unicex 1.0.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         params = {
             "currency": currency,
             "baseCoin": base_coin,
@@ -1844,6 +2011,7 @@ class Client(BaseClient):
         frozen_period: str,
         qty_limit: str,
         delta_limit: str,
+        vega_limit: str | None = None,
     ) -> dict:
         """Настроить Market Maker Protection (MMP).
 
@@ -1855,6 +2023,7 @@ class Client(BaseClient):
             "frozenPeriod": frozen_period,
             "qtyLimit": qty_limit,
             "deltaLimit": delta_limit,
+            "vegaLimit": vega_limit,
         }
 
         return await self._make_request(
@@ -1888,3 +2057,266 @@ class Client(BaseClient):
         }
 
         return await self._make_request("GET", "/v5/account/mmp-state", params=params, signed=True)
+
+    async def account_instruments_info(
+        self,
+        category: str,
+        symbol: str | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """Получение инструментов, доступных аккаунту.
+
+        https://bybit-exchange.github.io/docs/v5/account/instrument
+        """
+        params = {
+            "category": category,
+            "symbol": symbol,
+            "limit": limit,
+            "cursor": cursor,
+        }
+
+        return await self._make_request(
+            "GET",
+            "/v5/account/instruments-info",
+            params=params,
+            signed=True,
+        )
+
+    async def borrow(self, coin: str, amount: str) -> dict:
+        """Ручное заимствование.
+
+        https://bybit-exchange.github.io/docs/v5/account/borrow
+        """
+        params = {
+            "coin": coin,
+            "amount": amount,
+        }
+
+        return await self._make_request("POST", "/v5/account/borrow", params=params, signed=True)
+
+    async def repay(
+        self,
+        coin: str | None = None,
+        amount: str | None = None,
+        repayment_type: str | None = None,
+    ) -> dict:
+        """Ручное погашение займа.
+
+        https://bybit-exchange.github.io/docs/v5/account/repay
+        """
+        params = {
+            "coin": coin,
+            "amount": amount,
+            "repaymentType": repayment_type,
+        }
+
+        return await self._make_request("POST", "/v5/account/repay", params=params, signed=True)
+
+    async def no_convert_repay(
+        self,
+        coin: str,
+        amount: str | None = None,
+        repayment_type: str | None = None,
+    ) -> dict:
+        """Ручное погашение займа без конвертации активов.
+
+        https://bybit-exchange.github.io/docs/v5/account/no-convert-repay
+        """
+        params = {
+            "coin": coin,
+            "amount": amount,
+            "repaymentType": repayment_type,
+        }
+
+        return await self._make_request(
+            "POST",
+            "/v5/account/no-convert-repay",
+            params=params,
+            signed=True,
+        )
+
+    async def set_delta_mode(self, delta_enable: str) -> dict:
+        """Включение/выключение режима delta neutral.
+
+        https://bybit-exchange.github.io/docs/v5/account/set-delta-mode
+        """
+        params = {
+            "deltaEnable": delta_enable,
+        }
+
+        return await self._make_request(
+            "POST",
+            "/v5/account/set-delta-mode",
+            params=params,
+            signed=True,
+        )
+
+    async def trade_info_for_analysis(
+        self,
+        symbol: str,
+        start_time: str | None = None,
+        end_time: str | None = None,
+    ) -> dict:
+        """Получение торговой статистики для анализа.
+
+        https://bybit-exchange.github.io/docs/v5/account/trade-info-for-analysis
+        """
+        params = {
+            "symbol": symbol,
+            "startTime": start_time,
+            "endTime": end_time,
+        }
+
+        return await self._make_request(
+            "GET",
+            "/v5/account/trade-info-for-analysis",
+            params=params,
+            signed=True,
+        )
+
+    async def pay_info(self, coin: str | None = None) -> dict:
+        """Получение информации о платежах.
+
+        https://bybit-exchange.github.io/docs/v5/account/pay-info
+        """
+        params = {
+            "coin": coin,
+        }
+
+        return await self._make_request("GET", "/v5/account/pay-info", params=params, signed=True)
+
+    async def option_asset_info(self) -> dict:
+        """Получение информации об опционных активах.
+
+        https://bybit-exchange.github.io/docs/v5/account/option-asset-info
+        """
+        return await self._make_request("GET", "/v5/account/option-asset-info", signed=True)
+
+    async def api_rate_limit(self, uids: str) -> dict:
+        """Получение лимита запросов API.
+
+        https://bybit-exchange.github.io/docs/v5/rate-limit/rules-for-pros/apilimit-query
+        """
+        params = {
+            "uids": uids,
+        }
+
+        return await self._make_request("GET", "/v5/apilimit/query", params=params, signed=True)
+
+    async def api_rate_limits_all(
+        self,
+        limit: str | None = None,
+        cursor: str | None = None,
+        uids: str | None = None,
+    ) -> dict:
+        """Получение всех лимитов запросов API.
+
+        https://bybit-exchange.github.io/docs/v5/rate-limit/rules-for-pros/apilimit-query-all
+        """
+        params = {
+            "limit": limit,
+            "cursor": cursor,
+            "uids": uids,
+        }
+
+        return await self._make_request("GET", "/v5/apilimit/query-all", params=params, signed=True)
+
+    async def api_rate_limit_cap(self) -> dict:
+        """Получение максимального лимита запросов API.
+
+        https://bybit-exchange.github.io/docs/v5/rate-limit/rules-for-pros/apilimit-query-cap
+        """
+        return await self._make_request("GET", "/v5/apilimit/query-cap", signed=True)
+
+    async def api_rate_limit_set(self, list: list[Any]) -> dict:
+        """Изменение лимита запросов API.
+
+        https://bybit-exchange.github.io/docs/v5/rate-limit/rules-for-pros/apilimit-set
+        """
+        params = {
+            "list": list,
+        }
+
+        return await self._make_request("POST", "/v5/apilimit/set", params=params, signed=True)
+
+    async def strategy_create(self) -> dict:
+        """Создание стратегического ордера.
+
+        https://bybit-exchange.github.io/docs/v5/strategy/create-strategy
+        """
+        return await self._make_request("POST", "/v5/strategy/create", signed=True)
+
+    async def strategy_stop(self, strategy_id: str) -> dict:
+        """Остановка стратегии.
+
+        https://bybit-exchange.github.io/docs/v5/strategy/stop-strategy
+        """
+        params = {
+            "strategyId": strategy_id,
+        }
+
+        return await self._make_request("POST", "/v5/strategy/stop", params=params, signed=True)
+
+    async def strategy_list(
+        self,
+        strategy_id: str | None = None,
+        symbol: str | None = None,
+        status: str | None = None,
+        category: str | None = None,
+        strategy_type: str | None = None,
+        begin_time_e0: str | None = None,
+        end_time_e0: str | None = None,
+        page_size: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """Получение списка стратегий.
+
+        https://bybit-exchange.github.io/docs/v5/strategy/strategy-list
+        """
+        params = {
+            "strategyId": strategy_id,
+            "symbol": symbol,
+            "status": status,
+            "category": category,
+            "strategyType": strategy_type,
+            "beginTimeE0": begin_time_e0,
+            "endTimeE0": end_time_e0,
+            "pageSize": page_size,
+            "cursor": cursor,
+        }
+
+        return await self._make_request("GET", "/v5/strategy/list", params=params, signed=True)
+
+    async def strategy_order_list(
+        self,
+        strategy_id: str,
+        status: str | None = None,
+        symbol: str | None = None,
+        strategy_type: str | None = None,
+        begin_time_e0: str | None = None,
+        end_time_e0: str | None = None,
+        page_size: int | None = None,
+        cursor: str | None = None,
+    ) -> dict:
+        """Получение ордеров стратегии.
+
+        https://bybit-exchange.github.io/docs/v5/strategy/order-list
+        """
+        params = {
+            "strategyId": strategy_id,
+            "status": status,
+            "symbol": symbol,
+            "strategyType": strategy_type,
+            "beginTimeE0": begin_time_e0,
+            "endTimeE0": end_time_e0,
+            "pageSize": page_size,
+            "cursor": cursor,
+        }
+
+        return await self._make_request(
+            "GET",
+            "/v5/strategy/order-list",
+            params=params,
+            signed=True,
+        )

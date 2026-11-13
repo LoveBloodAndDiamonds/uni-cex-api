@@ -89,7 +89,7 @@ class WebsocketManager:
         self,
         callback: CallbackType,
         category: Literal["spot", "linear", "inverse", "option"],
-        depth: Literal[1, 25, 50, 100, 200, 500, 1000] = 1,
+        depth: Literal[1, 25, 50, 100, 200, 1000] = 1,
         symbol: str | None = None,
         symbols: Sequence[str] | None = None,
         req_id: str | None = None,
@@ -101,7 +101,8 @@ class WebsocketManager:
         Параметры:
             callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
             category (`Literal["spot", "linear", "inverse", "option"]`): Категория рынка.
-            depth (`Literal[1, 25, 50, 100, 200, 500, 1000]`): Глубина order book.
+            depth (`Literal[1, 25, 50, 100, 200, 1000]`): Глубина order book. Спот, linear, inverse:
+                1, 50, 200, 1000; опционы: 25, 100 (глубина 500 удалена Bybit 2025-09-11).
             symbol (`str | None`): Один символ для подписки.
             symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
             req_id (`str | None`): Опциональный идентификатор запроса.
@@ -121,6 +122,159 @@ class WebsocketManager:
             callback=callback,
             url=url,
             subscription_messages=subscription_messages,
+            **self._ws_kwargs,
+        )
+
+    def _symbol_topic_websocket(
+        self,
+        callback: CallbackType,
+        category: Literal["spot", "linear", "inverse", "option"],
+        topic_prefix: str,
+        symbol: str | None,
+        symbols: Sequence[str] | None,
+        req_id: str | None,
+    ) -> Websocket:
+        """Создает вебсокет для топиков вида `{prefix}.{SYMBOL}`."""
+        validate_single_symbol_args(symbol, symbols)
+        tickers = [symbol] if symbol else symbols
+        topics = [f"{topic_prefix}.{ticker.upper()}" for ticker in tickers]  # type: ignore
+        return Websocket(
+            callback=callback,
+            url=self._get_url_for_category(category),
+            subscription_messages=self._generate_subscription_message(topics, req_id),
+            **self._ws_kwargs,
+        )
+
+    def full_orderbook(
+        self,
+        callback: CallbackType,
+        category: Literal["spot", "linear", "inverse"],
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+        req_id: str | None = None,
+    ) -> Websocket:
+        """Создает вебсокет полной книги ордеров (`orderbook.full.{symbol}`, без RPI).
+
+        https://bybit-exchange.github.io/docs/v5/websocket/public/full-ob
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            category (`Literal["spot", "linear", "inverse"]`): Категория рынка.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+            req_id (`str | None`): Опциональный идентификатор запроса.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        return self._symbol_topic_websocket(
+            callback, category, "orderbook.full", symbol, symbols, req_id
+        )
+
+    def orderbook_rpi(
+        self,
+        callback: CallbackType,
+        category: Literal["spot", "linear", "inverse"],
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+        req_id: str | None = None,
+    ) -> Websocket:
+        """Создает вебсокет книги ордеров с RPI-ордерами (`orderbook.rpi.{symbol}`).
+
+        https://bybit-exchange.github.io/docs/v5/websocket/public/orderbook-rpi
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            category (`Literal["spot", "linear", "inverse"]`): Категория рынка.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+            req_id (`str | None`): Опциональный идентификатор запроса.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        return self._symbol_topic_websocket(
+            callback, category, "orderbook.rpi", symbol, symbols, req_id
+        )
+
+    def order_price_limit(
+        self,
+        callback: CallbackType,
+        category: Literal["spot", "linear", "inverse"],
+        symbol: str | None = None,
+        symbols: Sequence[str] | None = None,
+        req_id: str | None = None,
+    ) -> Websocket:
+        """Создает вебсокет ценовых лимитов ордеров (`priceLimit.{symbol}`, раз в 300 мс).
+
+        https://bybit-exchange.github.io/docs/v5/websocket/public/order-price-limit
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            category (`Literal["spot", "linear", "inverse"]`): Категория рынка.
+            symbol (`str | None`): Один символ для подписки.
+            symbols (`Sequence[str] | None`): Список символов для мультиплекс‑подключения.
+            req_id (`str | None`): Опциональный идентификатор запроса.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        return self._symbol_topic_websocket(
+            callback, category, "priceLimit", symbol, symbols, req_id
+        )
+
+    def adl_alert(
+        self,
+        callback: CallbackType,
+        coin: str = "USDT",
+        category: Literal["linear", "inverse"] = "linear",
+        req_id: str | None = None,
+    ) -> Websocket:
+        """Создает вебсокет предупреждений об ADL (`adlAlert.{coin}`, раз в секунду).
+
+        https://bybit-exchange.github.io/docs/v5/websocket/public/adl-alert
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            coin (`str`): Монета: `USDT`, `USDC` или `inverse`.
+            category (`Literal["linear", "inverse"]`): Категория рынка (URL подключения).
+            req_id (`str | None`): Опциональный идентификатор запроса.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        return Websocket(
+            callback=callback,
+            url=self._get_url_for_category(category),
+            subscription_messages=self._generate_subscription_message([f"adlAlert.{coin}"], req_id),
+            **self._ws_kwargs,
+        )
+
+    def insurance_pool(
+        self,
+        callback: CallbackType,
+        pool: Literal["USDT", "USDC", "inverse"] = "USDT",
+        req_id: str | None = None,
+    ) -> Websocket:
+        """Создает вебсокет баланса страхового фонда (`insurance.{pool}`, раз в секунду).
+
+        https://bybit-exchange.github.io/docs/v5/websocket/public/insurance-pool
+
+        Параметры:
+            callback (`CallbackType`): Асинхронная функция обратного вызова для обработки сообщений.
+            pool (`Literal["USDT", "USDC", "inverse"]`): Пул страхового фонда.
+            req_id (`str | None`): Опциональный идентификатор запроса.
+
+        Возвращает:
+            `Websocket`: Объект для управления вебсокет соединением.
+        """
+        category = "inverse" if pool == "inverse" else "linear"
+        return Websocket(
+            callback=callback,
+            url=self._get_url_for_category(category),
+            subscription_messages=self._generate_subscription_message(
+                [f"insurance.{pool}"], req_id
+            ),
             **self._ws_kwargs,
         )
 
