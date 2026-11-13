@@ -1625,7 +1625,7 @@ class Client(BaseClient):
                 'lowPrice': 0.012459,
                 'baseVolume': 2011775,
                 'quoteVolume': 26613.48,
-                'openInterest': 85333.69964392  // В USDT
+                'openInterest': 85333.69964392  // В USDT, лонги + шорты (2× ОИ)
                 }, ...
             ]
         ]

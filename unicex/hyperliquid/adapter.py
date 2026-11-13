@@ -64,10 +64,14 @@ class Adapter:
 
     @staticmethod
     def ticker_24hr(raw_data: list, resolve_symbols: bool = True) -> TickerDailyDict:
+        # Контексты содержат и outcome-рынки HIP-4 ("#..."), и снятые пары — их нет в tickers()
+        universe = {item["name"] for item in raw_data[0]["universe"]}
         metrics = raw_data[1]
         result: TickerDailyDict = {}
 
         for item in metrics:
+            if item.get("coin") not in universe:
+                continue
             try:
                 coin = Adapter._resolve_spot_symbol(item["coin"], resolve_symbols)
 
