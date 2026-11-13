@@ -1,6 +1,7 @@
 __all__ = ["Adapter"]
 
 
+import time
 from typing import Any
 
 from loguru import logger
@@ -9,6 +10,8 @@ from unicex.types import (
     BestBidAskDict,
     BestBidAskItem,
     BookDepthDict,
+    FundingInfoDict,
+    FundingInfoItem,
     KlineDict,
     LongShortRatioItem,
     OpenInterestDict,
@@ -91,7 +94,18 @@ class Adapter:
         return result
 
     @staticmethod
+    def _base_volume_index(inst_id: str) -> int:
+        """Индекс объёма в базовой валюте в свече OKX.
+
+        Свеча: `[ts, o, h, l, c, vol, volCcy, volCcyQuote, confirm]`.
+        Спот (`BTC-USDT`): `vol` — в базовой валюте. SWAP/FUTURES (`BTC-USDT-SWAP`):
+        `vol` — в контрактах, `volCcy` — в базовой валюте. `volCcyQuote` — всегда в котируемой.
+        """
+        return 5 if inst_id.count("-") == 1 else 6
+
+    @staticmethod
     def klines(raw_data: dict, symbol: str) -> list[KlineDict]:
+        v_idx = Adapter._base_volume_index(symbol)
         return [
             KlineDict(
                 s=symbol,
@@ -100,7 +114,7 @@ class Adapter:
                 h=float(kline[2]),
                 l=float(kline[3]),
                 c=float(kline[4]),
-                v=float(kline[6]),
+                v=float(kline[v_idx]),
                 q=float(kline[7]),
                 T=None,
                 x=bool(int(kline[8])),
@@ -112,18 +126,74 @@ class Adapter:
         ]
 
     @staticmethod
+    def _swap_funding_items(raw_data: dict) -> list[dict]:
+        """Элементы `public/funding-rate` только по бессрочным SWAP (без X-Perps `FUTURES`)."""
+        return [item for item in raw_data["data"] if item.get("instType", "SWAP") == "SWAP"]
+
+    @staticmethod
     def funding_rate(raw_data: dict) -> dict[str, float]:
-        data = raw_data["data"][0]
-        return {data["instId"]: float(data["fundingRate"]) * 100}
+        result = {}
+        for item in Adapter._swap_funding_items(raw_data):
+            try:
+                result[item["instId"]] = float(item["fundingRate"]) * 100
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
 
     @staticmethod
     def funding_interval(raw_data: dict) -> dict[str, int]:
-        return {
-            item["instId"]: (int(item["fundingTime"]) - int(item["prevFundingTime"]))
-            // (1000 * 60 * 60)
-            for item in raw_data["data"]
-            if item.get("fundingTime") and item.get("prevFundingTime")
-        }
+        result = {}
+        for item in Adapter._swap_funding_items(raw_data):
+            try:
+                if item.get("fundingTime") and item.get("prevFundingTime"):
+                    result[item["instId"]] = (
+                        int(item["fundingTime"]) - int(item["prevFundingTime"])
+                    ) // (1000 * 60 * 60)
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
+
+    @staticmethod
+    def funding_next_time(raw_data: dict) -> dict[str, int]:
+        # fundingTime — ближайшее списание по текущей ставке, nextFundingTime — следующее за ним
+        result = {}
+        for item in Adapter._swap_funding_items(raw_data):
+            try:
+                if item.get("fundingTime"):
+                    result[item["instId"]] = int(item["fundingTime"])
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
+
+    @staticmethod
+    def funding_info(raw_data: dict) -> FundingInfoDict:
+        result = {}
+        for item in Adapter._swap_funding_items(raw_data):
+            try:
+                funding_time = int(item["fundingTime"]) if item.get("fundingTime") else 0
+                prev_time = int(item["prevFundingTime"]) if item.get("prevFundingTime") else 0
+                interval = (funding_time - prev_time) // (1000 * 60 * 60) if prev_time else 0
+                result[item["instId"]] = FundingInfoItem(
+                    v=float(item["fundingRate"]) * 100,
+                    i=interval,
+                    T=funding_time,
+                )
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
+
+    @staticmethod
+    def futures_delistings(raw_data: dict) -> dict[str, int]:
+        # Для SWAP expTime заполняется только при плановом выводе инструмента
+        now = int(time.time() * 1000)
+        result = {}
+        for item in raw_data["data"]:
+            try:
+                if item.get("expTime") and int(item["expTime"]) > now:
+                    result[item["instId"]] = int(item["expTime"])
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
 
     @staticmethod
     def open_interest(raw_data: dict) -> OpenInterestDict:
@@ -159,18 +229,27 @@ class Adapter:
 
     @staticmethod
     def futures_best_bid_ask(raw_data: dict) -> BestBidAskDict:
-        return {
-            item["instId"]: BestBidAskItem(
-                s=item["instId"],
-                t=int(item["ts"]),
-                u=0,  # REST endpoint не возвращает update id
-                b=float(item["bidPx"]),
-                B=float(item["bidSz"]) * Adapter._get_contract_size(item["instId"]),
-                a=float(item["askPx"]),
-                A=float(item["askSz"]) * Adapter._get_contract_size(item["instId"]),
-            )
-            for item in raw_data["data"]
-        }
+        result = {}
+        for item in raw_data["data"]:
+            # У неликвидных инструментов bidPx/bidSz/askPx/askSz бывают пустыми строками
+            if not (item.get("bidPx") and item.get("bidSz") and item.get("askPx")):
+                continue
+            if not item.get("askSz"):
+                continue
+            try:
+                contract_size = Adapter._get_contract_size(item["instId"])
+                result[item["instId"]] = BestBidAskItem(
+                    s=item["instId"],
+                    t=int(item["ts"]),
+                    u=0,  # REST endpoint не возвращает update id
+                    b=float(item["bidPx"]),
+                    B=float(item["bidSz"]) * contract_size,
+                    a=float(item["askPx"]),
+                    A=float(item["askSz"]) * contract_size,
+                )
+            except Exception as e:
+                logger.error(f"Item {item} iteration {type(e)} error: {e}")
+        return result
 
     @staticmethod
     def futures_depth(raw_data: dict, symbol: str) -> BookDepthDict:
@@ -186,6 +265,7 @@ class Adapter:
 
     @staticmethod
     def klines_message(raw_msg: Any) -> list[KlineDict]:
+        v_idx = Adapter._base_volume_index(raw_msg["arg"]["instId"])
         return [
             KlineDict(
                 s=raw_msg["arg"]["instId"],
@@ -194,7 +274,7 @@ class Adapter:
                 h=float(kline[2]),
                 l=float(kline[3]),
                 c=float(kline[4]),
-                v=float(kline[6]),
+                v=float(kline[v_idx]),
                 q=float(kline[7]),
                 T=None,
                 x=bool(int(kline[8])),

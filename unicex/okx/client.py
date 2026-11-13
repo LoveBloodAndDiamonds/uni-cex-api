@@ -147,6 +147,8 @@ class Client(BaseClient):
         # Предобрабатывает параметры запроса
         if params:
             params = filter_params(params)
+        if isinstance(body, dict):
+            body = filter_params(body)
 
         headers = None
         if signed:
@@ -223,6 +225,7 @@ class Client(BaseClient):
         inst_type: Literal["SPOT", "MARGIN", "SWAP", "FUTURES", "OPTION"],
         inst_family: str | None = None,
         inst_id: str | None = None,
+        series_id: str | None = None,
     ) -> dict:
         """Получение доступных инструментов аккаунта.
 
@@ -232,6 +235,7 @@ class Client(BaseClient):
             "instType": inst_type,
             "instFamily": inst_family,
             "instId": inst_id,
+            "seriesId": series_id,
         }
 
         return await self._make_request(
@@ -414,7 +418,7 @@ class Client(BaseClient):
         )
 
     async def apply_bills_history_archive(
-        self, year: str, quarter: Literal["Q1", "Q2", "Q3", "Q4"]
+        self, year: str, quarter: Literal["Q1", "Q2", "Q3", "Q4"], type_: str | None = None
     ) -> dict:
         """Запрос на формирование архива выписок.
 
@@ -423,6 +427,7 @@ class Client(BaseClient):
         data = {
             "year": year,
             "quarter": quarter,
+            "type": type_,
         }
 
         return await self._make_request(
@@ -433,7 +438,7 @@ class Client(BaseClient):
         )
 
     async def get_bills_history_archive(
-        self, year: str, quarter: Literal["Q1", "Q2", "Q3", "Q4"]
+        self, year: str, quarter: Literal["Q1", "Q2", "Q3", "Q4"], type_: str | None = None
     ) -> dict:
         """Получение ссылки на архив выписок.
 
@@ -442,6 +447,7 @@ class Client(BaseClient):
         params = {
             "year": year,
             "quarter": quarter,
+            "type": type_,
         }
 
         return await self._make_request(
@@ -513,6 +519,7 @@ class Client(BaseClient):
         px: NumberLike | None = None,
         leverage: str | None = None,
         trade_quote_ccy: str | None = None,
+        outcome: str | None = None,
     ) -> dict:
         """Получение максимального размера ордера.
 
@@ -525,6 +532,7 @@ class Client(BaseClient):
             "px": px,
             "leverage": leverage,
             "tradeQuoteCcy": trade_quote_ccy,
+            "outcome": outcome,
         }
 
         return await self._make_request(
@@ -675,6 +683,7 @@ class Client(BaseClient):
         inst_id: str | None = None,
         inst_family: str | None = None,
         rule_type: Literal["normal", "pre_market"] | None = None,
+        group_id: str | None = None,
     ) -> dict:
         """Получение торговых комиссий.
 
@@ -685,6 +694,7 @@ class Client(BaseClient):
             "instId": inst_id,
             "instFamily": inst_family,
             "ruleType": rule_type,
+            "groupId": group_id,
         }
 
         return await self._make_request(
@@ -1050,7 +1060,10 @@ class Client(BaseClient):
         )
 
     async def account_level_switch_preset(
-        self, acct_lv: Literal["2", "3", "4"], lever: str | None = None
+        self,
+        acct_lv: Literal["2", "3", "4"],
+        lever: str | None = None,
+        risk_offset_type: str | None = None,
     ) -> dict:
         """Преднастройка смены режима аккаунта.
 
@@ -1059,6 +1072,7 @@ class Client(BaseClient):
         data = {
             "acctLv": acct_lv,
             "lever": lever,
+            "riskOffsetType": risk_offset_type,
         }
 
         return await self._make_request(
@@ -1261,6 +1275,7 @@ class Client(BaseClient):
         ccy: str,
         action: Literal["turn_on", "turn_off"],
         earn_type: Literal["0", "1"] | None = None,
+        apr: str | None = None,
     ) -> dict:
         """Настройка автоматического Earn.
 
@@ -1270,6 +1285,7 @@ class Client(BaseClient):
             "earnType": earn_type,
             "ccy": ccy,
             "action": action,
+            "apr": apr,
         }
 
         return await self._make_request(
@@ -1292,6 +1308,104 @@ class Client(BaseClient):
             "POST",
             endpoint="/api/v5/account/set-settle-currency",
             data=data,
+            signed=True,
+        )
+
+    async def get_bill_types(self, type_: str | None = None) -> dict:
+        """Получение типов и подтипов записей в истории счёта.
+
+        https://www.okx.com/docs-v5/en/#trading-account-rest-api-get-bill-types
+        """
+        params = {
+            "type": type_,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/account/subtypes",
+            params=params,
+            signed=True,
+        )
+
+    async def activate_feature(self, feature: str) -> dict:
+        """Активация функции аккаунта.
+
+        https://www.okx.com/docs-v5/en/#trading-account-rest-api-activate-feature
+        """
+        data = {
+            "feature": feature,
+        }
+
+        return await self._make_request(
+            "POST",
+            endpoint="/api/v5/account/activate-feature",
+            data=data,
+            signed=True,
+        )
+
+    async def set_trading_config(self, type_: str, stgy_type: str | None = None) -> dict:
+        """Изменение торговой конфигурации аккаунта.
+
+        https://www.okx.com/docs-v5/en/#trading-account-rest-api-set-trading-config
+        """
+        data = {
+            "type": type_,
+            "stgyType": stgy_type,
+        }
+
+        return await self._make_request(
+            "POST",
+            endpoint="/api/v5/account/set-trading-config",
+            data=data,
+            signed=True,
+        )
+
+    async def precheck_set_delta_neutral(self, stgy_type: str) -> dict:
+        """Предпроверка перехода в режим delta neutral.
+
+        https://www.okx.com/docs-v5/en/#trading-account-rest-api-precheck-set-delta-neutral
+        """
+        params = {
+            "stgyType": stgy_type,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/account/precheck-set-delta-neutral",
+            params=params,
+            signed=True,
+        )
+
+    async def get_subaccount_trading_balance(self, sub_acct: str) -> dict:
+        """Получение торгового баланса субаккаунта.
+
+        https://www.okx.com/docs-v5/en/#sub-account-rest-api-get-sub-account-trading-balance
+        """
+        params = {
+            "subAcct": sub_acct,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/account/subaccount/balances",
+            params=params,
+            signed=True,
+        )
+
+    async def get_subaccount_max_withdrawal(self, sub_acct: str, ccy: str | None = None) -> dict:
+        """Получение максимальной суммы вывода субаккаунта.
+
+        https://www.okx.com/docs-v5/en/#sub-account-rest-api-get-sub-account-maximum-withdrawals
+        """
+        params = {
+            "subAcct": sub_acct,
+            "ccy": ccy,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/account/subaccount/max-withdrawal",
+            params=params,
             signed=True,
         )
 
@@ -1329,6 +1443,10 @@ class Client(BaseClient):
         stp_mode: Literal["cancel_maker", "cancel_taker", "cancel_both"] | None = None,
         quick_mgn_type: str | None = None,
         attach_algo_orders: list[dict[str, Any]] | None = None,
+        outcome: str | None = None,
+        rpi_px_round: bool | None = None,
+        rpi_taker_access: bool | None = None,
+        slippage_pct: str | None = None,
         extra_params: dict[str, Any] | None = None,
     ) -> dict:
         """Создание ордера.
@@ -1355,6 +1473,10 @@ class Client(BaseClient):
             "tradeQuoteCcy": trade_quote_ccy,
             "stpMode": stp_mode,
             "quickMgnType": quick_mgn_type,
+            "outcome": outcome,
+            "rpiPxRound": rpi_px_round,
+            "rpiTakerAccess": rpi_taker_access,
+            "slippagePct": slippage_pct,
         }
         if attach_algo_orders is not None:
             data["attachAlgoOrds"] = [filter_params(order) for order in attach_algo_orders]
@@ -1438,6 +1560,9 @@ class Client(BaseClient):
         req_id: str | None = None,
         px_amend_type: Literal["0", "1"] | None = None,
         attach_algo_orders: list[dict[str, Any]] | None = None,
+        rpi_px_round: bool | None = None,
+        rpi_taker_access: bool | None = None,
+        speed_bump: str | None = None,
         extra_params: dict[str, Any] | None = None,
     ) -> dict:
         """Изменение параметров ордера.
@@ -1458,6 +1583,9 @@ class Client(BaseClient):
             "cxlOnFail": cxl_on_fail,
             "reqId": req_id,
             "pxAmendType": px_amend_type,
+            "rpiPxRound": rpi_px_round,
+            "rpiTakerAccess": rpi_taker_access,
+            "speedBump": speed_bump,
         }
         if attach_algo_orders is not None:
             data["attachAlgoOrds"] = [filter_params(order) for order in attach_algo_orders]
@@ -1993,6 +2121,7 @@ class Client(BaseClient):
         reduce_only: bool | None = None,
         tgt_ccy: Literal["base_ccy", "quote_ccy"] | None = None,
         attach_algo_orders: list[dict[str, Any]] | None = None,
+        outcome: str | None = None,
         extra_params: dict[str, Any] | None = None,
     ) -> dict:
         """Превентивная проверка перед размещением ордера.
@@ -2009,6 +2138,7 @@ class Client(BaseClient):
             "px": px,
             "reduceOnly": reduce_only,
             "tgtCcy": tgt_ccy,
+            "outcome": outcome,
         }
         if attach_algo_orders is not None:
             data["attachAlgoOrds"] = [filter_params(order) for order in attach_algo_orders]
@@ -2019,6 +2149,261 @@ class Client(BaseClient):
             "POST",
             endpoint="/api/v5/trade/order-precheck",
             data=filter_params(data),
+            signed=True,
+        )
+
+    # topic: Order Book Trading (Algo Trading)
+
+    async def place_algo_order(
+        self,
+        inst_id: str,
+        td_mode: str,
+        side: str,
+        ord_type: str,
+        ccy: str | None = None,
+        pos_side: str | None = None,
+        sz: NumberLike | None = None,
+        tag: str | None = None,
+        tgt_ccy: str | None = None,
+        algo_cl_ord_id: str | None = None,
+        close_fraction: str | None = None,
+        trade_quote_ccy: str | None = None,
+        tp_trigger_px: NumberLike | None = None,
+        tp_trigger_px_type: str | None = None,
+        tp_ord_px: NumberLike | None = None,
+        tp_ord_kind: str | None = None,
+        sl_trigger_px: NumberLike | None = None,
+        sl_trigger_px_type: str | None = None,
+        sl_ord_px: NumberLike | None = None,
+        cxl_on_close_pos: bool | None = None,
+        reduce_only: bool | None = None,
+        chase_type: str | None = None,
+        chase_val: str | None = None,
+        max_chase_type: str | None = None,
+        max_chase_val: str | None = None,
+        trigger_px: NumberLike | None = None,
+        order_px: NumberLike | None = None,
+        advance_ord_type: str | None = None,
+        adv_chase_params: list[Any] | None = None,
+        trigger_px_type: str | None = None,
+        attach_algo_ords: list[Any] | None = None,
+        callback_ratio: NumberLike | None = None,
+        callback_spread: NumberLike | None = None,
+        active_px: NumberLike | None = None,
+        px_var: str | None = None,
+        px_spread: str | None = None,
+        sz_limit: str | None = None,
+        px_limit: str | None = None,
+        time_interval: str | None = None,
+        lmt_order_number: str | None = None,
+        aggressiveness: str | None = None,
+        trigger_params: list[Any] | None = None,
+    ) -> dict:
+        """Создание алгоритмического ордера (TP/SL, trigger, trailing, TWAP, chase).
+
+        https://www.okx.com/docs-v5/en/#order-book-trading-algo-trading-post-place-algo-order
+        """
+        data = {
+            "instId": inst_id,
+            "tdMode": td_mode,
+            "ccy": ccy,
+            "side": side,
+            "posSide": pos_side,
+            "ordType": ord_type,
+            "sz": sz,
+            "tag": tag,
+            "tgtCcy": tgt_ccy,
+            "algoClOrdId": algo_cl_ord_id,
+            "closeFraction": close_fraction,
+            "tradeQuoteCcy": trade_quote_ccy,
+            "tpTriggerPx": tp_trigger_px,
+            "tpTriggerPxType": tp_trigger_px_type,
+            "tpOrdPx": tp_ord_px,
+            "tpOrdKind": tp_ord_kind,
+            "slTriggerPx": sl_trigger_px,
+            "slTriggerPxType": sl_trigger_px_type,
+            "slOrdPx": sl_ord_px,
+            "cxlOnClosePos": cxl_on_close_pos,
+            "reduceOnly": reduce_only,
+            "chaseType": chase_type,
+            "chaseVal": chase_val,
+            "maxChaseType": max_chase_type,
+            "maxChaseVal": max_chase_val,
+            "triggerPx": trigger_px,
+            "orderPx": order_px,
+            "advanceOrdType": advance_ord_type,
+            "advChaseParams": adv_chase_params,
+            "triggerPxType": trigger_px_type,
+            "attachAlgoOrds": attach_algo_ords,
+            "callbackRatio": callback_ratio,
+            "callbackSpread": callback_spread,
+            "activePx": active_px,
+            "pxVar": px_var,
+            "pxSpread": px_spread,
+            "szLimit": sz_limit,
+            "pxLimit": px_limit,
+            "timeInterval": time_interval,
+            "lmtOrderNumber": lmt_order_number,
+            "aggressiveness": aggressiveness,
+            "triggerParams": trigger_params,
+        }
+
+        return await self._make_request(
+            "POST",
+            endpoint="/api/v5/trade/order-algo",
+            data=data,
+            signed=True,
+        )
+
+    async def cancel_algo_orders(self, orders: list[dict[str, Any]]) -> dict:
+        """Отмена алгоритмических ордеров (до 10 за запрос).
+
+        Элемент списка: `{"instId": ..., "algoId": ...}` или `{"instId": ..., "algoClOrdId": ...}`.
+
+        https://www.okx.com/docs-v5/en/#order-book-trading-algo-trading-post-cancel-algo-order
+        """
+        data = [filter_params(order) for order in orders]
+
+        return await self._make_request(
+            "POST",
+            endpoint="/api/v5/trade/cancel-algos",
+            data=data,  # type: ignore
+            signed=True,
+        )
+
+    async def amend_algo_order(
+        self,
+        inst_id: str,
+        algo_id: str | None = None,
+        algo_cl_ord_id: str | None = None,
+        cxl_on_fail: bool | None = None,
+        req_id: str | None = None,
+        new_sz: NumberLike | None = None,
+        new_tp_trigger_px: str | None = None,
+        new_tp_ord_px: str | None = None,
+        new_sl_trigger_px: str | None = None,
+        new_sl_ord_px: str | None = None,
+        new_tp_trigger_px_type: str | None = None,
+        new_sl_trigger_px_type: str | None = None,
+        new_trigger_px: str | None = None,
+        new_ord_px: str | None = None,
+        new_trigger_px_type: str | None = None,
+        attach_algo_ords: list[Any] | None = None,
+        adv_chase_params: list[Any] | None = None,
+    ) -> dict:
+        """Изменение алгоритмического ордера.
+
+        https://www.okx.com/docs-v5/en/#order-book-trading-algo-trading-post-amend-algo-order
+        """
+        data = {
+            "instId": inst_id,
+            "algoId": algo_id,
+            "algoClOrdId": algo_cl_ord_id,
+            "cxlOnFail": cxl_on_fail,
+            "reqId": req_id,
+            "newSz": new_sz,
+            "newTpTriggerPx": new_tp_trigger_px,
+            "newTpOrdPx": new_tp_ord_px,
+            "newSlTriggerPx": new_sl_trigger_px,
+            "newSlOrdPx": new_sl_ord_px,
+            "newTpTriggerPxType": new_tp_trigger_px_type,
+            "newSlTriggerPxType": new_sl_trigger_px_type,
+            "newTriggerPx": new_trigger_px,
+            "newOrdPx": new_ord_px,
+            "newTriggerPxType": new_trigger_px_type,
+            "attachAlgoOrds": attach_algo_ords,
+            "advChaseParams": adv_chase_params,
+        }
+
+        return await self._make_request(
+            "POST",
+            endpoint="/api/v5/trade/amend-algos",
+            data=data,
+            signed=True,
+        )
+
+    async def get_algo_order_details(
+        self,
+        algo_id: str | None = None,
+        algo_cl_ord_id: str | None = None,
+    ) -> dict:
+        """Получение информации об алгоритмическом ордере.
+
+        https://www.okx.com/docs-v5/en/#order-book-trading-algo-trading-get-algo-order-details
+        """
+        params = {
+            "algoId": algo_id,
+            "algoClOrdId": algo_cl_ord_id,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/trade/order-algo",
+            params=params,
+            signed=True,
+        )
+
+    async def get_algo_order_list(
+        self,
+        ord_type: str,
+        algo_id: str | None = None,
+        inst_type: str | None = None,
+        inst_id: str | None = None,
+        after: str | None = None,
+        before: str | None = None,
+        limit: str | None = None,
+    ) -> dict:
+        """Получение активных алгоритмических ордеров.
+
+        https://www.okx.com/docs-v5/en/#order-book-trading-algo-trading-get-algo-order-list
+        """
+        params = {
+            "ordType": ord_type,
+            "algoId": algo_id,
+            "instType": inst_type,
+            "instId": inst_id,
+            "after": after,
+            "before": before,
+            "limit": limit,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/trade/orders-algo-pending",
+            params=params,
+            signed=True,
+        )
+
+    async def get_algo_order_history(
+        self,
+        ord_type: str,
+        state: str | None = None,
+        algo_id: str | None = None,
+        inst_type: str | None = None,
+        inst_id: str | None = None,
+        after: str | None = None,
+        before: str | None = None,
+        limit: str | None = None,
+    ) -> dict:
+        """Получение истории алгоритмических ордеров.
+
+        https://www.okx.com/docs-v5/en/#order-book-trading-algo-trading-get-algo-order-history
+        """
+        params = {
+            "ordType": ord_type,
+            "state": state,
+            "algoId": algo_id,
+            "instType": inst_type,
+            "instId": inst_id,
+            "after": after,
+            "before": before,
+            "limit": limit,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/trade/orders-algo-history",
+            params=params,
             signed=True,
         )
 
@@ -2098,6 +2483,7 @@ class Client(BaseClient):
         after: int | None = None,
         before: int | None = None,
         limit: int | None = None,
+        adjust: str | None = None,
     ) -> dict:
         """Получение списка свечей с максимальной глубиной в 1440 записей.
 
@@ -2109,6 +2495,7 @@ class Client(BaseClient):
             "after": after,
             "before": before,
             "limit": limit,
+            "adjust": adjust,
         }
 
         return await self._make_request(
@@ -2124,6 +2511,7 @@ class Client(BaseClient):
         before: int | None = None,
         bar: str | None = None,
         limit: int | None = None,
+        adjust: str | None = None,
     ) -> dict:
         """Получение исторических свечей за прошлые периоды.
 
@@ -2135,6 +2523,7 @@ class Client(BaseClient):
             "before": before,
             "bar": bar,
             "limit": limit,
+            "adjust": adjust,
         }
 
         return await self._make_request(
@@ -2247,6 +2636,68 @@ class Client(BaseClient):
             params=params,
         )
 
+    async def get_rpi_order_book(self, inst_id: str, sz: NumberLike | None = None) -> dict:
+        """Получение книги ордеров с RPI-ордерами.
+
+        https://www.okx.com/docs-v5/en/#order-book-trading-market-data-get-rpi-order-book
+        """
+        params = {
+            "instId": inst_id,
+            "sz": sz,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/market/books-rpi",
+            params=params,
+        )
+
+    async def get_block_tickers(self, inst_type: str, inst_family: str | None = None) -> dict:
+        """Получение тикеров блочных сделок.
+
+        https://www.okx.com/docs-v5/en/#block-trading-rest-api-get-block-tickers
+        """
+        params = {
+            "instType": inst_type,
+            "instFamily": inst_family,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/market/block-tickers",
+            params=params,
+        )
+
+    async def get_block_ticker(self, inst_id: str) -> dict:
+        """Получение тикера блочных сделок по инструменту.
+
+        https://www.okx.com/docs-v5/en/#block-trading-rest-api-get-block-ticker
+        """
+        params = {
+            "instId": inst_id,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/market/block-ticker",
+            params=params,
+        )
+
+    async def get_public_block_trades(self, inst_id: str) -> dict:
+        """Получение публичных блочных сделок (single-leg).
+
+        https://www.okx.com/docs-v5/en/#block-trading-rest-api-get-public-single-leg-transactions-of-block-trades
+        """
+        params = {
+            "instId": inst_id,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/block-trades",
+            params=params,
+        )
+
     # topic: Public Data
 
     async def get_instruments(
@@ -2254,6 +2705,7 @@ class Client(BaseClient):
         inst_type: Literal["SPOT", "MARGIN", "SWAP", "FUTURES", "OPTION"],
         inst_family: str | None = None,
         inst_id: str | None = None,
+        series_id: str | None = None,
     ) -> dict:
         """Получение списка доступных публичных инструментов.
 
@@ -2263,6 +2715,7 @@ class Client(BaseClient):
             "instType": inst_type,
             "instFamily": inst_family,
             "instId": inst_id,
+            "seriesId": series_id,
         }
 
         return await self._make_request(
@@ -2863,6 +3316,140 @@ class Client(BaseClient):
             params=params,
         )
 
+    async def get_corporate_actions(
+        self,
+        ticker: str | None = None,
+        inst_id: str | None = None,
+        limit: str | None = None,
+        after: str | None = None,
+        before: str | None = None,
+    ) -> dict:
+        """Получение корпоративных действий по акционным контрактам.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-corporate-actions
+        """
+        params = {
+            "ticker": ticker,
+            "instId": inst_id,
+            "limit": limit,
+            "after": after,
+            "before": before,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/corporate-actions",
+            params=params,
+        )
+
+    async def get_delta_hedge_currencies(self, ccy: str | None = None) -> dict:
+        """Получение валют, образующих delta hedge (например ETH и BETH).
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-delta-hedge-currencies
+        """
+        params = {
+            "ccy": ccy,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/delta-hedge-currencies",
+            params=params,
+        )
+
+    async def get_mm_instrument_types(
+        self,
+        inst_type: str | None = None,
+        inst_id: str | None = None,
+    ) -> dict:
+        """Получение классификации инструментов программы маркет-мейкеров.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-mm-instrument-types
+        """
+        params = {
+            "instType": inst_type,
+            "instId": inst_id,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/mm-instrument-types",
+            params=params,
+        )
+
+    async def get_event_contract_series(self, series_id: str | None = None) -> dict:
+        """Получение серий event-контрактов.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-series
+        """
+        params = {
+            "seriesId": series_id,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/event-contract/series",
+            params=params,
+        )
+
+    async def get_event_contract_events(
+        self,
+        series_id: str,
+        event_id: str | None = None,
+        state: str | None = None,
+        limit: str | None = None,
+        before: str | None = None,
+        after: str | None = None,
+    ) -> dict:
+        """Получение событий event-контрактов.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-events
+        """
+        params = {
+            "seriesId": series_id,
+            "eventId": event_id,
+            "state": state,
+            "limit": limit,
+            "before": before,
+            "after": after,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/event-contract/events",
+            params=params,
+        )
+
+    async def get_event_contract_markets(
+        self,
+        series_id: str,
+        event_id: str | None = None,
+        inst_id: str | None = None,
+        state: str | None = None,
+        limit: str | None = None,
+        before: str | None = None,
+        after: str | None = None,
+    ) -> dict:
+        """Получение рынков event-контрактов.
+
+        https://www.okx.com/docs-v5/en/#public-data-rest-api-get-markets
+        """
+        params = {
+            "seriesId": series_id,
+            "eventId": event_id,
+            "instId": inst_id,
+            "state": state,
+            "limit": limit,
+            "before": before,
+            "after": after,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/public/event-contract/markets",
+            params=params,
+        )
+
     # topic: Trading Statistics
 
     async def get_long_short_account_ratio_contract(
@@ -2889,4 +3476,935 @@ class Client(BaseClient):
             "GET",
             endpoint="/api/v5/rubik/stat/contracts/long-short-account-ratio-contract",
             params=params,
+        )
+
+    async def get_support_coin(self) -> dict:
+        """Получение списка валют, поддерживаемых торговой статистикой.
+
+        https://www.okx.com/docs-v5/en/#trading-statistics-rest-api-get-support-coin
+        """
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/rubik/stat/trading-data/support-coin",
+        )
+
+    async def get_contract_open_interest_history(
+        self,
+        inst_id: str,
+        period: str | None = None,
+        end: str | None = None,
+        begin: str | None = None,
+        limit: str | None = None,
+    ) -> dict:
+        """Получение истории открытого интереса по контракту.
+
+        https://www.okx.com/docs-v5/en/#trading-statistics-rest-api-get-contract-open-interest-history
+        """
+        params = {
+            "instId": inst_id,
+            "period": period,
+            "end": end,
+            "begin": begin,
+            "limit": limit,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/rubik/stat/contracts/open-interest-history",
+            params=params,
+        )
+
+    async def get_taker_volume(
+        self,
+        ccy: str,
+        inst_type: str,
+        begin: str | None = None,
+        end: str | None = None,
+        period: str | None = None,
+    ) -> dict:
+        """Получение объёма тейкеров на покупку и продажу.
+
+        https://www.okx.com/docs-v5/en/#trading-statistics-rest-api-get-taker-volume
+        """
+        params = {
+            "ccy": ccy,
+            "instType": inst_type,
+            "begin": begin,
+            "end": end,
+            "period": period,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/rubik/stat/taker-volume",
+            params=params,
+        )
+
+    async def get_contract_taker_volume(
+        self,
+        inst_id: str,
+        period: str | None = None,
+        unit: str | None = None,
+        end: str | None = None,
+        begin: str | None = None,
+        limit: str | None = None,
+    ) -> dict:
+        """Получение объёма тейкеров по контракту.
+
+        https://www.okx.com/docs-v5/en/#trading-statistics-rest-api-get-contract-taker-volume
+        """
+        params = {
+            "instId": inst_id,
+            "period": period,
+            "unit": unit,
+            "end": end,
+            "begin": begin,
+            "limit": limit,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/rubik/stat/taker-volume-contract",
+            params=params,
+        )
+
+    async def get_margin_loan_ratio(
+        self,
+        ccy: str,
+        begin: str | None = None,
+        end: str | None = None,
+        period: str | None = None,
+    ) -> dict:
+        """Получение соотношения лонгов и шортов в марже.
+
+        https://www.okx.com/docs-v5/en/#trading-statistics-rest-api-get-margin-long-short-ratio
+        """
+        params = {
+            "ccy": ccy,
+            "begin": begin,
+            "end": end,
+            "period": period,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/rubik/stat/margin/loan-ratio",
+            params=params,
+        )
+
+    async def get_long_short_account_ratio(
+        self,
+        ccy: str,
+        begin: str | None = None,
+        end: str | None = None,
+        period: str | None = None,
+    ) -> dict:
+        """Получение соотношения аккаунтов в лонге и шорте по валюте.
+
+        https://www.okx.com/docs-v5/en/#trading-statistics-rest-api-get-long-short-ratio
+        """
+        params = {
+            "ccy": ccy,
+            "begin": begin,
+            "end": end,
+            "period": period,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/rubik/stat/contracts/long-short-account-ratio",
+            params=params,
+        )
+
+    async def get_top_trader_long_short_account_ratio(
+        self,
+        inst_id: str,
+        period: str | None = None,
+        end: str | None = None,
+        begin: str | None = None,
+        limit: str | None = None,
+    ) -> dict:
+        """Получение соотношения лонгов и шортов топ-трейдеров (по аккаунтам).
+
+        https://www.okx.com/docs-v5/en/#trading-statistics-rest-api-get-top-traders-contract-long-short-ratio
+        """
+        params = {
+            "instId": inst_id,
+            "period": period,
+            "end": end,
+            "begin": begin,
+            "limit": limit,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/rubik/stat/contracts/long-short-account-ratio-contract-top-trader",
+            params=params,
+        )
+
+    async def get_top_trader_long_short_position_ratio(
+        self,
+        inst_id: str,
+        period: str | None = None,
+        end: str | None = None,
+        begin: str | None = None,
+        limit: str | None = None,
+    ) -> dict:
+        """Получение соотношения лонгов и шортов топ-трейдеров (по позициям).
+
+        https://www.okx.com/docs-v5/en/#trading-statistics-rest-api-get-top-traders-contract-long-short-ratio-by-position
+        """
+        params = {
+            "instId": inst_id,
+            "period": period,
+            "end": end,
+            "begin": begin,
+            "limit": limit,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/rubik/stat/contracts/long-short-position-ratio-contract-top-trader",
+            params=params,
+        )
+
+    async def get_contracts_open_interest_volume(
+        self,
+        ccy: str,
+        begin: str | None = None,
+        end: str | None = None,
+        period: str | None = None,
+    ) -> dict:
+        """Получение открытого интереса и объёма по контрактам.
+
+        https://www.okx.com/docs-v5/en/#trading-statistics-rest-api-get-contracts-open-interest-and-volume
+        """
+        params = {
+            "ccy": ccy,
+            "begin": begin,
+            "end": end,
+            "period": period,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/rubik/stat/contracts/open-interest-volume",
+            params=params,
+        )
+
+    async def get_options_open_interest_volume(self, ccy: str, period: str | None = None) -> dict:
+        """Получение открытого интереса и объёма опционов.
+
+        https://www.okx.com/docs-v5/en/#trading-statistics-rest-api-get-options-open-interest-and-volume
+        """
+        params = {
+            "ccy": ccy,
+            "period": period,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/rubik/stat/option/open-interest-volume",
+            params=params,
+        )
+
+    async def get_put_call_ratio(self, ccy: str, period: str | None = None) -> dict:
+        """Получение соотношения put/call.
+
+        https://www.okx.com/docs-v5/en/#trading-statistics-rest-api-get-put-call-ratio
+        """
+        params = {
+            "ccy": ccy,
+            "period": period,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/rubik/stat/option/open-interest-volume-ratio",
+            params=params,
+        )
+
+    async def get_options_open_interest_volume_expiry(
+        self,
+        ccy: str,
+        period: str | None = None,
+    ) -> dict:
+        """Получение открытого интереса и объёма опционов по экспирации.
+
+        https://www.okx.com/docs-v5/en/#trading-statistics-rest-api-get-open-interest-and-volume-expiry
+        """
+        params = {
+            "ccy": ccy,
+            "period": period,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/rubik/stat/option/open-interest-volume-expiry",
+            params=params,
+        )
+
+    async def get_options_open_interest_volume_strike(
+        self,
+        ccy: str,
+        exp_time: str,
+        period: str | None = None,
+    ) -> dict:
+        """Получение открытого интереса и объёма опционов по страйку.
+
+        https://www.okx.com/docs-v5/en/#trading-statistics-rest-api-get-open-interest-and-volume-strike
+        """
+        params = {
+            "ccy": ccy,
+            "expTime": exp_time,
+            "period": period,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/rubik/stat/option/open-interest-volume-strike",
+            params=params,
+        )
+
+    async def get_option_taker_flow(self, ccy: str, period: str | None = None) -> dict:
+        """Получение потока тейкеров по опционам.
+
+        https://www.okx.com/docs-v5/en/#trading-statistics-rest-api-get-taker-flow
+        """
+        params = {
+            "ccy": ccy,
+            "period": period,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/rubik/stat/option/taker-block-volume",
+            params=params,
+        )
+
+    # topic: Funding Account
+
+    async def get_currencies(self, ccy: str | None = None) -> dict:
+        """Получение списка валют.
+
+        https://www.okx.com/docs-v5/en/#funding-account-rest-api-get-currencies
+        """
+        params = {
+            "ccy": ccy,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/asset/currencies",
+            params=params,
+            signed=True,
+        )
+
+    async def get_funding_balance(self, ccy: str | None = None) -> dict:
+        """Получение баланса финансового аккаунта.
+
+        https://www.okx.com/docs-v5/en/#funding-account-rest-api-get-balance
+        """
+        params = {
+            "ccy": ccy,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/asset/balances",
+            params=params,
+            signed=True,
+        )
+
+    async def get_non_tradable_assets(self, ccy: str | None = None) -> dict:
+        """Получение неторгуемых активов.
+
+        https://www.okx.com/docs-v5/en/#funding-account-rest-api-get-non-tradable-assets
+        """
+        params = {
+            "ccy": ccy,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/asset/non-tradable-assets",
+            params=params,
+            signed=True,
+        )
+
+    async def get_asset_valuation(self, ccy: str | None = None) -> dict:
+        """Получение оценки активов аккаунта.
+
+        https://www.okx.com/docs-v5/en/#funding-account-rest-api-get-account-asset-valuation
+        """
+        params = {
+            "ccy": ccy,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/asset/asset-valuation",
+            params=params,
+            signed=True,
+        )
+
+    async def funds_transfer(
+        self,
+        ccy: str,
+        amt: NumberLike,
+        from_: str,
+        to: str,
+        type_: str | None = None,
+        sub_acct: str | None = None,
+        loan_trans: bool | None = None,
+        omit_pos_risk: str | None = None,
+        client_id: str | None = None,
+    ) -> dict:
+        """Перевод средств между аккаунтами.
+
+        https://www.okx.com/docs-v5/en/#funding-account-rest-api-funds-transfer
+        """
+        data = {
+            "type": type_,
+            "ccy": ccy,
+            "amt": amt,
+            "from": from_,
+            "to": to,
+            "subAcct": sub_acct,
+            "loanTrans": loan_trans,
+            "omitPosRisk": omit_pos_risk,
+            "clientId": client_id,
+        }
+
+        return await self._make_request(
+            "POST",
+            endpoint="/api/v5/asset/transfer",
+            data=data,
+            signed=True,
+        )
+
+    async def get_transfer_state(
+        self,
+        trans_id: str | None = None,
+        client_id: str | None = None,
+        type_: str | None = None,
+    ) -> dict:
+        """Получение статуса перевода средств.
+
+        https://www.okx.com/docs-v5/en/#funding-account-rest-api-get-funds-transfer-state
+        """
+        params = {
+            "transId": trans_id,
+            "clientId": client_id,
+            "type": type_,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/asset/transfer-state",
+            params=params,
+            signed=True,
+        )
+
+    async def get_asset_bills(
+        self,
+        ccy: str | None = None,
+        type_: str | None = None,
+        third_party_type: str | None = None,
+        client_id: str | None = None,
+        after: str | None = None,
+        before: str | None = None,
+        limit: str | None = None,
+    ) -> dict:
+        """Получение истории операций финансового аккаунта.
+
+        https://www.okx.com/docs-v5/en/#funding-account-rest-api-asset-bills-details
+        """
+        params = {
+            "ccy": ccy,
+            "type": type_,
+            "thirdPartyType": third_party_type,
+            "clientId": client_id,
+            "after": after,
+            "before": before,
+            "limit": limit,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/asset/bills",
+            params=params,
+            signed=True,
+        )
+
+    async def get_asset_bills_history(
+        self,
+        ccy: str | None = None,
+        type_: str | None = None,
+        third_party_type: str | None = None,
+        client_id: str | None = None,
+        after: str | None = None,
+        before: str | None = None,
+        limit: str | None = None,
+        paging_type: str | None = None,
+    ) -> dict:
+        """Получение архива истории операций финансового аккаунта.
+
+        https://www.okx.com/docs-v5/en/#funding-account-rest-api-asset-bills-history
+        """
+        params = {
+            "ccy": ccy,
+            "type": type_,
+            "thirdPartyType": third_party_type,
+            "clientId": client_id,
+            "after": after,
+            "before": before,
+            "limit": limit,
+            "pagingType": paging_type,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/asset/bills-history",
+            params=params,
+            signed=True,
+        )
+
+    async def get_deposit_address(self, ccy: str) -> dict:
+        """Получение адреса депозита.
+
+        https://www.okx.com/docs-v5/en/#funding-account-rest-api-get-deposit-address
+        """
+        params = {
+            "ccy": ccy,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/asset/deposit-address",
+            params=params,
+            signed=True,
+        )
+
+    async def get_deposit_history(
+        self,
+        ccy: str | None = None,
+        dep_id: str | None = None,
+        from_wd_id: str | None = None,
+        tx_id: str | None = None,
+        type_: str | None = None,
+        state: str | None = None,
+        after: str | None = None,
+        before: str | None = None,
+        limit: str | None = None,
+    ) -> dict:
+        """Получение истории депозитов.
+
+        https://www.okx.com/docs-v5/en/#funding-account-rest-api-get-deposit-history
+        """
+        params = {
+            "ccy": ccy,
+            "depId": dep_id,
+            "fromWdId": from_wd_id,
+            "txId": tx_id,
+            "type": type_,
+            "state": state,
+            "after": after,
+            "before": before,
+            "limit": limit,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/asset/deposit-history",
+            params=params,
+            signed=True,
+        )
+
+    async def withdrawal(
+        self,
+        ccy: str,
+        amt: NumberLike,
+        dest: str,
+        to_addr: str,
+        to_addr_type: str | None = None,
+        chain: str | None = None,
+        area_code: str | None = None,
+        rcvr_info: dict[str, Any] | None = None,
+        client_id: str | None = None,
+    ) -> dict:
+        """Вывод средств.
+
+        https://www.okx.com/docs-v5/en/#funding-account-rest-api-withdrawal
+        """
+        data = {
+            "ccy": ccy,
+            "amt": amt,
+            "dest": dest,
+            "toAddr": to_addr,
+            "toAddrType": to_addr_type,
+            "chain": chain,
+            "areaCode": area_code,
+            "rcvrInfo": rcvr_info,
+            "clientId": client_id,
+        }
+
+        return await self._make_request(
+            "POST",
+            endpoint="/api/v5/asset/withdrawal",
+            data=data,
+            signed=True,
+        )
+
+    async def cancel_withdrawal(self, wd_id: str) -> dict:
+        """Отмена вывода средств.
+
+        https://www.okx.com/docs-v5/en/#funding-account-rest-api-cancel-withdrawal
+        """
+        data = {
+            "wdId": wd_id,
+        }
+
+        return await self._make_request(
+            "POST",
+            endpoint="/api/v5/asset/cancel-withdrawal",
+            data=data,
+            signed=True,
+        )
+
+    async def get_withdrawal_history(
+        self,
+        ccy: str | None = None,
+        wd_id: str | None = None,
+        client_id: str | None = None,
+        tx_id: str | None = None,
+        type_: str | None = None,
+        state: str | None = None,
+        after: str | None = None,
+        before: str | None = None,
+        limit: str | None = None,
+    ) -> dict:
+        """Получение истории выводов.
+
+        https://www.okx.com/docs-v5/en/#funding-account-rest-api-get-withdrawal-history
+        """
+        params = {
+            "ccy": ccy,
+            "wdId": wd_id,
+            "clientId": client_id,
+            "txId": tx_id,
+            "type": type_,
+            "state": state,
+            "after": after,
+            "before": before,
+            "limit": limit,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/asset/withdrawal-history",
+            params=params,
+            signed=True,
+        )
+
+    async def get_deposit_withdraw_status(
+        self,
+        wd_id: str | None = None,
+        tx_id: str | None = None,
+        ccy: str | None = None,
+        to: str | None = None,
+        chain: str | None = None,
+    ) -> dict:
+        """Получение статуса депозита или вывода.
+
+        https://www.okx.com/docs-v5/en/#funding-account-rest-api-get-deposit-withdraw-status
+        """
+        params = {
+            "wdId": wd_id,
+            "txId": tx_id,
+            "ccy": ccy,
+            "to": to,
+            "chain": chain,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/asset/deposit-withdraw-status",
+            params=params,
+            signed=True,
+        )
+
+    async def get_exchange_list(self) -> dict:
+        """Получение списка бирж (для travel rule).
+
+        https://www.okx.com/docs-v5/en/#funding-account-rest-api-get-exchange-list-public
+        """
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/asset/exchange-list",
+        )
+
+    async def apply_monthly_statement(self, month: str | None = None) -> dict:
+        """Запрос месячной выписки за последний год.
+
+        https://www.okx.com/docs-v5/en/#funding-account-rest-api-apply-for-monthly-statement-last-year
+        """
+        data = {
+            "month": month,
+        }
+
+        return await self._make_request(
+            "POST",
+            endpoint="/api/v5/asset/monthly-statement",
+            data=data,
+            signed=True,
+        )
+
+    async def get_monthly_statement(self, month: str) -> dict:
+        """Получение месячной выписки за последний год.
+
+        https://www.okx.com/docs-v5/en/#funding-account-rest-api-get-monthly-statement-last-year
+        """
+        params = {
+            "month": month,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/asset/monthly-statement",
+            params=params,
+            signed=True,
+        )
+
+    async def get_convert_currencies(self) -> dict:
+        """Получение валют для конвертации.
+
+        https://www.okx.com/docs-v5/en/#funding-account-rest-api-get-convert-currencies
+        """
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/asset/convert/currencies",
+            signed=True,
+        )
+
+    async def get_convert_currency_pair(self, from_ccy: str, to_ccy: str) -> dict:
+        """Получение пары для конвертации.
+
+        https://www.okx.com/docs-v5/en/#funding-account-rest-api-get-convert-currency-pair
+        """
+        params = {
+            "fromCcy": from_ccy,
+            "toCcy": to_ccy,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/asset/convert/currency-pair",
+            params=params,
+            signed=True,
+        )
+
+    async def convert_estimate_quote(
+        self,
+        base_ccy: str,
+        quote_ccy: str,
+        side: str,
+        rfq_sz: NumberLike,
+        rfq_sz_ccy: str,
+        cl_q_req_id: str | None = None,
+        tag: str | None = None,
+        convert_mode: str | None = None,
+    ) -> dict:
+        """Получение котировки для конвертации.
+
+        https://www.okx.com/docs-v5/en/#funding-account-rest-api-estimate-quote
+        """
+        data = {
+            "baseCcy": base_ccy,
+            "quoteCcy": quote_ccy,
+            "side": side,
+            "rfqSz": rfq_sz,
+            "rfqSzCcy": rfq_sz_ccy,
+            "clQReqId": cl_q_req_id,
+            "tag": tag,
+            "convertMode": convert_mode,
+        }
+
+        return await self._make_request(
+            "POST",
+            endpoint="/api/v5/asset/convert/estimate-quote",
+            data=data,
+            signed=True,
+        )
+
+    async def convert_trade(
+        self,
+        quote_id: str,
+        base_ccy: str,
+        quote_ccy: str,
+        side: str,
+        sz: NumberLike,
+        sz_ccy: str,
+        cl_t_req_id: str | None = None,
+        tag: str | None = None,
+        convert_mode: str | None = None,
+    ) -> dict:
+        """Конвертация по котировке.
+
+        https://www.okx.com/docs-v5/en/#funding-account-rest-api-convert-trade
+        """
+        data = {
+            "quoteId": quote_id,
+            "baseCcy": base_ccy,
+            "quoteCcy": quote_ccy,
+            "side": side,
+            "sz": sz,
+            "szCcy": sz_ccy,
+            "clTReqId": cl_t_req_id,
+            "tag": tag,
+            "convertMode": convert_mode,
+        }
+
+        return await self._make_request(
+            "POST",
+            endpoint="/api/v5/asset/convert/trade",
+            data=data,
+            signed=True,
+        )
+
+    async def get_convert_history(
+        self,
+        cl_t_req_id: str | None = None,
+        after: str | None = None,
+        before: str | None = None,
+        limit: str | None = None,
+        tag: str | None = None,
+    ) -> dict:
+        """Получение истории конвертаций.
+
+        https://www.okx.com/docs-v5/en/#funding-account-rest-api-get-convert-history
+        """
+        params = {
+            "clTReqId": cl_t_req_id,
+            "after": after,
+            "before": before,
+            "limit": limit,
+            "tag": tag,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/asset/convert/history",
+            params=params,
+            signed=True,
+        )
+
+    async def get_subaccount_funding_balance(self, sub_acct: str, ccy: str | None = None) -> dict:
+        """Получение финансового баланса субаккаунта.
+
+        https://www.okx.com/docs-v5/en/#sub-account-rest-api-get-sub-account-funding-balance
+        """
+        params = {
+            "subAcct": sub_acct,
+            "ccy": ccy,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/asset/subaccount/balances",
+            params=params,
+            signed=True,
+        )
+
+    async def get_subaccount_transfer_history(
+        self,
+        ccy: str | None = None,
+        type_: str | None = None,
+        sub_acct: str | None = None,
+        after: str | None = None,
+        before: str | None = None,
+        limit: str | None = None,
+    ) -> dict:
+        """Получение истории переводов субаккаунтов.
+
+        https://www.okx.com/docs-v5/en/#sub-account-rest-api-get-history-of-sub-account-transfer
+        """
+        params = {
+            "ccy": ccy,
+            "type": type_,
+            "subAcct": sub_acct,
+            "after": after,
+            "before": before,
+            "limit": limit,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/asset/subaccount/bills",
+            params=params,
+            signed=True,
+        )
+
+    async def get_managed_subaccount_transfer_history(
+        self,
+        ccy: str | None = None,
+        type_: str | None = None,
+        sub_acct: str | None = None,
+        sub_uid: str | None = None,
+        after: str | None = None,
+        before: str | None = None,
+        limit: str | None = None,
+    ) -> dict:
+        """Получение истории переводов управляемых субаккаунтов.
+
+        https://www.okx.com/docs-v5/en/#sub-account-rest-api-get-history-of-managed-sub-account-transfer
+        """
+        params = {
+            "ccy": ccy,
+            "type": type_,
+            "subAcct": sub_acct,
+            "subUid": sub_uid,
+            "after": after,
+            "before": before,
+            "limit": limit,
+        }
+
+        return await self._make_request(
+            "GET",
+            endpoint="/api/v5/asset/subaccount/managed-subaccount-bills",
+            params=params,
+            signed=True,
+        )
+
+    async def subaccount_transfer(
+        self,
+        ccy: str,
+        amt: NumberLike,
+        from_: str,
+        to: str,
+        from_sub_account: str,
+        to_sub_account: str,
+        loan_trans: bool | None = None,
+        omit_pos_risk: str | None = None,
+    ) -> dict:
+        """Перевод средств между субаккаунтами.
+
+        https://www.okx.com/docs-v5/en/#sub-account-rest-api-master-accounts-manage-the-transfers-between-sub-accounts
+        """
+        data = {
+            "ccy": ccy,
+            "amt": amt,
+            "from": from_,
+            "to": to,
+            "fromSubAccount": from_sub_account,
+            "toSubAccount": to_sub_account,
+            "loanTrans": loan_trans,
+            "omitPosRisk": omit_pos_risk,
+        }
+
+        return await self._make_request(
+            "POST",
+            endpoint="/api/v5/asset/subaccount/transfer",
+            data=data,
+            signed=True,
         )
