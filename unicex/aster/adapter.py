@@ -92,10 +92,12 @@ class Adapter:
     def open_interest(raw_data: dict) -> OpenInterestDict:
         # В ответе нет времени, поэтому используем текущее.
         timestamp = get_timestamp()
+        # Фронтенд отдает сумму ноционала лонгов и шортов (каждый контракт учтен дважды),
+        # поэтому ОИ в монетах, как в /fapi/v1/openInterest, — половина openInterest / lastPrice.
         return {
             item["symbol"]: OpenInterestItem(
                 t=timestamp,
-                v=float(item["openInterest"]) / float(item["lastPrice"]),
+                v=float(item["openInterest"]) / float(item["lastPrice"]) / 2,
                 u="coins",
             )
             for item in raw_data.get("data", [])

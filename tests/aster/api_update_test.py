@@ -143,7 +143,26 @@ async def check_public() -> None:
                 str(e.response_json),
             )
 
-    async with await UniClient.create() as u:
+    async with await UniClient.create() as u, await Client.create() as c:
+        symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "DOGEUSDT"]
+        oi, *official = await asyncio.gather(
+            u.open_interest(),
+            *(
+                c._make_request(
+                    "GET", c._BASE_FUTURES_URL + "/fapi/v1/openInterest", params={"symbol": s}
+                )
+                for s in symbols
+            ),
+        )
+        ratios = [
+            oi[s]["v"] / float(o["openInterest"]) for s, o in zip(symbols, official, strict=True)
+        ]
+        check(
+            all(0.97 < r < 1.03 for r in ratios),
+            "open_interest matches /fapi/v1/openInterest",
+            str([round(r, 4) for r in ratios]),
+        )
+
         delistings = await u.futures_delistings()
         now = int(time.time() * 1000)
         check(
