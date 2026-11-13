@@ -34,7 +34,7 @@ class UniClient(IUniClient[Client]):
         return Client
 
     async def tickers(self, only_usdt: bool = True) -> list[str]:
-        raw_data = await self._client.ticker_price()
+        raw_data = await self._client.ticker_price(symbol_status="TRADING")
         return Adapter.tickers(raw_data=raw_data, only_usdt=only_usdt)  # type: ignore | raw_data is list[dict] if symbol param is not omitted
 
     async def futures_tickers(self, only_usdt: bool = True) -> list[str]:
@@ -42,7 +42,7 @@ class UniClient(IUniClient[Client]):
         return Adapter.tickers(raw_data=raw_data, only_usdt=only_usdt)  # type: ignore | raw_data is list[dict] if symbol param is not omitted
 
     async def last_price(self) -> dict[str, float]:
-        raw_data = await self._client.ticker_price()
+        raw_data = await self._client.ticker_price(symbol_status="TRADING")
         return Adapter.last_price(raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not omitted
 
     async def futures_last_price(self) -> dict[str, float]:
@@ -50,7 +50,7 @@ class UniClient(IUniClient[Client]):
         return Adapter.last_price(raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not omitted
 
     async def ticker_24hr(self) -> TickerDailyDict:
-        raw_data = await self._client.ticker_24hr()
+        raw_data = await self._client.ticker_24hr(symbol_status="TRADING")
         return Adapter.ticker_24hr(raw_data=raw_data)  # type: ignore | raw_data is list[dict] if symbol param is not omitted
 
     async def futures_ticker_24hr(self) -> TickerDailyDict:

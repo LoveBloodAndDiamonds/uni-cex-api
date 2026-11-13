@@ -7,6 +7,7 @@ from typing import Any, Self
 
 import aiohttp
 from loguru import logger as _logger
+from yarl import URL
 
 from unicex.exceptions import ResponseError
 from unicex.types import LoggerLike, RequestMethod
@@ -114,7 +115,7 @@ class BaseClient:
     async def _make_request(
         self,
         method: RequestMethod,
-        url: str,
+        url: str | URL,
         params: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
         headers: dict[str, Any] | None = None,
@@ -123,7 +124,7 @@ class BaseClient:
 
         Параметры:
             method (`RequestMethod`): HTTP‑метод запроса.
-            url (`str`): Полный URL API.
+            url (`str | URL`): Полный URL API. `yarl.URL(..., encoded=True)` отправляется без перекодирования.
             params (`dict[str, Any] | None`): Параметры запроса (query string).
             data (`dict[str, Any] | None`): Тело запроса для POST/PUT.
             headers (`dict[str, Any] | None`): Заголовки запроса.
